@@ -16,6 +16,19 @@ To easily run the algorithms, some launch files are provided for ROS Nodes.
 roslaunch heuristic_planners astar.launch
 ```
 
+#### Parameters
+
+You can pass some args to the launch file such as:
+
+- *map*: The .bt file path, by default the mbzirc challenge3
+- *world_size_x*: world x size in meters 
+- *world_size_y*: world y size in meters 
+- *world_size_z*: world z size in meters
+- *resolution*: Resolution of the map in meters 
+- *save_data*: Boolean to enable data saving
+- *data_file_path*: Path of the data file, by default $HOME/planning.txt
+
+
 It will open an RViz window an load the default map *mbzirc_challenge3* in the folder ```resources/maps```. First time you open a map the Grid3 class will compute the gridmap so you will need to wait a little bit before starting.
 
 To request path you need to call the service ```/astar_ros_node/request_path``` filling the start and goal coordinates in meters(m). 

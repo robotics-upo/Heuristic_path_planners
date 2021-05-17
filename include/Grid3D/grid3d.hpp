@@ -282,10 +282,11 @@ protected:
 		m_maxZ = (float)(maxZ-minZ);
 		m_resolution = (float)res;
 		m_oneDivRes = 1.0/m_resolution;
-		std::cout << "Map size:\n\tx: " << minX << " to " << maxX << std::endl;
-		std::cout << "\ty: " << minY << " to " << maxY << std::endl;
-		std::cout << "\tz: " << minZ << " to " << maxZ << std::endl;
-		std::cout << "\tRes: " << m_resolution << std::endl;
+		ROS_INFO("Map size:\n");
+		ROS_INFO("\tx: %.2f to %.2f", minX, maxX);
+		ROS_INFO("\ty: %.2f to %.2f", minZ, maxZ);
+		ROS_INFO("\tz: %.2f to %.2f", minZ, maxZ);
+		ROS_INFO("\tRes: %.2f" , m_resolution );
 		
 		return true;
 	}
