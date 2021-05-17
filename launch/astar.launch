@@ -1,17 +1,17 @@
 <launch>
-    <arg name="map" default="$(find heuristic_planners)/resources/maps/mbzirc_challenge3.bt"/>
+    <arg name="map"                 default="$(find heuristic_planners)/resources/maps/mbzirc_challenge3.bt"/>
 
-    <arg name="world_size_x" default="50.0"/>
-    <arg name="world_size_y" default="50.0"/>
-    <arg name="world_size_z" default="50.0"/>
-    <arg name="resolution" default="0.2"/>
+    <arg name="world_size_x"        default="50.0"/>
+    <arg name="world_size_y"        default="50.0"/>
+    <arg name="world_size_z"        default="50.0"/>
+    <arg name="resolution"          default="0.2"/>
 
-    <arg name="save_data"      default="true"/>
-    <arg name="data_file_path" default="$(env HOME)/planning.txt"/>
+    <arg name="save_data"           default="true"/>
+    <arg name="data_file_path"      default="$(env HOME)/planning.txt"/>
 
 
     <arg name="cost_scaling_factor" default="1.0"/>
-    <arg name="robot_radius" default="0.5"/>
+    <arg name="robot_radius"        default="0.5"/>
 
     <node pkg="heuristic_planners" type="astar_ros_node" name="astar_ros_node" output="screen">
         <remap from="points" to="/grid3d/map_point_cloud"/>
@@ -22,7 +22,7 @@
         <param name="resolution"            value="$(arg resolution)"/>
         
         <param name="save_data"             value="$(arg save_data)"/>
-        <param name="data_file_path"        value="$(arg data_file_path)"/>
+        <param name="file_path"             value="$(arg data_file_path)"/>
 
         <param name="cost_scaling_factor"   value="$(arg cost_scaling_factor)"/>
         <param name="robot_radius"          value="$(arg robot_radius)"/>

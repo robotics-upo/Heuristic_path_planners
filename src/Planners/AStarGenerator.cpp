@@ -153,6 +153,7 @@ PathData AStarGenerator::findPath(Vec3i source_, Vec3i target_)
     result_data["explored_nodes"] = closedSet.size();
     result_data["start_coords"] = source_;
     result_data["goal_coords"] = target_;
+    result_data["path_length"] = calcualtePathLength(path, discrete_world_.getResolution());
     
 
 #ifdef ROS

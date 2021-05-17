@@ -27,7 +27,7 @@ namespace Planners
     public:
         PathGenerator();
 
-        void setWorldSize(Vec3i worldSize_);
+        void setWorldSize(Vec3i worldSize_, double _resolution);
         void setHeuristic(HeuristicFunction heuristic_);
         void addCollision(Vec3i coordinates_, bool do_inflate, bool steps);
         bool detectCollision(Vec3i coordinates_);
@@ -41,7 +41,6 @@ namespace Planners
         
         HeuristicFunction heuristic;
         CoordinateList direction;
-        Vec3i worldSize;
 
         Planners::utils::DiscreteWorld discrete_world_;
 

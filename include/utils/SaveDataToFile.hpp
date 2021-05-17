@@ -67,6 +67,17 @@ namespace Planners
                         out_file_data_ << ", ";
                         std::cerr << "Could not save field: " << field << " does not exist" << std::endl;
                     }
+                    field = "path_length";
+                    if (_data.find(field) != _data.end())
+                    {
+                        auto path_length = std::any_cast<float>(_data.at(field));
+                        out_file_data_ << path_length << ", ";
+                    }
+                    else
+                    {
+                        out_file_data_ << ", ";
+                        std::cerr << "Could not save field: " << field << " does not exist" << std::endl;
+                    }
                     field = "line_of_sight_checks";
                     if (_data.find(field) != _data.end())
                     {

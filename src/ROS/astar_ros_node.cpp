@@ -40,7 +40,7 @@ public:
         world_size_.y = std::floor(ws_y / resolution_);
         world_size_.z = std::floor(ws_z / resolution_);
 
-        astar_core_.setWorldSize(world_size_);
+        astar_core_.setWorldSize(world_size_, resolution_);
         astar_core_.setHeuristic(Heuristic::euclidean);
 
         ROS_INFO("Using discrete world size: [%d, %d, %d]", world_size_.x, world_size_.y, world_size_.z);
@@ -59,7 +59,8 @@ public:
 
         lnh_.param("save_data_file", save_data_, (bool)true);		
         lnh_.param("file_path", file_data_path_, std::string("planing_data.txt"));		
-
+        if(save_data_)
+            ROS_INFO("Saving path planning data results to %s", file_data_path_.c_str());
 
     }
 

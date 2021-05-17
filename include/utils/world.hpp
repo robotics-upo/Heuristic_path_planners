@@ -18,14 +18,18 @@ namespace utils
         DiscreteWorld()
         {
         }
-
+        void resizeWorld(const Vec3i &_world_size, const double &_resolution){
+            return resizeWorld(_world_size.x, _world_size.y, _world_size.z, _resolution);
+        }
         void resizeWorld(const unsigned int &_world_x_size,
                          const unsigned int &_world_y_size,
-                         const unsigned int &_world_z_size)
+                         const unsigned int &_world_z_size,
+                         const double &_resolution)
         {
             world_x_size_ = _world_x_size;
             world_y_size_ = _world_y_size;
             world_z_size_ = _world_z_size;
+            resolution_   = _resolution;
 
             discrete_world_vector_.clear();
             discrete_world_vector_.resize(world_x_size_ * world_y_size_ * _world_z_size);
@@ -143,6 +147,9 @@ namespace utils
         const std::vector<Planners::utils::Node>& getElements() const{
             return discrete_world_vector_;
         }
+        const double getResolution(){
+            return resolution_;
+        }
     private:
         bool checkValid(const Vec3i &_pos){
 
@@ -180,6 +187,7 @@ namespace utils
         std::vector<Planners::utils::Node> discrete_world_vector_;
 
         unsigned int world_x_size_, world_y_size_, world_z_size_;
+        double resolution_;
     };
 
 }

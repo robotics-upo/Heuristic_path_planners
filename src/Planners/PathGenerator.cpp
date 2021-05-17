@@ -6,10 +6,9 @@ namespace Planners
     PathGenerator::PathGenerator(){
 
     }
-    void PathGenerator::setWorldSize(Vec3i worldSize_)
+    void PathGenerator::setWorldSize(Vec3i _worldSize, double _resolution)
     {
-        worldSize = worldSize_;
-        discrete_world_.resizeWorld(worldSize.x, worldSize.y, worldSize.z);
+        discrete_world_.resizeWorld(_worldSize, _resolution);
     }
 
     void PathGenerator::setHeuristic(HeuristicFunction heuristic_)
