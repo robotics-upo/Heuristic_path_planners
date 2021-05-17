@@ -25,7 +25,8 @@ namespace Planners{
         
         void publishOccupationMarkersMap();
         
-        void setInflation(bool _inflate, unsigned int inflation_steps);
+        void setInflationConfig(bool _inflate, unsigned int _inflation_steps) 
+        { do_inflate_ = _inflate; inflate_steps_ = _inflation_steps;}
         
     private:
        
