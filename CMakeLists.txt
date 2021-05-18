@@ -3,7 +3,19 @@ project(heuristic_planners)
 
 # add_compile_options(-std=c++17 -Wall -Wextra -Wshadow -ansi -pedantic)
 add_compile_options(-std=c++17)
-# add_definitions(-DROS)
+add_definitions(-DROS)
+# add_definitions(-DPUB_EXPLORED_NODES)
+
+
+# if(NOT DEFINED ROS)
+#   message(STATUS "Compiling Algorithm Libraries without ROS features")
+# else()
+#   if(NOT DEFINED PUB_EXPLORED_NODES)
+#     message(STATUS "Compiling Algorithm Libraries with basic ROS Features")
+#   else()
+#     message(STATUS "Compiling Algorithm Libraries with ROS Rviz explored nodes markers publishing")
+#   endif()
+# endif()
 
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS

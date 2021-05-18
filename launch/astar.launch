@@ -6,6 +6,9 @@
     <arg name="world_size_z"        default="50.0"/>
     <arg name="resolution"          default="0.2"/>
 
+    <arg name="inflate_map"         default="true"/>
+    <arg name="inflation_size"      default="$(arg resolution)"/>
+
     <arg name="save_data"           default="true"/>
     <arg name="data_file_path"      default="$(env HOME)/planning.txt"/>
 
@@ -20,6 +23,8 @@
         <param name="world_size_y"          value="$(arg world_size_y)"/>
         <param name="world_size_z"          value="$(arg world_size_z)"/>
         <param name="resolution"            value="$(arg resolution)"/>
+        <param name="inflate_map"           value="$(arg inflate_map)"/>
+        <param name="inflation_size"        value="$(arg inflation_size)"/>
         
         <param name="save_data"             value="$(arg save_data)"/>
         <param name="file_path"             value="$(arg data_file_path)"/>

@@ -97,7 +97,7 @@ PathData AStarGenerator::findPath(Vec3i source_, Vec3i target_)
         discrete_world_.setOpenValue(current->coordinates, false);
         discrete_world_.setClosedValue(current->coordinates, true);
 
-#ifdef ROS
+#if defined(ROS) && defined(PUB_EXPLORED_NODES)
     geometry_msgs::Point point;
 	point.x = current->coordinates.x * resolution_;
 	point.y = current->coordinates.y * resolution_;
@@ -148,6 +148,7 @@ PathData AStarGenerator::findPath(Vec3i source_, Vec3i target_)
     }else{
         std::cout<< "Error impossible to calcualte a solution" << std::endl;
     }
+    result_data["algorithm"] = std::string("astar");
     result_data["path"] = path;
     result_data["time_spent"] = main_timer.getElapsedMillisecs();
     result_data["explored_nodes"] = closedSet.size();

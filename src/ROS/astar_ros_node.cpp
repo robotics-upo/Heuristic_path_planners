@@ -30,11 +30,14 @@ public:
         point_markers_pub_ = lnh_.advertise<visualization_msgs::Marker>("path_points_markers", 1);
 
         float ws_x, ws_y, ws_z;
+        bool inflate;
+        unsigned int inflation_steps;
 
         lnh_.param("world_size_x", ws_x, (float)100.0); // In meters
         lnh_.param("world_size_y", ws_y, (float)100.0); // In meters
         lnh_.param("world_size_z", ws_z, (float)100.0); // In meters
         lnh_.param("resolution", resolution_, (float)0.2);
+        lnh_.param("inflate_map", inflate, (bool)true);
 
         world_size_.x = std::floor(ws_x / resolution_);
         world_size_.y = std::floor(ws_y / resolution_);
@@ -45,6 +48,14 @@ public:
 
         ROS_INFO("Using discrete world size: [%d, %d, %d]", world_size_.x, world_size_.y, world_size_.z);
         ROS_INFO("Using resolution: [%f]", resolution_);
+
+        if(inflate){
+            double inflation_size;
+            lnh_.param("inflation_size", inflation_size, 0.5);
+            inflation_steps = std::round(inflation_size / resolution_);
+            ROS_INFO("Inflation size %.2f, using inflation step %d", inflation_size, inflation_steps);
+        }
+        astar_core_.setInflationConfig(inflate, inflation_steps);
 
         m_grid3d_.reset(new Grid3d); //TODO Costs not implement yet
         double cost_scaling_factor, robot_radius;
@@ -98,10 +109,8 @@ private:
         auto path_data = astar_core_.findPath(discrete_start, discrete_goal);
         if(static_cast<bool>(std::any_cast<bool>(path_data["solved"]))){
              
-            
-
             try{
-                _rep.path_length.data = utils::calcualtePathLength(std::any_cast<CoordinateList>(path_data["path"]), resolution_);
+                _rep.path_length.data = static_cast<float>(std::any_cast<float>(path_data["path_length"]));
                 _rep.time_spent.data =  static_cast<int>(std::floor(std::any_cast<double>(path_data["time_spent"])));
                 _rep.explored_nodes.data = static_cast<int>(std::any_cast<size_t>(path_data["explored_nodes"]));
 

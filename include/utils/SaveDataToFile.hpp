@@ -4,7 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include "utils/utils.hpp"
-#include <boost/algorithm/string.hpp>
+
 namespace Planners
 {
     namespace utils
@@ -23,6 +23,17 @@ namespace Planners
                 bool res = true;
                 try
                 {
+                    field = "algorithm";
+                    if (_data.find(field) != _data.end())
+                    {
+                        auto algorithm_name = std::any_cast<std::string>(_data.at(field));
+                        out_file_data_ << algorithm_name << ", ";
+                    }
+                    else
+                    {
+                        out_file_data_ << ", ";
+                        std::cerr << "Could not save field: " << field << " does not exist" << std::endl;
+                    }
                     field = "goal_coords";
                     if (_data.find(field) != _data.end())
                     {
