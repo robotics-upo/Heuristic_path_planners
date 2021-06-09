@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "Planners/AStarGenerator.hpp"
+#include "Planners/ThetaStarGenerator.hpp"
 #include "utils/ros/ROSInterfaces.hpp"
 #include "utils/SaveDataToFile.hpp"
 #include "Grid3D/grid3d.hpp"
@@ -198,7 +199,7 @@ private:
 
     std::unique_ptr<Grid3d> m_grid3d_;
 
-    AStarGenerator astar_core_;
+    ThetaStarGenerator astar_core_;
 
     visualization_msgs::Marker path_line_markers_, path_points_markers_;
     

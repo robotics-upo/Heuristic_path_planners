@@ -30,7 +30,7 @@ namespace Planners{
         
     private:
        
-        unsigned int inflate_steps_{5};
+        unsigned int inflate_steps_{1};
         bool do_inflate_{true};
 
 #ifdef ROS

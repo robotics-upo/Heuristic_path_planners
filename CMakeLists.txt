@@ -139,7 +139,7 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(astar_ros_node src/ROS/astar_ros_node.cpp 
                               src/Planners/AStarGenerator.cpp
-                              # src/Planners/ThetaStarGenerator.cpp
+                              src/Planners/ThetaStarGenerator.cpp
                               src/Planners/PathGenerator.cpp
                               src/utils/utils.cpp
                               src/utils/heuristic.cpp)
