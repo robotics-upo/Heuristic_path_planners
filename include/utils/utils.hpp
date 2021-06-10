@@ -103,7 +103,6 @@ namespace Planners
 		    return res < 0;
         	}
         };
-        float calcualtePathLength(const CoordinateList &_path, const double &_resolution);
 
     }
 }

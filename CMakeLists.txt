@@ -142,6 +142,7 @@ add_executable(astar_ros_node src/ROS/astar_ros_node.cpp
                               src/Planners/ThetaStarGenerator.cpp
                               src/Planners/PathGenerator.cpp
                               src/utils/utils.cpp
+                              src/utils/geometry_utils.cpp
                               src/utils/heuristic.cpp)
 
 ## Rename C++ executable without prefix

@@ -12,6 +12,7 @@
 #include "utils/heuristic.hpp"
 #include "utils/utils.hpp"
 #include "utils/time.hpp"
+#include "utils/geometry_utils.hpp"
 
 namespace Planners
 {
