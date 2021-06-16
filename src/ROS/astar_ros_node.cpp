@@ -200,8 +200,8 @@ private:
 
     std::unique_ptr<Grid3d> m_grid3d_;
 
-    AStarGenerator astar_core_;  // Para el A_Star
-    //ThetaStarGenerator astar_core_;  // Para el Theta_Star
+    //AStarGenerator astar_core_;  // Para el A_Star
+    ThetaStarGenerator astar_core_;  // Para el Theta_Star
     //LazyThetaStarGenerator astar_core_;  // Para el Lazy_Theta_Star
         
     visualization_msgs::Marker path_line_markers_, path_points_markers_;

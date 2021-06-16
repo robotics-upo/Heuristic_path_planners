@@ -129,7 +129,7 @@ namespace Planners
             discrete_world_.setOpenValue(current->coordinates, false);  //flag que se consulta para saber si esta en el Open
             discrete_world_.setClosedValue(current->coordinates, true); //flag que se consulta para saber si esta en el Close
 
-            // // To test the Lazy: SetVertex
+            // To test the Lazy: SetVertex
             //SetVertex(current, openSet);
 
     # if defined(ROS) && defined(PUB_EXPLORED_NODES)
