@@ -15,81 +15,28 @@
 #include <pcl_ros/transforms.h>
 
 #include <heuristic_planners/GetPath.h>
+#include <heuristic_planners/SetAlgorithm.h>
 
 using namespace Planners;
-class AStarROS
+class HeuristicPlannerROS
 {
 
 public:
-    AStarROS()
+    HeuristicPlannerROS()
     {
 
-        map_sub_ = lnh_.subscribe<pcl::PointCloud<pcl::PointXYZ>>("/points", 1, &AStarROS::pointCloudCallback, this);
+        map_sub_ = lnh_.subscribe<pcl::PointCloud<pcl::PointXYZ>>("/points", 1, &HeuristicPlannerROS::pointCloudCallback, this);
 
-        request_path_server_ = lnh_.advertiseService("request_path", &AStarROS::requestPathService, this);
+        request_path_server_   = lnh_.advertiseService("request_path",  &HeuristicPlannerROS::requestPathService, this);
+        change_planner_server_ = lnh_.advertiseService("set_algorithm", &HeuristicPlannerROS::setAlgorithm, this);
 
         line_markers_pub_ = lnh_.advertise<visualization_msgs::Marker>("path_line_markers", 1);
         point_markers_pub_ = lnh_.advertise<visualization_msgs::Marker>("path_points_markers", 1);
 
-        float ws_x, ws_y, ws_z;
-
-        lnh_.param("world_size_x", ws_x, (float)100.0); // In meters
-        lnh_.param("world_size_y", ws_y, (float)100.0); // In meters
-        lnh_.param("world_size_z", ws_z, (float)100.0); // In meters
-        lnh_.param("resolution", resolution_, (float)0.2);
-        lnh_.param("inflate_map", inflate_, (bool)true);
-
-        world_size_.x = std::floor(ws_x / resolution_);
-        world_size_.y = std::floor(ws_y / resolution_);
-        world_size_.z = std::floor(ws_z / resolution_);
-
         std::string algorithm_name;
         lnh_.param("algorithm", algorithm_name, (std::string)"astar");
-        if( algorithm_name == "astar" ){
-            ROS_INFO("Using A*");
-            algorithm_.reset(new AStarGenerator);
-        }else if ( algorithm_name == "thetastar" ){
-            ROS_INFO("Using Theta*");
-            algorithm_.reset(new ThetaStarGenerator);
 
-        }else if( algorithm_name == "lazythetastar" ){
-            ROS_INFO("Using LazyTheta*");
-            algorithm_.reset(new LazyThetaStarGenerator);
-        }else{
-            ROS_WARN("Wrong algorithm name parameter. Using ASTAR by default");
-            algorithm_.reset(new AStarGenerator);
-        }
-
-        algorithm_->setWorldSize(world_size_, resolution_);
-        algorithm_->setHeuristic(Heuristic::euclidean);
-
-        ROS_INFO("Using discrete world size: [%d, %d, %d]", world_size_.x, world_size_.y, world_size_.z);
-        ROS_INFO("Using resolution: [%f]", resolution_);
-
-        if(inflate_){
-            double inflation_size;
-            lnh_.param("inflation_size", inflation_size, 0.5);
-            inflation_steps_ = std::round(inflation_size / resolution_);
-            ROS_INFO("Inflation size %.2f, using inflation step %d", inflation_size, inflation_steps_);
-        }
-        algorithm_->setInflationConfig(inflate_, inflation_steps_);
-
-        m_grid3d_.reset(new Grid3d); //TODO Costs not implement yet
-        double cost_scaling_factor, robot_radius;
-        lnh_.param("cost_scaling_factor", cost_scaling_factor, 0.8);		
-		lnh_.param("robot_radius", robot_radius, 0.4);		
-        
-        m_grid3d_->setCostParams(cost_scaling_factor, robot_radius);
-        
-        std::string frame_id;
-        lnh_.param("frame_id", frame_id, std::string("map"));		
-        configMarkers("astar", frame_id, resolution_);
-
-        lnh_.param("save_data_file", save_data_, (bool)true);		
-        lnh_.param("file_path", file_data_path_, std::string("planing_data.txt"));		
-        if(save_data_)
-            ROS_INFO("Saving path planning data results to %s", file_data_path_.c_str());
-
+        configureAlgorithm(algorithm_name);
     }
 
 private:
@@ -108,8 +55,15 @@ private:
         ROS_INFO("Published occupation marker map");
 
         map_sub_.shutdown();
+        bool map_ready_ = true;
     }   
+    bool setAlgorithm(heuristic_planners::SetAlgorithmRequest &_req, heuristic_planners::SetAlgorithmResponse &rep){
+        
+        configureAlgorithm(_req.algorithm.data);
+        map_sub_ = lnh_.subscribe<pcl::PointCloud<pcl::PointXYZ>>("/points", 1, &HeuristicPlannerROS::pointCloudCallback, this);
 
+        return true;
+    }
     bool requestPathService(heuristic_planners::GetPathRequest &_req, heuristic_planners::GetPathResponse &_rep){
 
         ROS_INFO("Path requested, computing path");
@@ -162,7 +116,66 @@ private:
 
         return true;
     }
+    void configureAlgorithm(const std::string &algorithm_name){
 
+        float ws_x, ws_y, ws_z;
+
+        lnh_.param("world_size_x", ws_x, (float)100.0); // In meters
+        lnh_.param("world_size_y", ws_y, (float)100.0); // In meters
+        lnh_.param("world_size_z", ws_z, (float)100.0); // In meters
+        lnh_.param("resolution", resolution_, (float)0.2);
+        lnh_.param("inflate_map", inflate_, (bool)true);
+
+        world_size_.x = std::floor(ws_x / resolution_);
+        world_size_.y = std::floor(ws_y / resolution_);
+        world_size_.z = std::floor(ws_z / resolution_);
+
+        if( algorithm_name == "astar" ){
+            ROS_INFO("Using A*");
+            algorithm_.reset(new AStarGenerator);
+        }else if ( algorithm_name == "thetastar" ){
+            ROS_INFO("Using Theta*");
+            algorithm_.reset(new ThetaStarGenerator);
+
+        }else if( algorithm_name == "lazythetastar" ){
+            ROS_INFO("Using LazyTheta*");
+            algorithm_.reset(new LazyThetaStarGenerator);
+        }else{
+            ROS_WARN("Wrong algorithm name parameter. Using ASTAR by default");
+            algorithm_.reset(new AStarGenerator);
+        }
+
+        algorithm_->setWorldSize(world_size_, resolution_);
+        algorithm_->setHeuristic(Heuristic::euclidean);
+
+        ROS_INFO("Using discrete world size: [%d, %d, %d]", world_size_.x, world_size_.y, world_size_.z);
+        ROS_INFO("Using resolution: [%f]", resolution_);
+
+        if(inflate_){
+            double inflation_size;
+            lnh_.param("inflation_size", inflation_size, 0.5);
+            inflation_steps_ = std::round(inflation_size / resolution_);
+            ROS_INFO("Inflation size %.2f, using inflation step %d", inflation_size, inflation_steps_);
+        }
+        algorithm_->setInflationConfig(inflate_, inflation_steps_);
+
+        m_grid3d_.reset(new Grid3d); //TODO Costs not implement yet
+        double cost_scaling_factor, robot_radius;
+        lnh_.param("cost_scaling_factor", cost_scaling_factor, 0.8);		
+		lnh_.param("robot_radius", robot_radius, 0.4);		
+        
+        m_grid3d_->setCostParams(cost_scaling_factor, robot_radius);
+        
+        std::string frame_id;
+        lnh_.param("frame_id", frame_id, std::string("map"));		
+        configMarkers("astar", frame_id, resolution_);
+
+        lnh_.param("save_data_file", save_data_, (bool)true);		
+        lnh_.param("file_path", file_data_path_, std::string("planing_data.txt"));		
+        if(save_data_)
+            ROS_INFO("Saving path planning data results to %s", file_data_path_.c_str());
+
+    }
     void configMarkers(const std::string &_ns, const std::string &_frame, const double &_scale){
 
         path_line_markers_.ns = _ns;
@@ -209,7 +222,7 @@ private:
 
 
     ros::NodeHandle lnh_{"~"};
-    ros::ServiceServer request_path_server_;
+    ros::ServiceServer request_path_server_, change_planner_server_;
     ros::Subscriber map_sub_;
     //TODO Fix point markers
     ros::Publisher line_markers_pub_, point_markers_pub_;
@@ -220,6 +233,7 @@ private:
         
     visualization_msgs::Marker path_line_markers_, path_points_markers_;
     
+    bool map_ready_{false};
     //Parameters
     Vec3i world_size_; // Discrete
     float resolution_;
@@ -233,7 +247,7 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "astar_ros_node");
 
-    AStarROS astar_ros_node;
+    HeuristicPlannerROS astar_ros_node;
     ros::spin();
 
 return 0;
