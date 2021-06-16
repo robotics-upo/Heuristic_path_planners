@@ -14,6 +14,8 @@ namespace Planners
         {
 
             float calculatePathLength(const CoordinateList &_path, const double &_resolution);
+            float distanceBetween2nodes(Node &n1, Node &n2);
+            float distanceBetween2nodesOTRO(Node *n1, Node *n2);
             
             
         }//namespace geometry
