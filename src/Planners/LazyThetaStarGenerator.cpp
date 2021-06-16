@@ -49,27 +49,17 @@ namespace Planners
     {
         float distanceParent2 = geometry::distanceBetween2Nodes(s_aux->parent, s2_aux);
 
-        if (LineOfSight::bresenham3D((s_aux->parent), s2_aux, discrete_world_))
+        if ((s_aux->parent->G + distanceParent2) < (s2_aux->G))
         {
-            if ((s_aux->parent->G + distanceParent2) < (s2_aux->G))
-            {
-                s2_aux->parent = s_aux->parent;
-                s2_aux->G = s2_aux->parent->G + geometry::distanceBetween2Nodes(s2_aux->parent, s2_aux);
-            }
-        }
-        else
-        {
-            double distanceParent = geometry::distanceBetween2Nodes(s_aux, s2_aux);
-            if ((s_aux->G + distanceParent) < (s2_aux->G))
-            {
-                s2_aux->parent = s_aux;
-                s2_aux->G = s2_aux->parent->G + geometry::distanceBetween2Nodes(s2_aux->parent, s2_aux);
-            }
+            s2_aux->parent = s_aux->parent;
+            s2_aux->G = s2_aux->parent->G + geometry::distanceBetween2Nodes(s2_aux->parent, s2_aux);
         }
     }
 
-    PathData LazyThetaStarGenerator::findPath(Vec3i source_, Vec3i target_)
+    PathData LazyThetaStarGenerator::findPath(const Vec3i &source_, const Vec3i &target_)
     {
+        std::cout << "LazyTheta* Find Path" << std::endl;
+
         Node *current = nullptr;
         NodeSet openSet, closedSet;
         bool solved{false};

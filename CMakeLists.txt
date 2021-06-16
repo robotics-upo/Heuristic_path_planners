@@ -137,7 +137,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(astar_ros_node src/ROS/astar_ros_node.cpp 
+add_executable(planner_ros_node src/ROS/planner_ros_node.cpp 
                               src/Planners/AStarGenerator.cpp
                               src/Planners/ThetaStarGenerator.cpp
                               src/Planners/LazyThetaStarGenerator.cpp
@@ -155,9 +155,9 @@ add_executable(astar_ros_node src/ROS/astar_ros_node.cpp
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-add_dependencies(astar_ros_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(planner_ros_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 ## Specify libraries to link a library or executable target against
-target_link_libraries(astar_ros_node ${catkin_LIBRARIES} )
+target_link_libraries(planner_ros_node ${catkin_LIBRARIES} )
 
 #############
 ## Install ##
@@ -174,7 +174,7 @@ target_link_libraries(astar_ros_node ${catkin_LIBRARIES} )
 # )
 
 ## Mark executables and/or libraries for installation
-install(TARGETS astar_ros_node
+install(TARGETS planner_ros_node
  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

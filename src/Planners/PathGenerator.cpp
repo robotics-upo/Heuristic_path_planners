@@ -6,7 +6,7 @@ namespace Planners
     PathGenerator::PathGenerator(){
 
     }
-    void PathGenerator::setWorldSize(Vec3i _worldSize, double _resolution)
+    void PathGenerator::setWorldSize(const Vec3i &_worldSize,const double _resolution)
     {
         discrete_world_.resizeWorld(_worldSize, _resolution);
     }
@@ -16,7 +16,7 @@ namespace Planners
         heuristic = std::bind(heuristic_, std::placeholders::_1, std::placeholders::_2);
     }
 
-    void PathGenerator::addCollision(Vec3i coordinates_, bool do_inflate, bool steps)
+    void PathGenerator::addCollision(const Vec3i &coordinates_, bool do_inflate, bool steps)
     {
         if (do_inflate)
         {
@@ -27,7 +27,11 @@ namespace Planners
             discrete_world_.setOccupied(coordinates_);
         }
     }
-    bool PathGenerator::detectCollision(Vec3i coordinates_)
+    void PathGenerator::addCollision(const Vec3i &coordinates_)
+    {
+        addCollision(coordinates_, do_inflate_, inflate_steps_);
+    }
+    bool PathGenerator::detectCollision(const Vec3i &coordinates_)
     {
         if (discrete_world_.isOccupied(coordinates_))
         {

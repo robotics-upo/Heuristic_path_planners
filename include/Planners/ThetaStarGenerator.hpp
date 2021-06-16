@@ -13,7 +13,7 @@ namespace Planners
         
         ThetaStarGenerator() {}
 
-        PathData findPath(Vec3i source_, Vec3i target_);
+        PathData findPath(const Vec3i &source_, const Vec3i &target_);
 
     protected:
 

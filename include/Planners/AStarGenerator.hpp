@@ -19,20 +19,10 @@ namespace Planners{
     public:
         AStarGenerator();
 
-        PathData findPath(Vec3i source_, Vec3i target_);
-        
-        void addCollision(Vec3i coordinates_);
-        
+        PathData findPath(const Vec3i &source_, const Vec3i &target_);
+                
         void publishOccupationMarkersMap();
         
-        void setInflationConfig(bool _inflate, unsigned int _inflation_steps) 
-        { do_inflate_ = _inflate; inflate_steps_ = _inflation_steps;}
-        
-    private:
-       
-        unsigned int inflate_steps_{1};
-        bool do_inflate_{true};
-    
     protected:
 
 #ifdef ROS

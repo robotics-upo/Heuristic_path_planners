@@ -29,12 +29,20 @@ namespace Planners
     public:
         PathGenerator();
 
-        void setWorldSize(Vec3i worldSize_, double _resolution);
+        void setWorldSize(const Vec3i &worldSize_,const double _resolution);
         void setHeuristic(HeuristicFunction heuristic_);
-        void addCollision(Vec3i coordinates_, bool do_inflate, bool steps);
-        bool detectCollision(Vec3i coordinates_);
+        
+        void addCollision(const Vec3i &coordinates_, bool do_inflate, bool steps);
+        void addCollision(const Vec3i &coordinates_);
 
-        PathData findPath(Vec3i source_, Vec3i target_);
+        bool detectCollision(const Vec3i &coordinates_);
+
+        virtual PathData findPath(const Vec3i &source_, const Vec3i &target_) = 0;
+
+        void setInflationConfig(const bool _inflate, const unsigned int _inflation_steps) 
+        { do_inflate_ = _inflate; inflate_steps_ = _inflation_steps;}
+
+        virtual void publishOccupationMarkersMap() = 0;
 
     protected:
         void inflateNodeAsCube(const Vec3i &_ref,
@@ -45,6 +53,9 @@ namespace Planners
         CoordinateList direction;
 
         utils::DiscreteWorld discrete_world_;
+        unsigned int inflate_steps_{1};
+        bool do_inflate_{true};
+
 
     private:
     };

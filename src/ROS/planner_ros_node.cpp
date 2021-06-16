@@ -32,32 +32,47 @@ public:
         point_markers_pub_ = lnh_.advertise<visualization_msgs::Marker>("path_points_markers", 1);
 
         float ws_x, ws_y, ws_z;
-        bool inflate;
-        unsigned int inflation_steps;
 
         lnh_.param("world_size_x", ws_x, (float)100.0); // In meters
         lnh_.param("world_size_y", ws_y, (float)100.0); // In meters
         lnh_.param("world_size_z", ws_z, (float)100.0); // In meters
         lnh_.param("resolution", resolution_, (float)0.2);
-        lnh_.param("inflate_map", inflate, (bool)true);
+        lnh_.param("inflate_map", inflate_, (bool)true);
 
         world_size_.x = std::floor(ws_x / resolution_);
         world_size_.y = std::floor(ws_y / resolution_);
         world_size_.z = std::floor(ws_z / resolution_);
 
-        astar_core_.setWorldSize(world_size_, resolution_);
-        astar_core_.setHeuristic(Heuristic::euclidean);
+        std::string algorithm_name;
+        lnh_.param("algorithm", algorithm_name, (std::string)"astar");
+        if( algorithm_name == "astar" ){
+            ROS_INFO("Using A*");
+            algorithm_.reset(new AStarGenerator);
+        }else if ( algorithm_name == "thetastar" ){
+            ROS_INFO("Using Theta*");
+            algorithm_.reset(new ThetaStarGenerator);
+
+        }else if( algorithm_name == "lazythetastar" ){
+            ROS_INFO("Using LazyTheta*");
+            algorithm_.reset(new LazyThetaStarGenerator);
+        }else{
+            ROS_WARN("Wrong algorithm name parameter. Using ASTAR by default");
+            algorithm_.reset(new AStarGenerator);
+        }
+
+        algorithm_->setWorldSize(world_size_, resolution_);
+        algorithm_->setHeuristic(Heuristic::euclidean);
 
         ROS_INFO("Using discrete world size: [%d, %d, %d]", world_size_.x, world_size_.y, world_size_.z);
         ROS_INFO("Using resolution: [%f]", resolution_);
 
-        if(inflate){
+        if(inflate_){
             double inflation_size;
             lnh_.param("inflation_size", inflation_size, 0.5);
-            inflation_steps = std::round(inflation_size / resolution_);
-            ROS_INFO("Inflation size %.2f, using inflation step %d", inflation_size, inflation_steps);
+            inflation_steps_ = std::round(inflation_size / resolution_);
+            ROS_INFO("Inflation size %.2f, using inflation step %d", inflation_size, inflation_steps_);
         }
-        astar_core_.setInflationConfig(inflate, inflation_steps);
+        algorithm_->setInflationConfig(inflate_, inflation_steps_);
 
         m_grid3d_.reset(new Grid3d); //TODO Costs not implement yet
         double cost_scaling_factor, robot_radius;
@@ -85,11 +100,11 @@ private:
         ROS_INFO("Loading map...");
         int n_obs = 0;
         for(auto &it: *_points){
-            astar_core_.addCollision(discretePoint(it, resolution_));
+            algorithm_->addCollision(discretePoint(it, resolution_));
             n_obs++;
         }
         ROS_INFO("Map loaded. Added %d", n_obs);
-        astar_core_.publishOccupationMarkersMap();
+        algorithm_->publishOccupationMarkersMap();
         ROS_INFO("Published occupation marker map");
 
         map_sub_.shutdown();
@@ -99,16 +114,16 @@ private:
 
         ROS_INFO("Path requested, computing path");
         //Astar coordinate list is std::vector<vec3i>
-        auto discrete_goal =  discretePoint(_req.goal, resolution_);
-        auto discrete_start = discretePoint(_req.start, resolution_);
+        const auto discrete_goal =  discretePoint(_req.goal, resolution_);
+        const auto discrete_start = discretePoint(_req.start, resolution_);
 
-        if( astar_core_.detectCollision(discrete_start) || 
-            astar_core_.detectCollision(discrete_goal) ){
+        if( algorithm_->detectCollision(discrete_start) || 
+            algorithm_->detectCollision(discrete_goal) ){
             ROS_ERROR("Goal or start point not valid");
             return false;
         }
 
-        auto path_data = astar_core_.findPath(discrete_start, discrete_goal);
+        auto path_data = algorithm_->findPath(discrete_start, discrete_goal);
         if(static_cast<bool>(std::any_cast<bool>(path_data["solved"]))){
              
             try{
@@ -201,9 +216,7 @@ private:
 
     std::unique_ptr<Grid3d> m_grid3d_;
 
-    //AStarGenerator astar_core_;  // Para el A_Star
-    ThetaStarGenerator astar_core_;  // Para el Theta_Star
-    // LazyThetaStarGenerator astar_core_;  // Para el Lazy_Theta_Star
+    std::unique_ptr<PathGenerator> algorithm_;
         
     visualization_msgs::Marker path_line_markers_, path_points_markers_;
     
@@ -212,6 +225,8 @@ private:
     float resolution_;
 
     bool save_data_;
+    bool inflate_{false};
+    unsigned int inflation_steps_{0};
     std::string file_data_path_;
 };
 int main(int argc, char **argv)

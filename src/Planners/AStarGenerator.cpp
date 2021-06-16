@@ -61,17 +61,9 @@ void AStarGenerator::publishOccupationMarkersMap()
 #endif
 }
 
-void AStarGenerator::addCollision(Vec3i coordinates_)
+PathData AStarGenerator::findPath(const Vec3i &source_, const Vec3i &target_)
 {
-    if(do_inflate_){
-        inflateNodeAsCube(coordinates_, direction, inflate_steps_);
-    }else{
-        discrete_world_.setOccupied(coordinates_);
-    }
-}
-
-PathData AStarGenerator::findPath(Vec3i source_, Vec3i target_)
-{
+    std::cout << "A* Find Path" << std::endl;
     Node *current = nullptr;
     NodeSet openSet, closedSet;
     bool solved{false};
