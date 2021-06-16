@@ -47,8 +47,6 @@ namespace Planners
 
     PathData ThetaStarGenerator::findPath(const Vec3i &source_, const Vec3i &target_)
     {
-        std::cout << "Theta* Find Path" << std::endl;
-
         Node *current = nullptr;
         NodeSet openSet, closedSet;
         bool solved{false};

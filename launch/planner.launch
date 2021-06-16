@@ -36,7 +36,7 @@
         <param name="robot_radius"          value="$(arg robot_radius)"/>
     </node>
 
-    <node pkg="rviz" name="rviz" type="rviz" args="-d $(find heuristic_planners)/rviz/astar.rviz"/>
+    <node pkg="rviz" name="rviz" type="rviz" args="-d $(find heuristic_planners)/rviz/planners.rviz"/>
 
     <!-- <node pkg="rqt_service_caller" type="rqt_service_caller" name="rqt_service_caller"/> -->
 

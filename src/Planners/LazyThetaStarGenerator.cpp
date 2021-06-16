@@ -58,8 +58,6 @@ namespace Planners
 
     PathData LazyThetaStarGenerator::findPath(const Vec3i &source_, const Vec3i &target_)
     {
-        std::cout << "LazyTheta* Find Path" << std::endl;
-
         Node *current = nullptr;
         NodeSet openSet, closedSet;
         bool solved{false};
@@ -92,7 +90,8 @@ namespace Planners
             discrete_world_.setClosedValue(current->coordinates, true);
 
             SetVertex(current, openSet);
-
+            //in every setVertex the line of sight function is called 
+            line_of_sight_checks++;
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)
             geometry_msgs::Point point;
             point.x = current->coordinates.x * resolution_;

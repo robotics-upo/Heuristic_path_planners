@@ -63,7 +63,6 @@ void AStarGenerator::publishOccupationMarkersMap()
 
 PathData AStarGenerator::findPath(const Vec3i &source_, const Vec3i &target_)
 {
-    std::cout << "A* Find Path" << std::endl;
     Node *current = nullptr;
     NodeSet openSet, closedSet;
     bool solved{false};
