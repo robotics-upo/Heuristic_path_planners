@@ -115,6 +115,7 @@ private:
                 _rep.path_length.data = static_cast<float>(std::any_cast<float>(path_data["path_length"]));
                 _rep.time_spent.data =  static_cast<int>(std::floor(std::any_cast<double>(path_data["time_spent"])));
                 _rep.explored_nodes.data = static_cast<int>(std::any_cast<size_t>(path_data["explored_nodes"]));
+                _rep.line_of_sight_checks.data = static_cast<int>(std::any_cast<int>(path_data["line_of_sight_checks"]));
 
             }catch(const std::bad_any_cast& e){
                 std::cerr << "Any cast error: " << e.what() << std::endl;
@@ -202,7 +203,7 @@ private:
 
     //AStarGenerator astar_core_;  // Para el A_Star
     ThetaStarGenerator astar_core_;  // Para el Theta_Star
-    //LazyThetaStarGenerator astar_core_;  // Para el Lazy_Theta_Star
+    // LazyThetaStarGenerator astar_core_;  // Para el Lazy_Theta_Star
         
     visualization_msgs::Marker path_line_markers_, path_points_markers_;
     

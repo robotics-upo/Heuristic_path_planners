@@ -3,8 +3,9 @@
 
 #include <iostream>
 #include <vector>
-#include "utils/utils.hpp"
 #include <math.h>
+
+#include "utils/utils.hpp"
 
 namespace Planners
 {
@@ -14,8 +15,8 @@ namespace Planners
         {
 
             float calculatePathLength(const CoordinateList &_path, const double &_resolution);
-            float distanceBetween2nodes(Node &n1, Node &n2);
-            float distanceBetween2nodesOTRO(Node *n1, Node *n2);
+            float distanceBetween2Nodes(const Node &n1, const Node &n2);
+            float distanceBetween2Nodes(const Node *n1, const Node *n2);
             
             
         }//namespace geometry

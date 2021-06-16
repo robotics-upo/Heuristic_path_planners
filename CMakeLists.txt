@@ -4,7 +4,7 @@ project(heuristic_planners)
 # add_compile_options(-std=c++17 -Wall -Wextra -Wshadow -ansi -pedantic)
 add_compile_options(-std=c++17)
 add_definitions(-DROS)
-# add_definitions(-DPUB_EXPLORED_NODES)
+add_definitions(-DPUB_EXPLORED_NODES)
 
 
 # if(NOT DEFINED ROS)
@@ -140,10 +140,12 @@ include_directories(
 add_executable(astar_ros_node src/ROS/astar_ros_node.cpp 
                               src/Planners/AStarGenerator.cpp
                               src/Planners/ThetaStarGenerator.cpp
+                              src/Planners/LazyThetaStarGenerator.cpp
                               src/Planners/PathGenerator.cpp
                               src/utils/utils.cpp
                               src/utils/geometry_utils.cpp
-                              src/utils/heuristic.cpp)
+                              src/utils/heuristic.cpp
+                              src/utils/LineOfSight.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the

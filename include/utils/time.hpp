@@ -5,7 +5,6 @@ namespace Planners
 {
     namespace utils
     {
-
         class Clock
         {
 

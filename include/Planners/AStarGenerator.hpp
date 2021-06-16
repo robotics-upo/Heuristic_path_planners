@@ -32,6 +32,8 @@ namespace Planners{
        
         unsigned int inflate_steps_{1};
         bool do_inflate_{true};
+    
+    protected:
 
 #ifdef ROS
         ros::NodeHandle lnh_{"~"};

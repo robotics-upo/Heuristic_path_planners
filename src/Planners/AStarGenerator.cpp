@@ -1,11 +1,8 @@
 #include "Planners/AStarGenerator.hpp"
-#include <algorithm>
 
 namespace Planners{
     
-
-// using namespace utils;
-
+    
 AStarGenerator::AStarGenerator()
 {
     setHeuristic(&Heuristic::manhattan);
@@ -82,13 +79,12 @@ PathData AStarGenerator::findPath(Vec3i source_, Vec3i target_)
     openSet.insert(discrete_world_.getNodePtr(source_));
     discrete_world_.setOpenValue(source_, true);
     
-    Planners::utils::Clock main_timer;
+    utils::Clock main_timer;
     main_timer.tic();
     while (!openSet.empty()) {
 
         current = *openSet.begin();
 
-        //If its the goal, FINISH
         if (current->coordinates == target_) { solved = true; break; }
         
         openSet.erase(openSet.begin());
@@ -155,9 +151,10 @@ PathData AStarGenerator::findPath(Vec3i source_, Vec3i target_)
     result_data["start_coords"] = source_;
     result_data["goal_coords"] = target_;
     result_data["path_length"] = geometry::calculatePathLength(path, discrete_world_.getResolution());
+    result_data["line_of_sight_checks"] = 0;
     
 
-#ifdef ROS
+#if defined(ROS) && defined(PUB_EXPLORED_NODES)
     explored_node_marker_.points.clear();
 #endif
     

@@ -1,12 +1,12 @@
-#ifndef THETASTAR_HPP
-#define THETASTAR_HPP
+#ifndef LAZYTHETASTAR_HPP
+#define LAZYTHETASTAR_HPP
 
-#include <Planners/AStarGenerator.hpp>
+#include <Planners/ThetaStarGenerator.hpp>
 
 namespace Planners
 {
 
-    class LazyThetaStarGenerator : public AStarGenerator
+    class LazyThetaStarGenerator : public ThetaStarGenerator
     {
 
     public:
@@ -15,10 +15,13 @@ namespace Planners
 
         PathData findPath(Vec3i source_, Vec3i target_);
 
-        void UpdateVertex(Node *s, Node *s2, NodeSet &openset);
+    protected:
+
         void ComputeCost(Node *s_aux, Node *s2_aux);
-        //void UpdateVertex(Node &s, Node &s2, NodeSet &openset);
-        //void ComputeCost(Node &s, Node &s2);
+
+        void UpdateVertex(Node *s, Node *s2, NodeSet &openset);
+
+        void SetVertex(Node *s_aux, NodeSet &openset);
                 
     };
 

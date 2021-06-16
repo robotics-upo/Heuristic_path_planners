@@ -13,6 +13,7 @@
 #include "utils/utils.hpp"
 #include "utils/time.hpp"
 #include "utils/geometry_utils.hpp"
+#include "utils/LineOfSight.hpp"
 
 namespace Planners
 {
@@ -43,7 +44,7 @@ namespace Planners
         HeuristicFunction heuristic;
         CoordinateList direction;
 
-        Planners::utils::DiscreteWorld discrete_world_;
+        utils::DiscreteWorld discrete_world_;
 
     private:
     };
