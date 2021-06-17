@@ -9,8 +9,7 @@ namespace Planners
 
             bool bresenham3D(const Node *_lnode, const Node *_rnode, DiscreteWorld &_world)
             {
-                std::vector<Vec3i> list_visitors;
-                int xs, ys, zs, px, py, pz, d1, d2, tam;
+                int xs, ys, zs, d1, d2, tam;
 
                 int x0 = _lnode->coordinates.x;
                 int y0 = _lnode->coordinates.y;
@@ -23,12 +22,6 @@ namespace Planners
                 int dx = std::abs(x1 - x0);
                 int dy = std::abs(y1 - y0);
                 int dz = std::abs(z1 - z0);
-
-                if (_world.isOccupied(_lnode->coordinates.x, _lnode->coordinates.y, _lnode->coordinates.z) ||
-                    _world.isOccupied(_rnode->coordinates.x, _rnode->coordinates.y, _rnode->coordinates.z))
-                    return false;
-
-                float base = geometry::distanceBetween2Nodes(_lnode, _rnode);
 
                 x1 > x0 ? xs = 1 : xs = -1;
                 y1 > y0 ? ys = 1 : ys = -1;
@@ -59,7 +52,6 @@ namespace Planners
                         if (_world.isOccupied(x0, y0, z0))
                             return false;
 
-                        list_visitors.insert(list_visitors.begin(), {x0, y0, z0});
                     }
                 }
                 //Driving axis is Y-axis
@@ -87,7 +79,6 @@ namespace Planners
                         if (_world.isOccupied(x0, y0, z0))
                             return false;
 
-                        list_visitors.insert(list_visitors.begin(), {x0, y0, z0});
                     }
                 }
                 //Driving axis is Z-axis
@@ -114,7 +105,6 @@ namespace Planners
                         if (_world.isOccupied(x0, y0, z0))
                             return false;
 
-                        list_visitors.insert(list_visitors.begin(), {x0, y0, z0});
                     }
                 }
 
