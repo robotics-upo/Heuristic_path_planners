@@ -24,18 +24,19 @@ namespace Planners
             for (const auto &i: direction)
             {
                 Vec3i newCoordinates(s_aux->coordinates + i);
+                int factor = 10;
 
                 if ( discrete_world_.isOccupied(newCoordinates) ) continue;
 
                 if ( discrete_world_.isInClosedList(newCoordinates) )
                 {
                     float G_new;
-                    float G_max = 1000; // TODO Poner bien
+                    float G_max = 100000; // TODO Poner bien
 
                     Node *successor2 = discrete_world_.getNodePtr(newCoordinates);
                     if (successor2 == nullptr) continue;
 
-                    G_new = successor2->G + geometry::distanceBetween2Nodes(successor2, s_aux);
+                    G_new = successor2->G + factor * geometry::distanceBetween2Nodes(successor2, s_aux);
                     if (G_new < G_max)
                     {
                         s_aux->parent = successor2;
@@ -47,12 +48,13 @@ namespace Planners
     }
     void LazyThetaStarGenerator::ComputeCost(Node *s_aux, Node *s2_aux)
     {
-        float distanceParent2 = geometry::distanceBetween2Nodes(s_aux->parent, s2_aux);
+        int factor = 10;
+        float distanceParent2 = factor * geometry::distanceBetween2Nodes(s_aux->parent, s2_aux);
 
         if ((s_aux->parent->G + distanceParent2) < (s2_aux->G))
         {
             s2_aux->parent = s_aux->parent;
-            s2_aux->G = s2_aux->parent->G + geometry::distanceBetween2Nodes(s2_aux->parent, s2_aux);
+            s2_aux->G = s2_aux->parent->G + factor * geometry::distanceBetween2Nodes(s2_aux->parent, s2_aux);
         }
     }
 

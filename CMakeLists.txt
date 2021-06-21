@@ -4,7 +4,7 @@ project(heuristic_planners)
 # add_compile_options(-std=c++17 -Wall -Wextra -Wshadow -ansi -pedantic)
 add_compile_options(-std=c++17)
 add_definitions(-DROS)
-# add_definitions(-DPUB_EXPLORED_NODES)
+#add_definitions(-DPUB_EXPLORED_NODES)
 
 
 # if(NOT DEFINED ROS)

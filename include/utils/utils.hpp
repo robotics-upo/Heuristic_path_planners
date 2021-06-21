@@ -55,7 +55,7 @@ namespace Planners
 
             Planners::utils::Vec3i coordinates;
             unsigned int G{0}, H{0};
-
+            
             bool occuppied{false};
             bool isInOpenList{false};
             bool isInClosedList{false};

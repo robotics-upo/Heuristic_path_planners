@@ -130,6 +130,11 @@ private:
         world_size_.y = std::floor(ws_y / resolution_);
         world_size_.z = std::floor(ws_z / resolution_);
 
+        std::cout << "WORLD_SIZE X: " << world_size_.x << std::endl;
+        std::cout << "WORLD_SIZE Y: " << world_size_.y << std::endl;
+        std::cout << "WORLD_SIZE Z: " << world_size_.z << std::endl;
+
+
         if( algorithm_name == "astar" ){
             ROS_INFO("Using A*");
             algorithm_.reset(new AStarGenerator);

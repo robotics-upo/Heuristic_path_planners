@@ -1,7 +1,7 @@
 <launch>
     <arg name="map"                 default="$(find heuristic_planners)/resources/maps/mbzirc_challenge3.bt"/>
 
-    <arg name="algorithm_name"      default="astar"/>
+    <arg name="algorithm_name"      default="thetastar"/>
 
     <arg name="world_size_x"        default="50.0"/>
     <arg name="world_size_y"        default="50.0"/>

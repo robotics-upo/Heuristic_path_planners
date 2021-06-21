@@ -9,7 +9,8 @@ namespace Planners
         ThetaStarGenerator::ComputeCost(s, s2);
         if (s2->G < g_old)
         {
-            if (discrete_world_.isInOpenList(s2->coordinates))
+            // This is needed to order the open list.
+            if (discrete_world_.isInOpenList(*s2))
                 openset.erase(s2);
 
             openset.insert(s2);
@@ -18,31 +19,34 @@ namespace Planners
 
     void ThetaStarGenerator::ComputeCost(Node *s_aux, Node *s2_aux)
     {
-
-        float distanceParent2 = geometry::distanceBetween2Nodes(s_aux->parent, s2_aux);
+        //Include floor to compute de distance
+        int factor=10;
+        float distanceParent2 = factor * geometry::distanceBetween2Nodes(s_aux->parent, s2_aux);
 
         if (LineOfSight::bresenham3D((s_aux->parent), s2_aux, discrete_world_))
         {
             if ((s_aux->parent->G + distanceParent2 + s2_aux->H) <
                 (s2_aux->G + s2_aux->H))
             {
-
                 s2_aux->parent = s_aux->parent;
-                s2_aux->G = s2_aux->parent->G + geometry::distanceBetween2Nodes(s2_aux->parent, s2_aux);
+                s2_aux->G = s2_aux->parent->G + factor * geometry::distanceBetween2Nodes(s2_aux->parent, s2_aux);
             }
         }
-        else
-        {
-            double distanceParent = geometry::distanceBetween2Nodes(s_aux, s2_aux);
+        // JAC: No es necesario este else porque ya se calcula dentro del if (!discrete_world_.isInOpenList(newCoordinates))
+        // else
+        // {
+        //     //JAC: Debo multiplicar por 10 y redondear? Sí
+        //     float distanceParent = factor * geometry::distanceBetween2Nodes(s_aux, s2_aux);
+        //     //std::cout << "Distance: " << distanceParent << std::endl;
 
-            if ((s_aux->G + distanceParent + s2_aux->H) <
-                (s2_aux->G + s2_aux->H))
-            {
+        //     if ((s_aux->G + distanceParent + s2_aux->H) <
+        //         (s2_aux->G + s2_aux->H))
+        //     {
 
-                s2_aux->parent = s_aux;
-                s2_aux->G = s2_aux->parent->G + geometry::distanceBetween2Nodes(s2_aux->parent, s2_aux);
-            }
-        }
+        //         s2_aux->parent = s_aux;
+        //         s2_aux->G = s2_aux->parent->G + factor * geometry::distanceBetween2Nodes(s2_aux->parent, s2_aux);
+        //     }
+        // }
     }
 
     PathData ThetaStarGenerator::findPath(const Vec3i &source_, const Vec3i &target_)
@@ -96,12 +100,11 @@ namespace Planners
                 if (discrete_world_.isOccupied(newCoordinates) ||
                     discrete_world_.isInClosedList(newCoordinates))
                     continue;
-                unsigned int totalCost = current->G + (i < 6 ? 10 : (i < 18 ? 14 : 17));
+                unsigned int totalCost = current->G + (i < 6 ? 10 : (i < 18 ? 14.14 : 17.32));
 
                 Node *successor = discrete_world_.getNodePtr(newCoordinates);
 
-                if (successor == nullptr)
-                    continue;
+                if (successor == nullptr) continue;
 
                 if (!discrete_world_.isInOpenList(newCoordinates))
                 {
@@ -111,6 +114,7 @@ namespace Planners
                     openSet.insert(successor);
                     discrete_world_.setOpenValue(successor->coordinates, true);
                 }
+                
                 UpdateVertex(current, successor, openSet); 
                 //Every time a vertex is updated, a line of sight check is 
                 line_of_sight_checks++;
