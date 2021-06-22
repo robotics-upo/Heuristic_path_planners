@@ -6,7 +6,7 @@ namespace Planners
     {
         float g_old = s2->G;
 
-        ThetaStarGenerator::ComputeCost(s, s2);
+        ComputeCost(s, s2);
         if (s2->G < g_old)
         {
             /*
@@ -23,8 +23,7 @@ namespace Planners
 
     void ThetaStarGenerator::ComputeCost(Node *s_aux, Node *s2_aux)
     {
-        
-        float distanceParent2 = geometry::distanceBetween2Nodes(s_aux->parent, s2_aux);
+        auto distanceParent2 = geometry::distanceBetween2Nodes(s_aux->parent, s2_aux);
 
         if (LineOfSight::bresenham3D((s_aux->parent), s2_aux, discrete_world_))
         {

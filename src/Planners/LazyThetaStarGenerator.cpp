@@ -7,7 +7,7 @@ namespace Planners
     {
         float g_old = s2->G;
 
-        LazyThetaStarGenerator::ComputeCost(s, s2);
+        ComputeCost(s, s2);
         if (s2->G < g_old)
         {
             if (discrete_world_.isInOpenList(s2->coordinates))
@@ -47,7 +47,7 @@ namespace Planners
     }
     void LazyThetaStarGenerator::ComputeCost(Node *s_aux, Node *s2_aux)
     {
-        float distanceParent2 = geometry::distanceBetween2Nodes(s_aux->parent, s2_aux);
+        auto distanceParent2 = geometry::distanceBetween2Nodes(s_aux->parent, s2_aux);
 
         if ((s_aux->parent->G + distanceParent2) < (s2_aux->G))
         {
