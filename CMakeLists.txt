@@ -146,7 +146,8 @@ add_executable(planner_ros_node src/ROS/planner_ros_node.cpp
                               src/utils/utils.cpp
                               src/utils/geometry_utils.cpp
                               src/utils/heuristic.cpp
-                              src/utils/LineOfSight.cpp)
+                              src/utils/LineOfSight.cpp
+                              src/Grid3D/gridMap.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the

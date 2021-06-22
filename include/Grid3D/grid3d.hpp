@@ -55,8 +55,8 @@ private:
 	int m_gridStepY, m_gridStepZ;
 	
 	// 3D point clound representation of the map
-	pcl::PointCloud<pcl::PointXYZ>::Ptr m_cloud;
-	pcl::KdTreeFLANN<pcl::PointXYZ> m_kdtree;
+	pcl::PointCloud<pcl::PointXYZI>::Ptr m_cloud;
+	pcl::KdTreeFLANN<pcl::PointXYZI> m_kdtree;
 	
 	// Visualization of the map as pointcloud
 	sensor_msgs::PointCloud2 m_pcMsg;
@@ -73,7 +73,7 @@ private:
 	bool use_costmap_function;
 	
 public:
-	Grid3d(): m_cloud(new pcl::PointCloud<pcl::PointXYZ>)
+	Grid3d(): m_cloud(new pcl::PointCloud<pcl::PointXYZI>)
 	{
 		// Load paraeters
 		double value;
@@ -133,13 +133,13 @@ public:
 			{
 				buildGridSliceMsg(m_gridSlice);
 				m_gridSlicePub = m_nh.advertise<nav_msgs::OccupancyGrid>(m_nodeName+"/grid_slice", 1, true);
-				gridTimer = m_nh.createTimer(ros::Duration(1.0/m_publishGridSliceRate), &Grid3d::publishGridSliceTimer, this);	
+				gridTimer      = m_nh.createTimer(ros::Duration(1.0/m_publishGridSliceRate), &Grid3d::publishGridSliceTimer, this);	
 			}
 			
 			// Setup point-cloud publisher
 			if(m_publishPc)
 			{
-				m_pcPub = m_nh.advertise<sensor_msgs::PointCloud2>(m_nodeName+"/map_point_cloud", 1, true);
+				m_pcPub  = m_nh.advertise<sensor_msgs::PointCloud2>(m_nodeName+"/map_point_cloud", 1, true);
 				mapTimer = m_nh.createTimer(ros::Duration(1.0/m_publishPointCloudRate), &Grid3d::publishMapPointCloudTimer, this);
 			}
 			percent_computed_pub_ = m_nh.advertise<std_msgs::Float32>(m_nodeName+"/percent_computed", 1, false);
@@ -179,14 +179,14 @@ public:
 			buildGridSliceMsg(m_gridSlice);
 		}
 	}
-	float computeCloudWeight(std::vector<pcl::PointXYZ> &points)
+	float computeCloudWeight(std::vector<pcl::PointXYZI> &points)
 	{
 		float weight = 0.;
 		int n = 0;
 
 		for(int i=0; i<points.size(); i++)
 		{
-			const pcl::PointXYZ& p = points[i];
+			const pcl::PointXYZI& p = points[i];
 			if(p.x >= 0.0 && p.y >= 0.0 && p.z >= 0.0 && p.x < m_maxX && p.y < m_maxY && p.z < m_maxZ)
 			{
 				int index = point2grid(p.x, p.y, p.z);
@@ -371,6 +371,7 @@ protected:
 				m_cloud->points[i].x = it.getX()-minX;
 				m_cloud->points[i].y = it.getY()-minY;
 				m_cloud->points[i].z = it.getZ()-minZ;
+				
 				i++;
 			}
 		}
@@ -404,7 +405,7 @@ protected:
 		float dist;
 		float gaussConst1 = 1./(m_sensorDev*sqrt(2*M_PI));
 		float gaussConst2 = 1./(2*m_sensorDev*m_sensorDev);
-		pcl::PointXYZ searchPoint;
+		pcl::PointXYZI searchPoint;
 		std::vector<int> pointIdxNKNSearch(1);
 		std::vector<float> pointNKNSquaredDistance(1);
 		double count=0;
