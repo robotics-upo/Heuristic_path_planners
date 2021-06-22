@@ -89,7 +89,7 @@ namespace Planners
                 if (discrete_world_.isOccupied(newCoordinates) ||
                     discrete_world_.isInClosedList(newCoordinates))
                     continue;
-                unsigned int totalCost = current->G + (i < 6 ? 10 : (i < 18 ? 14 : 17));
+                unsigned int totalCost = current->G + (i < 6 ? 100 : (i < 18 ? 141 : 173)); //This is more efficient
 
                 Node *successor = discrete_world_.getNodePtr(newCoordinates);
 
