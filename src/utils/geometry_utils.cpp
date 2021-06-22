@@ -18,13 +18,13 @@ namespace Planners
                 }
                 return len;
             }
-            float distanceBetween2Nodes(const Node &n1, const Node &n2)
+            unsigned int distanceBetween2Nodes(const Node &n1, const Node &n2)
             {
-	            return sqrtf(pow(n1.coordinates.x - n2.coordinates.x, 2) +
-            			     pow(n1.coordinates.y - n2.coordinates.y, 2) +
-            			     pow(n1.coordinates.z - n2.coordinates.z, 2));
+	            return static_cast<unsigned int>( 10 * sqrt(pow(n1.coordinates.x - n2.coordinates.x, 2) +
+            			                                    pow(n1.coordinates.y - n2.coordinates.y, 2) +
+            			                                    pow(n1.coordinates.z - n2.coordinates.z, 2)));
             } 
-            float distanceBetween2Nodes(const Node *n1, const Node *n2)
+            unsigned int distanceBetween2Nodes(const Node *n1, const Node *n2)
             {
                 return distanceBetween2Nodes(*n1, *n2);
             } 
