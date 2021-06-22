@@ -20,7 +20,7 @@ namespace Planners
         auto delta = std::move(getDelta(source_, target_));
         return static_cast<unsigned int>(100 * sqrt(pow(delta.x, 2) + pow(delta.y, 2) + pow(delta.z, 2)));
     }
-    unsigned int Heuristic::dikjstra(Vec3i source_, Vec3i target_)
+    unsigned int Heuristic::dikjstra()
     {
         return 0;
     }

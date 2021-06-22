@@ -184,7 +184,7 @@ public:
 		float weight = 0.;
 		int n = 0;
 
-		for(int i=0; i<points.size(); i++)
+		for(long unsigned int i=0; i<points.size(); i++)
 		{
 			const pcl::PointXYZI& p = points[i];
 			if(p.x >= 0.0 && p.y >= 0.0 && p.z >= 0.0 && p.x < m_maxX && p.y < m_maxY && p.z < m_maxZ)

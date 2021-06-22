@@ -15,7 +15,7 @@ namespace Planners
         static unsigned int manhattan(Vec3i source_, Vec3i target_);
         static unsigned int euclidean(Vec3i source_, Vec3i target_);
         static unsigned int octagonal(Vec3i source_, Vec3i target_);
-        static unsigned int dikjstra(Vec3i source_, Vec3i target_);
+        static unsigned int dikjstra();
 
     };
 

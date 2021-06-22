@@ -55,13 +55,12 @@ private:
         ROS_INFO("Published occupation marker map");
 
         map_sub_.shutdown();
-        bool map_ready_ = true;
     }   
     bool setAlgorithm(heuristic_planners::SetAlgorithmRequest &_req, heuristic_planners::SetAlgorithmResponse &rep){
         
         configureAlgorithm(_req.algorithm.data);
-        map_sub_ = lnh_.subscribe<pcl::PointCloud<pcl::PointXYZ>>("/points", 1, &HeuristicPlannerROS::pointCloudCallback, this);
-
+        map_sub_        = lnh_.subscribe<pcl::PointCloud<pcl::PointXYZ>>("/points", 1, &HeuristicPlannerROS::pointCloudCallback, this);
+        rep.result.data = true;
         return true;
     }
     bool requestPathService(heuristic_planners::GetPathRequest &_req, heuristic_planners::GetPathResponse &_rep){
@@ -105,7 +104,7 @@ private:
 
             if(save_data_){
                 utils::DataSaver saver(file_data_path_);
-                if(saver.savePathDataToFile(path_data));
+                if(saver.savePathDataToFile(path_data))
                     ROS_INFO("Data saved succesfully");
             }
 
@@ -233,7 +232,6 @@ private:
         
     visualization_msgs::Marker path_line_markers_, path_points_markers_;
     
-    bool map_ready_{false};
     //Parameters
     Vec3i world_size_; // Discrete
     float resolution_;

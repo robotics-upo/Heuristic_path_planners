@@ -10,7 +10,7 @@ namespace Planners
         bool GridMap::readOctomap(const std::string &_path)
         {
 
-            if (!std::filesystem::exist(_path))
+            if (!std::filesystem::exists(_path))
             {
                 std::cout << "File " << _path << " does not exist! Aborting " << std::endl;
                 return false;
@@ -24,7 +24,7 @@ namespace Planners
             octomap::AbstractOcTree *tree;
             octomap::OcTree *binaryTree = new octomap::OcTree(octree_resolution_);
 
-            if (binaryTree->readBinary(path) && binaryTree->size() > 1)
+            if (binaryTree->readBinary(_path) && binaryTree->size() > 1)
             {
                 tree = binaryTree;
             }
@@ -32,6 +32,8 @@ namespace Planners
             {
                 return false;
             }
+            
+            return true;
         }
     } // namespace utis
 

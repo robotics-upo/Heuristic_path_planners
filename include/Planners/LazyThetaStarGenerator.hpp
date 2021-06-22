@@ -21,7 +21,7 @@ namespace Planners
 
         void UpdateVertex(Node *s, Node *s2, NodeSet &openset);
 
-        void SetVertex(Node *s_aux, NodeSet &openset);
+        void SetVertex(Node *s_aux);
                 
     };
 

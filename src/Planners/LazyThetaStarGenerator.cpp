@@ -16,7 +16,7 @@ namespace Planners
             openset.insert(s2);
         }
     }
-    void LazyThetaStarGenerator::SetVertex(Node *s_aux, NodeSet &openset)
+    void LazyThetaStarGenerator::SetVertex(Node *s_aux)
     {
 
         if (!LineOfSight::bresenham3D((s_aux->parent), s_aux, discrete_world_))
@@ -89,7 +89,7 @@ namespace Planners
             discrete_world_.setOpenValue(current->coordinates, false);
             discrete_world_.setClosedValue(current->coordinates, true);
 
-            SetVertex(current, openSet);
+            SetVertex(current);
             //in every setVertex the line of sight function is called 
             line_of_sight_checks++;
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)

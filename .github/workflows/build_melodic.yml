@@ -27,7 +27,7 @@ jobs:
           fetch-depth: 0
           path: catkin_ws/src/
       
-      - name: "Clone, test, build and publish ROS package artifacts"
+      - name: Build package
         run: |
           cd $GITHUB_WORKSPACE/catkin_ws;
           source /opt/ros/melodic/setup.bash;

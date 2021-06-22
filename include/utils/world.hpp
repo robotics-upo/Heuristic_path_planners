@@ -36,7 +36,7 @@ namespace utils
             Node node;
             std::fill(discrete_world_vector_.begin(), discrete_world_vector_.end(), node);
             
-            for(int i = 0; i < discrete_world_vector_.size(); ++i){
+            for(long unsigned int i = 0; i < discrete_world_vector_.size(); ++i){
                 discrete_world_vector_[i].coordinates =  getDiscreteWorldPositionFromIndex(i);
             }
             
@@ -147,7 +147,7 @@ namespace utils
         const std::vector<Planners::utils::Node>& getElements() const{
             return discrete_world_vector_;
         }
-        const double getResolution(){
+        double getResolution() const{
             return resolution_;
         }
     private:
@@ -155,11 +155,13 @@ namespace utils
 
             return checkValid(_pos.x, _pos.y, _pos.z);
         }
-        bool checkValid(const int &_x, const int &_y, const int &_z)
-        {
-            if (_x < 0 || _x > world_x_size_ ||
-                _y < 0 || _y > world_y_size_ ||
-                _z < 0 || _z > world_z_size_ )
+        bool checkValid(const unsigned int &_x, 
+                        const unsigned int &_y, 
+                        const unsigned int &_z) {
+
+            if ( _x > world_x_size_ ||
+                 _y > world_y_size_ ||
+                 _z > world_z_size_ )
                 return false;
 
             return true;

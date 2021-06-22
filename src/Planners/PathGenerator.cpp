@@ -43,7 +43,7 @@ namespace Planners
     {
         for (const auto &it : _directions)
         {
-            for (int i = 0; i < _inflate_steps; ++i)
+            for (unsigned int i = 0; i < _inflate_steps; ++i)
             {
                 auto new_vec = _ref + (i + 1) * it;
                 discrete_world_.setOccupied(new_vec);
