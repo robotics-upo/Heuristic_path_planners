@@ -9,74 +9,65 @@ namespace Planners
 
             bool bresenham3D(const Node *_lnode, const Node *_rnode, DiscreteWorld &_world)
             {
-                int xs, ys, zs, d1, d2, tam;
+                int d1, d2;
 
-                int x0 = _lnode->coordinates.x;
-                int y0 = _lnode->coordinates.y;
-                int z0 = _lnode->coordinates.z;
+                Vec3i vecS, vecDiff, vec0{_lnode->coordinates}, vec1{_rnode->coordinates};
+                vecDiff = geometry::abs(vec1 - vec0);
 
-                int x1 = _rnode->coordinates.x;
-                int y1 = _rnode->coordinates.y;
-                int z1 = _rnode->coordinates.z;
-
-                int dx = std::abs(x1 - x0);
-                int dy = std::abs(y1 - y0);
-                int dz = std::abs(z1 - z0);
-
-                x1 > x0 ? xs = 1 : xs = -1;
-                y1 > y0 ? ys = 1 : ys = -1;
-                z1 > z0 ? zs = 1 : zs = -1;
+                vec1.x > vec0.x ? vecS.x = 1 : vecS.x = -1;
+                vec1.y > vec0.y ? vecS.y = 1 : vecS.y = -1;
+                vec1.z > vec0.z ? vecS.z = 1 : vecS.z = -1;
 
                 //Driving axis is X-axis
-                if (dx >= dy &&
-                    dx >= dz)
+                if (vecDiff.x >= vecDiff.y &&
+                    vecDiff.x >= vecDiff.z)
                 {
-                    d1 = 2 * dy - dx;
-                    d2 = 2 * dz - dx;
-                    while (x0 != x1)
+                    d1 = 2 * vecDiff.y - vecDiff.x;
+                    d2 = 2 * vecDiff.z - vecDiff.x;
+                    while (vec0.x != vec1.x)
                     {
-                        x0 += xs;
+                        vec0.x += vecS.x;
                         if (d1 >= 0)
                         {
-                            y0 += ys;
-                            d1 -= 2 * dx;
+                            vec0.y += vecS.y;
+                            d1 -= 2 * vecDiff.x;
                         }
                         if (d2 >= 0)
                         {
-                            z0 += zs;
-                            d2 -= 2 * dx;
+                            vec0.z += vecS.z;
+                            d2 -= 2 * vecDiff.x;
                         }
-                        d1 += 2 * dy;
-                        d2 += 2 * dz;
+                        d1 += 2 * vecDiff.y;
+                        d2 += 2 * vecDiff.z;
                         //Check if visitor is occupied and add visitor
-                        if (_world.isOccupied(x0, y0, z0))
+                        if (_world.isOccupied(vec0.x, vec0.y, vec0.z))
                             return false;
 
                     }
                 }
                 //Driving axis is Y-axis
-                else if (dy >= dx &&
-                         dy >= dz)
+                else if (vecDiff.y >= vecDiff.x &&
+                         vecDiff.y >= vecDiff.z)
                 {
-                    d1 = 2 * dx - dy;
-                    d2 = 2 * dz - dy;
-                    while (y0 != y1)
+                    d1 = 2 * vecDiff.x - vecDiff.y;
+                    d2 = 2 * vecDiff.z - vecDiff.y;
+                    while (vec0.y != vec1.y)
                     {
-                        y0 += ys;
+                        vec0.y += vecS.y;
                         if (d1 >= 0)
                         {
-                            x0 += xs;
-                            d1 -= 2 * dy;
+                            vec0.x += vecS.x;
+                            d1 -= 2 * vecDiff.y;
                         }
                         if (d2 >= 0)
                         {
-                            z0 += zs;
-                            d2 -= 2 * dy;
+                            vec0.z += vecS.z;
+                            d2 -= 2 * vecDiff.y;
                         }
-                        d1 += 2 * dx;
-                        d2 += 2 * dz;
+                        d1 += 2 * vecDiff.x;
+                        d2 += 2 * vecDiff.z;
                         //Check if visitor is occupied and add visitor
-                        if (_world.isOccupied(x0, y0, z0))
+                        if (_world.isOccupied(vec0.x, vec0.y, vec0.z))
                             return false;
 
                     }
@@ -84,25 +75,25 @@ namespace Planners
                 //Driving axis is Z-axis
                 else
                 {
-                    d1 = 2 * dy - dz;
-                    d2 = 2 * dx - dz;
-                    while (z0 != z1)
+                    d1 = 2 * vecDiff.y - vecDiff.z;
+                    d2 = 2 * vecDiff.x - vecDiff.z;
+                    while (vec0.z != vec1.z)
                     {
-                        z0 += zs;
+                        vec0.z += vecS.z;
                         if (d1 >= 0)
                         {
-                            y0 += ys;
-                            d1 -= 2 * dz;
+                            vec0.y += vecS.y;
+                            d1 -= 2 * vecDiff.z;
                         }
                         if (d2 >= 0)
                         {
-                            x0 += xs;
-                            d2 -= 2 * dz;
+                            vec0.x += vecS.x;
+                            d2 -= 2 * vecDiff.z;
                         }
-                        d1 += 2 * dy;
-                        d2 += 2 * dx;
+                        d1 += 2 * vecDiff.y;
+                        d2 += 2 * vecDiff.x;
                         //Check if visitor is occupied and add visitor
-                        if (_world.isOccupied(x0, y0, z0))
+                        if (_world.isOccupied(vec0.x, vec0.y, vec0.z))
                             return false;
 
                     }

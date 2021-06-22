@@ -19,6 +19,7 @@ namespace Planners
             unsigned int distanceBetween2Nodes(const Node &n1, const Node &n2);
             unsigned int distanceBetween2Nodes(const Node *n1, const Node *n2);
             
+            Vec3i abs(const Vec3i &_vec);
             
         }//namespace geometry
     }//namespace utils

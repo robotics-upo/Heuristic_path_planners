@@ -32,6 +32,10 @@ namespace Planners
             {
                 return {this->x + right_.x, this->y + right_.y, this->z + right_.z};
             }
+            Vec3i operator-(const Vec3i &right_) const
+            {
+                return {this->x - right_.x, this->y - right_.y, this->z - right_.z};
+            }
             inline Vec3i operator*(int &_mult) const
             {
                 return {this->x * _mult, this->y * _mult, this->z * _mult };
