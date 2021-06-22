@@ -243,9 +243,9 @@ private:
 };
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "astar_ros_node");
+    ros::init(argc, argv, "heuristic_planner_ros_node");
 
-    HeuristicPlannerROS astar_ros_node;
+    HeuristicPlannerROS heuristic_planner_ros;
     ros::spin();
 
 return 0;
