@@ -17,10 +17,24 @@ namespace Planners{
     {
         
     public:
+        /**
+         * @brief Construct a new AStarGenerator object
+         * 
+         */
         AStarGenerator();
-
+        /**
+         * @brief 
+         * 
+         * @param source_ 
+         * @param target_ 
+         * @return PathData 
+         */
         PathData findPath(const Vec3i &source_, const Vec3i &target_);
-                
+        
+        /**
+         * @brief 
+         * 
+         */
         void publishOccupationMarkersMap();
         
     protected:

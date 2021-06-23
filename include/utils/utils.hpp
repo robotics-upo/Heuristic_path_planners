@@ -20,7 +20,10 @@ namespace Planners
         using CoordinateList = std::vector<Planners::utils::Vec3i>;
         using NodeSet = std::set<Node*, NodeComparator>;
         using PathData = std::map<std::string, std::any>;
-        
+        /**
+         * @brief 
+         * 
+         */
         class Vec3i
         {
             public:
@@ -51,7 +54,10 @@ namespace Planners
             os << "[" << dt.x << ", " << dt.y << ", " << dt.y << "]";
             return os;
         }
-
+        /**
+         * @brief 
+         * 
+         */
         class Node
         {
             public:
@@ -71,6 +77,10 @@ namespace Planners
 
         };
 
+        /**
+         * @brief 
+         * 
+         */
         struct NodeComparator{
             
             bool operator()(const Node *const &lhs__, const Node *const &rhs__) const

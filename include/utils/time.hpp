@@ -9,16 +9,28 @@ namespace Planners
         {
 
         public:
-
+            /**
+             * @brief Construct a new Clock object
+             * 
+             * @param _verbose 
+             */
             Clock(const bool _verbose = false) : verbose_(_verbose)
             {
             }
+            /**
+             * @brief 
+             * 
+             */
             void tic()
             {
                 start_ = std::chrono::high_resolution_clock::now();
                 started_ = true;
             }
-
+            /**
+             * @brief 
+             * 
+             * @param _msg 
+             */
             void toc(const std::string &_msg = "")
             {
                 if (!started_)
@@ -32,6 +44,11 @@ namespace Planners
                 if (verbose_)
                     std::cout << "[ " << _msg << "] " << "Elapsed time: " << elapsed_.count() * 1e-6 << std::endl;
             }
+            /**
+             * @brief Get the Elapsed Millisecs object
+             * 
+             * @return double 
+             */
             double getElapsedMillisecs()
             {
                 if( started_ )
@@ -39,6 +56,11 @@ namespace Planners
                     
                 return elapsed_.count() * 1e-6;
             }
+            /**
+             * @brief Get the Elapsed Nanosecs object
+             * 
+             * @return double 
+             */
             double getElapsedNanosecs()
             {
                 if( started_ )
@@ -46,6 +68,11 @@ namespace Planners
 
                 return elapsed_.count();
             }
+            /**
+             * @brief Get the Elapsed Seconds object
+             * 
+             * @return double 
+             */
             double getElapsedSeconds(){
 
                 if( started_ )

@@ -13,10 +13,22 @@ namespace Planners
         {
 
         public:
+            /**
+             * @brief Construct a new Data Saver object
+             * 
+             * @param _data_file 
+             */
             DataSaver(const std::string &_data_file)
             {
                 out_file_data_.open(_data_file, std::ofstream::app);
             }
+            /**
+             * @brief 
+             * 
+             * @param _data 
+             * @return true 
+             * @return false 
+             */
             bool savePathDataToFile(const PathData &_data)
             {
                 std::string field;

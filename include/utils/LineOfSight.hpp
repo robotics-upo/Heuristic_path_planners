@@ -11,6 +11,15 @@ namespace Planners
     {
         namespace LineOfSight
         {
+            /**
+             * @brief 
+             * 
+             * @param _lnode 
+             * @param _rnode 
+             * @param _world 
+             * @return true 
+             * @return false 
+             */
             bool bresenham3D(const Node *_lnode, const Node *_rnode, DiscreteWorld &_world);
         }
     }
