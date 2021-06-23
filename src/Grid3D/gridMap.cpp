@@ -10,11 +10,11 @@ namespace Planners
         bool GridMap::readOctomap(const std::string &_path)
         {
 
-            if (!std::filesystem::exists(_path))
+           /* if (!std::filesystem::exists(_path))
             {
                 std::cout << "File " << _path << " does not exist! Aborting " << std::endl;
                 return false;
-            }
+            }*/
             if (_path.substr(_path.length() - 3, 3) != ".bt")
             {
                 std::cout << "File " << _path << " does not have .bt extension! Aborting " << std::endl;

@@ -2,12 +2,11 @@
 #define _GRIDMAP_HPP_
 
 #include <iostream>
-#include <filesystem>
+// #include <filesystem>
 #include <ros/ros.h>
 #include <octomap/octomap.h>
 #include <octomap/OcTree.h>
 #include <nav_msgs/OccupancyGrid.h>
-
 
 #include <pcl/point_cloud.h>
 #include <pcl/kdtree/kdtree_flann.h>
@@ -19,13 +18,20 @@ namespace Planners
 {
     namespace utils
     {
+        class GridCell
+        {
+
+        public:
+            float closest_dist{0};
+            float cost{0};
+        };
+        
         class GridMap
         {
         public:
             GridMap();
 
         private:
-
             bool readOctomap(const std::string &_path);
 
             bool computeGrid();

@@ -29,6 +29,7 @@ jobs:
       
       - name: Build package
         run: |
+          export DEBIAN_FRONTEND=noninteractive
           cd $GITHUB_WORKSPACE/catkin_ws;
           source /opt/ros/melodic/setup.bash;
           apt update && rosdep update && rosdep install --from-paths src/ -y -r;
