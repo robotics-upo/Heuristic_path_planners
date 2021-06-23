@@ -41,12 +41,29 @@ namespace utils
             }
             
         }
+        bool setNodeCost(const double &_x, const double &_y, const double &_z, const unsigned int &_cost){
+            
+            return setNodeCost( Vec3i{ static_cast<int>(std::round(_x / resolution_)),
+                                       static_cast<int>(std::round(_y / resolution_)),
+                                       static_cast<int>(std::round(_z / resolution_))}, _cost);
+        }
+        bool setNodeCost(const Vec3i &_vec, const unsigned int &_cost){
+
+            if(!checkValid(_vec))
+                return false;
+            
+            auto i = getWorldIndex(_vec);
+            discrete_world_vector_[i].cost = _cost;
+
+        return true;
+        }
         void resetWorld(){
             
             for(auto &it: discrete_world_vector_){
                 it.isInClosedList = false;
                 it.isInOpenList = false;
                 it.H = it.G = 0;
+                it.cost = 0;
                 it.parent = nullptr;
             }
         }

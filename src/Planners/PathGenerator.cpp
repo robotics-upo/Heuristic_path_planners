@@ -15,7 +15,10 @@ namespace Planners
     {
         heuristic = std::bind(heuristic_, std::placeholders::_1, std::placeholders::_2);
     }
+    bool PathGenerator::configureCellCost(const Vec3i &coordinates_, const unsigned int &_cost){
 
+        return discrete_world_.setNodeCost(coordinates_, _cost);
+    }
     void PathGenerator::addCollision(const Vec3i &coordinates_, bool do_inflate, bool steps)
     {
         if (do_inflate)

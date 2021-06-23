@@ -34,6 +34,7 @@ namespace Planners
         
         void addCollision(const Vec3i &coordinates_, bool do_inflate, bool steps);
         void addCollision(const Vec3i &coordinates_);
+        bool configureCellCost(const Vec3i &coordinates_, const unsigned int &_cost);
 
         bool detectCollision(const Vec3i &coordinates_);
 
