@@ -6,6 +6,9 @@
 
 This repo contains a series of Path Planning heuristic algorithms such as A*, Theta* and Lazy Theta*. The purpose of this repository is to provide som classes with a pure C++ implementation with the minimum dependencies, but at the same time, to provide ROS Integration to easily run these algorithms inside a ROS Network through some ROS Nodes.
 
+## Code Documentation
+
+By default the CMake BUILD_DOC option is enabled so the doxygen documentation will be generated every time you run catkin_make. You can also read it [Online](https://codedocs.xyz/robotics-upo/3D_heuristic_path_planners)
 ## Dependencies
 
 If you want to easily run it go to the [Releases](https://github.com/RafaelRey/3D_heuristic_path_planners/releases) and download and install the desired debian package with:
