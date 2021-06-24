@@ -5,8 +5,7 @@
 #include <vector>
 #include <set>
 #include <map>
-#include <any>
-
+#include <variant>
 #include <math.h>
 
 namespace Planners
@@ -17,9 +16,28 @@ namespace Planners
         class Node;
         struct NodeComparator;
 
-        using CoordinateList = std::vector<Planners::utils::Vec3i>;
-        using NodeSet = std::set<Node*, NodeComparator>;
-        using PathData = std::map<std::string, std::any>;
+        using CoordinateList  = std::vector<Planners::utils::Vec3i>;
+        using NodeSet         = std::set<Node*, NodeComparator>;
+        using DataVariant     = std::variant<std::string, Vec3i, CoordinateList, double, size_t, int, bool>;
+        using PathData        = std::map<std::string, DataVariant>;
+        
+        /**
+         * @brief Overload ofstream operator << for std::vector<<CoordinateList>
+         * 
+         * @tparam T 
+         * @param os 
+         * @param v 
+         * @return std::ostream& 
+         */
+        template <class T>
+        inline std::ostream& operator << (std::ostream& os, const std::vector<T>& v) 
+        {
+            for (typename std::vector<T>::const_iterator ii = v.begin(); ii != v.end(); ++ii)
+                os << " " << *ii << " ";
+            
+            return os;
+        }
+
         /**
          * @brief 
          * 
@@ -44,14 +62,27 @@ namespace Planners
                 return {this->x * _mult, this->y * _mult, this->z * _mult };
             }
         };
+        /**
+         * @brief 
+         * 
+         * @param _mult 
+         * @param _vec 
+         * @return Planners::utils::Vec3i 
+         */
         inline Planners::utils::Vec3i operator*(const int &_mult, const Planners::utils::Vec3i &_vec){
                     
             return { _vec.x * _mult, _vec.y * _mult, _vec.z * _mult};
         }
-
+        /**
+         * @brief 
+         * 
+         * @param os 
+         * @param dt 
+         * @return std::ostream& 
+         */
         inline std::ostream& operator<<(std::ostream& os, const Vec3i& dt)
         {
-            os << "[" << dt.x << ", " << dt.y << ", " << dt.y << "]";
+            os << "[" << dt.x << ", " << dt.y << ", " << dt.z << "]";
             return os;
         }
         /**

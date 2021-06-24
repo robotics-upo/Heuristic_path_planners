@@ -4,7 +4,7 @@
 #include "Planners/ThetaStarGenerator.hpp"
 #include "Planners/LazyThetaStarGenerator.hpp"
 #include "utils/ros/ROSInterfaces.hpp"
-#include "utils/SaveDataToFile.hpp"
+#include "utils/SaveDataVariantToFile.hpp"
 #include "Grid3D/grid3d.hpp"
 
 #include <ros/ros.h>
@@ -77,33 +77,35 @@ private:
         }
 
         auto path_data = algorithm_->findPath(discrete_start, discrete_goal);
-        if(static_cast<bool>(std::any_cast<bool>(path_data["solved"]))){
-             
+        
+        if( std::get<bool>(path_data["solved"]) ){
+            
+            std::cout << "solved" << std::endl;
             try{
-                _rep.path_length.data = static_cast<float>(std::any_cast<float>(path_data["path_length"]));
-                _rep.time_spent.data =  static_cast<int>(std::floor(std::any_cast<double>(path_data["time_spent"])));
-                _rep.explored_nodes.data = static_cast<int>(std::any_cast<size_t>(path_data["explored_nodes"]));
-                _rep.line_of_sight_checks.data = static_cast<int>(std::any_cast<int>(path_data["line_of_sight_checks"]));
-
-            }catch(const std::bad_any_cast& e){
-                std::cerr << "Any cast error: " << e.what() << std::endl;
+                
+                _rep.time_spent.data           = std::get<double>(path_data["time_spent"] );
+                _rep.path_length.data          = std::get<double>(path_data["path_length"] );
+                _rep.explored_nodes.data       = std::get<size_t>(path_data["explored_nodes"] );
+                _rep.line_of_sight_checks.data = std::get<int>(   path_data["line_of_sight_checks"] );
+            }catch(std::bad_variant_access const& ex){
+                std::cerr << "Bad variant error: " << ex.what() << std::endl;
             }
 
             path_line_markers_.points.clear();
             path_points_markers_.points.clear();
-            for(const auto &it: std::any_cast<CoordinateList>(path_data["path"])){
+            for(const auto &it: std::get<CoordinateList>(path_data["path"])){
                 _rep.path_points.push_back(continousPoint(it, resolution_));
                 path_line_markers_.points.push_back(continousPoint(it, resolution_));
                 path_points_markers_.points.push_back(continousPoint(it, resolution_));
             }
-
+            
             publishMarker(path_line_markers_, line_markers_pub_);
             publishMarker(path_points_markers_, point_markers_pub_);
 
             ROS_INFO("Path calculated succesfully");
 
             if(save_data_){
-                utils::DataSaver saver(file_data_path_);
+                utils::DataVariantSaver saver(file_data_path_);
                 if(saver.savePathDataToFile(path_data))
                     ROS_INFO("Data saved succesfully");
             }

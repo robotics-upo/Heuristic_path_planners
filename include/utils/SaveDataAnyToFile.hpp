@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <any>
 #include "utils/utils.hpp"
 
 namespace Planners
@@ -50,7 +51,7 @@ namespace Planners
                     if (_data.find(field) != _data.end())
                     {
                         auto goal_vec = std::any_cast<utils::Vec3i>(_data.at(field));
-                        out_file_data_ << "[ " << goal_vec.x << ", " << goal_vec.y << ", " << goal_vec.z << " ]" << ", ";
+                        out_file_data_ << goal_vec << ", ";
                     }
                     else
                     {
@@ -61,7 +62,7 @@ namespace Planners
                     if (_data.find(field) != _data.end())
                     {
                         auto start_vec = std::any_cast<utils::Vec3i>(_data.at(field));
-                        out_file_data_ << "[ " << start_vec.x << ", " << start_vec.y << ", " << start_vec.z << " ]" << ", ";
+                        out_file_data_ << start_vec << ", ";
                     }
                     else
                     {
