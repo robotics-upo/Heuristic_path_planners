@@ -32,9 +32,12 @@ namespace Planners
         template <class T>
         inline std::ostream& operator << (std::ostream& os, const std::vector<T>& v) 
         {
-            for (typename std::vector<T>::const_iterator ii = v.begin(); ii != v.end(); ++ii)
-                os << " " << *ii << " ";
+
+            for (typename std::vector<T>::const_iterator ii = v.begin(); ii != v.end()-1; ++ii)
+                os << *ii << ", ";
             
+            os << *(v.end()-1);
+
             return os;
         }
 
