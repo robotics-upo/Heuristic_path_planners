@@ -31,7 +31,7 @@ namespace Planners
          * @brief Construct a new Path Generator object
          * 
          */
-        PathGenerator();
+        PathGenerator(bool _use_3d);
         /**
          * @brief Set the World Size object
          * 

@@ -3,18 +3,8 @@
 namespace Planners{
     
     
-AStarGenerator::AStarGenerator()
+AStarGenerator::AStarGenerator(bool _use_3d = true): PathGenerator(_use_3d)
 {
-    setHeuristic(&Heuristic::manhattan);
-    direction = {
-
-        { 0, 1, 0 }, {0, -1, 0}, { 1, 0, 0 }, { -1, 0, 0 }, { 0, 0, 1}, { 0, 0, -1}, //6 first elements
-
-        { 1, -1, 0 }, { -1, 1, 0 }, { -1, -1, 0 }, { 1, 1, 0 },  { -1, 0, -1 }, //7-18 inclusive
-        { 1, 0, 1 }, { 1, 0, -1 }, {-1, 0, 1}, { 0, -1, 1 }, { 0, 1, 1 }, { 0, 1, -1 },  { 0, -1, -1 }, 
-
-        { -1, -1, 1 }, { 1, 1, 1 },  { -1, 1, 1 }, { 1, -1, 1 }, { -1, -1, -1 }, { 1, 1, -1 }, { -1, 1, -1 }, { 1, -1, -1 }, 
-    };
 
     //If compiled with ros and visualization
 #ifdef ROS
@@ -98,11 +88,15 @@ PathData AStarGenerator::findPath(const Vec3i &source_, const Vec3i &target_)
         for (unsigned int i = 0; i < direction.size(); ++i) {
             
             Vec3i newCoordinates(current->coordinates + direction[i]);
-            
+            unsigned int totalCost = current->G;
             if ( discrete_world_.isOccupied(newCoordinates) || 
                  discrete_world_.isInClosedList(newCoordinates) ) 
                 continue;
-            unsigned int totalCost = current->G + (i < 6 ? 100 : (i < 18 ? 141 : 173)); //This is more efficient
+            if(direction.size()  == 8){
+                totalCost += (i < 4 ? 100 : 141); //This is more efficient
+            }else{
+                totalCost += (i < 6 ? 100 : (i < 18 ? 141 : 173)); //This is more efficient
+            }
             
             Node *successor = discrete_world_.getNodePtr(newCoordinates);
 

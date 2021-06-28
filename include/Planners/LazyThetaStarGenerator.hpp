@@ -11,7 +11,7 @@ namespace Planners
 
     public:
         
-        LazyThetaStarGenerator() {}
+        LazyThetaStarGenerator(bool _use_3d ):ThetaStarGenerator(_use_3d) {}
 
         PathData findPath(const Vec3i &source_, const Vec3i &target_);
 

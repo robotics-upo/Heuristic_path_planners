@@ -51,6 +51,9 @@ namespace Planners
             int x, y, z;    
 
             bool operator==(const Vec3i &coordinates_);
+            bool operator>=(const Vec3i &coordinates_);
+            bool operator<=(const Vec3i &coordinates_);
+            
             Planners::utils::Vec3i &operator/=(float _divid);
             Vec3i operator+(const Vec3i &right_) const
             {
@@ -64,6 +67,7 @@ namespace Planners
             {
                 return {this->x * _mult, this->y * _mult, this->z * _mult };
             }
+
         };
         /**
          * @brief 

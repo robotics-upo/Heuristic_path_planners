@@ -14,6 +14,8 @@
 #include <pcl_ros/point_cloud.h>
 #include <pcl_ros/transforms.h>
 
+#include <nav_msgs/OccupancyGrid.h>
+
 #include <heuristic_planners/GetPath.h>
 #include <heuristic_planners/SetAlgorithm.h>
 
@@ -25,21 +27,33 @@ public:
     HeuristicPlannerROS()
     {
 
-        map_sub_ = lnh_.subscribe<pcl::PointCloud<pcl::PointXYZ>>("/points", 1, &HeuristicPlannerROS::pointCloudCallback, this);
-
-        request_path_server_   = lnh_.advertiseService("request_path",  &HeuristicPlannerROS::requestPathService, this);
-        change_planner_server_ = lnh_.advertiseService("set_algorithm", &HeuristicPlannerROS::setAlgorithm, this);
-
-        line_markers_pub_ = lnh_.advertise<visualization_msgs::Marker>("path_line_markers", 1);
-        point_markers_pub_ = lnh_.advertise<visualization_msgs::Marker>("path_points_markers", 1);
-
         std::string algorithm_name;
         lnh_.param("algorithm", algorithm_name, (std::string)"astar");
 
         configureAlgorithm(algorithm_name);
+
+        pointcloud_sub_     = lnh_.subscribe<pcl::PointCloud<pcl::PointXYZ>>("/points", 1, &HeuristicPlannerROS::pointCloudCallback, this);
+        occupancy_grid_sub_ = lnh_.subscribe<nav_msgs::OccupancyGrid>("/grid", 1, &HeuristicPlannerROS::occupancyGridCallback, this);
+
+        request_path_server_   = lnh_.advertiseService("request_path",  &HeuristicPlannerROS::requestPathService, this);
+        change_planner_server_ = lnh_.advertiseService("set_algorithm", &HeuristicPlannerROS::setAlgorithm, this);
+
+        line_markers_pub_  = lnh_.advertise<visualization_msgs::Marker>("path_line_markers", 1);
+        point_markers_pub_ = lnh_.advertise<visualization_msgs::Marker>("path_points_markers", 1);
+
     }
 
 private:
+
+    void occupancyGridCallback(const nav_msgs::OccupancyGrid::ConstPtr &_grid){
+        ROS_INFO("Loading OccupancyGrid map...");
+
+        utils::configureWorldFromOccupancy(*_grid, *algorithm_);
+        algorithm_->publishOccupationMarkersMap();
+        occupancy_grid_sub_.shutdown();
+        ROS_INFO("Occupancy Grid Loaded");
+
+    }
 
     void pointCloudCallback(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &_points)
     {
@@ -54,12 +68,12 @@ private:
         algorithm_->publishOccupationMarkersMap();
         ROS_INFO("Published occupation marker map");
 
-        map_sub_.shutdown();
+        pointcloud_sub_.shutdown();
     }   
     bool setAlgorithm(heuristic_planners::SetAlgorithmRequest &_req, heuristic_planners::SetAlgorithmResponse &rep){
         
         configureAlgorithm(_req.algorithm.data);
-        map_sub_        = lnh_.subscribe<pcl::PointCloud<pcl::PointXYZ>>("/points", 1, &HeuristicPlannerROS::pointCloudCallback, this);
+        pointcloud_sub_        = lnh_.subscribe<pcl::PointCloud<pcl::PointXYZ>>("/points", 1, &HeuristicPlannerROS::pointCloudCallback, this);
         rep.result.data = true;
         return true;
     }
@@ -70,9 +84,13 @@ private:
         const auto discrete_goal =  discretePoint(_req.goal, resolution_);
         const auto discrete_start = discretePoint(_req.start, resolution_);
 
-        if( algorithm_->detectCollision(discrete_start) || 
-            algorithm_->detectCollision(discrete_goal) ){
-            ROS_ERROR("Goal or start point not valid");
+        if( algorithm_->detectCollision(discrete_start) ){
+            std::cout << discrete_start << ": Start not valid" << std::endl;
+            return false;
+        }
+
+        if( algorithm_->detectCollision(discrete_goal) ){
+            std::cout << discrete_goal << ": Goal not valid" << std::endl;
             return false;
         }
 
@@ -130,20 +148,23 @@ private:
         world_size_.x = std::floor(ws_x / resolution_);
         world_size_.y = std::floor(ws_y / resolution_);
         world_size_.z = std::floor(ws_z / resolution_);
+        
+        bool use3d{true};
+        lnh_.param("use3d", use3d, (bool)true);
 
         if( algorithm_name == "astar" ){
             ROS_INFO("Using A*");
-            algorithm_.reset(new AStarGenerator);
+            algorithm_.reset(new AStarGenerator(use3d));
         }else if ( algorithm_name == "thetastar" ){
             ROS_INFO("Using Theta*");
-            algorithm_.reset(new ThetaStarGenerator);
+            algorithm_.reset(new ThetaStarGenerator(use3d));
 
         }else if( algorithm_name == "lazythetastar" ){
             ROS_INFO("Using LazyTheta*");
-            algorithm_.reset(new LazyThetaStarGenerator);
+            algorithm_.reset(new LazyThetaStarGenerator(use3d));
         }else{
             ROS_WARN("Wrong algorithm name parameter. Using ASTAR by default");
-            algorithm_.reset(new AStarGenerator);
+            algorithm_.reset(new AStarGenerator(use3d));
         }
 
         algorithm_->setWorldSize(world_size_, resolution_);
@@ -224,7 +245,7 @@ private:
 
     ros::NodeHandle lnh_{"~"};
     ros::ServiceServer request_path_server_, change_planner_server_;
-    ros::Subscriber map_sub_;
+    ros::Subscriber pointcloud_sub_, occupancy_grid_sub_;
     //TODO Fix point markers
     ros::Publisher line_markers_pub_, point_markers_pub_;
 

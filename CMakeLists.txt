@@ -3,7 +3,7 @@ project(heuristic_planners)
 
 add_compile_options(-std=c++17 -Wall -Wextra -pedantic)
 add_definitions(-DROS)
-#add_definitions(-DPUB_EXPLORED_NODES)
+# add_definitions(-DPUB_EXPLORED_NODES)
 option(BUILD_DOC "Build documentation" ON)
 
 
@@ -21,12 +21,14 @@ option(BUILD_DOC "Build documentation" ON)
 find_package(catkin REQUIRED COMPONENTS
   std_msgs
   geometry_msgs
+  nav_msgs
+  visualization_msgs
   message_generation
   roscpp
-  visualization_msgs
   pcl_conversions
   pcl_ros
   octomap_ros
+  costmap_2d
 )
 
 # check if Doxygen is installed
@@ -131,7 +133,7 @@ generate_messages(
 catkin_package(
  INCLUDE_DIRS include
 #  LIBRARIES upo_actions
-  CATKIN_DEPENDS geometry_msgs roscpp message_runtime
+  CATKIN_DEPENDS std_msgs visualization_msgs geometry_msgs nav_msgs roscpp message_runtime costmap_2d
 #  DEPENDS system_lib
 )
 

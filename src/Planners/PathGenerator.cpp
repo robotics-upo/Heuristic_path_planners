@@ -3,8 +3,29 @@
 namespace Planners
 {
 
-    PathGenerator::PathGenerator(){
+    PathGenerator::PathGenerator(bool _use_3d = true){
+        setHeuristic(&Heuristic::euclidean);
+        CoordinateList directions2d, directions3d;
+        directions2d = {
+            { 0, 1, 0 }, {0, -1, 0}, { 1, 0, 0 }, { -1, 0, 0 }, //4 straight elements
+            { 1, -1, 0 }, { -1, 1, 0 }, { -1, -1, 0 }, { 1, 1, 0 } //4 diagonal elements
+        };
+        directions3d = {
 
+            { 0, 1, 0 }, {0, -1, 0}, { 1, 0, 0 }, { -1, 0, 0 }, { 0, 0, 1}, { 0, 0, -1}, //6 first elements
+
+            { 1, -1, 0 }, { -1, 1, 0 }, { -1, -1, 0 }, { 1, 1, 0 },  { -1, 0, -1 }, //7-18 inclusive
+            { 1, 0, 1 }, { 1, 0, -1 }, {-1, 0, 1}, { 0, -1, 1 }, { 0, 1, 1 }, { 0, 1, -1 },  { 0, -1, -1 }, 
+
+            { -1, -1, 1 }, { 1, 1, 1 },  { -1, 1, 1 }, { 1, -1, 1 }, { -1, -1, -1 }, { 1, 1, -1 }, { -1, 1, -1 }, { 1, -1, -1 }, 
+        };
+        if(_use_3d){
+            std::cout << "Using 3D Directions" << std::endl;
+            direction = directions3d;
+        }else{
+            std::cout << "Using 2D Directions" << std::endl;
+            direction = directions2d;
+        }
     }
     void PathGenerator::setWorldSize(const Vec3i &_worldSize,const double _resolution)
     {

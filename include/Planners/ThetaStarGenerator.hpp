@@ -15,7 +15,7 @@ namespace Planners
          * @brief Construct a new Theta Star Generator object
          * 
          */
-        ThetaStarGenerator() {}
+        ThetaStarGenerator(bool _use_3d ):AStarGenerator(_use_3d) {}
 
         /**
          * @brief 

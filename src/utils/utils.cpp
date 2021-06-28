@@ -10,7 +10,14 @@ namespace Planners
         {
             return (x == coordinates_.x && y == coordinates_.y && z == coordinates_.z);
         }
-
+        bool Planners::utils::Vec3i::operator>=(const Vec3i &coordinates_)
+        {
+            return (x >= coordinates_.x && y >= coordinates_.y && z >= coordinates_.z);
+        }
+        bool Planners::utils::Vec3i::operator<=(const Vec3i &coordinates_)
+        {
+            return (x <= coordinates_.x && y <= coordinates_.y && z <= coordinates_.z);
+        }
         Vec3i &Vec3i::operator/=(float _divid)
         {
             x = x / _divid;

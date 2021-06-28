@@ -21,7 +21,7 @@ namespace Planners{
          * @brief Construct a new AStarGenerator object
          * 
          */
-        AStarGenerator();
+        AStarGenerator(bool _use_3d);
         /**
          * @brief 
          * 
