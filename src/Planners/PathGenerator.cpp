@@ -40,7 +40,7 @@ namespace Planners
 
         return discrete_world_.setNodeCost(coordinates_, _cost);
     }
-    void PathGenerator::addCollision(const Vec3i &coordinates_, bool do_inflate, bool steps)
+    void PathGenerator::addCollision(const Vec3i &coordinates_, bool do_inflate, unsigned int steps)
     {
         if (do_inflate)
         {
@@ -65,11 +65,13 @@ namespace Planners
     }
     void PathGenerator::inflateNodeAsCube(const Vec3i &_ref, const CoordinateList &_directions, const unsigned int &_inflate_steps)
     {
+        std::cout << "Inflating " << _ref  << "with " << _inflate_steps << " steps" << std::endl;
         for (const auto &it : _directions)
         {
             for (unsigned int i = 0; i < _inflate_steps; ++i)
             {
                 auto new_vec = _ref + (i + 1) * it;
+                // std::cout << "\tAdding " << new_vec << std::endl;
                 discrete_world_.setOccupied(new_vec);
             }
         }

@@ -40,7 +40,7 @@ namespace Planners
                         d1 += 2 * vecDiff.y;
                         d2 += 2 * vecDiff.z;
                         //Check if visitor is occupied and add visitor
-                        if (_world.isOccupied(vec0.x, vec0.y, vec0.z))
+                        if (_world.isOccupied(vec0))
                             return false;
 
                     }
@@ -67,7 +67,7 @@ namespace Planners
                         d1 += 2 * vecDiff.x;
                         d2 += 2 * vecDiff.z;
                         //Check if visitor is occupied and add visitor
-                        if (_world.isOccupied(vec0.x, vec0.y, vec0.z))
+                        if (_world.isOccupied(vec0))
                             return false;
 
                     }
@@ -93,7 +93,7 @@ namespace Planners
                         d1 += 2 * vecDiff.y;
                         d2 += 2 * vecDiff.x;
                         //Check if visitor is occupied and add visitor
-                        if (_world.isOccupied(vec0.x, vec0.y, vec0.z))
+                        if (_world.isOccupied(vec0))
                             return false;
 
                     }

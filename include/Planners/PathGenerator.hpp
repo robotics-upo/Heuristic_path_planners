@@ -53,7 +53,7 @@ namespace Planners
          * @param do_inflate 
          * @param steps 
          */
-        void addCollision(const Vec3i &coordinates_, bool do_inflate, bool steps);
+        void addCollision(const Vec3i &coordinates_, bool do_inflate, unsigned int steps);
         
         /**
          * @brief 
