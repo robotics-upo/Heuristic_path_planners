@@ -132,7 +132,7 @@ generate_messages(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
  INCLUDE_DIRS include
-#  LIBRARIES upo_actions
+ LIBRARIES PathGenerator AStarGenerator ThetaStarGenerator LazyThetaStarGenerator
   CATKIN_DEPENDS std_msgs visualization_msgs geometry_msgs nav_msgs roscpp message_runtime costmap_2d
 #  DEPENDS system_lib
 )
@@ -149,9 +149,43 @@ include_directories(
 )
 
 ## Declare a C++ library
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/upo_actions.cpp
-# )
+add_library(PathGenerator          src/Planners/PathGenerator.cpp 
+                                   src/utils/geometry_utils.cpp
+                                   src/utils/heuristic.cpp
+                                   src/utils/LineOfSight.cpp
+                                   src/utils/utils.cpp
+)
+target_link_libraries(PathGenerator ${catkin_LIBRARIES})
+
+add_library(AStarGenerator         src/Planners/AStarGenerator.cpp 
+                                   src/Planners/PathGenerator.cpp
+                                   src/utils/geometry_utils.cpp
+                                   src/utils/heuristic.cpp
+                                   src/utils/LineOfSight.cpp
+                                   src/utils/utils.cpp)
+
+target_link_libraries(AStarGenerator ${catkin_LIBRARIES})
+
+add_library(ThetaStarGenerator     src/Planners/ThetaStarGenerator.cpp 
+                                   src/Planners/AStarGenerator.cpp 
+                                   src/Planners/PathGenerator.cpp
+                                   src/utils/geometry_utils.cpp
+                                   src/utils/heuristic.cpp
+                                   src/utils/LineOfSight.cpp
+                                   src/utils/utils.cpp)
+
+target_link_libraries(ThetaStarGenerator ${catkin_LIBRARIES})
+
+add_library(LazyThetaStarGenerator src/Planners/LazyThetaStarGenerator.cpp 
+                                   src/Planners/ThetaStarGenerator.cpp 
+                                   src/Planners/AStarGenerator.cpp 
+                                   src/Planners/PathGenerator.cpp
+                                   src/utils/geometry_utils.cpp
+                                   src/utils/heuristic.cpp
+                                   src/utils/LineOfSight.cpp
+                                   src/utils/utils.cpp)
+                                   
+target_link_libraries(LazyThetaStarGenerator ${catkin_LIBRARIES})
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -202,18 +236,17 @@ target_link_libraries(planner_ros_node ${catkin_LIBRARIES} )
 # )
 
 ## Mark executables and/or libraries for installation
-install(TARGETS planner_ros_node
+install(TARGETS planner_ros_node PathGenerator AStarGenerator ThetaStarGenerator LazyThetaStarGenerator
  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
 ## Mark cpp header files for installation
-# install(DIRECTORY include/${PROJECT_NAME}/
-#   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-#   FILES_MATCHING PATTERN "*.h"
-#   PATTERN ".svn" EXCLUDE
-# )
+install(DIRECTORY include/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.hpp"
+)
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
 
