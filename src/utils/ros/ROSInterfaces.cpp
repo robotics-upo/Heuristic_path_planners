@@ -69,6 +69,14 @@ namespace Planners
 
             return true;
         }
+        bool configureWorldFromPointCloud(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &_points, PathGenerator &_algorithm, const double &_resolution){
+
+            for(auto &it: *_points){
+                _algorithm.addCollision(discretePoint(it, _resolution));
+            }
+
+            return true;
+        }
 
     } //ns utils
 } //ns planners

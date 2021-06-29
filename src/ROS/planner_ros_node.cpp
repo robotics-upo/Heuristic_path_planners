@@ -59,12 +59,7 @@ private:
     {
 
         ROS_INFO("Loading map...");
-        int n_obs = 0;
-        for(auto &it: *_points){
-            algorithm_->addCollision(discretePoint(it, resolution_));
-            n_obs++;
-        }
-        ROS_INFO("Map loaded. Added %d", n_obs);
+        utils::configureWorldFromPointCloud(_points, *algorithm_, resolution_);
         algorithm_->publishOccupationMarkersMap();
         ROS_INFO("Published occupation marker map");
 
@@ -74,6 +69,8 @@ private:
         
         configureAlgorithm(_req.algorithm.data);
         pointcloud_sub_        = lnh_.subscribe<pcl::PointCloud<pcl::PointXYZ>>("/points", 1, &HeuristicPlannerROS::pointCloudCallback, this);
+        occupancy_grid_sub_ = lnh_.subscribe<nav_msgs::OccupancyGrid>("/grid", 1, &HeuristicPlannerROS::occupancyGridCallback, this);
+
         rep.result.data = true;
         return true;
     }

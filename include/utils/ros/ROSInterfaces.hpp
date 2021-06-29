@@ -70,6 +70,16 @@ namespace Planners
          * @return false 
          */
         bool configureWorldFromOccupancy(const nav_msgs::OccupancyGrid &_grid, PathGenerator &_algorithm, bool _set_size = false);
+
+        /**
+         * @brief 
+         * 
+         * @param _points 
+         * @param _algorithm 
+         * @return true 
+         * @return false 
+         */
+        bool configureWorldFromPointCloud(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &_points, PathGenerator &_algorithm, const double &_resolution);
     }
 }
 
