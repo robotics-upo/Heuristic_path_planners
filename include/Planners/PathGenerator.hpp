@@ -33,6 +33,10 @@ namespace Planners
     class Heuristic;
     class Clock;
 
+    /**
+     * @brief Main base class that implements useful functions for children algorithm class 
+     * and provides a guide to implement any new algorithm.
+     */
     class PathGenerator
     {
 

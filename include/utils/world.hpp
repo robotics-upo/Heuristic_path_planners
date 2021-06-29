@@ -20,6 +20,11 @@ namespace utils
 {
     class Node;
     class Vec3i;
+
+    /**
+     * @brief Class implementing the data structure storing the map related data that algorithms uses internally
+     * 
+     */
     class DiscreteWorld
     {
 

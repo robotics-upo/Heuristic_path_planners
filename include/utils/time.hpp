@@ -15,6 +15,10 @@ namespace Planners
 {
     namespace utils
     {
+        /**
+         * @brief Very simple Class to easily measure time duration with tic() and toc() functions
+         * 
+         */
         class Clock
         {
 

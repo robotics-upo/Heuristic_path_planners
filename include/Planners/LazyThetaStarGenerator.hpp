@@ -14,7 +14,10 @@
 
 namespace Planners
 {
-
+    /**
+     * @brief Lazy Theta* Algorithm Class
+     * 
+     */
     class LazyThetaStarGenerator : public ThetaStarGenerator
     {
 

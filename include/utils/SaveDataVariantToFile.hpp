@@ -34,7 +34,11 @@ namespace Planners
 
         template <class... Ts>
         overloaded(Ts...) -> overloaded<Ts...>;
-
+        
+        /**
+         * @brief This class allow to easily save information stored as "PathData" (std::map<std::string, DataVariant>) into files 
+         * 
+         */
         class DataVariantSaver
         {
 

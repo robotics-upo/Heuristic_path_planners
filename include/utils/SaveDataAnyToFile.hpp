@@ -19,8 +19,12 @@
 namespace Planners
 {
     namespace utils
-    {
-        class DataSaver
+    {   
+        /**
+         * @brief Old class used to store std any map as file
+         * 
+         */
+        class DataAnySaver
         {
 
         public:
