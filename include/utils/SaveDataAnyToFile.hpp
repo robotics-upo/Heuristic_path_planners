@@ -1,6 +1,16 @@
 #ifndef SAVEDATATOFILE_HPP
 #define SAVEDATATOFILE_HPP
-
+/**
+ * @file SaveDataAnyToFile.hpp
+ * @author Rafael Rey (rreyarc@upo.es)
+ * @brief Old class used to save std::map<std::string, std::any> fields to file. It is not used 
+ * anymore but not deleted because maybe in the future can be reused
+ * @version 0.1
+ * @date 2021-06-29
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #include <iostream>
 #include <fstream>
 #include <any>
@@ -17,7 +27,7 @@ namespace Planners
             /**
              * @brief Construct a new Data Saver object
              * 
-             * @param _data_file 
+             * @param _data_file path of the file to append the data 
              */
             DataSaver(const std::string &_data_file)
             {
@@ -26,7 +36,7 @@ namespace Planners
             /**
              * @brief 
              * 
-             * @param _data 
+             * @param _data pathdata 
              * @return true 
              * @return false 
              */

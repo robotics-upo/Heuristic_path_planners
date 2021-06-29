@@ -40,31 +40,29 @@ rosdep update && rosdep install --from-paths src/ -y -r
 
 Make sure you have sourced your ```devel/setup.bash``` in case you compile it or ```/opt/ros/$ROS_DISTRO/setup.bash``` in case you installed it.
 
-## Running it
+## Running the demo ROS Node 
 
-To easily run the algorithms, some launch files are provided for ROS Nodes. 
+The algorithms can be used for 2D and 3D. 2D is a special case of the 3D world size configuration. The world size Z must be equal to the resolution of the map, and the start/goals coordinates should have a 0 z component. The main internal difference for the algorithms is the number of directions that can be used to explore the space, that is 8 in 2D and 26 in 3D.
 
-### A*
+Also, the header ROSInterfaces.hpp include two interfaces to load PointClouds and OccupancyGrid as maps, for the 3D and 2D cases.
+
+To easily run the algorithms, some launch files are provided for ROS Nodes. Also 2D maps and 3D maps are provided 
+
+### 3D 
 
 ```bash
-roslaunch heuristic_planners planner.launch algorithm_name:=astar
+roslaunch heuristic_planners planner.launch algorithm_name:=<algorithm_name>
 ```
 
 ### Theta*
 
 ```bash
-roslaunch heuristic_planners planner.launch algorithm_name:=thetastar
-```
-
-### LazyTheta*
-
-```bash
-roslaunch heuristic_planners planner.launch algorithm_name:=lazythetastar
+roslaunch heuristic_planners planner2d_example.launch algorithm_name:=<algorithm_name>
 ```
 
 #### Parameters
 
-You can pass some args to the launch file such as:
+You can pass some args to the launchs files such as:
 
 - *map*: The .bt file path, by default the mbzirc challenge3
 - *algorithm_name*: Can be "astar", "thetastar" or "lazythetastar" for the moment. At startup the node will echo the selected one to make you sure you are using the one you want. 
@@ -78,7 +76,7 @@ You can pass some args to the launch file such as:
 - *data_file_path*: Path of the data file, by default $HOME/planning.txt. It saves algorithm name, start and goal coordinates, explored nodes, time etc.
 
 
-It will open an RViz window an load the default map *mbzirc_challenge3* in the folder ```resources/maps```. First time you open a map the Grid3 class will compute the gridmap so you will need to wait a little bit before starting.
+In the 3D case, it will open an RViz window an load the default map *mbzirc_challenge3* in the folder ```resources/3dmaps```. First time you open a map the Grid3 class will compute the gridmap so you will need to wait a little bit before starting.
 
 To request path you need to call the service ```/planner_ros_node/request_path``` filling the start and goal coordinates in meters(m). 
 
@@ -86,7 +84,7 @@ To request path you need to call the service ```/planner_ros_node/request_path``
 ## TODOs
 
 - [ ] Allow using ```std::experimental``` for ```std::any``` and other C++17 functions to allow compiling it with GCC 5/6. 
-- [ ] Refine save data integration
+- [x] Refine save data integration: Using std variant that reduces duplicated code.
 - [x] Add Theta* class
 - [x] Add Lazy Theta* class
 - [ ] Add bash/python scripts to generate data from a set of parameters

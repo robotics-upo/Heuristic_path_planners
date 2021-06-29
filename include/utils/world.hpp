@@ -1,6 +1,15 @@
 #ifndef WORLD_HPP
 #define WORLD_HPP
-
+/**
+ * @file world.hpp
+ * @author Rafael Rey (rreyarc@upo.es)
+ * @brief This header contains an implementation of a discrete cell-like world to use with the planning algorithms
+ * @version 0.1
+ * @date 2021-06-29
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #include <vector>
 #include <math.h>
 #include "utils/utils.hpp"
@@ -23,17 +32,18 @@ namespace utils
         {
         }
         /**
-         * @brief 
+         * @brief Overloaded resizeWorld function for Vec3i objects
          * 
-         * @param _world_size 
-         * @param _resolution 
+         * @param _world_size Vec3i object with world size data
+         * @param _resolution resolution to create the internal world vector
          */
         void resizeWorld(const Vec3i &_world_size, const double &_resolution){
             return resizeWorld(_world_size.x, _world_size.y, _world_size.z, _resolution);
         }
         /**
-         * @brief 
-         * 
+         * @brief It configures the inner world vector. Internally the world coordinates 
+         *  goes from [0, world_x_size], [0, world_y_size], [0, world_z_size]
+         *  It clears the previous world and create a new one. 
          * @param _world_x_size 
          * @param _world_y_size 
          * @param _world_z_size 
@@ -58,28 +68,30 @@ namespace utils
                 discrete_world_vector_[i].coordinates =  getDiscreteWorldPositionFromIndex(i);
             }
             
-        }/**
-         * @brief Set the Node Cost object
+        }
+        /**
+         * @brief Set the Node Cost object overloaded function for continous coordinates
          * 
-         * @param _x 
-         * @param _y 
-         * @param _z 
+         * @param _x continous coordinate
+         * @param _y continous coordinate
+         * @param _z continous coordinate
          * @param _cost 
-         * @return true 
-         * @return false 
+         * @return true if node is valid
+         * @return false if requested coordinates correspond to invalid node (outside the world)
          */
         bool setNodeCost(const double &_x, const double &_y, const double &_z, const unsigned int &_cost){
             
             return setNodeCost( Vec3i{ static_cast<int>(std::round(_x / resolution_)),
                                        static_cast<int>(std::round(_y / resolution_)),
                                        static_cast<int>(std::round(_z / resolution_))}, _cost);
-        }/**
-         * @brief Set the Node Cost object
+        }
+        /**
+         * @brief Set the Node Cost object 
          * 
-         * @param _vec 
-         * @param _cost 
-         * @return true 
-         * @return false 
+         * @param _vec coordinates of the node
+         * @param _cost cost value assigned to it
+         * @return true if node is valid
+         * @return false if requested coordinates correspond to invalid node (outside the world)
          */
         bool setNodeCost(const Vec3i &_vec, const unsigned int &_cost){
 
@@ -92,8 +104,8 @@ namespace utils
         return true;
         }
         /**
-         * @brief 
-         * 
+         * @brief Set to its default state the flags, cost values, and parent values inside 
+         * each world's node
          */
         void resetWorld(){
             
@@ -104,14 +116,15 @@ namespace utils
                 it.cost = 0;
                 it.parent = nullptr;
             }
-        }/**
-         * @brief 
+        }
+        /**
+         * @brief Function to check is the node is valid 
          * 
-         * @param _x 
-         * @param _y 
-         * @param _z 
-         * @return true 
-         * @return false 
+         * @param _x discrete coordinate
+         * @param _y discrete coordinate
+         * @param _z discrete coordinate
+         * @return true if node valid and not occupied
+         * @return false if node is outside the workspace of is marked as occupied
          */
         bool isOccupied(const int &_x, const int &_y, const int &_z)
         {
@@ -126,31 +139,31 @@ namespace utils
             return false;
         }
         /**
-         * @brief 
+         * @brief Overloaded isOccupied function for Vec3i objects
          * 
-         * @param _node 
-         * @return true 
-         * @return false 
+         * @param _coord discrete coordinates vector
+         * @return true if node valid and not occupied 
+         * @return false if node is outside the workspace of is marked as occupied 
          */
-        bool isOccupied(const Vec3i &_node){
-            return isOccupied(_node.x, _node.y, _node.z);
+        bool isOccupied(const Vec3i &_coord){
+            return isOccupied(_coord.x, _coord.y, _coord.z);
         }
         /**
-         * @brief 
+         * @brief Overloaded isOccupied function for Node objects
          * 
-         * @param _node 
-         * @return true 
-         * @return false 
+         * @param _node node object
+         * @return true if node valid and not occupied 
+         * @return false if node is outside the workspace of is marked as occupied 
          */
         bool isOccupied(const Node &_node){
             return isOccupied(_node.coordinates.x, _node.coordinates.y, _node.coordinates.z);
         }
         /**
-         * @brief Set the Occupied object
-         * 
-         * @param _x 
-         * @param _y 
-         * @param _z 
+         * @brief Set the world's node associated
+         * to these coordinates as occupied. 
+         * @param _x discrete coordinates
+         * @param _y discrete coordinates
+         * @param _z discrete coordinates
          */
         void setOccupied(const int &_x, const int &_y, const int &_z)
         {
@@ -161,22 +174,22 @@ namespace utils
             discrete_world_vector_[getWorldIndex(_x, _y, _z)].occuppied = true;
         }
         /**
-         * @brief Set the Occupied object
+         * @brief Set the world's node associated
          * 
-         * @param _pos 
+         * @param _pos discrete node position vector
          */
         void setOccupied(const Vec3i &_pos){
 
             return setOccupied(_pos.x, _pos.y, _pos.z);
         }
         /**
-         * @brief 
-         * 
-         * @param _x 
-         * @param _y 
-         * @param _z 
-         * @return true 
-         * @return false 
+         * @brief Checks the value of the internal flag of the node
+         * that is used to mark that the node is in the open list
+         * @param _x discrete coordinates
+         * @param _y discrete coordinates
+         * @param _z discrete coordinates
+         * @return true if the node is valid and is in the open list
+         * @return false if the node is not valid (outside workspace) or not in the open list
          */
         bool isInOpenList(const int &_x, const int &_y, const int &_z){
             if (!checkValid(_x, _y, _z))
@@ -188,33 +201,33 @@ namespace utils
             return false;
         }
         /**
-         * @brief 
+         * @brief Overloaded function for Vec3i objects
          * 
-         * @param _node 
-         * @return true 
-         * @return false 
+         * @param _coord Discrete coordinates
+         * @return true if the node is valid and is in the open list 
+         * @return false if the node is not valid (outside workspace) or not in the open list 
          */
-        bool isInOpenList(const Vec3i &_node){
-            return isInOpenList(_node.x, _node.y, _node.z);
+        bool isInOpenList(const Vec3i &_coord){
+            return isInOpenList(_coord.x, _coord.y, _coord.z);
         }
         /**
-         * @brief 
+         * @brief Overloaded function for Node objects
          * 
-         * @param _node 
-         * @return true 
-         * @return false 
+         * @param _node Node object 
+         * @return true if the node is valid and is in the open list 
+         * @return false if the node is not valid (outside workspace) or not in the open list 
          */
         bool isInOpenList(const Node &_node){
             return isInOpenList(_node.coordinates.x, _node.coordinates.y, _node.coordinates.z);
         }
         /**
-         * @brief 
+         * @brief Analogous to isInOpenList
          * 
-         * @param _x 
-         * @param _y 
-         * @param _z 
-         * @return true 
-         * @return false 
+         * @param _x discrete coordinates
+         * @param _y discrete coordinates
+         * @param _z discrete coordinates
+         * @return true if node is valid and it is in the closed list
+         * @return false if node is not in the closed list or it is not valid
          */
         bool isInClosedList(const int &_x, const int &_y, const int &_z){
             if (!checkValid(_x, _y, _z))
@@ -226,32 +239,32 @@ namespace utils
             return false;
         }
         /**
-         * @brief 
+         * @brief Overloaded function for Vec3i objects
          * 
          * @param _node 
-         * @return true 
-         * @return false 
+         * @return true if node is valid and it is in the closed list
+         * @return false if node is not in the closed list or it is not valid
          */
         bool isInClosedList(const Vec3i &_node){
             return isInClosedList(_node.x, _node.y, _node.z);
         }
         /**
-         * @brief 
+         * @brief Overloaded function for Node objects
          * 
          * @param _node 
-         * @return true 
-         * @return false 
+         * @return true if node is valid and it is in the closed list
+         * @return false if node is not in the closed list or it is not valid
          */
         bool isInClosedList(const Node &_node){
             return isInClosedList(_node.coordinates.x, _node.coordinates.y, _node.coordinates.z);
         }
         /**
-         * @brief Set the Closed Value object
-         * 
-         * @param _x 
-         * @param _y 
-         * @param _z 
-         * @param value 
+         * @brief Set the is in closed list internal flag of the node associated to the 
+         * discrete coordinates 
+         * @param _x discrete_coordinated
+         * @param _y discrete_coordinated
+         * @param _z discrete_coordinated
+         * @param value desired value
          */
         void setClosedValue(const int &_x, const int &_y, const int &_z, const bool value){
             if (!checkValid(_x, _y, _z))
@@ -260,10 +273,10 @@ namespace utils
             discrete_world_vector_[getWorldIndex(_x, _y, _z)].isInClosedList = value;
         }
         /**
-         * @brief Set the Closed Value object
+         * @brief Set the Closed Value object overloaded function for Vec3i
          * 
-         * @param _pos 
-         * @param _value 
+         * @param _pos discrete position of the node
+         * @param _value the desired value 
          */
         void setClosedValue(const Vec3i &_pos, const bool _value){
             if (!checkValid(_pos))
@@ -272,12 +285,13 @@ namespace utils
             discrete_world_vector_[getWorldIndex(_pos)].isInClosedList = _value;
         }
         /**
-         * @brief Set the Open Value object
+         * @brief SSet the is in open list internal flag of the node associated to 
+         * the discrete coordinates
          * 
-         * @param _x 
-         * @param _y 
-         * @param _z 
-         * @param _value 
+         * @param _x discrete coordinates
+         * @param _y discrete coordinates
+         * @param _z discrete coordinates
+         * @param _value desired value
          */
         void setOpenValue(const int &_x, const int &_y, const int &_z, const bool _value){
             if (!checkValid(_x, _y, _z))
@@ -286,10 +300,11 @@ namespace utils
             discrete_world_vector_[getWorldIndex(_x, _y, _z)].isInOpenList = _value;
         }
         /**
-         * @brief Set the Open Value object
+         * @brief Overloaded function for Vec3i. Set the is in open list internal flag of the node associated to 
+         * the discrete coordinates
          * 
-         * @param _pos 
-         * @param _value 
+         * @param _pos discrete coordinates
+         * @param _value desired value
          */
         void setOpenValue(const Vec3i &_pos, const bool _value){
 
@@ -299,10 +314,10 @@ namespace utils
             discrete_world_vector_[getWorldIndex(_pos)].isInOpenList = _value;
         }
         /**
-         * @brief Get the Node Ptr object
+         * @brief Get the pointer to the node corresponding to a discrete set of coordinates
          * 
-         * @param _vec 
-         * @return Node* 
+         * @param _vec discrete coordinates
+         * @return Pointer to the corresponding node* object or nullptr if requested set of coordinates are not valid
          */
         Node* getNodePtr(const Vec3i &_vec){
 
@@ -312,28 +327,28 @@ namespace utils
             return &discrete_world_vector_[getWorldIndex(_vec)];
         }
         /**
-         * @brief Get the Elements object
+         * @brief get the inner world object
          * 
-         * @return const std::vector<Planners::utils::Node>& 
+         * @return const std::vector<Planners::utils::Node>& Reference to the world object stored inside
          */
         const std::vector<Planners::utils::Node>& getElements() const{
             return discrete_world_vector_;
         }
         /**
-         * @brief Get the Resolution object
+         * @brief Get the Resolution stored inside
          * 
-         * @return double 
+         * @return double resolution used internally
          */
         double getResolution() const{
             return resolution_;
         }
     private:
         /**
-         * @brief 
+         * @brief checkValid overloaded function for Vec3i objects
          * 
-         * @param _pos 
-         * @return true 
-         * @return false 
+         * @param _pos discrete position object
+         * @return true if position inside the workspace 
+         * @return false if any of the coordinates is bigger than the associated world size dimension
          */
         bool checkValid(const Vec3i &_pos){
 
@@ -345,8 +360,8 @@ namespace utils
          * @param _x 
          * @param _y 
          * @param _z 
-         * @return true 
-         * @return false 
+         * @return true if position inside the workspace 
+         * @return false if any of the coordinates is bigger than the associated world size dimension
          */
         bool checkValid(const unsigned int &_x, 
                         const unsigned int &_y, 
@@ -360,22 +375,22 @@ namespace utils
             return true;
         }
         /**
-         * @brief Get the World Index object
+         * @brief getWorldIndex overloaded function for Vec3i coordinates
          * 
-         * @param _pos 
-         * @return unsigned int 
+         * @param _pos discrete position 
+         * @return unsigned int world index associated to the requested discrete position
          */
         unsigned int getWorldIndex(const Vec3i &_pos){
 
             return getWorldIndex(_pos.x, _pos.y, _pos.z);
         }
         /**
-         * @brief Get the World Index object
+         * @brief Get the world index associated to a set of discrete coordinates
          * 
-         * @param x 
-         * @param y 
-         * @param z 
-         * @return unsigned int 
+         * @param x discrete coordinates
+         * @param y discrete coordinates
+         * @param z discrete coordinates
+         * @return unsigned int world index of the vector
          */
         unsigned int getWorldIndex(const int &x, const int &y, const int &z)
         {
@@ -384,8 +399,8 @@ namespace utils
         /**
          * @brief Get the Discrete World Position From Index object
          * 
-         * @param _index 
-         * @return Vec3i 
+         * @param _index Discrete index of the internal vector
+         * @return Vec3i discrete coordinates vector
          */
         Vec3i getDiscreteWorldPositionFromIndex(const int _index){
 

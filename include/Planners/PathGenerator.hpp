@@ -1,6 +1,16 @@
 #ifndef PATHGENERATOR_HPP
 #define PATHGENERATOR_HPP
-
+/**
+ * @file PathGenerator.hpp
+ * @author Rafael Rey (rreyarc@upo.es)
+ * @brief Generic PathGenerator class. The algorithms should inherit from this class as far as possible.
+ * It implements some generic functions used by all the algorithms
+ * @version 0.1
+ * @date 2021-06-29
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #include <iostream>
 #include <vector>
 #include <set>
@@ -30,77 +40,80 @@ namespace Planners
         /**
          * @brief Construct a new Path Generator object
          * 
+         * @param _use_3d This parameter allows the user to choose between planning on a plane (8 directions possibles) or in the 3D full space (26 directions)
          */
         PathGenerator(bool _use_3d);
         /**
          * @brief Set the World Size object
          * 
-         * @param worldSize_ 
-         * @param _resolution 
+         * @param worldSize_ Discrete world size vector
+         * @param _resolution resolution to save inside the world object
          */
         void setWorldSize(const Vec3i &worldSize_,const double _resolution);
         /**
-         * @brief Set the Heuristic object
+         * @brief Configure the heuristic
          * 
-         * @param heuristic_ 
+         * @param heuristic_ Should be one of the static functions of the Heuristic Class
          */
         void setHeuristic(HeuristicFunction heuristic_);
         
         /**
-         * @brief 
+         * @brief Mark a set of coordinates of the map as occupied (blocked)
          * 
-         * @param coordinates_ 
-         * @param do_inflate 
-         * @param steps 
+         * @param coordinates_ Discrete vector of coordinates
+         * @param do_inflate enable inflation (mark surrounding coordinates as occupied)
+         * @param steps inflation steps (in multiples of the resolution value)
          */
         void addCollision(const Vec3i &coordinates_, bool do_inflate, unsigned int steps);
         
         /**
-         * @brief 
+         * @brief Calls the addCollision with the internal inflation configuration values
          * 
-         * @param coordinates_ 
+         * @param coordinates_ Discrete coordinates vector
          */
         void addCollision(const Vec3i &coordinates_);
 
         /**
-         * @brief 
+         * @brief Function to use in the future to configure the cost of each node
          * 
-         * @param coordinates_ 
-         * @param _cost 
+         * @param coordinates_ Discrete coordinates
+         * @param _cost cost value 
          * @return true 
          * @return false 
          */
         bool configureCellCost(const Vec3i &coordinates_, const unsigned int &_cost);
 
         /**
-         * @brief 
+         * @brief Check if a set of discrete coordinates are marked as occupied
          * 
-         * @param coordinates_ 
-         * @return true 
-         * @return false 
+         * @param coordinates_ Discrete vector of coordinates
+         * @return true Occupied
+         * @return false not occupied
          */
         bool detectCollision(const Vec3i &coordinates_);
 
         /**
-         * @brief 
+         * @brief Main function that should be inherit by each algorithm. 
+         * This function should accept two VALID start and goal discrete coordinates and return
+         * a PathData object containing the necessary information (path, time....)
          * 
-         * @param source_ 
-         * @param target_ 
-         * @return PathData 
+         * @param source_ Start discrete coordinates
+         * @param target_ Goal discrete coordinates
+         * @return PathData Results stored as PathData object
          */
         virtual PathData findPath(const Vec3i &source_, const Vec3i &target_) = 0;
 
         /**
-         * @brief Set the Inflation Config object
-         * 
-         * @param _inflate 
-         * @param _inflation_steps 
+         * @brief Configure the simple inflation implementation
+         * By default the inflation way is "As a Cube"
+         * @param _inflate If inflate by default
+         * @param _inflation_steps The number of adjacent cells to inflate
          */
         void setInflationConfig(const bool _inflate, const unsigned int _inflation_steps) 
         { do_inflate_ = _inflate; inflate_steps_ = _inflation_steps;}
 
         /**
-         * @brief 
+         * @brief Deleted function to be inherit from
          * 
          */
         virtual void publishOccupationMarkersMap() = 0;
@@ -108,11 +121,11 @@ namespace Planners
     protected:
 
         /**
-         * @brief 
+         * @brief Basic inflation function 
          * 
-         * @param _ref 
-         * @param _directions 
-         * @param _inflate_steps 
+         * @param _ref Discrete coordinates vector
+         * @param _directions Directions vector to inflate
+         * @param _inflate_steps number of cells to inflate in each direction
          */
         void inflateNodeAsCube(const Vec3i &_ref,
                                const CoordinateList &_directions,

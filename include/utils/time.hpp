@@ -1,3 +1,13 @@
+/**
+ * @file time.hpp
+ * @author Rafael Rey (rreyarc@upo.es)
+ * @brief Helper Clock Class to easily measure time durations
+ * @version 0.1
+ * @date 2021-06-29
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #include <chrono>
 #include <iostream>
 
@@ -12,13 +22,13 @@ namespace Planners
             /**
              * @brief Construct a new Clock object
              * 
-             * @param _verbose 
+             * @param _verbose boolean parameter to enable console output when calling the stop toc() function
              */
             Clock(const bool _verbose = false) : verbose_(_verbose)
             {
             }
             /**
-             * @brief 
+             * @brief Start the chrono
              * 
              */
             void tic()
@@ -27,9 +37,9 @@ namespace Planners
                 started_ = true;
             }
             /**
-             * @brief 
+             * @brief End the chorno 
              * 
-             * @param _msg 
+             * @param _msg Message to put on the verbose output to differentiate it from other chronos
              */
             void toc(const std::string &_msg = "")
             {
@@ -45,9 +55,9 @@ namespace Planners
                     std::cout << "[ " << _msg << "] " << "Elapsed time: " << elapsed_.count() * 1e-6 << std::endl;
             }
             /**
-             * @brief Get the Elapsed Millisecs object
+             * @brief Get the elapsed time in milliseconds
              * 
-             * @return double 
+             * @return double the time elapsed, 0 if toc() was not called yet
              */
             double getElapsedMillisecs()
             {
@@ -57,9 +67,9 @@ namespace Planners
                 return elapsed_.count() * 1e-6;
             }
             /**
-             * @brief Get the Elapsed Nanosecs object
+             * @brief Get the elapsed time in nanoseconds
              * 
-             * @return double 
+             * @return double the time elapsed, 0 if toc() was not called yet
              */
             double getElapsedNanosecs()
             {
@@ -69,9 +79,9 @@ namespace Planners
                 return elapsed_.count();
             }
             /**
-             * @brief Get the Elapsed Seconds object
+             * @brief Get the elapsed time in seconds
              * 
-             * @return double 
+             * @return double the time elapsed, 0 if toc() was not called yet
              */
             double getElapsedSeconds(){
 

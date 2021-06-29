@@ -1,6 +1,15 @@
 #ifndef ASTARGENERATOR_HPP
 #define ASTARGENERATOR_HPP
-
+/**
+ * @file AStarGenerator.hpp
+ * @author Rafael Rey (rreyarc@upo.es)
+ * @brief 
+ * @version 0.1
+ * @date 2021-06-29
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #include <Planners/PathGenerator.hpp>
 
 #ifdef ROS
@@ -13,27 +22,28 @@
 
 namespace Planners{
 
+    
     class AStarGenerator : public PathGenerator
     {
         
     public:
         /**
          * @brief Construct a new AStarGenerator object
-         * 
+         * @param _use_3d This parameter allows the user to choose between planning on a plane (8 directions possibles) or in the 3D full space (26 directions)
          */
         AStarGenerator(bool _use_3d);
         /**
-         * @brief 
+         * @brief Main function of the algorithm
          * 
-         * @param source_ 
-         * @param target_ 
-         * @return PathData 
+         * @param source_ Start discrete coordinates
+         * @param target_ Goal discrete coordinates
+         * @return PathData PathData Results stored as PathData object
          */
         PathData findPath(const Vec3i &source_, const Vec3i &target_);
         
         /**
-         * @brief 
-         * 
+         * @brief Published occupation markers map to visualize the loaded map in RVIZ
+         * if the package is compiled without the ROS definition in the CMakeLists, this function is empty
          */
         void publishOccupationMarkersMap();
         

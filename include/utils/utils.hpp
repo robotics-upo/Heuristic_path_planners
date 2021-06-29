@@ -1,6 +1,15 @@
 #ifndef UTILS_HPP
 #define UTILS_HPP
-
+/**
+ * @file utils.hpp
+ * @author Rafael Rey (rreyarc@upo.es)
+ * @brief A set of utils used alongside the project 
+ * @version 0.1
+ * @date 2021-06-29
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #include <iostream>
 #include <vector>
 #include <set>
@@ -42,27 +51,75 @@ namespace Planners
         }
 
         /**
-         * @brief 
-         * 
+         * @brief This is one of the main classes used internally by the algorithms. 
+         * It only stores a set of 3D discrete coordinates values 
+         * and has some operator overloaded implementations to easily work with objects
          */
         class Vec3i
         {
             public:
             int x, y, z;    
-
+            /**
+             * @brief 
+             * 
+             * @param coordinates_ 
+             * @return true 
+             * @return false 
+             */
             bool operator==(const Vec3i &coordinates_);
+            /**
+             * @brief 
+             * 
+             * @param coordinates_ 
+             * @return true if all of the coordinates are greather or equal than the others
+             * @return false if any of the coordinates are not greather or equal than the others
+             */
             bool operator>=(const Vec3i &coordinates_);
+            /**
+             * @brief 
+             * 
+             * @param coordinates_ 
+             * @return true if all the coordinates are <= of the corresponding ones
+             * @return false if any of the coordinates are not <=
+             */
             bool operator<=(const Vec3i &coordinates_);
             
+            /**
+             * @brief 
+             * 
+             * @param _divid 
+             * @return Planners::utils::Vec3i& 
+             */
             Planners::utils::Vec3i &operator/=(float _divid);
+
+            /**
+             * @brief 
+             * 
+             * @param right_ 
+             * @return Vec3i 
+             */
             Vec3i operator+(const Vec3i &right_) const
             {
                 return {this->x + right_.x, this->y + right_.y, this->z + right_.z};
             }
+
+            /**
+             * @brief 
+             * 
+             * @param right_ 
+             * @return Vec3i 
+             */
             Vec3i operator-(const Vec3i &right_) const
             {
                 return {this->x - right_.x, this->y - right_.y, this->z - right_.z};
             }
+
+            /**
+             * @brief 
+             * 
+             * @param _mult 
+             * @return Vec3i 
+             */
             inline Vec3i operator*(int &_mult) const
             {
                 return {this->x * _mult, this->y * _mult, this->z * _mult };
@@ -93,7 +150,7 @@ namespace Planners
             return os;
         }
         /**
-         * @brief 
+         * @brief This object store the main information used by the algorithms 
          * 
          */
         class Node
@@ -116,8 +173,8 @@ namespace Planners
         };
 
         /**
-         * @brief 
-         * 
+         * @brief Comparator passed to the Open and Closed sets to automatically order the lists depending
+         * on the nodes total costs 
          */
         struct NodeComparator{
             
