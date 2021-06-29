@@ -20,6 +20,12 @@
 #include <heuristic_planners/SetAlgorithm.h>
 
 using namespace Planners;
+
+/**
+ * @brief Demo Class that demonstrate how to use the algorithms classes and utils 
+ * with ROS 
+ * 
+ */
 class HeuristicPlannerROS
 {
 
