@@ -160,14 +160,20 @@ add_library(LazyThetaStarGenerator          src/Planners/LazyThetaStarGenerator.
 add_library(CostAwareLazyThetaStarGenerator src/Planners/CostAwareLazyThetaStarGenerator.cpp )
 add_library(LazyThetaStarGeneratorSafetyCost src/Planners/LazyThetaStarGeneratorSafetyCost.cpp )
 
+list(APPEND ${PROJECT_NAME}_LIBRARIES 
+PathGenerator AStarGenerator CostAwareAStarGenerator AStarGeneratorSafetyCost
+ThetaStarGenerator CostAwareThetaStarGenerator ThetaStarGeneratorSafetyCost 
+LazyThetaStarGenerator CostAwareLazyThetaStarGenerator LazyThetaStarGeneratorSafetyCost)  
 
-
-list(APPEND ${PROJECT_NAME}_LIBRARIES PathGenerator AStarGenerator CostAwareAStarGenerator AStarGeneratorSafetyCost ThetaStarGenerator CostAwareThetaStarGenerator ThetaStarGeneratorSafetyCost LazyThetaStarGenerator CostAwareLazyThetaStarGenerator LazyThetaStarGeneratorSafetyCost)  
 target_link_libraries(${${PROJECT_NAME}_LIBRARIES} ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 add_dependencies( ${${PROJECT_NAME}_LIBRARIES} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 list(APPEND ${PROJECT_NAME}_TARGETS ${${PROJECT_NAME}_LIBRARIES})
 
 if(BUILD_ROS_SUPPORT)
+  # Move Base Global Planner plugin
+  add_library(global_planner_lib src/ROS/global_planner.cpp)
+  list(APPEND ${PROJECT_NAME}_LIBRARIES global_planner_lib)
+
   add_executable(planner_ros_node src/ROS/planner_ros_node.cpp )
   add_dependencies(planner_ros_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_LIBRARIES})
   target_link_libraries(planner_ros_node ${catkin_LIBRARIES} ${${PROJECT_NAME}_LIBRARIES} -lstdc++fs Eigen3::Eigen -lcrypto -lssl)
@@ -199,6 +205,7 @@ if(BUILD_ROS_SUPPORT)
   )
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
+  install(DIRECTORY ros_plugins/ DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/ros_plugins)
 
   install(DIRECTORY launch/ DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch)
   install(DIRECTORY rviz/ DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/rviz)
@@ -215,5 +222,5 @@ else()
     DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
   )
 
-endif()
 unset(BUILD_ROS_SUPPORT CACHE)
+endif()

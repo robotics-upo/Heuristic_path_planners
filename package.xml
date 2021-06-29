@@ -21,6 +21,10 @@
   <build_depend>message_generation</build_depend>
   <build_depend>doxygen</build_depend>
   <build_depend>libssl-dev</build_depend>
+  <build_depend>nav_core</build_depend>
+  <build_depend>pluginlib</build_depend>
+  <build_depend>angles</build_depend>
+  <build_depend>base_local_planner</build_depend>
 
   <build_depend>libboost1.71-dev</build_depend>
   
@@ -36,6 +40,10 @@
   <build_export_depend>doxygen</build_export_depend>
   <build_export_depend>libssl-dev</build_export_depend>
   <build_export_depend>libboost1.71-dev</build_export_depend>
+  <build_export_depend>nav_core</build_export_depend>
+  <build_export_depend>pluginlib</build_export_depend>
+  <build_export_depend>angles</build_export_depend>
+  <build_export_depend>base_local_planner</build_export_depend>
 
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>visualization_msgs</exec_depend>
@@ -51,11 +59,16 @@
   <exec_depend>doxygen</exec_depend>
   <exec_depend>libssl-dev</exec_depend>
   <exec_depend>libboost1.71-dev</exec_depend>
+  <exec_depend>nav_core</exec_depend>
+  <exec_depend>pluginlib</exec_depend>
+  <exec_depend>angles</exec_depend>
+  <exec_depend>base_local_planner</exec_depend>
+
 
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
     <!-- Other tools can request additional information be placed here -->
-
+    <nav_core plugin="${prefix}/ros_plugins/global_planner_plugin.xml" />
   </export>
 </package>
