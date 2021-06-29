@@ -65,13 +65,11 @@ namespace Planners
     }
     void PathGenerator::inflateNodeAsCube(const Vec3i &_ref, const CoordinateList &_directions, const unsigned int &_inflate_steps)
     {
-        std::cout << "Inflating " << _ref  << "with " << _inflate_steps << " steps" << std::endl;
         for (const auto &it : _directions)
         {
             for (unsigned int i = 0; i < _inflate_steps; ++i)
             {
                 auto new_vec = _ref + (i + 1) * it;
-                // std::cout << "\tAdding " << new_vec << std::endl;
                 discrete_world_.setOccupied(new_vec);
             }
         }
