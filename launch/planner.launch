@@ -1,5 +1,5 @@
 <launch>
-    <arg name="map"                 default="$(find heuristic_planners)/resources/maps/mbzirc_challenge3.bt"/>
+    <arg name="map"                 default="$(find heuristic_planners)/resources/3dmaps/mbzirc_challenge3.bt"/>
 
     <arg name="algorithm_name"      default="thetastar"/>
 
