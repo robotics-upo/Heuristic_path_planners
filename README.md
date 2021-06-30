@@ -23,6 +23,8 @@
 
 This repo contains a series of Path Planning heuristic algorithms such as A*, Theta* and Lazy Theta*. The purpose of this repository is to provide som classes with a pure C++ implementation with the minimum dependencies, but at the same time, to provide ROS Integration to easily run these algorithms inside a ROS Network through some ROS Nodes.
 
+Also take into account that the content of this repo is work-in-progress.
+
 ## Table of contents
 - [Quick Start](quick-start)
 - [Code Documentation](#code-documentation)
@@ -33,11 +35,11 @@ This repo contains a series of Path Planning heuristic algorithms such as A*, Th
 
 ## Quick-Start
 
-1. ** Install ROS [Melodic](http://wiki.ros.org/melodic/Installation/Ubuntu) or [Noetic](http://wiki.ros.org/noetic/Installation/Ubuntu) **
+1. **Install ROS [Melodic](http://wiki.ros.org/melodic/Installation/Ubuntu) or [Noetic](http://wiki.ros.org/noetic/Installation/Ubuntu)**
 
 2. Downlaod Heuristic Path Planners: You can either download the source code or install the latest debian
 
-- [Latest Debian]
+- [Latest Release](https://github.com/robotics-upo/Heuristic_path_planners/releases)
 - Clone the repo, install dependencies with rosdep and compile it with catkin
 ```bash
 mkdir -p ~/catkin_ws/src
