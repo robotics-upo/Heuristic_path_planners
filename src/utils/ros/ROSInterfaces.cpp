@@ -20,11 +20,21 @@ namespace Planners
                     static_cast<int>(std::round(_msg.z / _res))};
         }
         Vec3i discretePose(const geometry_msgs::Pose &_msg, const double &_res)
-        {
-
+        {   
+            //TODO Take a look to this overloading
+            // return discretePoint(_msg.position); 
             return {static_cast<int>(std::round(_msg.position.x / _res)),
                     static_cast<int>(std::round(_msg.position.y / _res)),
                     static_cast<int>(std::round(_msg.position.z / _res))};
+        }
+        Vec3i discretePose(const geometry_msgs::PoseStamped &_msg, const double &_res)
+        {
+            //TODO Take a look to this overloading
+            // return discretePose(_msg.pose);
+            return {static_cast<int>(std::round(_msg.pose.position.x / _res)),
+                    static_cast<int>(std::round(_msg.pose.position.y / _res)),
+                    static_cast<int>(std::round(_msg.pose.position.z / _res))};
+
         }
         geometry_msgs::Point continousPoint(const Vec3i &_vec, const double &_res)
         {
@@ -34,6 +44,16 @@ namespace Planners
             ret.y = _vec.y * _res;
             ret.z = _vec.z * _res;
 
+            return ret;
+        }
+        geometry_msgs::PoseStamped continousPose(const Vec3i &_vec, const double &_res)
+        {
+            geometry_msgs::PoseStamped ret;
+
+            ret.pose.position.x = _vec.x * _res;
+            ret.pose.position.y = _vec.y * _res;
+            ret.pose.position.z = _vec.z * _res;
+            
             return ret;
         }
         inline Vec3i indexToXY(const unsigned int &_index, const unsigned int _grid_width)
@@ -127,6 +147,20 @@ namespace Planners
 
             return true;
         }
+
+        bool coordinateListToROSPlan(const CoordinateList &_path, 
+                                     const double &_resolution, 
+                                     std::vector<geometry_msgs::PoseStamped> &_ros_plan)
+        {
+            if(!_ros_plan.empty())
+                return false;
+
+            for(const auto &it: _path)
+                _ros_plan.push_back(continousPose(it, _resolution));
+            
+            return true;
+        }
+
 
     } //ns utils
 } //ns planners
