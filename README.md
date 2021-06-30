@@ -2,7 +2,8 @@
 
 
 [![Build for Ubuntu 18.04 and ROS Melodic](https://github.com/RafaelRey/3D_heuristic_path_planners/actions/workflows/build_melodic.yml/badge.svg)](https://github.com/RafaelRey/3D_heuristic_path_planners/actions/workflows/build_melodic.yml)
-[![Build for Ubuntu 20.04 and ROS noetic](https://g</ithub.com/RafaelRey/3D_heuristic_path_planners/actions/workflows/build_noetic.yml/badge.svg)](https://github.com/RafaelRey/3D_heuristic_path_planners/actions/workflows/build_noetic.yml)
+
+[![Build for Ubuntu 20.04 and ROS noetic](https://github.com/RafaelRey/3D_heuristic_path_planners/actions/workflows/build_noetic.yml/badge.svg)](https://github.com/RafaelRey/3D_heuristic_path_planners/actions/workflows/build_noetic.yml)
 
 [![issues](https://img.shields.io/github/issues/robotics-upo/3D_heuristic_path_planners?style=plastic)](https://img.shields.io/github/issues/robotics-upo/3D_heuristic_path_planners?style=plastic)
 [![license](https://img.shields.io/github/license/robotics-upo/Heuristic_path_planners)](https://img.shields.io/github/license/robotics-upo/Heuristic_path_planners)
