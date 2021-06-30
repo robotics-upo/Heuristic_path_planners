@@ -35,5 +35,9 @@ jobs:
           apt update && rosdep update && rosdep install --from-paths src/ -y -r;
           catkin_make;
 
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v1
+        with:
+          path: catkin_ws/src/
 
         
