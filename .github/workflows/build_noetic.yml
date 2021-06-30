@@ -26,7 +26,12 @@ jobs:
         with:
           fetch-depth: 0
           path: catkin_ws/src/
-      
+          
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v1
+        with:
+           languages: cpp
+           
       - name: Build package
         run: |
           export DEBIAN_FRONTEND=noninteractive
