@@ -1,11 +1,77 @@
-[![Build for Ubuntu 18.04 and ROS Melodic](https://github.com/RafaelRey/3D_heuristic_path_planners/actions/workflows/build_melodic.yml/badge.svg)](https://github.com/RafaelRey/3D_heuristic_path_planners/actions/workflows/build_melodic.yml)
+# UPO Heuristic Path Planners
 
+
+[![Build for Ubuntu 18.04 and ROS Melodic](https://github.com/RafaelRey/3D_heuristic_path_planners/actions/workflows/build_melodic.yml/badge.svg)](https://github.com/RafaelRey/3D_heuristic_path_planners/actions/workflows/build_melodic.yml)
 [![Build for Ubuntu 20.04 and ROS noetic](https://github.com/RafaelRey/3D_heuristic_path_planners/actions/workflows/build_noetic.yml/badge.svg)](https://github.com/RafaelRey/3D_heuristic_path_planners/actions/workflows/build_noetic.yml)
 
-# 3D Heuristic Path Planners
+[![issues](https://img.shields.io/github/issues/robotics-upo/3D_heuristic_path_planners?style=plastic)](https://img.shields.io/github/issues/robotics-upo/3D_heuristic_path_planners?style=plastic)
+[![license](https://img.shields.io/github/license/robotics-upo/Heuristic_path_planners)](https://img.shields.io/github/license/robotics-upo/Heuristic_path_planners)
+
+
+![2D Example](https://raw.githubusercontent.com/robotics-upo/Heuristic_path_planners/master/resources/images/2dexample.png)
+![3D Example](https://raw.githubusercontent.com/robotics-upo/Heuristic_path_planners/master/resources/images/3dexample.png)
+
 
 This repo contains a series of Path Planning heuristic algorithms such as A*, Theta* and Lazy Theta*. The purpose of this repository is to provide som classes with a pure C++ implementation with the minimum dependencies, but at the same time, to provide ROS Integration to easily run these algorithms inside a ROS Network through some ROS Nodes.
 
+## Table of contents
+- [Quick Start](quick-start)
+- [Code Documentation](#code-documentation)
+- [Dependencies](#dependencies)
+- [What's included?](#whats-included)
+- [Running the demo ROS Node](#running-the-demo-ros-node)
+- [TODOs](#categories)
+
+## Quick-Start
+
+1. ** Install ROS [Melodic](http://wiki.ros.org/melodic/Installation/Ubuntu) or [Noetic](http://wiki.ros.org/noetic/Installation/Ubuntu) 
+
+2. Downlaod Heuristic Path Planners: You can either download the source code or install the latest debian
+
+- [Latest Debian]
+- Clone the repo and compile it with catkin
+```bash
+mkdir -p ~/catkin_ws/src
+cd ~/catkin_ws/src
+git clone https://github.com/robotics-upo/Heuristic_path_planners
+cd ..
+catkin_make
+```
+
+3. Launch a demo a request a path
+
+
+- 2D Theta*:
+```bash
+roslaunch heuristic_planners planner2d_example.launch algorithm_name:=thetastar
+```
+Example start and goal request: 
+```bash
+rosservice call /planner_ros_node/request_path "start:
+  x: 1.5
+  y: 0.5
+  z: 0.0
+goal:
+  x: 1.0
+  y: 3.0
+  z: 0.0" 
+```
+- 3D Lazy Theta*:
+```bash
+roslaunch heuristic_planners planner2d_example.launch algorithm_name:=lazythetastar
+```
+
+Example start and goal request: 
+```bash
+rosservice call /planner_ros_node/request_path "start:
+  x: 20.0
+  y: 20.0
+  z: 1.0
+goal:
+  x: 40.0
+  y: 40.0
+  z: 4.0" 
+```
 ## Code Documentation
 
 By default the CMake BUILD_DOC option is enabled so the doxygen documentation will be generated every time you run catkin_make. You can also read it [Online](https://codedocs.xyz/robotics-upo/3D_heuristic_path_planners)
