@@ -7,9 +7,8 @@
 [![issues](https://img.shields.io/github/issues/robotics-upo/3D_heuristic_path_planners?style=plastic)](https://img.shields.io/github/issues/robotics-upo/3D_heuristic_path_planners?style=plastic)
 [![license](https://img.shields.io/github/license/robotics-upo/Heuristic_path_planners)](https://img.shields.io/github/license/robotics-upo/Heuristic_path_planners)
 
-
-![2D Example](https://raw.githubusercontent.com/robotics-upo/Heuristic_path_planners/master/resources/images/2dexample.png)
-![3D Example](https://raw.githubusercontent.com/robotics-upo/Heuristic_path_planners/master/resources/images/3dexample.png)
+<img src="https://raw.githubusercontent.com/robotics-upo/Heuristic_path_planners/master/resources/images/2dexample.png" alt="2d" width="300"/>
+<img src="https://raw.githubusercontent.com/robotics-upo/Heuristic_path_planners/master/resources/images/3dexample.png" alt="3d" width="300"/>
 
 
 This repo contains a series of Path Planning heuristic algorithms such as A*, Theta* and Lazy Theta*. The purpose of this repository is to provide som classes with a pure C++ implementation with the minimum dependencies, but at the same time, to provide ROS Integration to easily run these algorithms inside a ROS Network through some ROS Nodes.
