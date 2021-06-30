@@ -33,17 +33,18 @@ This repo contains a series of Path Planning heuristic algorithms such as A*, Th
 
 ## Quick-Start
 
-1. ** Install ROS [Melodic](http://wiki.ros.org/melodic/Installation/Ubuntu) or [Noetic](http://wiki.ros.org/noetic/Installation/Ubuntu) 
+1. ** Install ROS [Melodic](http://wiki.ros.org/melodic/Installation/Ubuntu) or [Noetic](http://wiki.ros.org/noetic/Installation/Ubuntu) **
 
 2. Downlaod Heuristic Path Planners: You can either download the source code or install the latest debian
 
 - [Latest Debian]
-- Clone the repo and compile it with catkin
+- Clone the repo, install dependencies with rosdep and compile it with catkin
 ```bash
 mkdir -p ~/catkin_ws/src
 cd ~/catkin_ws/src
 git clone https://github.com/robotics-upo/Heuristic_path_planners
 cd ..
+rosdep update && rosdep install --from-paths src/ -y -r
 catkin_make
 ```
 
@@ -51,10 +52,12 @@ catkin_make
 
 
 - 2D Theta*:
+In one terminal:
 ```bash
 roslaunch heuristic_planners planner2d_example.launch algorithm_name:=thetastar
 ```
-Example start and goal request: 
+
+Open another terminal and call an example start and goal request: 
 ```bash
 rosservice call /planner_ros_node/request_path "start:
   x: 1.5
@@ -66,11 +69,13 @@ goal:
   z: 0.0" 
 ```
 - 3D Lazy Theta*:
+
+In one terminal:
 ```bash
 roslaunch heuristic_planners planner2d_example.launch algorithm_name:=lazythetastar
 ```
 
-Example start and goal request: 
+Open another terminal and call an example start and goal request: 
 ```bash
 rosservice call /planner_ros_node/request_path "start:
   x: 20.0
