@@ -3,6 +3,7 @@
 #include "Planners/AStarGenerator.hpp"
 #include "Planners/ThetaStarGenerator.hpp"
 #include "Planners/LazyThetaStarGenerator.hpp"
+#include "Planners/CostAwareLazyThetaStarGenerator.hpp"
 #include "utils/ros/ROSInterfaces.hpp"
 #include "utils/SaveDataVariantToFile.hpp"
 #include "Grid3D/grid3d.hpp"
@@ -162,10 +163,12 @@ private:
         }else if ( algorithm_name == "thetastar" ){
             ROS_INFO("Using Theta*");
             algorithm_.reset(new ThetaStarGenerator(use3d));
-
         }else if( algorithm_name == "lazythetastar" ){
             ROS_INFO("Using LazyTheta*");
             algorithm_.reset(new LazyThetaStarGenerator(use3d));
+        }else if( algorithm_name == "costlazythetastar"){
+            ROS_INFO("Using Cost Aware LazyTheta*");
+            algorithm_.reset(new CostAwareLazyThetaStarGenerator(use3d));
         }else{
             ROS_WARN("Wrong algorithm name parameter. Using ASTAR by default");
             algorithm_.reset(new AStarGenerator(use3d));

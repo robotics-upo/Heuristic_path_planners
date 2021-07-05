@@ -31,6 +31,18 @@ namespace Planners
              * @return false If there is no line of sight between both nodes
              */
             bool bresenham3D(const Node *_lnode, const Node *_rnode, DiscreteWorld &_world);
+
+            /**
+             * @brief 
+             * 
+             * @param _lnode 
+             * @param _rnode 
+             * @param _world 
+             * @param _threshold 
+             * @return true 
+             * @return false 
+             */
+            bool bresenham3DWithMaxThreshold(const Node *_lnode, const Node *_rnode, DiscreteWorld &_world, const unsigned int _threshold);
         }
     }
 }
