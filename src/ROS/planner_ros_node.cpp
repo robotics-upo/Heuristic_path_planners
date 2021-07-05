@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "Planners/AStarGenerator.hpp"
+#include "Planners/CostAwareAStarGenerator.hpp"
 #include "Planners/ThetaStarGenerator.hpp"
 #include "Planners/LazyThetaStarGenerator.hpp"
 #include "Planners/CostAwareLazyThetaStarGenerator.hpp"
@@ -54,8 +55,7 @@ private:
 
     void occupancyGridCallback(const nav_msgs::OccupancyGrid::ConstPtr &_grid){
         ROS_INFO("Loading OccupancyGrid map...");
-
-        utils::configureWorldFromOccupancy(*_grid, *algorithm_);
+        utils::configureWorldFromOccupancyWithCosts(*_grid, *algorithm_);
         algorithm_->publishOccupationMarkersMap();
         occupancy_grid_sub_.shutdown();
         ROS_INFO("Occupancy Grid Loaded");
@@ -160,6 +160,13 @@ private:
         if( algorithm_name == "astar" ){
             ROS_INFO("Using A*");
             algorithm_.reset(new AStarGenerator(use3d));
+        }else if( algorithm_name == "costastar" ){
+            ROS_INFO("Using Cost Aware A*");
+            algorithm_.reset(new CostAwareAStarGenerator(use3d));
+            float cost_weight;
+            lnh_.param("cost_weight", cost_weight, (float)0.0); // In meters
+            algorithm_->setCostFactor(cost_weight);
+
         }else if ( algorithm_name == "thetastar" ){
             ROS_INFO("Using Theta*");
             algorithm_.reset(new ThetaStarGenerator(use3d));

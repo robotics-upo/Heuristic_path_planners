@@ -1,9 +1,8 @@
 <launch>
     <arg name="map"                 default="$(find heuristic_planners)/resources/2dmaps/test.yaml"/>
-
-    <arg name="algorithm_name"      default="astar"/>
-
-    <!-- This param is very important -->
+    <arg name="algorithm_name"      default="costastar"/>
+    <arg name="use_costs"           default="true"/>
+    <!-- This param is very important -->   
     <arg name="use3d"               default="false"/>
 
     <arg name="world_size_x"        default="2.5"/>
@@ -17,17 +16,24 @@
     <arg name="save_data"           default="true"/>
     <arg name="data_file_path"      default="$(env HOME)/planning.txt"/>
 
+    <arg name="cost_weight" default="1.0"/>
 
     <arg name="cost_scaling_factor" default="1.0"/>
     <arg name="robot_radius"        default="0.5"/>
 
-
     <!-- Map server to publish 2d occupancy grid in the /map topic by default -->
     <node pkg="map_server" name="map_server" type="map_server" args="$(arg map)"/>
 
+    <!-- This TF is mandatory to make costmap run properly (only work with tf, not with tf2)... -->
+    <node pkg="tf" type="static_transform_publisher" name="world_broadcaster" args="0 0 0 0 0 0 world map 10" if="$(arg use_costs)"/>
+    <node pkg="costmap_2d" type="costmap_2d_node"    name="costmap_2d"                                        if="$(arg use_costs)">
+        <rosparam command="load" file="$(find heuristic_planners)/config/example_costmap_params.yaml"/>
+    </node>
+
     <node pkg="heuristic_planners" type="planner_ros_node" name="planner_ros_node" output="screen">
         <!-- <remap from="points" to="/grid3d/map_point_cloud"/> -->
-        <remap from="grid" to="/map"/>
+        <remap from="grid" to="/map"                        unless="$(arg use_costs)"/>
+        <remap from="grid" to="/costmap_2d/costmap/costmap" if="$(arg use_costs)"/>
         <param name="map_path"              value="$(arg map)"/>
         <param name="world_size_x"          value="$(arg world_size_x)"/>
         <param name="world_size_y"          value="$(arg world_size_y)"/>
@@ -40,6 +46,8 @@
         <param name="file_path"             value="$(arg data_file_path)"/>
         <param name="algorithm"             value="$(arg algorithm_name)"/>
         <param name="use3d"                 value="$(arg use3d)"/>
+
+        <param name="cost_weight"           value="$(arg cost_weight)"/>
 
         <param name="cost_scaling_factor"   value="$(arg cost_scaling_factor)"/>
         <param name="robot_radius"          value="$(arg robot_radius)"/>

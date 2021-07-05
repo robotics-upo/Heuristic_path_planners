@@ -129,6 +129,12 @@ namespace Planners
         { do_inflate_ = _inflate; inflate_steps_ = _inflation_steps;}
 
         /**
+         * @brief Set the Cost Factor object
+         * 
+         */
+        virtual void setCostFactor(const float &_factor){ cost_weight_ = _factor; }
+
+        /**
          * @brief Deleted function to be inherit from
          * 
          */
@@ -153,6 +159,8 @@ namespace Planners
         utils::DiscreteWorld discrete_world_;
         unsigned int inflate_steps_{1};
         bool do_inflate_{true};
+
+        float cost_weight_{0};
 
 
     private:

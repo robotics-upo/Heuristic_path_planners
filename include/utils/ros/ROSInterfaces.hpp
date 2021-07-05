@@ -85,6 +85,17 @@ namespace Planners
          * @return false Never returns false at this version
          */
         bool configureWorldFromOccupancy(const nav_msgs::OccupancyGrid &_grid, PathGenerator &_algorithm, bool _set_size = false);
+        
+        /**
+         * @brief 
+         * 
+         * @param _grid 
+         * @param _algorithm 
+         * @param _set_size 
+         * @return true 
+         * @return false 
+         */
+        bool configureWorldFromOccupancyWithCosts(const nav_msgs::OccupancyGrid &_grid, PathGenerator &_algorithm, bool _set_size = false);
 
         /**
          * @brief Same as configureWorldFromOccupancy but to use with a pcl::PointCloud
