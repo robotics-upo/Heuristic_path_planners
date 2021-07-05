@@ -68,7 +68,7 @@ namespace Planners
 
             discrete_world_.setOpenValue(current->coordinates, false);
             discrete_world_.setClosedValue(current->coordinates, true);
-
+            
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)
             geometry_msgs::Point point;
             point.x = current->coordinates.x * resolution_;
@@ -78,6 +78,8 @@ namespace Planners
             explored_node_marker_.header.seq++;
             explored_node_marker_.points.push_back(point);
             explored_nodes_marker_pub_.publish(explored_node_marker_);
+            std::cout << "Node " << current->coordinates <<  " Cost: " << current->cost << std::endl;
+            usleep(1e4);
 #endif
 
             for (unsigned int i = 0; i < direction.size(); ++i)
@@ -88,7 +90,7 @@ namespace Planners
                 if (discrete_world_.isOccupied(newCoordinates) ||
                     discrete_world_.isInClosedList(newCoordinates))
                     continue;
-                unsigned int totalCost = current->G + (i < 6 ? 100 : (i < 18 ? 141 : 173)); //This is more efficient
+                // unsigned int totalCost = current->G + (i < 6 ? 100 : (i < 18 ? 141 : 173)); //This is more efficient
 
                 Node *successor = discrete_world_.getNodePtr(newCoordinates);
 
@@ -96,6 +98,14 @@ namespace Planners
 
                 if (!discrete_world_.isInOpenList(newCoordinates))
                 {
+                    unsigned int totalCost = current->G;
+
+                    if(direction.size()  == 8){
+                        totalCost += (i < 4 ? 100 : 141); //This is more efficient
+                    }else{
+                        totalCost += (i < 6 ? 100 : (i < 18 ? 141 : 173)); //This is more efficient
+                    }
+
                     successor->parent = current;
                     successor->G = totalCost;
                     successor->H = heuristic(successor->coordinates, target_);

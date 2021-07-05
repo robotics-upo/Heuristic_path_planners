@@ -31,6 +31,27 @@ namespace Planners
         using PathData        = std::map<std::string, DataVariant>;
         
         /**
+         * @brief 
+         * 
+         */
+        struct gridCell
+	    {
+	    	float dist{0};
+	    	float prob{0};
+	    };
+        /**
+         * @brief 
+         * 
+         */
+        struct gridData
+        {
+            unsigned int grid_size{0};
+            unsigned int grid_size_x{0};
+            unsigned int grid_size_y{0};
+            unsigned int grid_size_z{0};
+            unsigned int sensor_dev{0};
+        };
+        /**
          * @brief Overload ofstream operator << for std::vector<<CoordinateList>
          * 
          * @tparam T 

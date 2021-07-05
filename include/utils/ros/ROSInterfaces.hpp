@@ -21,6 +21,7 @@
 #include <pcl_ros/transforms.h>
 
 #include "utils/utils.hpp"
+#include "Grid3D/grid3d.hpp"
 #include "Planners/PathGenerator.hpp"
 
 #include <math.h>
@@ -95,6 +96,17 @@ namespace Planners
          * @return false Never returns false at this version
          */
         bool configureWorldFromPointCloud(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &_points, PathGenerator &_algorithm, const double &_resolution);
+
+        /**
+         * @brief 
+         * 
+         * @param _grid 
+         * @param _algorithm 
+         * @return true 
+         * @return false 
+         */
+        bool configureWorldCosts(Grid3d &_grid, PathGenerator &_algorithm);
+
     }
 }
 

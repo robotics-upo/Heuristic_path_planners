@@ -83,6 +83,8 @@ PathData AStarGenerator::findPath(const Vec3i &source_, const Vec3i &target_)
 	explored_node_marker_.header.seq++;
 	explored_node_marker_.points.push_back(point);
     explored_nodes_marker_pub_.publish(explored_node_marker_);
+    std::cout << "Node " << current->coordinates <<  " Cost: " << current->cost << std::endl;
+    usleep(1e4);
 #endif
 
         for (unsigned int i = 0; i < direction.size(); ++i) {
@@ -92,16 +94,18 @@ PathData AStarGenerator::findPath(const Vec3i &source_, const Vec3i &target_)
             if ( discrete_world_.isOccupied(newCoordinates) || 
                  discrete_world_.isInClosedList(newCoordinates) ) 
                 continue;
+
+            
+            Node *successor = discrete_world_.getNodePtr(newCoordinates);
+
+            if(successor == nullptr) continue;
+
             if(direction.size()  == 8){
                 totalCost += (i < 4 ? 100 : 141); //This is more efficient
             }else{
                 totalCost += (i < 6 ? 100 : (i < 18 ? 141 : 173)); //This is more efficient
             }
             
-            Node *successor = discrete_world_.getNodePtr(newCoordinates);
-
-            if(successor == nullptr) continue;
-
             if (!discrete_world_.isInOpenList(newCoordinates)) { 
                 successor->parent = current;
                 successor->G = totalCost;
