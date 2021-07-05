@@ -59,7 +59,8 @@ private:
         algorithm_->publishOccupationMarkersMap();
         occupancy_grid_sub_.shutdown();
         ROS_INFO("Occupancy Grid Loaded");
-
+        occupancy_grid_ = *_grid;
+        input_map = 1;
     }
 
     void pointCloudCallback(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &_points)
@@ -70,14 +71,15 @@ private:
         algorithm_->publishOccupationMarkersMap();
         utils::configureWorldCosts(*m_grid3d_, *algorithm_);
         ROS_INFO("Published occupation marker map");
-
+        cloud_ = *_points;
+        input_map = 2;
         pointcloud_sub_.shutdown();
     }   
     bool setAlgorithm(heuristic_planners::SetAlgorithmRequest &_req, heuristic_planners::SetAlgorithmResponse &rep){
         
         configureAlgorithm(_req.algorithm.data);
-        pointcloud_sub_        = lnh_.subscribe<pcl::PointCloud<pcl::PointXYZ>>("/points", 1, &HeuristicPlannerROS::pointCloudCallback, this);
-        occupancy_grid_sub_ = lnh_.subscribe<nav_msgs::OccupancyGrid>("/grid", 1, &HeuristicPlannerROS::occupancyGridCallback, this);
+        // pointcloud_sub_        = lnh_.subscribe<pcl::PointCloud<pcl::PointXYZ>>("/points", 1, &HeuristicPlannerROS::pointCloudCallback, this);
+        // occupancy_grid_sub_ = lnh_.subscribe<nav_msgs::OccupancyGrid>("/grid", 1, &HeuristicPlannerROS::occupancyGridCallback, this);
 
         rep.result.data = true;
         return true;
@@ -211,6 +213,13 @@ private:
         if(save_data_)
             ROS_INFO("Saving path planning data results to %s", file_data_path_.c_str());
 
+        //
+        if( input_map == 1 ){
+            utils::configureWorldFromOccupancyWithCosts(occupancy_grid_, *algorithm_);
+        }else if( input_map == 2 ){
+            utils::configureWorldFromPointCloud(boost::make_shared<pcl::PointCloud<pcl::PointXYZ>>(cloud_), *algorithm_, resolution_);
+        }
+
     }
     void configMarkers(const std::string &_ns, const std::string &_frame, const double &_scale){
 
@@ -277,6 +286,13 @@ private:
     bool inflate_{false};
     unsigned int inflation_steps_{0};
     std::string file_data_path_;
+    
+    nav_msgs::OccupancyGrid occupancy_grid_;
+    pcl::PointCloud<pcl::PointXYZ> cloud_;
+    //0: no map yet
+    //1: using occupancy
+    //2: using cloud
+    int input_map{0};
 };
 int main(int argc, char **argv)
 {

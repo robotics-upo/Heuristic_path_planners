@@ -73,6 +73,14 @@ Visualization Manager:
       Value: true
     - Class: rviz/Marker
       Enabled: true
+      Marker Topic: /test_text_marker
+      Name: Test Information
+      Namespaces:
+        planners: true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
       Marker Topic: /planner_ros_node/path_line_markers
       Name: Path Line Markers
       Namespaces:
@@ -84,7 +92,7 @@ Visualization Manager:
       Marker Topic: /planner_ros_node/astar_explored_nodes
       Name: Explored Nodes
       Namespaces:
-        debug: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -187,9 +195,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.6397965550422668
+      Pitch: 0.569796621799469
       Target Frame: <Fixed Frame>
-      Yaw: 4.0289740562438965
+      Yaw: 4.838975429534912
     Saved: ~
 Window Geometry:
   Displays:
