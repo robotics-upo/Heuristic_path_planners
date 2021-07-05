@@ -353,7 +353,9 @@ namespace utils
          * @return Vec3i 
          */
         Vec3i getWorldSize() const{
-            return world_size_;
+            return { static_cast<int>(world_x_size_),
+                     static_cast<int>(world_y_size_), 
+                     static_cast<int>(world_z_size_)};
         }
     private:
         /**
