@@ -347,6 +347,14 @@ namespace utils
         double getResolution() const{
             return resolution_;
         }
+        /**
+         * @brief Get the World Size internal object (discrete)
+         * 
+         * @return Vec3i 
+         */
+        Vec3i getWorldSize() const{
+            return world_size_;
+        }
     private:
         /**
          * @brief checkValid overloaded function for Vec3i objects

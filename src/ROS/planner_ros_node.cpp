@@ -67,6 +67,7 @@ private:
         ROS_INFO("Loading map...");
         utils::configureWorldFromPointCloud(_points, *algorithm_, resolution_);
         algorithm_->publishOccupationMarkersMap();
+        utils::configureWorldCosts(*m_grid3d_, *algorithm_);
         ROS_INFO("Published occupation marker map");
 
         pointcloud_sub_.shutdown();

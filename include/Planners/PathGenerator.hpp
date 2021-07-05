@@ -55,6 +55,18 @@ namespace Planners
          */
         void setWorldSize(const Vec3i &worldSize_,const double _resolution);
         /**
+         * @brief Get the World Size object
+         * 
+         * @return Vec3i discrete world bounds
+         */
+        Vec3i getWorldSize();
+        /**
+         * @brief Get the World Resolution object
+         * 
+         * @return double resolution
+         */
+        double getWorldResolution();
+        /**
          * @brief Configure the heuristic
          * 
          * @param heuristic_ Should be one of the static functions of the Heuristic Class

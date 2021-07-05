@@ -31,7 +31,12 @@ namespace Planners
     {
         discrete_world_.resizeWorld(_worldSize, _resolution);
     }
-
+    Vec3i PathGenerator::getWorldSize(){
+        return discrete_world_.getWorldSize();
+    }
+    double PathGenerator::getWorldResolution(){
+        return discrete_world_.getResolution();
+    }
     void PathGenerator::setHeuristic(HeuristicFunction heuristic_)
     {
         heuristic = std::bind(heuristic_, std::placeholders::_1, std::placeholders::_2);

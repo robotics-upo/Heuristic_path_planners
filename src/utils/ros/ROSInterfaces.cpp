@@ -69,10 +69,31 @@ namespace Planners
 
             return true;
         }
-        bool configureWorldFromPointCloud(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &_points, PathGenerator &_algorithm, const double &_resolution){
+        bool configureWorldFromPointCloud(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &_points, PathGenerator &_algorithm, const double &_resolution)
+        {
 
-            for(auto &it: *_points){
+            for (auto &it : *_points)
                 _algorithm.addCollision(discretePoint(it, _resolution));
+
+            return true;
+        }
+
+        bool configureWorldCosts(Grid3d &_grid, PathGenerator &_algorithm)
+        {
+
+            auto world_size = _algorithm.getWorldSize();
+            auto resolution = _algorithm.getWorldResolution();
+
+            for (int i = 0; i < world_size.x; i++)
+            {
+                for (int j = 0; j < world_size.z; j++)
+                {
+                    for (int k = 0; k < world_size.z; k++)
+                    {
+                        auto cost = _grid.getCellCost(i * resolution, j * resolution, k * resolution);
+                        _algorithm.configureCellCost({i, j, k}, cost);
+                    }
+                }
             }
 
             return true;

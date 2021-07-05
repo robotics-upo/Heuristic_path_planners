@@ -19,7 +19,7 @@
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl_conversions/pcl_conversions.h>
 
-#include <heuristic_planners/CellCostValue.h>
+#include "utils/utils.hpp"
 
 class Grid3d
 {
@@ -27,8 +27,7 @@ private:
 	
 	// Ros parameters
 	ros::NodeHandle m_nh;
-	ros::ServiceServer getProb_server;
-	bool m_saveGrid, m_publishPc;
+	bool m_publishPc;
 	std::string m_mapPath, m_nodeName;
 	std::string m_globalFrameId;
 	float m_sensorDev, m_gridSlice;
@@ -40,17 +39,7 @@ private:
 	octomap::OcTree *m_octomap;
 	
 	// 3D probabilistic grid cell
-	struct gridCell
-	{
-		float dist;
-		float prob;
-		gridCell(void)
-		{
-			dist = -1.0;
-			prob =  0.0;
-		}
-	};
-	gridCell *m_grid;
+	Planners::utils::gridCell *m_grid;
 	int m_gridSize, m_gridSizeX, m_gridSizeY, m_gridSizeZ;
 	int m_gridStepY, m_gridStepZ;
 	
@@ -100,7 +89,6 @@ public:
 		lnh.param("robot_radius", robot_radius, 0.4);		
 		lnh.param("use_costmap_function", use_costmap_function, (bool)true);		
 
-		getProb_server = lnh.advertiseService("get_cell_probability", &Grid3d::getCellProbability,this);
 		// Load octomap 
 		m_octomap = NULL;
 		m_grid = NULL;
@@ -160,19 +148,7 @@ public:
 
 		return true;
 	}
-	bool getCellProbability(heuristic_planners::CellCostValueRequest &req, heuristic_planners::CellCostValueResponse &rep){
-
-		if(req.x.data >= 0.0   && req.y.data >= 0.0   && req.z.data >= 0.0 && 
-		   req.x.data < m_maxX && req.y.data < m_maxY && req.z.data < m_maxZ)
-		{
-			int index = point2grid(req.x.data, req.y.data, req.z.data);
-			rep.probability.data = m_grid[index].prob;
-			return true;
-		}else{
-			return false;
-		}
-
-	}
+	
 	void setGridSliceHeight(const double _height){
 		if(_height < m_maxZ && _height > 0.0 ){
 			m_gridSlice = _height;
@@ -217,9 +193,20 @@ public:
 	{
 		return (x >= 0.0 && y >= 0.0 && z >= 0.0 && x < m_maxX && y < m_maxY && z < m_maxZ);
 	}
+	int getCellCost(const float &_x, const float &_y, const float &_z){
+		
+		if( !isIntoMap(_x, _y, _z) )
+			return 0;
+
+		int index = point2grid(_x, _y, _z);
+		
+		return m_grid[index].prob;
+	}
 
 protected:
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 	void publishMapPointCloudTimer(const ros::TimerEvent& event)
 	{
 		publishMapPointCloud();
@@ -229,6 +216,7 @@ protected:
 	{
 		publishGridSlice();
 	}
+#pragma GCC diagnostic pop
 
 	bool loadOctomap(std::string &path)
 	{
@@ -311,7 +299,7 @@ protected:
 		fwrite(&m_sensorDev, sizeof(float), 1, pf);
 		
 		// Write grid cells
-		fwrite(m_grid, sizeof(gridCell), m_gridSize, pf);
+		fwrite(m_grid, sizeof(Planners::utils::gridCell), m_gridSize, pf);
 		
 		// Close file
 		fclose(pf);
@@ -343,8 +331,8 @@ protected:
 		// Write grid cells
 		if(m_grid != NULL)
 			delete []m_grid;
-		m_grid = new gridCell[m_gridSize];
-		fread(m_grid, sizeof(gridCell), m_gridSize, pf);
+		m_grid = new Planners::utils::gridCell[m_gridSize];
+		fread(m_grid, sizeof(Planners::utils::gridCell), m_gridSize, pf);
 		
 		// Close file
 		fclose(pf);
@@ -395,7 +383,7 @@ protected:
 		m_gridSize = m_gridSizeX*m_gridSizeY*m_gridSizeZ;
 		m_gridStepY = m_gridSizeX;
 		m_gridStepZ = m_gridSizeX*m_gridSizeY;
-		m_grid = new gridCell[m_gridSize];
+		m_grid = new Planners::utils::gridCell[m_gridSize];
 
 		// Setup kdtree
 		m_kdtree.setInputCloud(m_cloud);
