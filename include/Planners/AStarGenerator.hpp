@@ -61,8 +61,11 @@ namespace Planners{
 
 #ifdef ROS
         ros::NodeHandle lnh_{"~"};
-        ros::Publisher explored_nodes_marker_pub_, occupancy_marker_pub_, openset_marker_pub_, closedset_marker_pub_, best_node_marker_pub_;
-        visualization_msgs::Marker explored_node_marker_, openset_markers_, closed_set_markers_, best_node_marker_;
+        ros::Publisher explored_nodes_marker_pub_, occupancy_marker_pub_, 
+                       openset_marker_pub_, closedset_marker_pub_,
+                       best_node_marker_pub_, aux_text_marker_pub_;
+        visualization_msgs::Marker explored_node_marker_, openset_markers_, 
+                                   closed_set_markers_, best_node_marker_, aux_text_marker_;
         float resolution_;
     	pcl::PointCloud<pcl::PointXYZ>  occupancy_marker_; // Occupancy Map as PointCloud markers
 

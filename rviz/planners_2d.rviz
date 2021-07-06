@@ -3,7 +3,8 @@ Panels:
     Help Height: 78
     Name: Displays
     Property Tree Widget:
-      Expanded: ~
+      Expanded:
+        - /OpenSet Nodes1/Status1
       Splitter Ratio: 0.8294117450714111
     Tree Height: 719
   - Class: rviz/Selection
@@ -84,7 +85,7 @@ Visualization Manager:
       Marker Topic: /planner_ros_node/path_line_markers
       Name: Path Line Markers
       Namespaces:
-        astar: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -121,10 +122,18 @@ Visualization Manager:
       Value: true
     - Class: rviz/Marker
       Enabled: true
+      Marker Topic: /planner_ros_node/aux_text_marker
+      Name: Aux Text
+      Namespaces:
+        debug: true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
       Marker Topic: /planner_ros_node/path_points_markers
       Name: Path Point Markers
       Namespaces:
-        astar: true
+        {}
       Queue Size: 100
       Value: true
     - Alpha: 0.5
@@ -203,7 +212,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/ThirdPersonFollower
-      Distance: 3.623234987258911
+      Distance: 3.047102451324463
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -219,9 +228,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.5047963857650757
+      Pitch: 0.5797966718673706
       Target Frame: <Fixed Frame>
-      Yaw: 4.708967208862305
+      Yaw: 4.73896598815918
     Saved: ~
 Window Geometry:
   Displays:

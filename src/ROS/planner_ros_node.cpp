@@ -84,6 +84,10 @@ private:
     bool requestPathService(heuristic_planners::GetPathRequest &_req, heuristic_planners::GetPathResponse &_rep){
 
         ROS_INFO("Path requested, computing path");
+        //delete previous markers
+        publishMarker(path_line_markers_, line_markers_pub_);
+        publishMarker(path_points_markers_, point_markers_pub_);
+
         //Astar coordinate list is std::vector<vec3i>
         const auto discrete_goal =  discretePoint(_req.goal, resolution_);
         const auto discrete_start = discretePoint(_req.start, resolution_);
@@ -113,8 +117,6 @@ private:
                 std::cerr << "Bad variant error: " << ex.what() << std::endl;
             }
 
-            path_line_markers_.points.clear();
-            path_points_markers_.points.clear();
             for(const auto &it: std::get<CoordinateList>(path_data["path"])){
                 _rep.path_points.push_back(continousPoint(it, resolution_));
                 path_line_markers_.points.push_back(continousPoint(it, resolution_));
@@ -123,6 +125,9 @@ private:
             
             publishMarker(path_line_markers_, line_markers_pub_);
             publishMarker(path_points_markers_, point_markers_pub_);
+            
+            path_line_markers_.points.clear();
+            path_points_markers_.points.clear();
 
             ROS_INFO("Path calculated succesfully");
 
