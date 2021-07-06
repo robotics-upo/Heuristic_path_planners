@@ -167,10 +167,6 @@ private:
         }else if( algorithm_name == "costastar" ){
             ROS_INFO("Using Cost Aware A*");
             algorithm_.reset(new CostAwareAStarGenerator(use3d));
-            float cost_weight;
-            lnh_.param("cost_weight", cost_weight, (float)0.0); // In meters
-            algorithm_->setCostFactor(cost_weight);
-
         }else if ( algorithm_name == "thetastar" ){
             ROS_INFO("Using Theta*");
             algorithm_.reset(new ThetaStarGenerator(use3d));
@@ -180,12 +176,6 @@ private:
         }else if( algorithm_name == "costlazythetastar"){
             ROS_INFO("Using Cost Aware LazyTheta*");
             algorithm_.reset(new CostAwareLazyThetaStarGenerator(use3d));
-            float cost_weight, sight_dist;
-            lnh_.param("cost_weight", cost_weight, (float)0.0); // In meters
-            lnh_.param("max_line_of_sight_distance", sight_dist, (float)1000.0); // In meters
-            algorithm_->setCostFactor(cost_weight);
-            algorithm_->setMaxLineOfSight(sight_dist);
-            
         }else{
             ROS_WARN("Wrong algorithm name parameter. Using ASTAR by default");
             algorithm_.reset(new AStarGenerator(use3d));
@@ -227,7 +217,12 @@ private:
         }else if( input_map_ == 2 ){
             utils::configureWorldFromPointCloud(boost::make_shared<pcl::PointCloud<pcl::PointXYZ>>(cloud_), *algorithm_, resolution_);
         }
-
+        //Algorithm specific parameters. Its important to set line of sight after configuring world size(it depends on the resolution)
+        float sight_dist, cost_weight;
+        lnh_.param("max_line_of_sight_distance", sight_dist, (float)1000.0); // In meters
+        lnh_.param("cost_weight", cost_weight, (float)0.0);
+        algorithm_->setMaxLineOfSight(sight_dist);
+        algorithm_->setCostFactor(cost_weight);
     }
     void configMarkers(const std::string &_ns, const std::string &_frame, const double &_scale){
 

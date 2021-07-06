@@ -59,13 +59,13 @@ namespace utils
                          const unsigned int &_world_z_size,
                          const double &_resolution)
         {
-            world_size_x_ = _world_x_size;
-            world_size_y_ = _world_y_size;
-            world_size_z_ = _world_z_size;
+            world_x_size_ = _world_x_size;
+            world_y_size_ = _world_y_size;
+            world_z_size_ = _world_z_size;
             resolution_   = _resolution;
 
             discrete_world_vector_.clear();
-            discrete_world_vector_.resize(static_cast<long>(world_size_x_ * world_size_y_ * world_size_z_));
+            discrete_world_vector_.resize(world_x_size_ * world_y_size_ * _world_z_size);
             Node node;
             std::fill(discrete_world_vector_.begin(), discrete_world_vector_.end(), node);
             
@@ -352,9 +352,9 @@ namespace utils
          * @return Vec3i 
          */
         Vec3i getWorldSize() const{
-            return { static_cast<int>(world_size_x_),
-                     static_cast<int>(world_size_y_), 
-                     static_cast<int>(world_size_z_)};
+            return { static_cast<int>(world_x_size_),
+                     static_cast<int>(world_y_size_), 
+                     static_cast<int>(world_z_size_)};
         }
     private:
         /**
@@ -377,13 +377,13 @@ namespace utils
          * @return true if position inside the workspace 
          * @return false if any of the coordinates is bigger than the associated world size dimension
          */
-        bool checkValid(const int &_x, 
-                        const int &_y, 
-                        const int &_z) {
+        bool checkValid(const unsigned int &_x, 
+                        const unsigned int &_y, 
+                        const unsigned int &_z) {
 
-            if ( _x >= world_size_x_ ||
-                 _y >= world_size_y_ ||
-                 _z >= world_size_z_ )
+            if ( _x >= world_x_size_ ||
+                 _y >= world_y_size_ ||
+                 _z >= world_z_size_ )
                 return false;
 
             return true;
@@ -408,7 +408,7 @@ namespace utils
          */
         unsigned int getWorldIndex(const int &x, const int &y, const int &z)
         {
-            return (unsigned int)( z * world_size_x_ * world_size_y_ + y * world_size_x_ + x);
+            return (unsigned int)( z * world_x_size_ * world_y_size_ + y * world_x_size_ + x);
         }
         /**
          * @brief Get the Discrete World Position From Index object
@@ -418,17 +418,18 @@ namespace utils
          */
         Vec3i getDiscreteWorldPositionFromIndex(const int _index){
 
-            int z = std::floor(_index / (world_size_x_ * world_size_y_));
-            int ind = _index - ( z * world_size_y_ * world_size_x_ );
-            int y = std::floor(ind / world_size_x_);
-            int x = std::floor(ind % world_size_x_);
+            int z = std::floor(_index / (world_x_size_ * world_y_size_));
+            int ind = _index - ( z * world_y_size_ * world_x_size_ );
+            int y = std::floor(ind /world_x_size_);
+            int x = std::floor(ind % world_x_size_);
 
-            return {x, y, z};
+            Vec3i vec{x, y, z};
+            return vec;
         }
 
         std::vector<Planners::utils::Node> discrete_world_vector_;
 
-        int world_size_x_, world_size_y_, world_size_z_;
+        unsigned int world_x_size_, world_y_size_, world_z_size_;
         double resolution_;
     };
 

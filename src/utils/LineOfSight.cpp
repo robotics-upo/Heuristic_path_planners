@@ -103,12 +103,9 @@ namespace Planners
             }
             bool bresenham3DWithMaxThreshold(const Node *_lnode, const Node *_rnode, DiscreteWorld &_world, const unsigned int _threshold){
                 
-                auto dist = utils::geometry::distanceBetween2Nodes(_lnode, _rnode);
-                if(  dist >= ( 100 * _threshold ) ){ //100 is because of the internal distance units
-                    std::cout << "Dist between " << _rnode->coordinates << "and " << _lnode->coordinates << " is " << dist << " cells, >= " << 100 *  _threshold << std::endl;
+                if( utils::geometry::distanceBetween2Nodes(_lnode, _rnode) >= ( 100 * _threshold ) ) //100 is because of the internal distance units
                     return false;
-                }
-
+                
                 return bresenham3D(_lnode, _rnode, _world);
             }
         }
