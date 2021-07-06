@@ -37,7 +37,7 @@ namespace Planners
          * @param target_ Goal discrete coordinates
          * @return PathData PathData Results stored as PathData object
          */
-        PathData findPath(const Vec3i &source_, const Vec3i &target_);
+        virtual PathData findPath(const Vec3i &source_, const Vec3i &target_);
 
     protected:
 
@@ -47,14 +47,14 @@ namespace Planners
          * @param s_aux Pointer to first node
          * @param s2_aux Pointer to second node
          */
-        void ComputeCost(Node *s_aux, Node *s2_aux);
+        virtual void ComputeCost(Node *s_aux, Node *s2_aux);
 
         /**
          * @brief SetVertex function
          * Line of sight is checked inside this function
          * @param s_aux 
          */
-        void SetVertex(Node *s_aux);
+        virtual void SetVertex(Node *s_aux);
                 
     };
 

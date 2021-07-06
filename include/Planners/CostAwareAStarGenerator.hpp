@@ -32,7 +32,7 @@ namespace Planners{
          * @param target_ Goal discrete coordinates
          * @return PathData PathData Results stored as PathData object
          */
-        PathData findPath(const Vec3i &source_, const Vec3i &target_);
+        virtual PathData findPath(const Vec3i &source_, const Vec3i &target_);
 
     };
 

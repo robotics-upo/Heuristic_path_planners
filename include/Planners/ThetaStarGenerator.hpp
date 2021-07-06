@@ -38,7 +38,7 @@ namespace Planners
          * @param target_ Goal discrete coordinates
          * @return PathData PathData Results stored as PathData object
          */
-        PathData findPath(const Vec3i &source_, const Vec3i &target_);
+        virtual PathData findPath(const Vec3i &source_, const Vec3i &target_);
 
     protected:
         /**
@@ -48,7 +48,7 @@ namespace Planners
          * @param s2 Pointer to node s2
          * @param openset reference to openset to erase and insert the nodes in some cases
          */
-        void UpdateVertex(Node *s, Node *s2, NodeSet &openset);
+        virtual void UpdateVertex(Node *s, Node *s2, NodeSet &openset);
         
         /**
          * @brief Compute cost algorithm function
@@ -56,7 +56,7 @@ namespace Planners
          * @param s_aux Pointer to first node
          * @param s2_aux Pointer to the second node
          */
-        void ComputeCost(Node *s_aux, Node *s2_aux);
+        virtual void ComputeCost(Node *s_aux, Node *s2_aux);
     };
 
 }

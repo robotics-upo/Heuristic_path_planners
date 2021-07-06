@@ -15,6 +15,7 @@
     <arg name="data_file_path"      default="$(env HOME)/planning.txt"/>
 
     <arg name="cost_weight" default="1.0"/>
+    <arg name="max_line_of_sight_distance" default="1.0"/>
 
     <arg name="cost_scaling_factor" default="1.0"/>
     <arg name="robot_radius"        default="0.5"/>
@@ -33,6 +34,7 @@
         <param name="file_path"             value="$(arg data_file_path)"/>
         <param name="algorithm"             value="$(arg algorithm_name)"/>
         <param name="cost_weight"           value="$(arg cost_weight)"/>
+        <param name="max_line_of_sight_distance"   value="$(arg max_line_of_sight_distance)"/>
 
         <param name="cost_scaling_factor"   value="$(arg cost_scaling_factor)"/>
         <param name="robot_radius"          value="$(arg robot_radius)"/>

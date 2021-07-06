@@ -135,6 +135,12 @@ namespace Planners
         virtual void setCostFactor(const float &_factor){ cost_weight_ = _factor; }
 
         /**
+         * @brief Set the Max Line Of Sight object
+         * 
+         * @param _max_line_of_sight 
+         */
+        virtual void setMaxLineOfSight(const float &_max_line_of_sight){ max_line_of_sight_cells_ = std::floor(_max_line_of_sight/discrete_world_.getResolution()); }
+        /**
          * @brief Deleted function to be inherit from
          * 
          */
@@ -161,7 +167,7 @@ namespace Planners
         bool do_inflate_{true};
 
         float cost_weight_{0};
-
+        unsigned int max_line_of_sight_cells_;
 
     private:
     };

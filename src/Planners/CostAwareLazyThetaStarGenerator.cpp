@@ -2,13 +2,13 @@
 
 namespace Planners
 {
-    
     void CostAwareLazyThetaStarGenerator::SetVertex(Node *s_aux)
-    {
-
-        if (!LineOfSight::bresenham3DWithMaxThreshold((s_aux->parent), s_aux, discrete_world_, 15 ))
-        // if (!LineOfSight::bresenham3D((s_aux->parent), s_aux, discrete_world_))
+    {   
+        if (!LineOfSight::bresenham3DWithMaxThreshold((s_aux->parent), s_aux, discrete_world_, max_line_of_sight_cells_ ))
         {
+            unsigned int G_max = std::numeric_limits<unsigned int>::max(); 
+            unsigned int G_new;
+
             for (const auto &i: direction)
             {
                 Vec3i newCoordinates(s_aux->coordinates + i);
@@ -17,15 +17,13 @@ namespace Planners
 
                 if ( discrete_world_.isInClosedList(newCoordinates) )
                 {
-                    float G_new;
-                    float G_max = 100000; // TODO Poner bien
-
                     Node *successor2 = discrete_world_.getNodePtr(newCoordinates);
                     if (successor2 == nullptr) continue;
 
-                    G_new = successor2->G +  geometry::distanceBetween2Nodes(successor2, s_aux) + (500 * s_aux->cost);
+                    G_new = successor2->G +  geometry::distanceBetween2Nodes(successor2, s_aux) + static_cast<int>(cost_weight_ * successor2->cost);
                     if (G_new < G_max)
                     {
+                        G_max = G_new;
                         s_aux->parent = successor2;
                         s_aux->G = G_new;
                     }
@@ -37,10 +35,10 @@ namespace Planners
     {
         auto distanceParent2 = geometry::distanceBetween2Nodes(s_aux->parent, s2_aux);
 
-        if ((s_aux->parent->G + distanceParent2 + (500 * s_aux->cost)) < (s2_aux->G))
+        if ((s_aux->parent->G + distanceParent2 ) < (s2_aux->G))
         {
             s2_aux->parent = s_aux->parent;
-            s2_aux->G = s2_aux->parent->G + geometry::distanceBetween2Nodes(s2_aux->parent, s2_aux) +  (500 * s_aux->cost);
+            s2_aux->G = s2_aux->parent->G + geometry::distanceBetween2Nodes(s2_aux->parent, s2_aux) +  static_cast<int>(cost_weight_ * s_aux->cost);
         }
     }
 
@@ -81,16 +79,7 @@ namespace Planners
             //in every setVertex the line of sight function is called 
             line_of_sight_checks++;
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)
-            geometry_msgs::Point point;
-            point.x = current->coordinates.x * resolution_;
-            point.y = current->coordinates.y * resolution_;
-            point.z = current->coordinates.z * resolution_;
-            explored_node_marker_.header.stamp = ros::Time();
-            explored_node_marker_.header.seq++;
-            explored_node_marker_.points.push_back(point);
-            explored_nodes_marker_pub_.publish(explored_node_marker_);
-            std::cout << "Node " << current->coordinates <<  " Cost: " << current->cost << std::endl;
-            usleep(1e4);
+            publishROSDebugData(current, openSet, closedSet);
 #endif
 
             for (unsigned int i = 0; i < direction.size(); ++i)
@@ -118,7 +107,7 @@ namespace Planners
                     }
 
                     successor->parent = current;
-                    successor->G = totalCost + 500 * successor->cost;
+                    successor->G = totalCost + static_cast<int>(cost_weight_ * successor->cost);
                     successor->H = heuristic(successor->coordinates, target_);
                     openSet.insert(successor);
                     discrete_world_.setOpenValue(successor->coordinates, true);

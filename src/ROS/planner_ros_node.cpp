@@ -180,6 +180,12 @@ private:
         }else if( algorithm_name == "costlazythetastar"){
             ROS_INFO("Using Cost Aware LazyTheta*");
             algorithm_.reset(new CostAwareLazyThetaStarGenerator(use3d));
+            float cost_weight, sight_dist;
+            lnh_.param("cost_weight", cost_weight, (float)0.0); // In meters
+            lnh_.param("max_line_of_sight_distance", sight_dist, (float)1000.0); // In meters
+            algorithm_->setCostFactor(cost_weight);
+            algorithm_->setMaxLineOfSight(sight_dist);
+            
         }else{
             ROS_WARN("Wrong algorithm name parameter. Using ASTAR by default");
             algorithm_.reset(new AStarGenerator(use3d));

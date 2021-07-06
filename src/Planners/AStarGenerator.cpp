@@ -107,7 +107,8 @@ void AStarGenerator::publishROSDebugData(const Node* _node, const NodeSet &_open
     best_node_marker_.pose.position = continousPoint(_node->coordinates, resolution_);
     best_node_marker_.pose.position.z += resolution_;
 
-    aux_text_marker_.text = "Best node cost: " + std::to_string(_node->G+_node->H);
+    aux_text_marker_.text = "Best node G+H = " + std::to_string(_node->G+_node->H) +
+                 std::string("\nCost = ") + std::to_string(static_cast<int>(cost_weight_ * _node->cost));
 	aux_text_marker_.pose = best_node_marker_.pose;
     aux_text_marker_.pose.position.z += 5 * resolution_;
 
