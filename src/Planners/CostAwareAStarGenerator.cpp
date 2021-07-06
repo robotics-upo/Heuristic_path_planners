@@ -25,17 +25,8 @@ PathData CostAwareAStarGenerator::findPath(const Vec3i &source_, const Vec3i &ta
         discrete_world_.setOpenValue(current->coordinates, false);
         discrete_world_.setClosedValue(current->coordinates, true);
 
-#if defined(ROS) && defined(PUB_EXPLORED_NODES)
-    geometry_msgs::Point point;
-	point.x = current->coordinates.x * resolution_;
-	point.y = current->coordinates.y * resolution_;
-	point.z = current->coordinates.z * resolution_;
-    explored_node_marker_.header.stamp = ros::Time();
-	explored_node_marker_.header.seq++;
-	explored_node_marker_.points.push_back(point);
-    explored_nodes_marker_pub_.publish(explored_node_marker_);
-    std::cout << "Node " << current->coordinates <<  " Cost: " << current->cost << std::endl;
-    usleep(1e4);
+#if defined(ROS) && defined(PUB_EXPLORED_NODES)        
+        publishROSDebugData(current, openSet, closedSet);
 #endif
 
         for (unsigned int i = 0; i < direction.size(); ++i) {

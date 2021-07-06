@@ -48,6 +48,15 @@ namespace Planners{
          */
         void publishOccupationMarkersMap();
         
+        /**
+         * @brief 
+         * 
+         * @param _node 
+         * @param _open_set 
+         * @param _closed_set 
+         */
+        void publishROSDebugData(const Node* _node, const NodeSet &_open_set, const NodeSet &_closed_set);
+        
     protected:
 
 #ifdef ROS

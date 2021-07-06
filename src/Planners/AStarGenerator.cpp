@@ -67,6 +67,46 @@ void AStarGenerator::publishOccupationMarkersMap()
 #endif
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+void AStarGenerator::publishROSDebugData(const Node* _node, const NodeSet &_open_set, const NodeSet &_closed_set)
+{
+#if defined(ROS) && defined(PUB_EXPLORED_NODES)
+
+    explored_node_marker_.header.stamp = ros::Time();
+    explored_node_marker_.header.seq++;
+    openset_markers_.header.stamp = ros::Time();
+    openset_markers_.header.seq++;
+    closed_set_markers_.header.stamp = ros::Time();
+    closed_set_markers_.header.seq++;
+
+    openset_markers_.points.clear();
+    closed_set_markers_.points.clear();
+
+    explored_node_marker_.points.push_back(continousPoint(_node->coordinates, resolution_));
+    explored_nodes_marker_pub_.publish(explored_node_marker_);
+
+    for(const auto &it: _open_set)
+        openset_markers_.points.push_back(continousPoint(it->coordinates, resolution_));
+
+    for(const auto &it: _closed_set)
+        closed_set_markers_.points.push_back(continousPoint(it->coordinates, resolution_));
+
+    best_node_marker_.pose.position = continousPoint(_node->coordinates, resolution_);
+    best_node_marker_.pose.position.z += resolution_;
+    // std::cout<<"\tBest node cost: " <<_node->G+_node->H<<std::endl;
+
+    closedset_marker_pub_.publish(closed_set_markers_);
+    openset_marker_pub_.publish(openset_markers_);
+    best_node_marker_pub_.publish(best_node_marker_);
+
+    usleep(1e4);
+    // getchar();
+
+#endif
+#pragma GCC diagnostic pop
+
+}
 PathData AStarGenerator::findPath(const Vec3i &source_, const Vec3i &target_)
 {
     Node *current = nullptr;
@@ -91,16 +131,7 @@ PathData AStarGenerator::findPath(const Vec3i &source_, const Vec3i &target_)
         discrete_world_.setClosedValue(current->coordinates, true);
 
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)
-    geometry_msgs::Point point;
-	point.x = current->coordinates.x * resolution_;
-	point.y = current->coordinates.y * resolution_;
-	point.z = current->coordinates.z * resolution_;
-    explored_node_marker_.header.stamp = ros::Time();
-	explored_node_marker_.header.seq++;
-	explored_node_marker_.points.push_back(point);
-    explored_nodes_marker_pub_.publish(explored_node_marker_);
-    std::cout << "Node " << current->coordinates <<  " Cost: " << current->cost << std::endl;
-    usleep(1e4);
+        publishROSDebugData(current, openSet, closedSet);
 #endif
 
         for (unsigned int i = 0; i < direction.size(); ++i) {
