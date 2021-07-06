@@ -118,7 +118,6 @@ namespace utils
                 it.isInClosedList = false;
                 it.isInOpenList = false;
                 it.H = it.G = 0;
-                it.cost = 0;
                 it.parent = nullptr;
             }
         }
@@ -382,9 +381,9 @@ namespace utils
                         const int &_y, 
                         const int &_z) {
 
-            if ( _x > world_size_.x ||
-                 _y > world_size_.y ||
-                 _z > world_size_.z )
+            if ( _x >= world_x_size_ ||
+                 _y >= world_y_size_ ||
+                 _z >= world_z_size_ )
                 return false;
 
             return true;

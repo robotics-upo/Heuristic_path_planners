@@ -21,6 +21,9 @@ namespace Planners
 
         if (!LineOfSight::bresenham3D((s_aux->parent), s_aux, discrete_world_))
         {
+            unsigned int G_max = std::numeric_limits<unsigned int>::max(); 
+            unsigned int G_new;
+
             for (const auto &i: direction)
             {
                 Vec3i newCoordinates(s_aux->coordinates + i);
@@ -29,15 +32,13 @@ namespace Planners
 
                 if ( discrete_world_.isInClosedList(newCoordinates) )
                 {
-                    float G_new;
-                    float G_max = 100000; // TODO Poner bien
-
                     Node *successor2 = discrete_world_.getNodePtr(newCoordinates);
                     if (successor2 == nullptr) continue;
 
                     G_new = successor2->G +  geometry::distanceBetween2Nodes(successor2, s_aux);
                     if (G_new < G_max)
                     {
+                        G_max = G_new;
                         s_aux->parent = successor2;
                         s_aux->G = G_new;
                     }
@@ -93,16 +94,7 @@ namespace Planners
             //in every setVertex the line of sight function is called 
             line_of_sight_checks++;
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)
-            geometry_msgs::Point point;
-            point.x = current->coordinates.x * resolution_;
-            point.y = current->coordinates.y * resolution_;
-            point.z = current->coordinates.z * resolution_;
-            explored_node_marker_.header.stamp = ros::Time();
-            explored_node_marker_.header.seq++;
-            explored_node_marker_.points.push_back(point);
-            explored_nodes_marker_pub_.publish(explored_node_marker_);
-            std::cout << "Node " << current->coordinates <<  " Cost: " << current->cost << std::endl;
-            usleep(1e4);
+            publishROSDebugData(current, openSet, closedSet);
 #endif
 
             for (unsigned int i = 0; i < direction.size(); ++i)

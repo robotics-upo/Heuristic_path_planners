@@ -1,8 +1,10 @@
 #include <iostream>
 
 #include "Planners/AStarGenerator.hpp"
+#include "Planners/CostAwareAStarGenerator.hpp"
 #include "Planners/ThetaStarGenerator.hpp"
 #include "Planners/LazyThetaStarGenerator.hpp"
+#include "Planners/CostAwareLazyThetaStarGenerator.hpp"
 #include "utils/ros/ROSInterfaces.hpp"
 #include "utils/SaveDataVariantToFile.hpp"
 #include "Grid3D/grid3d.hpp"
@@ -53,12 +55,12 @@ private:
 
     void occupancyGridCallback(const nav_msgs::OccupancyGrid::ConstPtr &_grid){
         ROS_INFO("Loading OccupancyGrid map...");
-
-        utils::configureWorldFromOccupancy(*_grid, *algorithm_);
+        utils::configureWorldFromOccupancyWithCosts(*_grid, *algorithm_);
         algorithm_->publishOccupationMarkersMap();
         occupancy_grid_sub_.shutdown();
         ROS_INFO("Occupancy Grid Loaded");
-
+        occupancy_grid_ = *_grid;
+        input_map_ = 1;
     }
 
     void pointCloudCallback(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &_points)
@@ -69,21 +71,23 @@ private:
         algorithm_->publishOccupationMarkersMap();
         utils::configureWorldCosts(*m_grid3d_, *algorithm_);
         ROS_INFO("Published occupation marker map");
-
+        cloud_ = *_points;
+        input_map_ = 2;
         pointcloud_sub_.shutdown();
     }   
     bool setAlgorithm(heuristic_planners::SetAlgorithmRequest &_req, heuristic_planners::SetAlgorithmResponse &rep){
         
         configureAlgorithm(_req.algorithm.data);
-        pointcloud_sub_        = lnh_.subscribe<pcl::PointCloud<pcl::PointXYZ>>("/points", 1, &HeuristicPlannerROS::pointCloudCallback, this);
-        occupancy_grid_sub_ = lnh_.subscribe<nav_msgs::OccupancyGrid>("/grid", 1, &HeuristicPlannerROS::occupancyGridCallback, this);
-
         rep.result.data = true;
         return true;
     }
     bool requestPathService(heuristic_planners::GetPathRequest &_req, heuristic_planners::GetPathResponse &_rep){
 
         ROS_INFO("Path requested, computing path");
+        //delete previous markers
+        publishMarker(path_line_markers_, line_markers_pub_);
+        publishMarker(path_points_markers_, point_markers_pub_);
+
         //Astar coordinate list is std::vector<vec3i>
         const auto discrete_goal =  discretePoint(_req.goal, resolution_);
         const auto discrete_start = discretePoint(_req.start, resolution_);
@@ -113,8 +117,6 @@ private:
                 std::cerr << "Bad variant error: " << ex.what() << std::endl;
             }
 
-            path_line_markers_.points.clear();
-            path_points_markers_.points.clear();
             for(const auto &it: std::get<CoordinateList>(path_data["path"])){
                 _rep.path_points.push_back(continousPoint(it, resolution_));
                 path_line_markers_.points.push_back(continousPoint(it, resolution_));
@@ -123,6 +125,9 @@ private:
             
             publishMarker(path_line_markers_, line_markers_pub_);
             publishMarker(path_points_markers_, point_markers_pub_);
+            
+            path_line_markers_.points.clear();
+            path_points_markers_.points.clear();
 
             ROS_INFO("Path calculated succesfully");
 
@@ -159,13 +164,28 @@ private:
         if( algorithm_name == "astar" ){
             ROS_INFO("Using A*");
             algorithm_.reset(new AStarGenerator(use3d));
+        }else if( algorithm_name == "costastar" ){
+            ROS_INFO("Using Cost Aware A*");
+            algorithm_.reset(new CostAwareAStarGenerator(use3d));
+            float cost_weight;
+            lnh_.param("cost_weight", cost_weight, (float)0.0); // In meters
+            algorithm_->setCostFactor(cost_weight);
+
         }else if ( algorithm_name == "thetastar" ){
             ROS_INFO("Using Theta*");
             algorithm_.reset(new ThetaStarGenerator(use3d));
-
         }else if( algorithm_name == "lazythetastar" ){
             ROS_INFO("Using LazyTheta*");
             algorithm_.reset(new LazyThetaStarGenerator(use3d));
+        }else if( algorithm_name == "costlazythetastar"){
+            ROS_INFO("Using Cost Aware LazyTheta*");
+            algorithm_.reset(new CostAwareLazyThetaStarGenerator(use3d));
+            float cost_weight, sight_dist;
+            lnh_.param("cost_weight", cost_weight, (float)0.0); // In meters
+            lnh_.param("max_line_of_sight_distance", sight_dist, (float)1000.0); // In meters
+            algorithm_->setCostFactor(cost_weight);
+            algorithm_->setMaxLineOfSight(sight_dist);
+            
         }else{
             ROS_WARN("Wrong algorithm name parameter. Using ASTAR by default");
             algorithm_.reset(new AStarGenerator(use3d));
@@ -200,6 +220,13 @@ private:
         lnh_.param("file_path", file_data_path_, std::string("planing_data.txt"));		
         if(save_data_)
             ROS_INFO("Saving path planning data results to %s", file_data_path_.c_str());
+
+        //
+        if( input_map_ == 1 ){
+            utils::configureWorldFromOccupancyWithCosts(occupancy_grid_, *algorithm_);
+        }else if( input_map_ == 2 ){
+            utils::configureWorldFromPointCloud(boost::make_shared<pcl::PointCloud<pcl::PointXYZ>>(cloud_), *algorithm_, resolution_);
+        }
 
     }
     void configMarkers(const std::string &_ns, const std::string &_frame, const double &_scale){
@@ -267,6 +294,13 @@ private:
     bool inflate_{false};
     unsigned int inflation_steps_{0};
     std::string file_data_path_;
+    
+    nav_msgs::OccupancyGrid occupancy_grid_;
+    pcl::PointCloud<pcl::PointXYZ> cloud_;
+    //0: no map yet
+    //1: using occupancy
+    //2: using cloud
+    int input_map_{0};
 };
 int main(int argc, char **argv)
 {

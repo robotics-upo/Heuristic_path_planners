@@ -18,6 +18,7 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl_ros/point_cloud.h>
+#include "utils/ros/ROSInterfaces.hpp"
 #endif
 
 namespace Planners{
@@ -47,12 +48,24 @@ namespace Planners{
          */
         void publishOccupationMarkersMap();
         
+        /**
+         * @brief 
+         * 
+         * @param _node 
+         * @param _open_set 
+         * @param _closed_set 
+         */
+        void publishROSDebugData(const Node* _node, const NodeSet &_open_set, const NodeSet &_closed_set);
+        
     protected:
 
 #ifdef ROS
         ros::NodeHandle lnh_{"~"};
-        ros::Publisher explored_nodes_marker_pub_, occupancy_marker_pub_;
-        visualization_msgs::Marker explored_node_marker_;
+        ros::Publisher explored_nodes_marker_pub_, occupancy_marker_pub_, 
+                       openset_marker_pub_, closedset_marker_pub_,
+                       best_node_marker_pub_, aux_text_marker_pub_;
+        visualization_msgs::Marker explored_node_marker_, openset_markers_, 
+                                   closed_set_markers_, best_node_marker_, aux_text_marker_;
         float resolution_;
     	pcl::PointCloud<pcl::PointXYZ>  occupancy_marker_; // Occupancy Map as PointCloud markers
 

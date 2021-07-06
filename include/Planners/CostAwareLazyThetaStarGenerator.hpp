@@ -1,7 +1,7 @@
-#ifndef THETASTAR_HPP
-#define THETASTAR_HPP
+#ifndef COSTAWARELAZYTHETASTAR_HPP
+#define COSTAWARELAZYTHETASTAR_HPP
 /**
- * @file ThetaStarGenerator.hpp
+ * @file CostAwareLazyThetaStarGenerator.hpp
  * @author Rafael Rey (rreyarc@upo.es)
  * @brief 
  * @version 0.1
@@ -10,26 +10,25 @@
  * @copyright Copyright (c) 2021
  * 
  */
-#include <Planners/AStarGenerator.hpp>
+#include <Planners/LazyThetaStarGenerator.hpp>
 
 namespace Planners
 {
-
     /**
-     * @brief Theta* Algorithm Class
+     * @brief Lazy Theta* Algorithm Class
      * 
      */
-    class ThetaStarGenerator : public AStarGenerator
+    class CostAwareLazyThetaStarGenerator : public LazyThetaStarGenerator
     {
 
     public:
         
         /**
-         * @brief Construct a new Theta Star Generator object
+         * @brief Construct a new Lazy Theta Star Generator object
          * 
          * @param _use_3d This parameter allows the user to choose between planning on a plane (8 directions possibles) or in the 3D full space (26 directions)
          */
-        ThetaStarGenerator(bool _use_3d ):AStarGenerator(_use_3d) {}
+        CostAwareLazyThetaStarGenerator(bool _use_3d ):LazyThetaStarGenerator(_use_3d) {}
 
         /**
          * @brief Main function of the algorithm
@@ -41,22 +40,22 @@ namespace Planners
         virtual PathData findPath(const Vec3i &source_, const Vec3i &target_);
 
     protected:
+
         /**
-         * @brief Update Vertex function
-         * 
-         * @param s Pointer to node s
-         * @param s2 Pointer to node s2
-         * @param openset reference to openset to erase and insert the nodes in some cases
-         */
-        virtual void UpdateVertex(Node *s, Node *s2, NodeSet &openset);
-        
-        /**
-         * @brief Compute cost algorithm function
+         * @brief Compute cost function of the Lazy version of the algorithm
          * 
          * @param s_aux Pointer to first node
-         * @param s2_aux Pointer to the second node
+         * @param s2_aux Pointer to second node
          */
         virtual void ComputeCost(Node *s_aux, Node *s2_aux);
+
+        /**
+         * @brief SetVertex function
+         * Line of sight is checked inside this function
+         * @param s_aux 
+         */
+        virtual void SetVertex(Node *s_aux);
+                
     };
 
 }

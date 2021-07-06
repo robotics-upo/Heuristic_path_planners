@@ -54,7 +54,7 @@ namespace Planners
             DataVariantSaver(const std::string &_data_file, 
                              const std::vector<std::string> &_fields =
                             {"algorithm", "goal_coords", "start_coords", "time_spent",
-                             "explored_nodes", "path_length", "line_of_sight_checks", "solved"}): fields_(_fields)
+                             "explored_nodes", "path_length", "line_of_sight_checks", "solved", "cost_weight"}): fields_(_fields)
             {
                 out_file_data_.open(_data_file, std::ofstream::app);
             }
