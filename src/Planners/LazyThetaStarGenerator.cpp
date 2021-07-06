@@ -21,6 +21,9 @@ namespace Planners
 
         if (!LineOfSight::bresenham3D((s_aux->parent), s_aux, discrete_world_))
         {
+            unsigned int G_max = std::numeric_limits<unsigned int>::max(); 
+            unsigned int G_new;
+
             for (const auto &i: direction)
             {
                 Vec3i newCoordinates(s_aux->coordinates + i);
@@ -28,16 +31,15 @@ namespace Planners
                 if ( discrete_world_.isOccupied(newCoordinates) ) continue;
 
                 if ( discrete_world_.isInClosedList(newCoordinates) )
-                {
-                    float G_new;
-                    float G_max = 100000; // TODO Poner bien
 
+                {
                     Node *successor2 = discrete_world_.getNodePtr(newCoordinates);
                     if (successor2 == nullptr) continue;
 
                     G_new = successor2->G +  geometry::distanceBetween2Nodes(successor2, s_aux);
                     if (G_new < G_max)
                     {
+                        G_max = G_new;
                         s_aux->parent = successor2;
                         s_aux->G = G_new;
                     }
