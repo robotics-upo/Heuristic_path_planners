@@ -60,7 +60,7 @@ private:
         occupancy_grid_sub_.shutdown();
         ROS_INFO("Occupancy Grid Loaded");
         occupancy_grid_ = *_grid;
-        input_map = 1;
+        input_map_ = 1;
     }
 
     void pointCloudCallback(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &_points)
@@ -72,15 +72,12 @@ private:
         utils::configureWorldCosts(*m_grid3d_, *algorithm_);
         ROS_INFO("Published occupation marker map");
         cloud_ = *_points;
-        input_map = 2;
+        input_map_ = 2;
         pointcloud_sub_.shutdown();
     }   
     bool setAlgorithm(heuristic_planners::SetAlgorithmRequest &_req, heuristic_planners::SetAlgorithmResponse &rep){
         
         configureAlgorithm(_req.algorithm.data);
-        // pointcloud_sub_        = lnh_.subscribe<pcl::PointCloud<pcl::PointXYZ>>("/points", 1, &HeuristicPlannerROS::pointCloudCallback, this);
-        // occupancy_grid_sub_ = lnh_.subscribe<nav_msgs::OccupancyGrid>("/grid", 1, &HeuristicPlannerROS::occupancyGridCallback, this);
-
         rep.result.data = true;
         return true;
     }
@@ -214,9 +211,9 @@ private:
             ROS_INFO("Saving path planning data results to %s", file_data_path_.c_str());
 
         //
-        if( input_map == 1 ){
+        if( input_map_ == 1 ){
             utils::configureWorldFromOccupancyWithCosts(occupancy_grid_, *algorithm_);
-        }else if( input_map == 2 ){
+        }else if( input_map_ == 2 ){
             utils::configureWorldFromPointCloud(boost::make_shared<pcl::PointCloud<pcl::PointXYZ>>(cloud_), *algorithm_, resolution_);
         }
 
@@ -292,7 +289,7 @@ private:
     //0: no map yet
     //1: using occupancy
     //2: using cloud
-    int input_map{0};
+    int input_map_{0};
 };
 int main(int argc, char **argv)
 {

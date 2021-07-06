@@ -8,7 +8,10 @@ AStarGenerator::AStarGenerator(bool _use_3d = true): PathGenerator(_use_3d)
 
     //If compiled with ros and visualization
 #ifdef ROS
-    explored_nodes_marker_pub_ = lnh_.advertise<visualization_msgs::Marker>("astar_explored_nodes", 1);
+    explored_nodes_marker_pub_ = lnh_.advertise<visualization_msgs::Marker>("explored_nodes", 1);
+    openset_marker_pub_        = lnh_.advertise<visualization_msgs::Marker>("openset_nodes", 1);
+    closedset_marker_pub_      = lnh_.advertise<visualization_msgs::Marker>("closed_set_nodes", 1);
+    best_node_marker_pub_      = lnh_.advertise<visualization_msgs::Marker>("best_node_marker", 1);
 	occupancy_marker_pub_ = lnh_.advertise<pcl::PointCloud<pcl::PointXYZ>>("occupancy_markers", 1, true);
 
     std::string frame_id;
@@ -30,6 +33,19 @@ AStarGenerator::AStarGenerator(bool _use_3d = true): PathGenerator(_use_3d)
 	explored_node_marker_.color.r = 0.0;
 	explored_node_marker_.color.g = 1.0;
 	explored_node_marker_.color.b = 0.0;
+
+    openset_markers_    = explored_node_marker_;
+    openset_markers_.color.b = 1.0;
+    openset_markers_.color.g = 0.0;
+    closed_set_markers_ = explored_node_marker_;
+    closed_set_markers_.color.g = 0.0;
+    closed_set_markers_.color.r = 1.0;
+
+    best_node_marker_ = explored_node_marker_;
+    best_node_marker_.color.g = 0.7;
+    best_node_marker_.color.b = 0.7;
+	best_node_marker_.type = visualization_msgs::Marker::SPHERE;
+
 #endif
 
 }
