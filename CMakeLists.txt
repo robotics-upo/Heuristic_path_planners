@@ -5,21 +5,7 @@ add_compile_options(-std=c++17 -Wall -Wextra -pedantic)
 
 option(BUILD_DOC         "Build documentation   " ON)
 option(BUILD_ROS_SUPPORT "Build with ROS Support" ON)
-option(BUILD_DEBUG       "Build debug features  " OFF)
-
-## Find catkin macros and libraries
-find_package(catkin REQUIRED COMPONENTS
-  std_msgs
-  geometry_msgs
-  nav_msgs
-  visualization_msgs
-  message_generation
-  roscpp
-  pcl_conversions
-  pcl_ros
-  octomap_ros
-  costmap_2d
-)
+option(BUILD_DEBUG       "Build debug features  " ON)
 
 if(BUILD_DOC)
 # check if Doxygen is installed
@@ -47,13 +33,25 @@ unset(BUILD_DOC CACHE)
 
 if(BUILD_ROS_SUPPORT)
   add_definitions(-DROS)
-endif()
-unset(BUILD_ROS_SUPPORT CACHE)
+  ## Find catkin macros and libraries
+  find_package(catkin REQUIRED COMPONENTS
+    std_msgs
+    geometry_msgs
+    nav_msgs
+    visualization_msgs
+    message_generation
+    roscpp
+    pcl_conversions
+    pcl_ros
+    octomap_ros
+    costmap_2d
+  )
+  
+  if(BUILD_DEBUG)
+    add_definitions(-DPUB_EXPLORED_NODES)
+  endif()
+  unset(BUILD_DEBUG CACHE)
 
-if(BUILD_DEBUG)
-  add_definitions(-DPUB_EXPLORED_NODES)
-endif()
-unset(BUILD_DEBUG CACHE)
 ################################################
 ## Declare ROS messages, services and actions ##
 ################################################
@@ -87,7 +85,7 @@ catkin_package(
  CATKIN_DEPENDS std_msgs visualization_msgs geometry_msgs nav_msgs roscpp message_runtime costmap_2d
 #  DEPENDS system_lib
 )
-
+endif()
 ###########
 ## Build ##
 ###########
@@ -96,13 +94,17 @@ include_directories(
   include
   ${catkin_INCLUDE_DIRS}
 )
-
+##This is True by default but it's good to have it here as a reminder
+set(BUILD_SHARED_LIBS TRUE)
 list(APPEND ${PROJECT_NAME}_UTILS_SOURCES src/utils/geometry_utils.cpp
                                           src/utils/heuristic.cpp
                                           src/utils/LineOfSight.cpp
                                           src/utils/utils.cpp       
-                                          src/utils/ros/ROSInterfaces.cpp
                                           )
+if(BUILD_ROS_SUPPORT)
+list(APPEND ${PROJECT_NAME}_UTILS_SOURCES src/utils/ros/ROSInterfaces.cpp)
+endif()
+
 add_library(PathGenerator          src/Planners/PathGenerator.cpp 
                                    ${${PROJECT_NAME}_UTILS_SOURCES})
 
@@ -136,34 +138,47 @@ add_library(CostAwareLazyThetaStarGenerator src/Planners/CostAwareLazyThetaStarG
 list(APPEND ${PROJECT_NAME}_LIBRARIES PathGenerator AStarGenerator CostAwareAStarGenerator ThetaStarGenerator LazyThetaStarGenerator CostAwareLazyThetaStarGenerator)
 target_link_libraries(${${PROJECT_NAME}_LIBRARIES} ${catkin_LIBRARIES})
 add_dependencies( ${${PROJECT_NAME}_LIBRARIES} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+list(APPEND ${PROJECT_NAME}_TARGETS ${${PROJECT_NAME}_LIBRARIES})
 
-add_executable(planner_ros_node src/ROS/planner_ros_node.cpp )
-add_dependencies(planner_ros_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_LIBRARIES})
-target_link_libraries(planner_ros_node ${catkin_LIBRARIES} ${${PROJECT_NAME}_LIBRARIES})
+if(BUILD_ROS_SUPPORT)
+  add_executable(planner_ros_node src/ROS/planner_ros_node.cpp )
+  add_dependencies(planner_ros_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_LIBRARIES})
+  target_link_libraries(planner_ros_node ${catkin_LIBRARIES} ${${PROJECT_NAME}_LIBRARIES})
+  list(APPEND ${PROJECT_NAME}_TARGETS planner_ros_node)
+#############
+  ## Install ##
+#############
 
-list(APPEND ${PROJECT_NAME}_TARGETS ${${PROJECT_NAME}_LIBRARIES} planner_ros_node)
-#############
-## Install ##
-#############
 
 ## Mark executables and/or libraries for installation
-install(TARGETS ${${PROJECT_NAME}_TARGETS}
- ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
- LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
- RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+  install(TARGETS ${${PROJECT_NAME}_TARGETS}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+  )
 
 ## Mark cpp header files for installation
-install(DIRECTORY include/
+  install(DIRECTORY include/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
   FILES_MATCHING PATTERN "*.hpp"
-)
+  )
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
 
-install(DIRECTORY launch/ DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch)
-install(DIRECTORY rviz/ DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/rviz)
-install(DIRECTORY resources/ 
-        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/resources  
-        PATTERN ".gridm" EXCLUDE)
+  install(DIRECTORY launch/ DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch)
+  install(DIRECTORY rviz/ DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/rviz)
+  install(DIRECTORY resources/ 
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/resources  
+  PATTERN ".gridm" EXCLUDE)
+else()
+  install(DIRECTORY include/
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/include
+    FILES_MATCHING PATTERN "*.hpp"
+  )
+  
+  install(TARGETS ${${PROJECT_NAME}_TARGETS}
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+  )
 
+endif()
+unset(BUILD_ROS_SUPPORT CACHE)
