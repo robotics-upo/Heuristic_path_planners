@@ -25,12 +25,14 @@ This repo contains a series of Path Planning heuristic algorithms such as A*, Th
 Also take into account that the content of this repo is work-in-progress.
 
 ## Table of contents
-- [Quick Start](quick-start)
+- [Quick Start](#quick-start)
+- [Available Algorithms](#available-algorithms)
 - [Code Documentation](#code-documentation)
 - [Dependencies](#dependencies)
+- [Building The package](#building)
 - [What's included?](#whats-included)
 - [Running the demo ROS Node](#running-the-demo-ros-node)
-- [TODOs](#categories)
+- [TODOs](#todos)
 
 ## Quick-Start
 
@@ -87,31 +89,33 @@ goal:
   y: 40.0
   z: 4.0" 
 ```
+
+## Available Algorithms
+
+Currently there are 5 algorithms:
+
+- A*
+- Cost Aware A*: Variation of A* that also takes into account a costmap 
+- Theta*
+- Lazy Theta*
+- Cost Aware Lazy Theta*: Variaton of Lazy Theta* that also takes into account a costmap
+
+Every algorithm is built has a shared library if you build the package without ROS and without DEBUG features.
+If you build with the ROS features you can easily test all the algorithms above in the 2D / 3D variations through the included example ROS node. Please refer to the section [Running the demo ROS Node](#running-the-demo-ros-node).
+
+
 ## Code Documentation
 
 By default the CMake BUILD_DOC option is enabled so the doxygen documentation will be generated every time you run catkin_make. You can also read it [Online](https://codedocs.xyz/robotics-upo/3D_heuristic_path_planners)
 ## Dependencies
 
-If you want to easily run it go to the [Releases](https://github.com/RafaelRey/3D_heuristic_path_planners/releases) and download and install the desired debian package with:
+If you want to easily run it go to the [Releases](https://github.com/RafaelRey/Heuristic_path_planners/releases) and download and install the desired debian package with:
 
 ```bash
 sudo apt install ./ros-$ROS_DISTRO-heuristic_planners....deb
 ```
 
-To compile everything you need a ROS Melodic/Noetic installation in Ubuntu 18.04/20.04. If you want to use only the algorithm libraries you need a compiler with C++17 support (Gcc 7 or newer). 
-
-The user can also choose to compile the class ```PathGenerator``` and related ones with ROS debug features such as publication of the inflated map with markers and publication of the explored nodes with markers for RViz. To enable it uncommented the line
-
-```
-add_definitions(-DROS)
-```
-
-in the CMakeLists.txt. To enable explored nodes visualization marker publication uncomment the following line:
-
-```
-add_definitions(-DPUB_EXPLORED_NODES)
-```
-But for "production" uses and real tests you should uncomment these definitions, specially the publishing explores nodes one because it increases a lot the computation time because of the marker messages sending. Debians files on the Release tab are compiled only with the ROS definition, not with the PUB_EXPLORED_NODES one.
+But to compile everything you need a ROS Melodic/Noetic installation in Ubuntu 18.04/20.04. If you want to use only the algorithm libraries you need a compiler with C++17 support (Gcc 7 or newer). 
 
 To easily install the dependencies, download the source code onto your catkin workspace source folder, after that go to the catkin workspace root folder and run:
 
@@ -121,6 +125,18 @@ rosdep update && rosdep install --from-paths src/ -y -r
 
 Make sure you have sourced your ```devel/setup.bash``` in case you compile it or ```/opt/ros/$ROS_DISTRO/setup.bash``` in case you installed it.
 
+## Building
+
+The build system is CMake. By default CMakeLists.txt is configured to build the package with the ROS Features and nodes. The debug features such as step by step explored nodes publications are disabled by default. To enable/disable them you can play with the the CMake options at the beginning of the CMakeLists:
+
+```CMake
+option(BUILD_DOC         "Build documentation   " ON)
+option(BUILD_ROS_SUPPORT "Build with ROS Support" ON)
+option(BUILD_DEBUG       "Build debug features  " ON)
+```
+
+For production uses and real tests you should set **debug features** to **OFF**, because it increases a lot the computation time because of the marker messages sending. Debians files on the Release tab are compiled only with the ROS Support, not with the debug features.
+
 ## Running the demo ROS Node 
 
 The algorithms can be used for 2D and 3D. 2D is a special case of the 3D world size configuration. The world size Z must be equal to the resolution of the map, and the start/goals coordinates should have a 0 z component. The main internal difference for the algorithms is the number of directions that can be used to explore the space, that is 8 in 2D and 26 in 3D.
@@ -129,16 +145,16 @@ Also, the header ROSInterfaces.hpp include two interfaces to load PointClouds an
 
 To easily run the algorithms, some launch files are provided for ROS Nodes. Also 2D maps and 3D maps are provided 
 
-### 3D 
+### 3D Lazy Theta*
 
 ```bash
-roslaunch heuristic_planners planner.launch algorithm_name:=<algorithm_name>
+roslaunch heuristic_planners planner.launch algorithm_name:=lazythetastar
 ```
 
-### Theta*
+### 2D Theta*
 
 ```bash
-roslaunch heuristic_planners planner2d_example.launch algorithm_name:=<algorithm_name>
+roslaunch heuristic_planners planner2d_example.launch algorithm_name:=thetastar
 ```
 
 #### Parameters
@@ -161,12 +177,7 @@ In the 3D case, it will open an RViz window an load the default map *mbzirc_chal
 
 To request path you need to call the service ```/planner_ros_node/request_path``` filling the start and goal coordinates in meters(m). 
 
-
 ## TODOs
 
-- [ ] Allow using ```std::experimental``` for ```std::any``` and other C++17 functions to allow compiling it with GCC 5/6. 
-- [x] Refine save data integration: Using std variant that reduces duplicated code.
-- [x] Add Theta* class
-- [x] Add Lazy Theta* class
 - [ ] Add bash/python scripts to generate data from a set of parameters
 - [ ] Clean grid3d.hpp class
