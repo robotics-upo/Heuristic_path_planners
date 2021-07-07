@@ -30,6 +30,14 @@ namespace Planners
         using DataVariant     = std::variant<std::string, Vec3i, CoordinateList, double, size_t, int, bool>;
         using PathData        = std::map<std::string, DataVariant>;
         
+        //Compile time constants
+        static constexpr int const dist_scale_factor_{100};
+        //Dont touch these ones (diagonal distances in 2D and 3D)
+        //The static cast from floating point to integer returns the truncated value 
+        //i.e discards the decimal part
+        static constexpr int const dd_2D_{static_cast<int>( dist_scale_factor_ * 1.41421356237 )}; //sqrt(2)
+        static constexpr int const dd_3D_{static_cast<int>( dist_scale_factor_ * 1.73205080757 )}; //sqrt(3)
+
         /**
          * @brief 
          * 

@@ -20,8 +20,8 @@ namespace Planners
     /**
      * @brief Heuristic class, collection of static functions
      * The heuristic is computed as a discrete value because the discrete coordinates are used
-     * All these discrete values correspond to std::floor(100 * real_distance). sqrt(2) in this discrete approach
-     * correspond to 141 (1,41 * 100).
+     * All these discrete values correspond to std::floor(dist_scale_factor_100 * real_distance). sqrt(2) in this discrete approach
+     * correspond to 141 (1,41 * dist_scale_factor_=100).
      */
     class Heuristic
     {   

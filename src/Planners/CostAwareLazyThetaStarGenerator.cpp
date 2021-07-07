@@ -90,7 +90,6 @@ namespace Planners
                 if (discrete_world_.isOccupied(newCoordinates) ||
                     discrete_world_.isInClosedList(newCoordinates))
                     continue;
-                // unsigned int totalCost = current->G + (i < 6 ? 100 : (i < 18 ? 141 : 173)); //This is more efficient
                 Node *successor = discrete_world_.getNodePtr(newCoordinates);
 
                 if (successor == nullptr)
@@ -101,9 +100,9 @@ namespace Planners
                     unsigned int totalCost = current->G;
 
                     if(direction.size()  == 8){
-                        totalCost += (i < 4 ? 100 : 141); //This is more efficient
+                        totalCost += (i < 4 ? dist_scale_factor_ : dd_2D_); //This is more efficient
                     }else{
-                        totalCost += (i < 6 ? 100 : (i < 18 ? 141 : 173)); //This is more efficient
+                        totalCost += (i < 6 ? dist_scale_factor_ : (i < 18 ? dd_2D_ : dd_3D_)); //This is more efficient
                     }
 
                     successor->parent = current;

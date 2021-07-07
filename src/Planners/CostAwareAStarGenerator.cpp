@@ -43,9 +43,9 @@ PathData CostAwareAStarGenerator::findPath(const Vec3i &source_, const Vec3i &ta
 
             unsigned int totalCost = current->G;
             if(direction.size()  == 8){
-                totalCost += (i < 4 ? 100 : 141); //This is more efficient
+                totalCost += (i < 4 ? dist_scale_factor_ : dd_2D_); //This is more efficient
             }else{
-                totalCost += (i < 6 ? 100 : (i < 18 ? 141 : 173)); //This is more efficient
+                totalCost += (i < 6 ? dist_scale_factor_ : (i < 18 ? dd_2D_ : dd_3D_)); //This is more efficient
             }
             
             if (!discrete_world_.isInOpenList(newCoordinates)) { 

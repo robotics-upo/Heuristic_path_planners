@@ -31,7 +31,7 @@ namespace Planners
              */
             float calculatePathLength(const CoordinateList &_path, const double &_resolution);
             /**
-             * @brief Discrete distance multiplied by 100
+             * @brief Discrete distance multiplied by dist_scale_factor_
              * 
              * @param n1 
              * @param n2 
@@ -39,7 +39,7 @@ namespace Planners
              */
             unsigned int distanceBetween2Nodes(const Node &n1, const Node &n2);
             /**
-             * @brief  Discrete distance multiplied by 100
+             * @brief  Discrete distance multiplied by dist_scale_factor_
              * 
              * @param n1 
              * @param n2 
