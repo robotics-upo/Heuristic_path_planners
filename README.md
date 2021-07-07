@@ -32,6 +32,7 @@ Also take into account that the content of this repo is work-in-progress.
 - [Building The package](#building)
 - [What's included?](#whats-included)
 - [Running the demo ROS Node](#running-the-demo-ros-node)
+- [Included Maps](#included-maps)
 - [TODOs](#todos)
 
 ## Quick-Start
@@ -176,6 +177,56 @@ You can pass some args to the launchs files such as:
 In the 3D case, it will open an RViz window an load the default map *mbzirc_challenge3* in the folder ```resources/3dmaps```. First time you open a map the Grid3 class will compute the gridmap so you will need to wait a little bit before starting.
 
 To request path you need to call the service ```/planner_ros_node/request_path``` filling the start and goal coordinates in meters(m). 
+
+# Included Maps
+
+The repository includes some 3D and 2D maps for testing purposes. They can be found in the ```resources/3maps``` and ```resources/2dmaps``` folders. 
+The included maps are the following ones:
+
+<table width="600">
+<th> 3D Octomaps </th>
+<tr>
+        <td width="50%">
+        two_walls.bt
+<img src="https://raw.githubusercontent.com/robotics-upo/Heuristic_path_planners/master/resources/images/two_blocks.png" alt="two_blocks" width="400"/>
+        </td>
+        <td width="50%">
+        wall.bt
+<img src="https://raw.githubusercontent.com/robotics-upo/Heuristic_path_planners/master/resources/images/wall.png" alt="wall" width="400"/>
+        </td>
+</tr>
+<tr>
+        <td width="50%">
+        maze.bt
+<img src="https://raw.githubusercontent.com/robotics-upo/Heuristic_path_planners/master/resources/images/maze.png" alt="maze" width="400"/>
+        </td>
+        <td width="50%">
+        laberynth.bt
+<img src="https://raw.githubusercontent.com/robotics-upo/Heuristic_path_planners/master/resources/images/laberynth.png" alt="laberynth" width="400"/>
+        </td>
+</tr>
+<tr>
+        <td width="50%">
+        mbzirc.bt
+<img src="https://raw.githubusercontent.com/robotics-upo/Heuristic_path_planners/master/resources/images/mbzirc.png" alt="mbzirc" width="400"/>
+        </td>
+        <td width="50%">
+        manufacturing.bt
+<img src="https://raw.githubusercontent.com/robotics-upo/Heuristic_path_planners/master/resources/images/manufacturing.png" alt="3d" width="400"/>
+        </td>
+</tr>
+</table>
+
+<table>
+<th> 2D Maps</th>
+<tr>
+        <td width="100%">
+        test.pgm
+        <br>
+<img src="https://raw.githubusercontent.com/robotics-upo/Heuristic_path_planners/master/resources/images/test.png" alt="test.pgm" width="100"/>
+        </td>
+</tr>
+</table>
 
 ## TODOs
 
