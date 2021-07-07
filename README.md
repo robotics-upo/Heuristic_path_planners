@@ -30,8 +30,8 @@ Also take into account that the content of this repo is work-in-progress.
 - [Code Documentation](#code-documentation)
 - [Dependencies](#dependencies)
 - [Building The package](#building)
-- [What's included?](#whats-included)
 - [Running the demo ROS Node](#running-the-demo-ros-node)
+- [Test scripts](#test-scripts)
 - [Included Maps](#included-maps)
 - [TODOs](#todos)
 
@@ -227,6 +227,50 @@ The included maps are the following ones:
         </td>
 </tr>
 </table>
+
+## Test scripts
+
+The package also include pythons scripts to easily automatize test of ROS launch files with ranges of values of some parameters. 
+
+### Dependencies
+
+- Python 3.6 or higher
+- matplotlib: ```pip3 install matplotlib```
+- numpy: ```pip3 install numpy```
+- ROS Melodic/Noetic
+
+Right now there is only one script called ```test_algorithms.py```. The usage is the following:
+ 
+```bash
+usage: test_algorithms.py [-h] --launch {planner2d_example.launch,planner.launch}
+                          [{planner2d_example.launch,planner.launch} ...] --algorithm
+                          {astar,costastar,thetastar,lazythetastar,costlazythetastar}
+                          [{astar,costastar,thetastar,lazythetastar,costlazythetastar} ...] --start-coords
+                          START_COORDS START_COORDS START_COORDS --goal-coords GOAL_COORDS GOAL_COORDS
+                          GOAL_COORDS [--cost-range COST_RANGE COST_RANGE COST_RANGE]
+                          [--lof-value LOF_VALUE LOF_VALUE LOF_VALUE]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --launch {planner2d_example.launch,planner.launch} [{planner2d_example.launch,planner.launch} ...]
+                        name of the launch file
+  --algorithm {astar,costastar,thetastar,lazythetastar,costlazythetastar} [{astar,costastar,thetastar,lazythetastar,costlazythetastar} ...]
+                        name of the algorithm
+  --start-coords START_COORDS START_COORDS START_COORDS
+                        start coordinates (x,y,z). Set z to 0 when testing with 2D
+  --goal-coords GOAL_COORDS GOAL_COORDS GOAL_COORDS
+                        goal coordinates (x,y,z). Set z to 0 when testing with 2D
+  --cost-range COST_RANGE COST_RANGE COST_RANGE
+                        cost range to evaluate. (min, max, step). To test only one value set COST COST+1 1
+  --lof-value LOF_VALUE LOF_VALUE LOF_VALUE
+                        Line of sight range to evaluate. (min, max, step). To test only one value set LOF_VALUE
+                        LOF_VALUE+1 1
+```
+
+```bash
+roscd heuristic_planners 
+./scripts/test_algorithms.py --launch planner2d_example.launch --algorithm costastar --start-coords 1.5 0.5 0.0 --goal-coords 1.0 3.0 0.0 --cost-range 140 150 1 --lof-value 1 3 1 
+```
 
 ## TODOs
 

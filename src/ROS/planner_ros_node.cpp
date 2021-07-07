@@ -106,7 +106,6 @@ private:
         
         if( std::get<bool>(path_data["solved"]) ){
             
-            std::cout << "solved" << std::endl;
             try{
                 
                 _rep.time_spent.data           = std::get<double>(path_data["time_spent"] );
