@@ -1,5 +1,7 @@
 <launch>
-    <arg name="map"                 default="$(find heuristic_planners)/resources/3dmaps/mbzirc_challenge3.bt"/>
+    <!-- Map name is the filename wihtouth the .bt extensionof the 3D Map -->
+    <arg name="map_name"            default="manufacturing"/>
+    <arg name="map"                 default="$(find heuristic_planners)/resources/3dmaps/$(arg map_name).bt"/>
 
     <arg name="algorithm_name"      default="thetastar"/>
 
