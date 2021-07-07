@@ -7,13 +7,13 @@
 [![issues](https://img.shields.io/github/issues/robotics-upo/3D_heuristic_path_planners?style=plastic)](https://github.com/robotics-upo/Heuristic_path_planners/issues)
 [![license](https://img.shields.io/github/license/robotics-upo/Heuristic_path_planners)](https://github.com/robotics-upo/Heuristic_path_planners/blob/master/LICENSE)
 
-<table width="500">
+<table width="600">
     <tr>
         <td width="50%">
-<img src="https://raw.githubusercontent.com/robotics-upo/Heuristic_path_planners/master/resources/images/2dexample.png" alt="2d" width="300"/>
+<img src="https://raw.githubusercontent.com/robotics-upo/Heuristic_path_planners/master/resources/images/2dexample.png" alt="2d" width="400"/>
         </td>
         <td width="50%">
-<img src="https://raw.githubusercontent.com/robotics-upo/Heuristic_path_planners/master/resources/images/3dexample.png" alt="3d" width="300"/>
+<img src="https://raw.githubusercontent.com/robotics-upo/Heuristic_path_planners/master/resources/images/3dexample.png" alt="3d" width="400"/>
         </td>
     </tr>
 </table>
@@ -232,3 +232,5 @@ The included maps are the following ones:
 
 - [ ] Add bash/python scripts to generate data from a set of parameters
 - [ ] Clean grid3d.hpp class
+
+See also the [issues](https://github.com/robotics-upo/Heuristic_path_planners/issues) tab.
