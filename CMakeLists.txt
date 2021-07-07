@@ -5,7 +5,7 @@ add_compile_options(-std=c++17 -Wall -Wextra -pedantic)
 
 option(BUILD_DOC         "Build documentation   " ON)
 option(BUILD_ROS_SUPPORT "Build with ROS Support" ON)
-option(BUILD_DEBUG       "Build debug features  " ON)
+option(BUILD_DEBUG       "Build debug features  " OFF)
 
 if(BUILD_DOC)
 # check if Doxygen is installed
