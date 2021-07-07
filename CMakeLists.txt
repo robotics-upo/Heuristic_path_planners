@@ -156,6 +156,11 @@ if(BUILD_ROS_SUPPORT)
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
   )
+  
+  catkin_install_python(PROGRAMS  scripts/test_algorithms.py
+                                  setup.py
+                                  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+  )
 
 ## Mark cpp header files for installation
   install(DIRECTORY include/
