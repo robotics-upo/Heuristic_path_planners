@@ -109,31 +109,19 @@ add_library(PathGenerator          src/Planners/PathGenerator.cpp
                                    ${${PROJECT_NAME}_UTILS_SOURCES})
 
 add_library(AStarGenerator         src/Planners/AStarGenerator.cpp 
-                                   src/Planners/PathGenerator.cpp
-                                   ${${PROJECT_NAME}_UTILS_SOURCES})
+                                   ${PATH_GENERATOR_LIBRARY})
             
 add_library(CostAwareAStarGenerator     src/Planners/CostAwareAStarGenerator.cpp 
-                                   src/Planners/AStarGenerator.cpp 
-                                   src/Planners/PathGenerator.cpp
-                                   ${${PROJECT_NAME}_UTILS_SOURCES})
+                                        ${ASTAR_GENERATOR_LIBRARY})
 
 add_library(ThetaStarGenerator     src/Planners/ThetaStarGenerator.cpp 
-                                   src/Planners/AStarGenerator.cpp 
-                                   src/Planners/PathGenerator.cpp
-                                   ${${PROJECT_NAME}_UTILS_SOURCES})
+                                   ${ASTAR_GENERATOR_LIBRARY})
 
 add_library(LazyThetaStarGenerator src/Planners/LazyThetaStarGenerator.cpp 
-                                   src/Planners/ThetaStarGenerator.cpp 
-                                   src/Planners/AStarGenerator.cpp 
-                                   src/Planners/PathGenerator.cpp
-                                   ${${PROJECT_NAME}_UTILS_SOURCES})
+                                    ${THETASTAR_GENERATOR_LIBRARY})
                                    
 add_library(CostAwareLazyThetaStarGenerator src/Planners/CostAwareLazyThetaStarGenerator.cpp 
-                                   src/Planners/LazyThetaStarGenerator.cpp 
-                                   src/Planners/ThetaStarGenerator.cpp 
-                                   src/Planners/AStarGenerator.cpp 
-                                   src/Planners/PathGenerator.cpp
-                                   ${${PROJECT_NAME}_UTILS_SOURCES})
+                                            ${LAZYTHETASTAR_GENERATOR_LIBRARY})
 
 list(APPEND ${PROJECT_NAME}_LIBRARIES PathGenerator AStarGenerator CostAwareAStarGenerator ThetaStarGenerator LazyThetaStarGenerator CostAwareLazyThetaStarGenerator)
 target_link_libraries(${${PROJECT_NAME}_LIBRARIES} ${catkin_LIBRARIES})
@@ -155,6 +143,11 @@ if(BUILD_ROS_SUPPORT)
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+  )
+  
+  catkin_install_python(PROGRAMS  scripts/test_algorithms.py
+                                  setup.py
+                                  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
   )
 
 ## Mark cpp header files for installation
