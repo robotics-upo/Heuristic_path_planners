@@ -105,23 +105,18 @@ if(BUILD_ROS_SUPPORT)
 list(APPEND ${PROJECT_NAME}_UTILS_SOURCES src/utils/ros/ROSInterfaces.cpp)
 endif()
 
-add_library(PathGenerator          src/Planners/PathGenerator.cpp 
-                                   ${${PROJECT_NAME}_UTILS_SOURCES})
+add_library(PathGenerator                   src/Planners/PathGenerator.cpp 
+                                            ${${PROJECT_NAME}_UTILS_SOURCES})
+add_library(AStarGenerator                  src/Planners/AStarGenerator.cpp
+                                            src/Planners/PathGenerator.cpp 
+                                            ${${PROJECT_NAME}_UTILS_SOURCES}
+                                            )
 
-add_library(AStarGenerator         src/Planners/AStarGenerator.cpp 
-                                   ${PATH_GENERATOR_LIBRARY})
-            
-add_library(CostAwareAStarGenerator     src/Planners/CostAwareAStarGenerator.cpp 
-                                        ${ASTAR_GENERATOR_LIBRARY})
+add_library(CostAwareAStarGenerator         src/Planners/CostAwareAStarGenerator.cpp ) 
+add_library(ThetaStarGenerator              src/Planners/ThetaStarGenerator.cpp )
+add_library(LazyThetaStarGenerator          src/Planners/LazyThetaStarGenerator.cpp )
+add_library(CostAwareLazyThetaStarGenerator src/Planners/CostAwareLazyThetaStarGenerator.cpp )
 
-add_library(ThetaStarGenerator     src/Planners/ThetaStarGenerator.cpp 
-                                   ${ASTAR_GENERATOR_LIBRARY})
-
-add_library(LazyThetaStarGenerator src/Planners/LazyThetaStarGenerator.cpp 
-                                    ${THETASTAR_GENERATOR_LIBRARY})
-                                   
-add_library(CostAwareLazyThetaStarGenerator src/Planners/CostAwareLazyThetaStarGenerator.cpp 
-                                            ${LAZYTHETASTAR_GENERATOR_LIBRARY})
 
 list(APPEND ${PROJECT_NAME}_LIBRARIES PathGenerator AStarGenerator CostAwareAStarGenerator ThetaStarGenerator LazyThetaStarGenerator CostAwareLazyThetaStarGenerator)
 target_link_libraries(${${PROJECT_NAME}_LIBRARIES} ${catkin_LIBRARIES})
