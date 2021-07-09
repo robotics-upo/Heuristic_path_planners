@@ -100,7 +100,7 @@ namespace Planners
                     successor->G = totalCost;
                     successor->H = heuristic(successor->coordinates, _target);
                     openSet.insert(successor);
-                    discrete_world_.setOpenValue(*successor, true);
+                    discrete_world_.setOpenValue(successor->coordinates, true);
                 }
                 
                 UpdateVertex(current, successor, openSet); 

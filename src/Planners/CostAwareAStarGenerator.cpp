@@ -53,7 +53,7 @@ PathData CostAwareAStarGenerator::findPath(const Vec3i &_source, const Vec3i &_t
                 successor->G = totalCost + static_cast<int>(cost_weight_ * successor->cost);
                 successor->H = heuristic(successor->coordinates, _target);
                 openSet.insert(successor);
-                discrete_world_.setOpenValue(*successor, true);
+                discrete_world_.setOpenValue(successor->coordinates, true);
             }
             else if (totalCost < successor->G) {
                 successor->parent = current;

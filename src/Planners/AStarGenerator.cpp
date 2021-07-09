@@ -154,8 +154,8 @@ PathData AStarGenerator::findPath(const Vec3i &_source, const Vec3i &_target)
 
         for (unsigned int i = 0; i < direction.size(); ++i) {
             
-            Vec3i newCoordinates(current->coordinates + direction[i]);
-            unsigned int totalCost = current->G;
+            Vec3i newCoordinates = current->coordinates + direction[i];
+
             if ( discrete_world_.isOccupied(newCoordinates) || 
                  discrete_world_.isInClosedList(newCoordinates) ) 
                 continue;
@@ -164,6 +164,8 @@ PathData AStarGenerator::findPath(const Vec3i &_source, const Vec3i &_target)
             Node *successor = discrete_world_.getNodePtr(newCoordinates);
 
             if(successor == nullptr) continue;
+        
+            unsigned int totalCost = current->G;
 
             if(direction.size()  == 8){
                 totalCost += (i < 4 ? dist_scale_factor_ : dd_2D_); //This is more efficient
@@ -176,7 +178,7 @@ PathData AStarGenerator::findPath(const Vec3i &_source, const Vec3i &_target)
                 successor->G = totalCost;
                 successor->H = heuristic(successor->coordinates, _target);
                 openSet.insert(successor);
-                discrete_world_.setOpenValue(*successor, true);
+                discrete_world_.setOpenValue(successor->coordinates, true);
             }
             else if (totalCost < successor->G) {
                 successor->parent = current;
