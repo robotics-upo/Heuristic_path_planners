@@ -112,7 +112,7 @@ namespace Planners
 
             for (int i = 0; i < world_size.x; i++)
             {
-                for (int j = 0; j < world_size.z; j++)
+                for (int j = 0; j < world_size.y; j++)
                 {
                     for (int k = 0; k < world_size.z; k++)
                     {
