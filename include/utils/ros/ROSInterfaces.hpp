@@ -73,7 +73,7 @@ namespace Planners
          * @param _grid_width 2D array width or horizontal step
          * @return Vec3i 
          */
-        inline Vec3i indexToXY(const unsigned int &_index, const unsigned int &_grid_width);
+        inline Vec3i indexToXY(const unsigned int &_index, const unsigned int _grid_width);
         /**
          * @brief Configure the inner world of the algorihtm _algorithm using a nav_msgs::OccupancyGrid
          * It used the resolution in the metadata 

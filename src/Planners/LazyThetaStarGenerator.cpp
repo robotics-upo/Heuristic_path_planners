@@ -3,30 +3,30 @@
 namespace Planners
 {
     
-    void LazyThetaStarGenerator::UpdateVertex(Node *s, Node *s2, NodeSet &openset)
+    void LazyThetaStarGenerator::UpdateVertex(Node *_s, Node *_s2, NodeSet &_openset)
     {
-        float g_old = s2->G;
+        float g_old = _s2->G;
 
-        ComputeCost(s, s2);
-        if (s2->G < g_old)
+        ComputeCost(_s, _s2);
+        if (_s2->G < g_old)
         {
-            if (discrete_world_.isInOpenList(s2->coordinates))
-                openset.erase(s2);
+            if (discrete_world_.isInOpenList(*_s2))
+                _openset.erase(_s2);
 
-            openset.insert(s2);
+            _openset.insert(_s2);
         }
     }
-    void LazyThetaStarGenerator::SetVertex(Node *s_aux)
+    void LazyThetaStarGenerator::SetVertex(Node *_s_aux)
     {
 
-        if (!LineOfSight::bresenham3D((s_aux->parent), s_aux, discrete_world_))
+        if (!LineOfSight::bresenham3D((_s_aux->parent), _s_aux, discrete_world_))
         {
             unsigned int G_max = std::numeric_limits<unsigned int>::max(); 
             unsigned int G_new;
 
             for (const auto &i: direction)
             {
-                Vec3i newCoordinates(s_aux->coordinates + i);
+                Vec3i newCoordinates(_s_aux->coordinates + i);
 
                 if ( discrete_world_.isOccupied(newCoordinates) ) continue;
 
@@ -35,38 +35,38 @@ namespace Planners
                     Node *successor2 = discrete_world_.getNodePtr(newCoordinates);
                     if (successor2 == nullptr) continue;
 
-                    G_new = successor2->G +  geometry::distanceBetween2Nodes(successor2, s_aux);
+                    G_new = successor2->G +  geometry::distanceBetween2Nodes(successor2, _s_aux);
                     if (G_new < G_max)
                     {
                         G_max = G_new;
-                        s_aux->parent = successor2;
-                        s_aux->G = G_new;
+                        _s_aux->parent = successor2;
+                        _s_aux->G = G_new;
                     }
                 }
             }
         }
     }
-    void LazyThetaStarGenerator::ComputeCost(Node *s_aux, Node *s2_aux)
+    void LazyThetaStarGenerator::ComputeCost(Node *_s_aux, Node *_s2_aux)
     {
-        auto distanceParent2 = geometry::distanceBetween2Nodes(s_aux->parent, s2_aux);
+        auto distanceParent2 = geometry::distanceBetween2Nodes(_s_aux->parent, _s2_aux);
 
-        if ((s_aux->parent->G + distanceParent2) < (s2_aux->G))
+        if ((_s_aux->parent->G + distanceParent2) < (_s2_aux->G))
         {
-            s2_aux->parent = s_aux->parent;
-            s2_aux->G = s2_aux->parent->G + geometry::distanceBetween2Nodes(s2_aux->parent, s2_aux);
+            _s2_aux->parent = _s_aux->parent;
+            _s2_aux->G = _s2_aux->parent->G + geometry::distanceBetween2Nodes(_s2_aux->parent, _s2_aux);
         }
     }
 
-    PathData LazyThetaStarGenerator::findPath(const Vec3i &source_, const Vec3i &target_)
+    PathData LazyThetaStarGenerator::findPath(const Vec3i &_source, const Vec3i &_target)
     {
         Node *current = nullptr;
         NodeSet openSet, closedSet;
         bool solved{false};
 
-        openSet.insert(discrete_world_.getNodePtr(source_));
+        openSet.insert(discrete_world_.getNodePtr(_source));
 
-        discrete_world_.getNodePtr(source_)->parent = new Node(source_);
-        discrete_world_.setOpenValue(source_, true);
+        discrete_world_.getNodePtr(_source)->parent = new Node(_source);
+        discrete_world_.setOpenValue(_source, true);
 
         utils::Clock main_timer;
         main_timer.tic();
@@ -78,7 +78,7 @@ namespace Planners
 
             current = *openSet.begin();
 
-            if (current->coordinates == target_)
+            if (current->coordinates == _target)
             {
                 solved = true;
                 break;
@@ -87,8 +87,8 @@ namespace Planners
             openSet.erase(openSet.begin());
             closedSet.insert(current);
 
-            discrete_world_.setOpenValue(current->coordinates, false);
-            discrete_world_.setClosedValue(current->coordinates, true);
+            discrete_world_.setOpenValue(*current, false);
+            discrete_world_.setClosedValue(*current, true);
 
             SetVertex(current);
             //in every setVertex the line of sight function is called 
@@ -122,9 +122,9 @@ namespace Planners
 
                     successor->parent = current;
                     successor->G = totalCost;
-                    successor->H = heuristic(successor->coordinates, target_);
+                    successor->H = heuristic(successor->coordinates, _target);
                     openSet.insert(successor);
-                    discrete_world_.setOpenValue(successor->coordinates, true);
+                    discrete_world_.setOpenValue(*successor, true);
                 }
                 UpdateVertex(current, successor, openSet);
             }
@@ -151,8 +151,8 @@ namespace Planners
         result_data["path"] = path;
         result_data["time_spent"] = main_timer.getElapsedMillisecs();
         result_data["explored_nodes"] = closedSet.size();
-        result_data["start_coords"] = source_;
-        result_data["goal_coords"] = target_;
+        result_data["start_coords"] = _source;
+        result_data["goal_coords"] = _target;
         result_data["path_length"] = geometry::calculatePathLength(path, discrete_world_.getResolution());
         result_data["line_of_sight_checks"] = line_of_sight_checks;
 

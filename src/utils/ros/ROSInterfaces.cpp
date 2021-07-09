@@ -36,7 +36,7 @@ namespace Planners
 
             return ret;
         }
-        inline Vec3i indexToXY(const unsigned int &_index, const unsigned int &_grid_width)
+        inline Vec3i indexToXY(const unsigned int &_index, const unsigned int _grid_width)
         {
 
             return {static_cast<int>(std::floor(_index % _grid_width)),

@@ -207,37 +207,33 @@ namespace Planners
          */
         struct NodeComparator{
             
-            bool operator()(const Node *const &lhs__, const Node *const &rhs__) const
+            bool operator()(const Node *const &_lhs, const Node *const &_rhs) const
 	        {
-		        const Node *lhs = lhs__;
-		        const Node *rhs = rhs__;
-                long int lc = (lhs->G + lhs->H);
-                long int rc = (rhs->G + rhs->H);
-		        auto res = lc - rc;
+		        auto res = static_cast<long int>(_lhs->G + _lhs->H) - static_cast<long int>(_rhs->G + _rhs->H);
 		        if (res == 0)
 		        {
-		        	res = lhs->coordinates.x - rhs->coordinates.x;
+		        	res = _lhs->coordinates.x - _rhs->coordinates.x;
 		        }
 		        if (res == 0)
 		        {
-		        	res = lhs->coordinates.y - rhs->coordinates.y;
+		        	res = _lhs->coordinates.y - _rhs->coordinates.y;
 		        }
 		        if (res == 0)
 		        {
-		        	res = lhs->coordinates.z - rhs->coordinates.z;
+		        	res = _lhs->coordinates.z - _rhs->coordinates.z;
 		        }
 
 		        if (res == 0)
 		        {
-		        	res = lhs->parent->coordinates.x - rhs->parent->coordinates.x;
+		        	res = _lhs->parent->coordinates.x - _rhs->parent->coordinates.x;
 		        }
 		        if (res == 0)
 		        {
-		        	res = lhs->parent->coordinates.y - rhs->parent->coordinates.y;
+		        	res = _lhs->parent->coordinates.y - _rhs->parent->coordinates.y;
 		        }
 		        if (res == 0)
 		        {
-		        	res = lhs->parent->coordinates.z - rhs->parent->coordinates.z;
+		        	res = _lhs->parent->coordinates.z - _rhs->parent->coordinates.z;
 		        }
 		    return res < 0;
         	}

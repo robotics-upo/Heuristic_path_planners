@@ -28,11 +28,11 @@ namespace Planners{
         /**
          * @brief Main function of the algorithm
          * 
-         * @param source_ Start discrete coordinates
-         * @param target_ Goal discrete coordinates
+         * @param _source Start discrete coordinates
+         * @param _target Goal discrete coordinates
          * @return PathData PathData Results stored as PathData object
          */
-        virtual PathData findPath(const Vec3i &source_, const Vec3i &target_);
+        virtual PathData findPath(const Vec3i &_source, const Vec3i &_target) override;
 
     };
 

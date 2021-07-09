@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "Planners/AStarGenerator.hpp"
+#include "Planners/ParallelAStarGenerator.hpp"
 #include "Planners/CostAwareAStarGenerator.hpp"
 #include "Planners/ThetaStarGenerator.hpp"
 #include "Planners/LazyThetaStarGenerator.hpp"

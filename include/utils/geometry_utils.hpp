@@ -37,7 +37,7 @@ namespace Planners
              * @param n2 
              * @return unsigned int 
              */
-            unsigned int distanceBetween2Nodes(const Node &n1, const Node &n2);
+            unsigned int distanceBetween2Nodes(const Node &_n1, const Node &_n2);
             /**
              * @brief  Discrete distance multiplied by dist_scale_factor_
              * 
@@ -45,7 +45,7 @@ namespace Planners
              * @param n2 
              * @return unsigned int 
              */
-            unsigned int distanceBetween2Nodes(const Node *n1, const Node *n2);
+            unsigned int distanceBetween2Nodes(const Node *_n1, const Node *_n2);
             
             /**
              * @brief Returns the absolute value vector 

@@ -2,14 +2,14 @@
 
 namespace Planners{
     
-PathData CostAwareAStarGenerator::findPath(const Vec3i &source_, const Vec3i &target_)
+PathData CostAwareAStarGenerator::findPath(const Vec3i &_source, const Vec3i &_target)
 {
     Node *current = nullptr;
     NodeSet openSet, closedSet;
     bool solved{false};
 
-    openSet.insert(discrete_world_.getNodePtr(source_));
-    discrete_world_.setOpenValue(source_, true);
+    openSet.insert(discrete_world_.getNodePtr(_source));
+    discrete_world_.setOpenValue(_source, true);
     
     utils::Clock main_timer;
     main_timer.tic();
@@ -17,13 +17,13 @@ PathData CostAwareAStarGenerator::findPath(const Vec3i &source_, const Vec3i &ta
 
         current = *openSet.begin();
 
-        if (current->coordinates == target_) { solved = true; break; }
+        if (current->coordinates == _target) { solved = true; break; }
         
         openSet.erase(openSet.begin());
         closedSet.insert(current);
 
-        discrete_world_.setOpenValue(current->coordinates, false);
-        discrete_world_.setClosedValue(current->coordinates, true);
+        discrete_world_.setOpenValue(*current, false);
+        discrete_world_.setClosedValue(*current, true);
 
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)        
         publishROSDebugData(current, openSet, closedSet);
@@ -51,9 +51,9 @@ PathData CostAwareAStarGenerator::findPath(const Vec3i &source_, const Vec3i &ta
             if (!discrete_world_.isInOpenList(newCoordinates)) { 
                 successor->parent = current;
                 successor->G = totalCost + static_cast<int>(cost_weight_ * successor->cost);
-                successor->H = heuristic(successor->coordinates, target_);
+                successor->H = heuristic(successor->coordinates, _target);
                 openSet.insert(successor);
-                discrete_world_.setOpenValue(successor->coordinates, true);
+                discrete_world_.setOpenValue(*successor, true);
             }
             else if (totalCost < successor->G) {
                 successor->parent = current;
@@ -80,8 +80,8 @@ PathData CostAwareAStarGenerator::findPath(const Vec3i &source_, const Vec3i &ta
     result_data["path"] = path;
     result_data["time_spent"] = main_timer.getElapsedMillisecs();
     result_data["explored_nodes"] = closedSet.size();
-    result_data["start_coords"] = source_;
-    result_data["goal_coords"] = target_;
+    result_data["start_coords"] = _source;
+    result_data["goal_coords"] = _target;
     result_data["path_length"] = geometry::calculatePathLength(path, discrete_world_.getResolution());
     result_data["line_of_sight_checks"] = 0;
     
