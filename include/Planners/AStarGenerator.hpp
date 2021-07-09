@@ -36,17 +36,17 @@ namespace Planners{
         /**
          * @brief Main function of the algorithm
          * 
-         * @param source_ Start discrete coordinates
-         * @param target_ Goal discrete coordinates
+         * @param _source Start discrete coordinates
+         * @param _target Goal discrete coordinates
          * @return PathData PathData Results stored as PathData object
          */
-        PathData findPath(const Vec3i &source_, const Vec3i &target_);
+        PathData findPath(const Vec3i &_source, const Vec3i &_target) override;
         
         /**
          * @brief Published occupation markers map to visualize the loaded map in RVIZ
          * if the package is compiled without the ROS definition in the CMakeLists, this function is empty
          */
-        void publishOccupationMarkersMap();
+        void publishOccupationMarkersMap() override;
         
         /**
          * @brief 

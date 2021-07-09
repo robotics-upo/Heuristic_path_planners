@@ -34,11 +34,11 @@ namespace Planners
         /**
          * @brief Main function of the algorithm
          * 
-         * @param source_ Start discrete coordinates
-         * @param target_ Goal discrete coordinates
+         * @param _source Start discrete coordinates
+         * @param _target Goal discrete coordinates
          * @return PathData PathData Results stored as PathData object
          */
-        virtual PathData findPath(const Vec3i &source_, const Vec3i &target_);
+        virtual PathData findPath(const Vec3i &_source, const Vec3i &_target) override;
 
     protected:
         /**
@@ -48,7 +48,7 @@ namespace Planners
          * @param s2 Pointer to node s2
          * @param openset reference to openset to erase and insert the nodes in some cases
          */
-        virtual void UpdateVertex(Node *s, Node *s2, NodeSet &openset);
+        virtual void UpdateVertex(Node *_s, Node *_s2, NodeSet &_openset);
         
         /**
          * @brief Compute cost algorithm function
@@ -56,7 +56,7 @@ namespace Planners
          * @param s_aux Pointer to first node
          * @param s2_aux Pointer to the second node
          */
-        virtual void ComputeCost(Node *s_aux, Node *s2_aux);
+        virtual void ComputeCost(Node *_s_aux, Node *_s2_aux);
     };
 
 }

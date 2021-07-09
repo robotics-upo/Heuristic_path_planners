@@ -18,15 +18,15 @@ namespace Planners
                 }
                 return len;
             }
-            unsigned int distanceBetween2Nodes(const Node &n1, const Node &n2)
+            unsigned int distanceBetween2Nodes(const Node &_n1, const Node &_n2)
             {
-                return static_cast<unsigned int>(dist_scale_factor_ * sqrt(pow(n1.coordinates.x - n2.coordinates.x, 2) +
-                                                                           pow(n1.coordinates.y - n2.coordinates.y, 2) +
-                                                                           pow(n1.coordinates.z - n2.coordinates.z, 2)));
+                return static_cast<unsigned int>(dist_scale_factor_ * sqrt(pow(_n1.coordinates.x - _n2.coordinates.x, 2) +
+                                                                           pow(_n1.coordinates.y - _n2.coordinates.y, 2) +
+                                                                           pow(_n1.coordinates.z - _n2.coordinates.z, 2)));
             }
-            unsigned int distanceBetween2Nodes(const Node *n1, const Node *n2)
+            unsigned int distanceBetween2Nodes(const Node *_n1, const Node *_n2)
             {
-                return distanceBetween2Nodes(*n1, *n2);
+                return distanceBetween2Nodes(*_n1, *_n2);
             }
             Vec3i abs(const Vec3i &_vec)
             {

@@ -113,11 +113,11 @@ namespace Planners
          * This function should accept two VALID start and goal discrete coordinates and return
          * a PathData object containing the necessary information (path, time....)
          * 
-         * @param source_ Start discrete coordinates
-         * @param target_ Goal discrete coordinates
+         * @param _source Start discrete coordinates
+         * @param _target Goal discrete coordinates
          * @return PathData Results stored as PathData object
          */
-        virtual PathData findPath(const Vec3i &source_, const Vec3i &target_) = 0;
+        virtual PathData findPath(const Vec3i &_source, const Vec3i &_target) = 0;
 
         /**
          * @brief Configure the simple inflation implementation

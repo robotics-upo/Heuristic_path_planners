@@ -33,11 +33,11 @@ namespace Planners
         /**
          * @brief Main function of the algorithm
          * 
-         * @param source_ Start discrete coordinates
-         * @param target_ Goal discrete coordinates
+         * @param _source Start discrete coordinates
+         * @param _target Goal discrete coordinates
          * @return PathData PathData Results stored as PathData object
          */
-        virtual PathData findPath(const Vec3i &source_, const Vec3i &target_);
+        virtual PathData findPath(const Vec3i &_source, const Vec3i &_target) override;
 
     protected:
 
@@ -47,14 +47,14 @@ namespace Planners
          * @param s_aux Pointer to first node
          * @param s2_aux Pointer to second node
          */
-        virtual void ComputeCost(Node *s_aux, Node *s2_aux);
+        virtual void ComputeCost(Node *_s_aux, Node *_s2_aux) override;
 
         /**
          * @brief SetVertex function
          * Line of sight is checked inside this function
          * @param s_aux 
          */
-        virtual void SetVertex(Node *s_aux);
+        virtual void SetVertex(Node *_s_aux) override;
                 
     };
 

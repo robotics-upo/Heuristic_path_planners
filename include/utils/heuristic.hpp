@@ -28,43 +28,54 @@ namespace Planners
         /**
          * @brief Returns the absolute of value of the difference of each component 
          * 
-         * @param source_ 
-         * @param target_ 
+         * @param _source 
+         * @param _target 
          * @return Vec3i 
          */
-        static Vec3i getDelta(Vec3i source_, Vec3i target_);
+        static Vec3i getDelta(const Vec3i &_source, const Vec3i &_target);
 
     public:
         /**
          * @brief Manhattan heuristic
          * 
-         * @param source_ 
-         * @param target_ 
+         * @param _source 
+         * @param _target 
          * @return unsigned int 
          */
-        static unsigned int manhattan(Vec3i source_, Vec3i target_);
+        static unsigned int manhattan(const Vec3i &_source, const Vec3i &_target);
         /**
          * @brief Euclidean heuristic. This is the one used by the standard algorithms
          * 
-         * @param source_ 
-         * @param target_ 
+         * @param _source 
+         * @param _target 
          * @return unsigned int 
          */
-        static unsigned int euclidean(Vec3i source_, Vec3i target_);
+        static unsigned int euclidean(const Vec3i &_source, const Vec3i &_target);
+
+        /**
+         * @brief 
+         * 
+         * @param _factor 
+         * @param _source 
+         * @param _target 
+         * @return unsigned int 
+         */
+        static unsigned int euclideanAttractive(const float _factor, const Vec3i &_source, const Vec3i &_target);
+
         /**
          * @brief  Octogonal heuristic
          * 
-         * @param source_ 
-         * @param target_ 
+         * @param _source 
+         * @param _target 
          * @return unsigned int 
          */
-        static unsigned int octagonal(Vec3i source_, Vec3i target_);
+        static unsigned int octagonal(const Vec3i &_source, const Vec3i &_target);
         /**
-         * @brief Dikjstra heuristic. (Absence of heuristic, always returns 0)
+         * @brief Dijkstra heuristic. (Absence of heuristic, always returns 0)
          * 
          * @return unsigned int 
          */
-        static unsigned int dikjstra(Vec3i source_, Vec3i target_);
+        static unsigned int dijkstra(const Vec3i &_source, const Vec3i &_target);
 
     };
 
