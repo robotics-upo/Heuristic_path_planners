@@ -235,6 +235,7 @@ unset(BUILD_ROS_SUPPORT CACHE)
 
 if(BUILD_TESTS)
   list(APPEND ${PROJECT_NAME}_TESTS 
+              tests/bresenham.cpp
               tests/tests.cpp )
 
   add_executable(main_test tests/main_test.cpp ${${PROJECT_NAME}_TESTS})

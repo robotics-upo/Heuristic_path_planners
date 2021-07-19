@@ -48,6 +48,17 @@ namespace Planners
             /**
              * @brief 
              * 
+             * @param _lcoords 
+             * @param _rcoords 
+             * @param _world 
+             * @return true 
+             * @return false 
+             */
+            bool bresenham3D(const Vec3i &_lcoords, const Vec3i &_rcoords, DiscreteWorld &_world);
+
+            /**
+             * @brief 
+             * 
              * @param _lnode 
              * @param _rnode 
              * @param _world 
