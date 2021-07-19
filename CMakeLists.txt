@@ -9,6 +9,7 @@ option(OPTIMIZE_FLAG        "Enable Compiler Optimization for Runtime Performanc
 option(BUILD_DEBUG          "Build debug features  " OFF)
 option(BUILD_COMPUTE_STATS  "Build PathGenerator with statistics" OFF)
 option(BUILD_VOROCPP        "Build voro++ features  " OFF)
+option(BUILD_TESTS           "Build tests"            ON)
 
 if(OPTIMIZE_FLAG)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
@@ -43,6 +44,20 @@ endif()
 unset(BUILD_DOC CACHE)
 
 find_package(Boost)
+
+if(BUILD_TESTS)
+  
+  Include(FetchContent) 
+  set(FETCHCONTENT_QUIET OFF)
+  FetchContent_Declare(
+    Catch2
+    GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+    GIT_TAG        v2.13.6)
+
+  FetchContent_MakeAvailable(Catch2)
+  find_package(Catch2 REQUIRED)
+
+endif()
 
 if(BUILD_ROS_SUPPORT)
   add_definitions(-DROS)
@@ -217,3 +232,12 @@ else()
 
 endif()
 unset(BUILD_ROS_SUPPORT CACHE)
+
+if(BUILD_TESTS)
+  list(APPEND ${PROJECT_NAME}_TESTS 
+              tests/tests.cpp )
+
+  add_executable(main_test tests/main_test.cpp ${${PROJECT_NAME}_TESTS})
+  target_link_libraries(main_test Catch2::Catch2 ${${PROJECT_NAME}_LIBRARIES})
+endif()
+unset(BUILD_TESTS CACHE)
