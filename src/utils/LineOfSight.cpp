@@ -9,6 +9,9 @@ namespace Planners
 
             bool bresenham3D(const Node *_lnode, const Node *_rnode, DiscreteWorld &_world)
             {
+                if( geometry::distanceBetween2Nodes(_lnode, _rnode) <= dd_3D_ )
+                    return true;
+                    
                 int d1, d2;
 
                 Vec3i vecS, vecDiff, vec0{_lnode->coordinates}, vec1{_rnode->coordinates};
