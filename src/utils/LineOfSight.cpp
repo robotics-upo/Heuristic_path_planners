@@ -9,7 +9,9 @@ namespace Planners
 
             bool bresenham3D(const Node *_lnode, const Node *_rnode, DiscreteWorld &_world)
             {
-                if( geometry::distanceBetween2Nodes(_lnode, _rnode) <= dd_3D_ )
+                if( geometry::distanceBetween2Nodes(_lnode, _rnode) <= dd_3D_ &&
+                    !_world.isOccupied(_lnode->coordinates) &&
+                    !_world.isOccupied(_rnode->coordinates) )
                     return true;
                     
                 int d1, d2;
