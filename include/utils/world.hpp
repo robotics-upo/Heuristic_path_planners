@@ -73,7 +73,7 @@ namespace utils
                 discrete_world_vector_[i].coordinates =  getDiscreteWorldPositionFromIndex(i);
                 discrete_world_vector_[i].world_index = i;
             }
-            
+
         }
         /**
          * @brief Set the Node Cost object overloaded function for continous coordinates
@@ -427,7 +427,7 @@ namespace utils
          */
         unsigned int getWorldIndex(const int _x, const int _y, const int _z) const
         {
-            return (unsigned int)( _z * world_x_size_ * world_y_size_ + _y * world_x_size_ + _x);
+            return static_cast<unsigned int>( _z * world_x_size_ * world_y_size_ + _y * world_x_size_ + _x);
         }
         /**
          * @brief Get the Discrete World Position From Index object

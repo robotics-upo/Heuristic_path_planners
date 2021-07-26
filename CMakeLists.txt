@@ -236,9 +236,14 @@ unset(BUILD_ROS_SUPPORT CACHE)
 if(BUILD_TESTS)
   list(APPEND ${PROJECT_NAME}_TESTS 
               tests/bresenham.cpp
-              tests/tests.cpp )
+              tests/geometry_utils.cpp
+              tests/clock.cpp 
+              tests/heuristics.cpp
+              tests/world.cpp
+              tests/nodecomparator.cpp
+              )
 
-  add_executable(main_test tests/main_test.cpp ${${PROJECT_NAME}_TESTS})
+  add_executable(main_test tests/main.cpp ${${PROJECT_NAME}_TESTS})
   target_link_libraries(main_test Catch2::Catch2 ${${PROJECT_NAME}_LIBRARIES})
 endif()
 unset(BUILD_TESTS CACHE)
