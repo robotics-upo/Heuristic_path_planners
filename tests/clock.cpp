@@ -32,9 +32,9 @@ TEST_CASE( "Random durations match approximately (2% of error)", "[random_elapse
     nanosleep(&spec, nullptr);
     clock.toc();
 
-    Approx nanotarget     = Approx(spec.tv_nsec).epsilon(0.02);
-    Approx milisecstarget = Approx(spec.tv_nsec/1e6).epsilon(0.02);
-    Approx secstarget     = Approx(spec.tv_nsec/1e9).epsilon(0.02);
+    Approx nanotarget     = Approx(spec.tv_nsec).epsilon(0.1);
+    Approx milisecstarget = Approx(spec.tv_nsec/1e6).epsilon(0.1);
+    Approx secstarget     = Approx(spec.tv_nsec/1e9).epsilon(0.1);
 
     CHECK( clock.getElapsedNanosecs()   == nanotarget );
     CHECK( clock.getElapsedMillisecs()  == milisecstarget );

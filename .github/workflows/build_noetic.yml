@@ -45,4 +45,9 @@ jobs:
         with:
           path: catkin_ws/src/
 
+      - name: Execute tests 
+        run: |
+          source /opt/ros/noetic/setup.bash;
+          source $GITHUB_WORKSPACE/catkin_ws/devel/setup.bash
+          rosrun heuristic_planners main_test
         

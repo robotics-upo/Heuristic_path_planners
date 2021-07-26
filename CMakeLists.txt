@@ -235,12 +235,12 @@ unset(BUILD_ROS_SUPPORT CACHE)
 
 if(BUILD_TESTS)
   list(APPEND ${PROJECT_NAME}_TESTS 
-              tests/bresenham.cpp
+              # tests/bresenham.cpp
               tests/geometry_utils.cpp
               tests/clock.cpp 
-              tests/heuristics.cpp
-              tests/world.cpp
-              tests/nodecomparator.cpp
+              # tests/heuristics.cpp
+              # tests/world.cpp
+              # tests/nodecomparator.cpp
               )
 
   add_executable(main_test tests/main.cpp ${${PROJECT_NAME}_TESTS})

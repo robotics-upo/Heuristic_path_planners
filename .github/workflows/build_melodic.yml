@@ -35,5 +35,13 @@ jobs:
           apt update && rosdep update && rosdep install --from-paths src/ -y -r;
           catkin_make;
 
+      - name: Execute tests 
+        run: |
+          source /opt/ros/noetic/setup.bash;
+          source $GITHUB_WORKSPACE/catkin_ws/devel/setup.bash
+          rosrun heuristic_planners main_test
+        
+
+
 
         
