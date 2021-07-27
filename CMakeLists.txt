@@ -235,7 +235,7 @@ unset(BUILD_ROS_SUPPORT CACHE)
 
 if(BUILD_TESTS)
   list(APPEND ${PROJECT_NAME}_TESTS 
-              # tests/bresenham.cpp
+              tests/bresenham.cpp
               tests/geometry_utils.cpp
               tests/clock.cpp 
               # tests/heuristics.cpp

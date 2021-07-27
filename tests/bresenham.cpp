@@ -1,35 +1,33 @@
 #include <catch2/catch.hpp>
+#include <cstdlib>
 #include "utils/utils.hpp"
 #include "utils/LineOfSight.hpp"
 #include "utils/world.hpp"
 
-SCENARIO( "Line of sight in empty world", "[empty]" ) {
+#define N_TESTS 6
+#define WORLD_TEST_SIZE 50
+#define WORLD_TEST_RESOLUTION 0.1
 
-    GIVEN( "An empty 2D world with 0.1 resolution" ) {
-        Planners::utils::DiscreteWorld world;
-        world.resizeWorld(100,100,1, 0.1);
+using namespace Planners::utils;
+using record = std::tuple<int, int, int>;
+using record2d = std::tuple<int, int>;
 
-        WHEN( "Point is itseld" ) {
-            
-            Planners::utils::Vec3i vec1{1,1,1};
-            // TODO Uncomment the requires when implementing overloaded functions to pass vec3i instead of node
-            THEN( "It should exist line of sight between the node itself" ) {
-                // REQUIRE( Planners::utils::LineOfSight::bresenham3D(vec1, vec1, world) );
-                // REQUIRE( Planners::utils::LineOfSight::bresenham3D(vec1, vec1, world)  );
-            }
-            
-        }
-        WHEN( "One of the input coordinates is out of bounds" ){
+TEST_CASE("It should exist line of sight between a random node and itself in an 3D empty world", "[bresenham3D][empty_world][nodes_itself]")
+{
+    DiscreteWorld world;
+    int world_size = WORLD_TEST_SIZE;
 
-            Planners::utils::Vec3i vec1{1,1,1};
-            Planners::utils::Vec3i vec2{102,1,1};
+    world.resizeWorld(world_size, world_size, world_size, WORLD_TEST_RESOLUTION);
 
-            THEN( "It shouldn't exist line of sight"){
-                // REQUIRE( !Planners::utils::LineOfSight::bresenham3D(vec1, vec2, world) );
-            }
+    auto r = GENERATE_COPY(table<int, int, int>({
+        record{world_size-1, world_size-1, world_size-1},
+    }));
 
-        }
-    }
+    auto x = GENERATE_COPY(take(N_TESTS, random(0, 0)));
+    auto y = GENERATE_COPY(take(N_TESTS, random(0, std::get<1>(r))));
+    auto z = GENERATE_COPY(take(N_TESTS, random(0, std::get<2>(r))));
 
+    Vec3i vec1{x, y, z};
 
+    // CHECK(LineOfSight::bresenham3D(vec1, vec1, world));
 }
