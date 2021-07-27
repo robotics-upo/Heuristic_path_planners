@@ -29,6 +29,7 @@ jobs:
       
       - name: Install CMake 3.16
         run: |
+          apt update
           apt install build-essential libssl-dev wget git -y
           wget https://github.com/Kitware/CMake/releases/download/v3.16.3/cmake-3.16.3.tar.gz
           tar -zxvf cmake-3.16.3.tar.gz
