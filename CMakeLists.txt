@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10.2)
+cmake_minimum_required(VERSION 3.16)
 project(heuristic_planners)
 
 add_compile_options(-std=c++17 -Wall -Wextra -pedantic)
@@ -55,7 +55,7 @@ if(BUILD_TESTS)
     GIT_TAG        v2.13.6)
 
   FetchContent_MakeAvailable(Catch2)
-  find_package(Catch2 REQUIRED)
+  # find_package(Catch2 REQUIRED)
 
 endif()
 
