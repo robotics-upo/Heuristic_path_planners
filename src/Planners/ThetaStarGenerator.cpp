@@ -24,8 +24,10 @@ namespace Planners
     void ThetaStarGenerator::ComputeCost(Node *_s_aux, Node *_s2_aux)
     {
         auto distanceParent2 = geometry::distanceBetween2Nodes(_s_aux->parent, _s2_aux);
+        utils::CoordinateListPtr checked_nodes;
+        checked_nodes.reset(new CoordinateList);
 
-        if (LineOfSight::bresenham3D((_s_aux->parent), _s2_aux, discrete_world_))
+        if (LineOfSight::bresenham3D((_s_aux->parent), _s2_aux, discrete_world_, checked_nodes))
         {
             if ((_s_aux->parent->G + distanceParent2 + _s2_aux->H) <
                 (_s2_aux->G + _s2_aux->H))
@@ -34,7 +36,10 @@ namespace Planners
                 _s2_aux->G = _s2_aux->parent->G + geometry::distanceBetween2Nodes(_s2_aux->parent, _s2_aux);
             }
         }
-
+        if( !checked_nodes->empty() ){
+            std::cout << "Theta Star cells checked in line of sight check between " << _s_aux->coordinates << " and " << _s2_aux->coordinates << " : " << std::endl;
+            std::cout << *(checked_nodes.get()) << std::endl;
+        }
     }
 
     PathData ThetaStarGenerator::findPath(const Vec3i &_source, const Vec3i &_target)

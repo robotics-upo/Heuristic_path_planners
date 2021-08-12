@@ -7,13 +7,17 @@ namespace Planners
         namespace LineOfSight
         {
 
-            bool bresenham3D(const Node *_lnode, const Node *_rnode, DiscreteWorld &_world)
+            bool bresenham3D(const Node *_lnode, const Node *_rnode, DiscreteWorld &_world, CoordinateListPtr _visited_nodes)
             {
-                if( geometry::distanceBetween2Nodes(_lnode, _rnode) <= dd_3D_ &&
-                    !_world.isOccupied(_lnode->coordinates) &&
-                    !_world.isOccupied(_rnode->coordinates) )
+                if( geometry::distanceBetween2Nodes(_lnode, _rnode) <= dd_3D_ //&&
+                    // !_world.isOccupied(_lnode->coordinates) &&
+                    // !_world.isOccupied(_rnode->coordinates) )
+                    )
                     return true;
-                    
+                
+                if( _visited_nodes == nullptr ){ //Case in which its not used
+                    _visited_nodes.reset(new CoordinateList);
+                }
                 int d1, d2;
 
                 Vec3i vecS, vecDiff, vec0{_lnode->coordinates}, vec1{_rnode->coordinates};
@@ -48,6 +52,7 @@ namespace Planners
                         if (_world.isOccupied(vec0))
                             return false;
 
+                        _visited_nodes->push_back(vec0);
                     }
                 }
                 //Driving axis is Y-axis
@@ -75,6 +80,7 @@ namespace Planners
                         if (_world.isOccupied(vec0))
                             return false;
 
+                        _visited_nodes->push_back(vec0);
                     }
                 }
                 //Driving axis is Z-axis
@@ -101,6 +107,7 @@ namespace Planners
                         if (_world.isOccupied(vec0))
                             return false;
 
+                        _visited_nodes->push_back(vec0);
                     }
                 }
 

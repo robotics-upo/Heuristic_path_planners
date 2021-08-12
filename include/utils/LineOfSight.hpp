@@ -30,7 +30,7 @@ namespace Planners
              * @return true If there exists line of sight between both nodes
              * @return false If there is no line of sight between both nodes
              */
-            bool bresenham3D(const Node *_lnode, const Node *_rnode, DiscreteWorld &_world);
+            bool bresenham3D(const Node *_lnode, const Node *_rnode, DiscreteWorld &_world, CoordinateListPtr _visited_nodes = nullptr);
 
             /**
              * @brief 

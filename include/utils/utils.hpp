@@ -16,6 +16,7 @@
 #include <map>
 #include <variant>
 #include <math.h>
+#include <memory>
 
 namespace Planners
 {
@@ -25,10 +26,11 @@ namespace Planners
         class Node;
         struct NodeComparator;
 
-        using CoordinateList  = std::vector<Planners::utils::Vec3i>;
-        using NodeSet         = std::set<Node*, NodeComparator>;
-        using DataVariant     = std::variant<std::string, Vec3i, CoordinateList, double, size_t, int, bool>;
-        using PathData        = std::map<std::string, DataVariant>;
+        using CoordinateList     = std::vector<Planners::utils::Vec3i>;
+        using CoordinateListPtr  = std::shared_ptr<std::vector<Planners::utils::Vec3i>>;
+        using NodeSet            = std::set<Node*, NodeComparator>;
+        using DataVariant        = std::variant<std::string, Vec3i, CoordinateList, double, size_t, int, bool>;
+        using PathData           = std::map<std::string, DataVariant>;
         
         //Compile time constants
         static constexpr int const dist_scale_factor_{100};
