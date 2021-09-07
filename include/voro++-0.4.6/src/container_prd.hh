@@ -10,6 +10,9 @@
 #ifndef VOROPP_CONTAINER_PRD_HH
 #define VOROPP_CONTAINER_PRD_HH
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 #include <cstdio>
 #include <vector>
 
@@ -650,5 +653,7 @@ class container_periodic_poly : public container_periodic_base, public radius_po
 };
 
 }
+
+#pragma GCC diagnostic pop
 
 #endif

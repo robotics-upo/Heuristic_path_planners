@@ -23,7 +23,7 @@
 
 class Grid3d
 {
-private:
+protected:
 	
 	// Ros parameters
 	ros::NodeHandle m_nh;
@@ -59,10 +59,11 @@ private:
 
 	//Parameters added to allow a new exp function to test different gridmaps
 	double cost_scaling_factor, robot_radius;
-	bool use_costmap_function;
+	bool use_costmap_function;	
+	std::string file_ext_;
 	
 public:
-	Grid3d(): m_cloud(new pcl::PointCloud<pcl::PointXYZI>)
+	Grid3d(): m_cloud(new pcl::PointCloud<pcl::PointXYZI>), file_ext_(".gridm")
 	{
 		// Load paraeters
 		double value;
@@ -101,9 +102,9 @@ public:
 			// Try to load tha associated grid-map from file
 			std::string path;
 			if(m_mapPath.compare(m_mapPath.length()-3, 3, ".bt") == 0)
-				path = m_mapPath.substr(0,m_mapPath.find(".bt"))+".gridm";
+				path = m_mapPath.substr(0,m_mapPath.find(".bt"))+ file_ext_;
 			if(m_mapPath.compare(m_mapPath.length()-3, 3, ".ot") == 0)
-				path = m_mapPath.substr(0,m_mapPath.find(".ot"))+".gridm";
+				path = m_mapPath.substr(0,m_mapPath.find(".ot"))+ file_ext_;
 			if(!loadGrid(path))
 			{						
 				// Compute the gridMap using kdtree search over the point-cloud
@@ -371,7 +372,7 @@ protected:
 		m_pcMsg.header.frame_id = m_globalFrameId;
 	}
 	
-	void computeGrid(void)
+	virtual void computeGrid(void)
 	{
 		//Publish percent variable
 		std_msgs::Float32 percent_msg;

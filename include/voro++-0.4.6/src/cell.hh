@@ -10,6 +10,9 @@
 #ifndef VOROPP_CELL_HH
 #define VOROPP_CELL_HH
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 #include <vector>
 
 #include "config.hh"
@@ -510,5 +513,6 @@ class voronoicell_neighbor : public voronoicell_base {
 };
 
 }
+#pragma GCC diagnostic pop
 
 #endif

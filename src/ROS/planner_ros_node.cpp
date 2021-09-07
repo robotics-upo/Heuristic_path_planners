@@ -8,6 +8,7 @@
 #include "utils/ros/ROSInterfaces.hpp"
 #include "utils/SaveDataVariantToFile.hpp"
 #include "Grid3D/grid3d.hpp"
+#include "Grid3D/VoronoiGrid.hpp"
 
 #include <ros/ros.h>
 
@@ -194,12 +195,23 @@ private:
         }
         algorithm_->setInflationConfig(inflate_, inflation_steps_);
 
-        m_grid3d_.reset(new Grid3d); //TODO Costs not implement yet
-        double cost_scaling_factor, robot_radius;
-        lnh_.param("cost_scaling_factor", cost_scaling_factor, 0.8);		
-		lnh_.param("robot_radius", robot_radius, 0.4);		
+        std::string grid_type;//standard or voronoi
+        lnh_.param("grid_type", grid_type, (std::string)"standard");
+        if( grid_type == "standard" ){
+            ROS_INFO("Using %s grid_type", grid_type.c_str());
+            m_grid3d_.reset(new Grid3d); //TODO Costs not implement yet
+            double cost_scaling_factor, robot_radius;
+            lnh_.param("cost_scaling_factor", cost_scaling_factor, 0.8);
+		    lnh_.param("robot_radius", robot_radius, 0.4);
+            m_grid3d_->setCostParams(cost_scaling_factor, robot_radius);
+        }else if ( grid_type == "voronoi" ){
+            ROS_INFO("Using %s grid_type", grid_type.c_str());
+            m_grid3d_.reset(new VoronoiGrid); 
+
+        }else{
+            ROS_WARN("%s is an invalidad grid type, using standard by default", grid_type.c_str());
+        }
         
-        m_grid3d_->setCostParams(cost_scaling_factor, robot_radius);
         
         std::string frame_id;
         lnh_.param("frame_id", frame_id, std::string("map"));		

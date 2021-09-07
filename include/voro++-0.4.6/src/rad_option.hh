@@ -11,6 +11,9 @@
 #ifndef VOROPP_RAD_OPTION_HH
 #define VOROPP_RAD_OPTION_HH
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 #include <cmath>
 
 namespace voro {
@@ -155,4 +158,6 @@ class radius_poly {
 };
 
 }
+#pragma GCC diagnostic pop
+
 #endif

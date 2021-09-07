@@ -168,7 +168,7 @@ if(BUILD_ROS_SUPPORT)
 ## Mark cpp header files for installation
   install(DIRECTORY include/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-  FILES_MATCHING PATTERN "*.hpp"
+  FILES_MATCHING PATTERN "*.hpp *.cc *.hh" 
   )
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
@@ -181,7 +181,7 @@ if(BUILD_ROS_SUPPORT)
 else()
   install(DIRECTORY include/
     DESTINATION ${CMAKE_INSTALL_PREFIX}/include
-    FILES_MATCHING PATTERN "*.hpp"
+    FILES_MATCHING PATTERN "*.hpp *.cc *.hh" 
   )
   
   install(TARGETS ${${PROJECT_NAME}_TARGETS}
