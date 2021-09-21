@@ -167,7 +167,7 @@ private:
         }else if( algorithm_name == "costastar" ){
             ROS_INFO("Using Cost Aware A*");
             algorithm_.reset(new CostAwareAStarGenerator(use3d));
-        }else if( algorithm_name == "costastarsafetycost" ){
+        }else if( algorithm_name == "astarsafetycost" ){
             ROS_INFO("Using A* Safety Cost");
             algorithm_.reset(new AStarGeneratorSafetyCost(use3d));    
         }else if ( algorithm_name == "thetastar" ){
