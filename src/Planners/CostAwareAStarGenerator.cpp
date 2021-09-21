@@ -50,6 +50,7 @@ PathData CostAwareAStarGenerator::findPath(const Vec3i &_source, const Vec3i &_t
             
             if (!discrete_world_.isInOpenList(newCoordinates)) { 
                 successor->parent = current;
+                std::cout << "Successor Cost " << successor->cost << " : " << std::endl;
                 successor->G = totalCost + static_cast<int>(cost_weight_ * successor->cost);
                 successor->H = heuristic(successor->coordinates, _target);
                 openSet.insert(successor);

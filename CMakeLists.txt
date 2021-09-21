@@ -5,7 +5,7 @@ add_compile_options(-std=c++17 -Wall -Wextra -pedantic)
 
 option(BUILD_DOC         "Build documentation   " ON)
 option(BUILD_ROS_SUPPORT "Build with ROS Support" ON)
-option(BUILD_DEBUG       "Build debug features  " OFF)
+option(BUILD_DEBUG       "Build debug features  " ON)
 
 if(BUILD_DOC)
 # check if Doxygen is installed
@@ -81,7 +81,8 @@ generate_messages(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
  INCLUDE_DIRS include
- LIBRARIES PathGenerator AStarGenerator CostAwareAStarGenerator ThetaStarGenerator LazyThetaStarGenerator CostAwareLazyThetaStarGenerator
+ LIBRARIES PathGenerator AStarGenerator CostAwareAStarGenerator AStarGeneratorSafetyCost ThetaStarGenerator ThetaStarGeneratorSafetyCost LazyThetaStarGenerator CostAwareLazyThetaStarGenerator
+ # CostAwareThetaStarGenerator  LazyThetaStarGeneratorSafetyCost
  CATKIN_DEPENDS std_msgs visualization_msgs geometry_msgs nav_msgs roscpp message_runtime costmap_2d
 #  DEPENDS system_lib
 )
@@ -133,12 +134,18 @@ add_library(AStarGenerator                  src/Planners/AStarGenerator.cpp
                                             )
 
 add_library(CostAwareAStarGenerator         src/Planners/CostAwareAStarGenerator.cpp ) 
+add_library(AStarGeneratorSafetyCost        src/Planners/AStarGeneratorSafetyCost.cpp ) 
 add_library(ThetaStarGenerator              src/Planners/ThetaStarGenerator.cpp )
+#add_library(ThetaStarGeneratorSafetyCost    src/Planners/CostAwareThetaStarGenerator.cpp )
+add_library(ThetaStarGeneratorSafetyCost    src/Planners/ThetaStarGeneratorSafetyCost.cpp )
 add_library(LazyThetaStarGenerator          src/Planners/LazyThetaStarGenerator.cpp )
 add_library(CostAwareLazyThetaStarGenerator src/Planners/CostAwareLazyThetaStarGenerator.cpp )
+#add_library(ThetaStarGeneratorSafetyCost    src/Planners/LazyThetaStarGeneratorSafetyCost.cpp )
 
 
-list(APPEND ${PROJECT_NAME}_LIBRARIES PathGenerator AStarGenerator CostAwareAStarGenerator ThetaStarGenerator LazyThetaStarGenerator CostAwareLazyThetaStarGenerator)
+
+list(APPEND ${PROJECT_NAME}_LIBRARIES PathGenerator AStarGenerator CostAwareAStarGenerator AStarGeneratorSafetyCost  ThetaStarGenerator ThetaStarGeneratorSafetyCost LazyThetaStarGenerator CostAwareLazyThetaStarGenerator)
+#CostAwareThetaStarGenerator  LazyThetaStarGeneratorSafetyCost
 target_link_libraries(${${PROJECT_NAME}_LIBRARIES} ${catkin_LIBRARIES})
 add_dependencies( ${${PROJECT_NAME}_LIBRARIES} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 list(APPEND ${PROJECT_NAME}_TARGETS ${${PROJECT_NAME}_LIBRARIES})

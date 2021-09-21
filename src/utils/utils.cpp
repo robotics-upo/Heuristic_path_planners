@@ -35,7 +35,8 @@ namespace Planners
         {
             parent = parent_;
             coordinates = coordinates_;
-            G = H = 0;
+            // G = H = cost = non_uni =0;
+            G = H =0;
         }
         Node::Node(){
 
@@ -43,8 +44,11 @@ namespace Planners
         unsigned int Node::getScore()
         {
             return G + H;
+        }        
+        unsigned int Node::getScoreWithSafetyCost()
+        {
+            return G + H + cost;  //Add the distance cost.
         }
-        
 
     }
 }

@@ -76,7 +76,7 @@ goal:
 
 In one terminal:
 ```bash
-roslaunch heuristic_planners planner2d_example.launch algorithm_name:=lazythetastar
+roslaunch heuristic_planners planner.launch algorithm_name:=lazythetastar
 ```
 
 Open another terminal and call an example start and goal request: 

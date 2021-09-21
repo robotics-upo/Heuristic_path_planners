@@ -1,4 +1,4 @@
-#ifndef __GRID3D_HPP__
+ #ifndef __GRID3D_HPP__
 #define __GRID3D_HPP__
 
 /**
@@ -20,6 +20,8 @@
 #include <pcl_conversions/pcl_conversions.h>
 
 #include "utils/utils.hpp"
+
+#include "voro++-0.4.6/src/voro++.hh"
 
 class Grid3d
 {
@@ -85,8 +87,8 @@ public:
 			value = 0.2;
 		m_sensorDev = (float)value;
 
-		lnh.param("cost_scaling_factor", cost_scaling_factor, 0.8);		
-		lnh.param("robot_radius", robot_radius, 0.4);		
+		lnh.param("cost_scaling_factor", cost_scaling_factor, 0.8); //0.8		
+		lnh.param("robot_radius", robot_radius, 0.4);		//0.4
 		lnh.param("use_costmap_function", use_costmap_function, (bool)true);		
 
 		// Load octomap 
@@ -426,6 +428,7 @@ protected:
 						}else{
 							double prob =  100*exp(-cost_scaling_factor*std::fabs((dist - robot_radius)));
 							// ROS_INFO("[%f, %f, %f] Dist: %f Probability: %f", searchPoint.x, searchPoint.y, searchPoint.z, dist, prob);
+							//JAC: Include the computation of prob considering the distance to the nearest voronoi edge.
 							m_grid[index].prob = prob;
 						}
 					}

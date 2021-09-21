@@ -18,8 +18,11 @@ namespace Planners
     }
     void LazyThetaStarGenerator::SetVertex(Node *_s_aux)
     {
+        utils::CoordinateListPtr checked_nodes;
+        checked_nodes.reset(new CoordinateList);
 
-        if (!LineOfSight::bresenham3D((_s_aux->parent), _s_aux, discrete_world_))
+        //if (!LineOfSight::bresenham3D((_s_aux->parent), _s_aux, discrete_world_))
+        if (!LineOfSight::bresenham3D((_s_aux->parent), _s_aux, discrete_world_, checked_nodes))
         {
             unsigned int G_max = std::numeric_limits<unsigned int>::max(); 
             unsigned int G_new;
@@ -45,6 +48,13 @@ namespace Planners
                 }
             }
         }
+        // To print the checked_nodes with Bresenham
+        if( !checked_nodes->empty() ){
+            std::cout << "Theta Star cells checked in line of sight check between " << _s_aux->parent->coordinates << " and " << _s_aux->coordinates << " : " << std::endl;
+            //std::cout << *(checked_nodes.get()) << std::endl;
+            std::cout << checked_nodes->size() << std::endl;
+            //std::cout << checked_nodes.coordinates << std::endl;
+        }
     }
     void LazyThetaStarGenerator::ComputeCost(Node *_s_aux, Node *_s2_aux)
     {
@@ -53,7 +63,8 @@ namespace Planners
         if ((_s_aux->parent->G + distanceParent2) < (_s2_aux->G))
         {
             _s2_aux->parent = _s_aux->parent;
-            _s2_aux->G = _s2_aux->parent->G + geometry::distanceBetween2Nodes(_s2_aux->parent, _s2_aux);
+            _s2_aux->G = _s2_aux->parent->G + distanceParent2;
+            //_s2_aux->G = _s2_aux->parent->G + geometry::distanceBetween2Nodes(_s2_aux->parent, _s2_aux);
         }
     }
 
@@ -107,8 +118,7 @@ namespace Planners
                     continue;
                 Node *successor = discrete_world_.getNodePtr(newCoordinates);
 
-                if (successor == nullptr)
-                    continue;
+                if (successor == nullptr) continue;
 
                 if (!discrete_world_.isInOpenList(newCoordinates))
                 {
@@ -121,7 +131,8 @@ namespace Planners
                     }
 
                     successor->parent = current;
-                    successor->G = totalCost;
+                    successor->G = totalCost; 
+                    //successor->G = totalCost+successor->parent->G; 
                     successor->H = heuristic(successor->coordinates, _target);
                     openSet.insert(successor);
                     discrete_world_.setOpenValue(*successor, true);

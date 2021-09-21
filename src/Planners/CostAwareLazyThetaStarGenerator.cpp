@@ -106,10 +106,13 @@ namespace Planners
                     }
 
                     successor->parent = current;
+                    //if (successor->cost >0) std::cout << "Successor Cost " << successor->cost << " : " << std::endl;
                     successor->G = totalCost + static_cast<int>(cost_weight_ * successor->cost);
+                    //successor->G = totalCost + successor->parent->G + static_cast<int>(cost_weight_ * successor->cost);
                     successor->H = heuristic(successor->coordinates, _target);
                     openSet.insert(successor);
-                    discrete_world_.setOpenValue(successor->coordinates, true);
+                    //discrete_world_.setOpenValue(successor->coordinates, true);
+                    discrete_world_.setOpenValue(*successor, true);
                 }
                 UpdateVertex(current, successor, openSet);
             }

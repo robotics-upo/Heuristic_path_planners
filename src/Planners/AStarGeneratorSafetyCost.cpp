@@ -1,9 +1,9 @@
-#include "Planners/AStarGenerator.hpp"
+#include "Planners/AStarGeneratorSafetyCost.hpp"
 
 namespace Planners{
     
     
-AStarGenerator::AStarGenerator(bool _use_3d = true): PathGenerator(_use_3d)
+AStarGeneratorSafetyCost::AStarGenerator(bool _use_3d = true): PathGenerator(_use_3d)
 {
 
     //If compiled with ros and visualization
@@ -62,7 +62,7 @@ AStarGenerator::AStarGenerator(bool _use_3d = true): PathGenerator(_use_3d)
 #endif
 
 }
-void AStarGenerator::publishOccupationMarkersMap()
+void AStarGeneratorSafetyCost::publishOccupationMarkersMap()
 {
 #ifdef ROS
 	occupancy_marker_.clear();
@@ -82,7 +82,7 @@ void AStarGenerator::publishOccupationMarkersMap()
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
-void AStarGenerator::publishROSDebugData(const Node* _node, const NodeSet &_open_set, const NodeSet &_closed_set)
+void AStarGeneratorSafetyCost::publishROSDebugData(const Node* _node, const NodeSet &_open_set, const NodeSet &_closed_set)
 {
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)
 
@@ -130,7 +130,7 @@ void AStarGenerator::publishROSDebugData(const Node* _node, const NodeSet &_open
 #pragma GCC diagnostic pop
 
 }
-PathData AStarGenerator::findPath(const Vec3i &_source, const Vec3i &_target)
+PathData AStarGeneratorSafetyCost::findPath(const Vec3i &_source, const Vec3i &_target)
 {
     Node *current = nullptr;
     NodeSet openSet, closedSet;

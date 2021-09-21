@@ -191,7 +191,7 @@ namespace Planners
 
             Planners::utils::Vec3i coordinates;
             unsigned int G{0}, H{0};
-            unsigned int cost{0};
+            unsigned int cost{0}, non_uni{0};
             
             bool occuppied{false};
             bool isInOpenList{false};
@@ -200,6 +200,7 @@ namespace Planners
             Node(Planners::utils::Vec3i coord_, Node *parent_ = nullptr);
             Node();
             unsigned int getScore();
+            unsigned int getScoreWithSafetyCost();
 
         };
 

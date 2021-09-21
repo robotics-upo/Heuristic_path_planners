@@ -16,11 +16,11 @@
     <arg name="save_data"           default="true"/>
     <arg name="data_file_path"      default="$(env HOME)/planning.txt"/>
 
-    <arg name="cost_weight" default="1.0"/>
+    <arg name="cost_weight" default="10.0"/>
     <arg name="max_line_of_sight_distance" default="1.0"/>
 
-    <arg name="cost_scaling_factor" default="1.0"/>
-    <arg name="robot_radius"        default="0.5"/>
+    <arg name="cost_scaling_factor" default="0.8"/>
+    <arg name="robot_radius"        default="0.4"/>
 
     <!-- Map server to publish 2d occupancy grid in the /map topic by default -->
     <node pkg="map_server" name="map_server" type="map_server" args="$(arg map)"/>

@@ -27,19 +27,40 @@ namespace Planners
         utils::CoordinateListPtr checked_nodes;
         checked_nodes.reset(new CoordinateList);
 
+        // std::cout << "Node Coordinates of Current: " << _s_aux->coordinates << std::endl;
+        // std::cout << "Node Coordinates of Parent: " << _s_aux->parent->coordinates << std::endl;
+        // std::cout << "Current Cost: " << _s_aux->cost << std::endl;
+        // std::cout << "Parent Cost: " << _s_aux->parent->cost << std::endl;
+
         if (LineOfSight::bresenham3D((_s_aux->parent), _s2_aux, discrete_world_, checked_nodes))
         {
-            if ((_s_aux->parent->G + distanceParent2 + _s2_aux->H) <
-                (_s2_aux->G + _s2_aux->H))
+            // if ((_s_aux->parent->G + distanceParent2 + _s2_aux->H) <
+            //     (_s2_aux->G + _s2_aux->H))
+            if ((_s_aux->parent->G + distanceParent2) < (_s2_aux->G))
             {
                 _s2_aux->parent = _s_aux->parent;
-                _s2_aux->G = _s2_aux->parent->G + geometry::distanceBetween2Nodes(_s2_aux->parent, _s2_aux);
+                // _s2_aux->G = _s2_aux->parent->G + geometry::distanceBetween2Nodes(_s2_aux->parent, _s2_aux);
+                //_s2_aux->G = _s_aux->parent->G + geometry::distanceBetween2Nodes(_s_aux->parent, _s2_aux);
+                _s2_aux->G = _s_aux->parent->G + distanceParent2;
+                // std::cout << "s2_aux G: " << _s2_aux->G << std::endl;
             }
         }
-        if( !checked_nodes->empty() ){
-            std::cout << "Theta Star cells checked in line of sight check between " << _s_aux->coordinates << " and " << _s2_aux->coordinates << " : " << std::endl;
-            std::cout << *(checked_nodes.get()) << std::endl;
+        else {
+            auto distance2 = geometry::distanceBetween2Nodes(_s_aux, _s2_aux);
+            if ((_s_aux->G + distance2) < _s2_aux->G){
+                _s2_aux->parent=_s_aux;
+                _s2_aux->G=_s_aux->G + distance2;
+            }
         }
+        // std::cout << "New G: " << _s2_aux->G << std::endl;
+        // std::cout << "Parent G: " << _s2_aux->parent->G << std::endl;
+        // std::cout << "Parent Coordinates: " << _s2_aux->parent->coordinates << " : " << std::endl;
+
+        // To print the checked_nodes with Bresenham
+        // if( !checked_nodes->empty() ){
+        //     std::cout << "Theta Star cells checked in line of sight check between " << _s_aux->coordinates << " and " << _s2_aux->coordinates << " : " << std::endl;
+        //     std::cout << *(checked_nodes.get()) << std::endl;
+        // }
     }
 
     PathData ThetaStarGenerator::findPath(const Vec3i &_source, const Vec3i &_target)
@@ -74,6 +95,9 @@ namespace Planners
             discrete_world_.setOpenValue(*current, false);
             discrete_world_.setClosedValue(*current, true);
             
+            // std::cout << "Current G: " << current->G << std::endl;
+            // std::cout << "Current Parent G: " << current->parent->G << std::endl;
+
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)        
             publishROSDebugData(current, openSet, closedSet);
 #endif
@@ -94,18 +118,24 @@ namespace Planners
                 if (!discrete_world_.isInOpenList(newCoordinates))
                 {
                     unsigned int totalCost = current->G;
+                    //std::cout << "totalCost1 " << totalCost << " : " << std::endl;
 
                     if(direction.size()  == 8){
                         totalCost += (i < 4 ? dist_scale_factor_ : dd_2D_); //This is more efficient
                     }else{
                         totalCost += (i < 6 ? dist_scale_factor_ : (i < 18 ? dd_2D_ : dd_3D_)); //This is more efficient
                     }
+                    //std::cout << "totalCost2 " << totalCost << " : " << std::endl;
 
                     successor->parent = current;
-                    successor->G = totalCost;
+                    // CHECK HOW THE SUCCESSOR->G SHOULD BE COMPUTED
+                    // IN THE SECOND ONE THE NUMBER OF EXPLORED NODES AND LoS IS GREATER THAN IN THE FIRST ONE.
+                    // successor->G = totalCost; 
+                    successor->G = totalCost + successor->parent->G; //also current->G like succesor->parent->G
                     successor->H = heuristic(successor->coordinates, _target);
                     openSet.insert(successor);
-                    discrete_world_.setOpenValue(successor->coordinates, true);
+                    //discrete_world_.setOpenValue(successor->coordinates, true);
+                    discrete_world_.setOpenValue(*successor, true);
                 }
                 
                 UpdateVertex(current, successor, openSet); 
