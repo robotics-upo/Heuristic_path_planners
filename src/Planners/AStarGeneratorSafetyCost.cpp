@@ -8,12 +8,17 @@ PathData AStarGeneratorSafetyCost::findPath(const Vec3i &_source, const Vec3i &_
     NodeSet openSet, closedSet;
     bool solved{false};
 
+    float scale=1; // Increase the influence of the distance cost. Important change between 5 and 6.
+
     openSet.insert(discrete_world_.getNodePtr(_source));
     discrete_world_.setOpenValue(_source, true);
     
     utils::Clock main_timer;
     main_timer.tic();
     while (!openSet.empty()) {
+
+        float aa, bb;
+        aa=0;
 
         current = *openSet.begin();
 
@@ -25,6 +30,8 @@ PathData AStarGeneratorSafetyCost::findPath(const Vec3i &_source, const Vec3i &_
         discrete_world_.setOpenValue(*current, false);
         discrete_world_.setClosedValue(*current, true);
 
+        aa=current->cost;
+
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)        
         publishROSDebugData(current, openSet, closedSet);
 #endif
@@ -32,6 +39,8 @@ PathData AStarGeneratorSafetyCost::findPath(const Vec3i &_source, const Vec3i &_
         for (unsigned int i = 0; i < direction.size(); ++i) {
             
             Vec3i newCoordinates(current->coordinates + direction[i]);
+            float edge_neighbour = 0;
+
             if ( discrete_world_.isOccupied(newCoordinates) || 
                  discrete_world_.isInClosedList(newCoordinates) ) 
                 continue;
@@ -41,24 +50,34 @@ PathData AStarGeneratorSafetyCost::findPath(const Vec3i &_source, const Vec3i &_
 
             if(successor == nullptr) continue;
 
-            unsigned int totalCost = current->G;
+            unsigned int totalCost_previuous = current->G; //A
+            unsigned int totalCost = 0;
             if(direction.size()  == 8){
                 totalCost += (i < 4 ? dist_scale_factor_ : dd_2D_); //This is more efficient
+                bb=successor->cost;
+                // std::cout << "Successor Cost " << successor->cost << " : " << std::endl;
+                edge_neighbour = (((aa+bb)/(2*100))*totalCost)*scale;
+
             }else{
                 totalCost += (i < 6 ? dist_scale_factor_ : (i < 18 ? dd_2D_ : dd_3D_)); //This is more efficient
+                bb=successor->cost;
+                edge_neighbour = (((aa+bb)/(2*100))*totalCost)*scale;
             }
             
             if (!discrete_world_.isInOpenList(newCoordinates)) { 
                 successor->parent = current;
-                std::cout << "Successor Cost " << successor->cost << " : " << std::endl;
-                successor->G = totalCost + static_cast<int>(cost_weight_ * successor->cost);
+                successor->G = totalCost_previuous + edge_neighbour; //A
+                // std::cout << "Successor Cost " << successor->cost << " : " << std::endl;
+                // successor->G = totalCost + static_cast<int>(cost_weight_ * successor->cost);
                 successor->H = heuristic(successor->coordinates, _target);
                 openSet.insert(successor);
                 discrete_world_.setOpenValue(successor->coordinates, true);
             }
-            else if (totalCost < successor->G) {
+            else if ((totalCost_previuous + edge_neighbour) < successor->G) { //A
+            // else if (totalCost < successor->G) {
                 successor->parent = current;
-                successor->G = totalCost + static_cast<int>(cost_weight_ * successor->cost);
+                successor->G = totalCost_previuous + edge_neighbour; //A
+                // successor->G = totalCost + static_cast<int>(cost_weight_ * successor->cost);
             }
         }
     }
