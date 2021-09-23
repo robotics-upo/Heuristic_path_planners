@@ -572,18 +572,18 @@ namespace Planners
                         totalCost += (i < 6 ? dist_scale_factor_ : (i < 18 ? dd_2D_ : dd_3D_)); //This is more efficient
 
                         // Method 1
-                        bb=successor->cost;
+                        // bb=successor->cost;
                         // Method 2
-                        // if ((totalCost > 100) && (totalCost < 150)) {
-                        //     bb=(successor->cost)/(factor_cost);
-                        //     // std::cout << "Cost scaled " << bb << " : " << std::endl;
-                        // }
-                        // else if ((totalCost > 150) && (totalCost < 200)){
-                        //     bb=(successor->cost)/(factor_cost2);
-                        // }
-                        // else {
-                        //     bb=successor->cost;
-                        // }
+                        if ((totalCost > 100) && (totalCost < 150)) {
+                            bb=(successor->cost)/(factor_cost);
+                            // std::cout << "Cost scaled " << bb << " : " << std::endl;
+                        }
+                        else if ((totalCost > 150) && (totalCost < 200)){
+                            bb=(successor->cost)/(factor_cost2);
+                        }
+                        else {
+                            bb=successor->cost;
+                        }
 
                         // edge_neighbour = (((aa+bb)/(2*100))*totalCost);
                         edge_neighbour = 0;

@@ -2,6 +2,7 @@
 
 namespace Planners
 {
+
     void LazyThetaStarGeneratorSafetyCost::SetVertex(Node *_s_aux)
     {   
         if (!LineOfSight::bresenham3DWithMaxThreshold((_s_aux->parent), _s_aux, discrete_world_, max_line_of_sight_cells_ ))
@@ -35,6 +36,8 @@ namespace Planners
     {
         auto distanceParent2 = geometry::distanceBetween2Nodes(_s_aux->parent, _s2_aux);
 
+        // Compute cost considering the safety cost.
+
         if ((_s_aux->parent->G + distanceParent2 ) < (_s2_aux->G))
         {
             _s2_aux->parent = _s_aux->parent;
@@ -48,6 +51,9 @@ namespace Planners
         NodeSet openSet, closedSet;
         bool solved{false};
 
+        float factor_cost = 1.4142;
+        float factor_cost2 = 1.73;
+
         openSet.insert(discrete_world_.getNodePtr(_source));
 
         discrete_world_.getNodePtr(_source)->parent = new Node(_source);
@@ -60,6 +66,8 @@ namespace Planners
 
         while (!openSet.empty())
         {
+            float aa, bb;
+            aa=0;
 
             current = *openSet.begin();
 
@@ -75,6 +83,8 @@ namespace Planners
             discrete_world_.setOpenValue(*current, false);
             discrete_world_.setClosedValue(*current, true);
 
+            aa=current->cost;
+
             SetVertex(current);
             //in every setVertex the line of sight function is called 
             line_of_sight_checks++;
@@ -86,6 +96,8 @@ namespace Planners
             {
 
                 Vec3i newCoordinates(current->coordinates + direction[i]);
+                float edge_neighbour = 0;
+                bb=0;
 
                 if (discrete_world_.isOccupied(newCoordinates) ||
                     discrete_world_.isInClosedList(newCoordinates))
@@ -101,14 +113,43 @@ namespace Planners
 
                     if(direction.size()  == 8){
                         totalCost += (i < 4 ? dist_scale_factor_ : dd_2D_); //This is more efficient
+                        // Method 1
+                        // bb=successor->cost;
+                        // Method 2
+                        if (totalCost > 100) {
+                            bb=(successor->cost)/(factor_cost);
+                            // std::cout << "Cost scaled " << bb << " : " << std::endl;
+                        }
+                        else {
+                            bb=successor->cost;
+                        }
+
+                        edge_neighbour = (((aa+bb)/(2*100))*totalCost);
+
                     }else{
                         totalCost += (i < 6 ? dist_scale_factor_ : (i < 18 ? dd_2D_ : dd_3D_)); //This is more efficient
+                        // Method 1
+                        // bb=successor->cost;
+                        // Method 2
+                        if ((totalCost > 100) && (totalCost < 150)) {
+                            bb=(successor->cost)/(factor_cost);
+                            // std::cout << "Cost scaled " << bb << " : " << std::endl;
+                        }
+                        else if ((totalCost > 150) && (totalCost < 200)){
+                            bb=(successor->cost)/(factor_cost2);
+                        }
+                        else {
+                            bb=successor->cost;
+                        }
+
+                        edge_neighbour = (((aa+bb)/(2*100))*totalCost);
                     }
 
                     successor->parent = current;
                     //if (successor->cost >0) std::cout << "Successor Cost " << successor->cost << " : " << std::endl;
-                    successor->G = totalCost + static_cast<int>(cost_weight_ * successor->cost);
+                    //successor->G = totalCost + static_cast<int>(cost_weight_ * successor->cost);
                     //successor->G = totalCost + successor->parent->G + static_cast<int>(cost_weight_ * successor->cost);
+                    successor->G = current->G + totalCost + edge_neighbour; // This is the same than A*
                     successor->H = heuristic(successor->coordinates, _target);
                     openSet.insert(successor);
                     //discrete_world_.setOpenValue(successor->coordinates, true);

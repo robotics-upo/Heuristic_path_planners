@@ -124,7 +124,7 @@ void AStarGenerator::publishROSDebugData(const Node* _node, const NodeSet &_open
     aux_text_marker_pub_.publish(aux_text_marker_);
     usleep(1e4);
     std::cout << "Please a key to go to the next iteration..." << std::endl;
-    getchar();
+    getchar(); // Comentar para no usar tecla.
 
 #endif
 #pragma GCC diagnostic pop
