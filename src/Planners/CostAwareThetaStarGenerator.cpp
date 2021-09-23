@@ -1,8 +1,8 @@
-#include "Planners/ThetaStarGeneratorSafetyCost.hpp"
+#include "Planners/CostAwareThetaStarGenerator.hpp"
 
 namespace Planners
 {
-    void ThetaStarGeneratorSafetyCost::UpdateVertex(Node *_s, Node *_s2, NodeSet &_openset)
+    void CostAwareThetaStarGenerator::UpdateVertex(Node *_s, Node *_s2, NodeSet &_openset)
     {
         float g_old = _s2->G;
         // std::cout << "s1 G 1: " << _s->G << std::endl;
@@ -30,7 +30,7 @@ namespace Planners
         }
     }
 
-    void ThetaStarGeneratorSafetyCost::ComputeCost(Node *_s_aux, Node *_s2_aux)
+    void CostAwareThetaStarGenerator::ComputeCost(Node *_s_aux, Node *_s2_aux)
     {
         //auto distanceParent2 = geometry::distanceBetween2Nodes(_s_aux->parent, _s2_aux);
         utils::CoordinateListPtr checked_nodes, checked_nodes_current;
@@ -38,7 +38,7 @@ namespace Planners
         checked_nodes_current.reset(new CoordinateList);
 
         float dist_max=100; // This parameter should appear in mean_dist_cost2 instead of *100.
-        float scale=1.0; // Increase the influence of the distance cost. Important change between 5 and 6.
+        float scale=1.5; // Increase the influence of the distance cost. Important change between 5 and 6.
 
         if (LineOfSight::bresenham3D((_s_aux->parent), _s2_aux, discrete_world_, checked_nodes))  
         {
@@ -57,7 +57,6 @@ namespace Planners
             //     _s_aux->parent->cost=_s_aux->cost;
             //     std::cout << "IGUALES" << std::endl;
             // }
-
 
             if (checked_nodes->size() > 1){
                 // std::cout << "IF Parent" << std::endl;
@@ -98,7 +97,6 @@ namespace Planners
                 // mean_dist_cost2 = ((dist_cost2+cost_origin2)/((var1+1)*dist_max));  // B Considering completely origin and goal. Goal is included in dist_cost2
 
                 edge2=(mean_dist_cost2)*dist2*scale; 
-                //edge2 = 0;  // It would behave like Theta*
 
                 // std::cout << "dist_cost2: " << dist_cost2 << std::endl;
                 // std::cout << "visited nodes: " << checked_nodes->size() << std::endl;
@@ -124,7 +122,6 @@ namespace Planners
                 cost_goal2=  _s2_aux->cost/dist_max;
                 mean_dist_cost2 = (((cost_origin2 + cost_goal2)/2 + ((dist_cost2)/dist_max)));
                 edge2=(mean_dist_cost2)*dist2*scale;    //Parece que no mejora mucho respecto al mean_dist_cost2*dist2*scale
-                // edge2 = 0; // It would behave like Theta*
                 // G + normalized cost
                 // edge2=dist2+dist_cost2;
                 
@@ -150,7 +147,6 @@ namespace Planners
                 
                 mean_dist_cost2 = (cost_origin2 + cost_goal2)/2;
                 edge2=(mean_dist_cost2)*dist2*scale;
-                // edge2 = 0; // It would behave like Theta*
 
                 // std::cout << "visited nodes: " << checked_nodes->size() << std::endl;
                 // std::cout << "cost_origin: " << _s_aux->parent->cost << std::endl;
@@ -213,7 +209,7 @@ namespace Planners
                 // mean_dist_cost = ((dist_cost+cost_origin)/((var11+1)*dist_max));  // B Considering completely origin and goal. Goal is included in dist_cost2
                
                 edge1=(mean_dist_cost)*dist1*scale;
-                // edge1 = 0; // It would behave like Theta*
+                // edge2=mean_dist_cost2;
 
                 // std::cout << "dist_cost: " << dist_cost << std::endl;
                 // std::cout << "visited nodes: " << checked_nodes_current->size() << std::endl;
@@ -242,7 +238,6 @@ namespace Planners
                 // mean_dist_cost = ((((cost_origin + cost_goal)/2 + dist_cost))/(2*dist_max));
                 mean_dist_cost = (((cost_origin + cost_goal)/2 + ((dist_cost)/dist_max)));
                 edge1=(mean_dist_cost)*dist1*scale;
-                // edge1 = 0; // It would behave like Theta*
 
                 // G + normalized cost
                 // edge1=dist1 + dist_cost;
@@ -263,8 +258,6 @@ namespace Planners
                 cost_goal=  _s2_aux->cost/dist_max;
                 mean_dist_cost = (cost_origin + cost_goal)/2;
                 edge1=(mean_dist_cost)*dist1*scale;
-                // edge1 = 0; // It would behave like Theta*
-
                 // G + normalized cost
                 // edge1 = dist1 + ((cost_origin + cost_goal)/2); 
 
@@ -283,14 +276,13 @@ namespace Planners
 
 
 
-            if ((_s_aux->parent->G + dist2 + edge2) <= (_s_aux->G + dist1 + edge1)) 
+            if ((_s_aux->parent->G + edge2) <= (_s_aux->G + edge1)) 
             {
                 // std::cout << "IIIIFFFF Edge2" << std::endl;
                 _s2_aux->parent = _s_aux->parent;
                 //_s2_aux->G = _s_aux->parent->G + dist2; // It is not necessary
                 // std::cout << "Previous Non_uni: " << _s_aux->parent->non_uni << std::endl;
-                // _s2_aux->G = _s_aux->parent->G + edge2;
-                _s2_aux->G = _s_aux->parent->G + dist2 + edge2;  // This is the same than A*
+                _s2_aux->G = _s_aux->parent->G + edge2;
 
                 // if ((_s_aux->parent->G + distanceParent2) < (_s2_aux->G))
                 // {
@@ -337,7 +329,7 @@ namespace Planners
 
                 //_s2_aux->non_uni= edge1;
                 // std::cout << "Previous Non_uni: " << _s_aux->parent->non_uni << std::endl;
-                _s2_aux->G= _s_aux->G + dist1 + edge1;   // This is the same than A*             
+                _s2_aux->G= _s_aux->G + edge1;               
             }
 
             
@@ -390,7 +382,7 @@ namespace Planners
                 // mean_dist_cost = ((dist_cost+cost_origin)/((var11+1)*dist_max));  // B Considering completely origin and goal. Goal is included in dist_cost2
 
                 edge1=(mean_dist_cost)*dist1*scale;
-                // edge1 = 0; // It would behave like Theta*
+                // edge1=mean_dist_cost;
 
                 // std::cout << "dist_cost: " << dist_cost << std::endl;
                 // std::cout << "visited nodes: " << checked_nodes->size() << std::endl;
@@ -418,7 +410,6 @@ namespace Planners
                 mean_dist_cost = (((cost_origin + cost_goal)/2 + ((dist_cost)/dist_max)));
                 // mean_dist_cost = ((((cost_origin + cost_goal)/2 + dist_cost))/(2*dist_max));
                 edge1=(mean_dist_cost)*dist1*scale;
-                // edge1 = 0; // It would behave like Theta*
 
                 // G + normalized cost
                 // edge1=dist1 + dist_cost;
@@ -439,8 +430,6 @@ namespace Planners
                 // mean_dist_cost = (((cost_origin + cost_goal))/(2*dist_max));
                 mean_dist_cost = (cost_origin + cost_goal)/2;
                 edge1=(mean_dist_cost)*dist1*scale;
-                // edge1 = 0; // It would behave like Theta*
-
                 // G + normalized cost
                 // edge1 = dist1 + ((cost_origin + cost_goal)/2); 
 
@@ -451,7 +440,7 @@ namespace Planners
                 // std::cout << "dist1: " << dist1 << std::endl;
                 // std::cout << "Edge Cost1: " << edge1 << std::endl;                
             }
-            _s2_aux->G= _s_aux->G + dist1 + edge1;  // This is the same than A*
+            _s2_aux->G= _s_aux->G + edge1;
 
             
         }
@@ -464,14 +453,11 @@ namespace Planners
         // }
     }
 
-    PathData ThetaStarGeneratorSafetyCost::findPath(const Vec3i &_source, const Vec3i &_target)
+    PathData CostAwareThetaStarGenerator::findPath(const Vec3i &_source, const Vec3i &_target)
     {
         Node *current = nullptr;
         NodeSet openSet, closedSet;
         bool solved{false};
-
-        float factor_cost = 1.4142;
-        float factor_cost2 = 1.73;
 
         openSet.insert(discrete_world_.getNodePtr(_source));
         discrete_world_.getNodePtr(_source)->parent = new Node(_source);
@@ -542,17 +528,7 @@ namespace Planners
                         // std::cout << "Current Cost: " << current->cost << std::endl;
                         // std::cout << "Successor Cost: " << successor->cost << std::endl;
 
-                        // Method 1
-                        // bb=successor->cost;
-                        // Method 2
-                        if (totalCost > 100) {
-                            bb=(successor->cost)/(factor_cost);
-                            // std::cout << "Cost scaled " << bb << " : " << std::endl;
-                        }
-                        else {
-                            bb=successor->cost;
-                        }
-
+                        bb=successor->cost;
                         edge_neighbour = (((aa+bb)/(2*100))*totalCost);
                         // edge_neighbour = totalCost + ((aa+bb)/2);  // G + normalized cost, 17-09-2021
                         // edge_neighbour = totalCost + ((aa+bb)/(2*100))*totalCost;
@@ -570,24 +546,8 @@ namespace Planners
 
                     }else{
                         totalCost += (i < 6 ? dist_scale_factor_ : (i < 18 ? dd_2D_ : dd_3D_)); //This is more efficient
-
-                        // Method 1
                         bb=successor->cost;
-                        // Method 2
-                        // if ((totalCost > 100) && (totalCost < 150)) {
-                        //     bb=(successor->cost)/(factor_cost);
-                        //     // std::cout << "Cost scaled " << bb << " : " << std::endl;
-                        // }
-                        // else if ((totalCost > 150) && (totalCost < 200)){
-                        //     bb=(successor->cost)/(factor_cost2);
-                        // }
-                        // else {
-                        //     bb=successor->cost;
-                        // }
-
-                        // edge_neighbour = (((aa+bb)/(2*100))*totalCost);
-                        edge_neighbour = 0;
-
+                        edge_neighbour = (((aa+bb)/(2*100))*totalCost);
                         //edge_neighbour = totalCost + ((aa+bb)/2);   // G + normalized cost, 17-09-2021
                         // edge_neighbour = totalCost + ((aa+bb)/(2*100))*totalCost;
 
@@ -603,12 +563,10 @@ namespace Planners
                     // std::cout << "Current Coordinates: " << current->coordinates << std::endl;
                     // std::cout << "Parent Current Coordinates: " << current->parent->coordinates << std::endl;
                     // std::cout << "Successor Coordinates: " << successor->coordinates << std::endl;
-
+                    // successor->parent = current;
                     // successor->G = edge_neighbour; 
-                    // successor->G = current->G + edge_neighbour; // This is the right
-                    successor->G = current->G + totalCost + edge_neighbour; // This is the same than A*
+                    successor->G = current->G + edge_neighbour; // This is the right
                     // successor->G = totalCost; 
-
                     // std::cout << "Successor G: " << successor->G << std::endl;                        
                     successor->H = heuristic(successor->coordinates, _target);
                     // std::cout << "Heuristic: " << successor->H << std::endl;
