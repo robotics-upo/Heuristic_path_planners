@@ -219,7 +219,7 @@ private:
         
         std::string frame_id;
         lnh_.param("frame_id", frame_id, std::string("map"));		
-        configMarkers("astar", frame_id, resolution_);
+        configMarkers(algorithm_name, frame_id, resolution_);
 
         lnh_.param("save_data_file", save_data_, (bool)true);		
         lnh_.param("file_path", file_data_path_, std::string("planing_data.txt"));		
@@ -231,6 +231,7 @@ private:
             utils::configureWorldFromOccupancyWithCosts(occupancy_grid_, *algorithm_);
         }else if( input_map_ == 2 ){
             utils::configureWorldFromPointCloud(boost::make_shared<pcl::PointCloud<pcl::PointXYZ>>(cloud_), *algorithm_, resolution_);
+            utils::configureWorldCosts(*m_grid3d_, *algorithm_);
         }
         //Algorithm specific parameters. Its important to set line of sight after configuring world size(it depends on the resolution)
         float sight_dist, cost_weight;
