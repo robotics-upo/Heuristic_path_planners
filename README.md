@@ -254,7 +254,9 @@ optional arguments:
   -h, --help            show this help message and exit
   --launch {planner2d_example.launch,planner.launch} [{planner2d_example.launch,planner.launch} ...]
                         name of the launch file
-  --algorithm {astar,costastar,thetastar,lazythetastar,costlazythetastar} [{astar,costastar,thetastar,lazythetastar,costlazythetastar} ...]
+  --map-name            The name of the map with .bt or .pgm extension. This map should be under the resources/3dmaps or resources/2dmaps. 2d/3d option should
+                        be configured in the launch
+  --algorithm {astar,costastar,thetastar,lazythetastar,costlazythetastar} [{astar,costastar,thetastar,lazythetastar,costlazythetastar} ...] It can be a list 
                         name of the algorithm
   --start-coords START_COORDS START_COORDS START_COORDS
                         start coordinates (x,y,z). Set z to 0 when testing with 2D
@@ -272,6 +274,15 @@ roscd heuristic_planners
 ./scripts/test_algorithms.py --launch planner2d_example.launch --algorithm costastar --start-coords 1.5 0.5 0.0 --goal-coords 1.0 3.0 0.0 --cost-range 140 150 1 --lof-value 1 3 1 
 ```
 
+Another example: 
+
+Run the launch ```planner.launch``` with algorithms costlazythetastar and lazythetastarsafetycost with the map mbzirc_challenge3.bt with start coords [20,20,3] and goal coords [40, 40, 3] with cost range between 1 and 20 with steps of 1 and line of sight range between 1 and 5 with an step of 1. 
+
+As it is configured right now, the script will create a multiple graphic visualization of the data with the resulting data for every algorithm with every line of sight i.e. DATA VS COST. They will be saved in the same folder the script is executed. 
+
+```bash
+./test_algorithms.py --launch planner.launch --algorithm costlazythetastar lazythetastarsafetycost --map-name mbzirc_challenge3.bt --start-coords 20 20 3 --goal-coords 40 40 3 --cost-range 1 20 1 --lof-value 1 5 1
+```
 ## TODOs
 
 - [ ] Add bash/python scripts to generate data from a set of parameters
