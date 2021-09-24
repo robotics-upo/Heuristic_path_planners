@@ -22,7 +22,9 @@
     <arg name="max_line_of_sight_distance" default="3.0"/>
 
     <arg name="scale" default="1"/>  
-    <arg name="cost_scaling_factor" default="0.8"/>  
+    <!-- <arg name="cost_scaling_factor" default="0.8"/>  
+    <arg name="robot_radius"        default="0.4"/>  -->
+    <arg name="cost_scaling_factor" default="2.0"/>  
     <arg name="robot_radius"        default="0.4"/> 
 
     <node pkg="heuristic_planners" type="planner_ros_node" name="planner_ros_node" output="screen">

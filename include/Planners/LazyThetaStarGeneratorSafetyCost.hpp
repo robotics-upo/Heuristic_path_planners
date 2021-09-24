@@ -55,6 +55,10 @@ namespace Planners
          * @param s_aux 
          */
         virtual void SetVertex(Node *_s_aux) override;
+
+        // Variable to ensure that the los is true between the parent of the current and one neighbour, so SetVertex function should not be executed
+        bool los_neighbour_{false};
+
                 
     };
 

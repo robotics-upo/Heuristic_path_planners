@@ -50,9 +50,9 @@ namespace Planners
         }
         // To print the checked_nodes with Bresenham
         if( !checked_nodes->empty() ){
-            std::cout << "Theta Star cells checked in line of sight check between " << _s_aux->parent->coordinates << " and " << _s_aux->coordinates << " : " << std::endl;
+            // std::cout << "Theta Star cells checked in line of sight check between " << _s_aux->parent->coordinates << " and " << _s_aux->coordinates << " : " << std::endl;
             //std::cout << *(checked_nodes.get()) << std::endl;
-            std::cout << checked_nodes->size() << std::endl;
+            // std::cout << checked_nodes->size() << std::endl;
             //std::cout << checked_nodes.coordinates << std::endl;
         }
     }
