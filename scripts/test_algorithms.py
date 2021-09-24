@@ -159,10 +159,10 @@ for algorithm in args.algorithm:
         ax2.set_ylabel("Time spent")
         ax3.set_ylabel("Path Lenght")
         ax4.set_ylabel("Sight Checks")
-        ax1.set_xlim(int(args.cost_range[0]), int(args.cost_range[1] - args.cost_range[2]))
-        ax2.set_xlim(int(args.cost_range[0]), int(args.cost_range[1] - args.cost_range[2]))
-        ax3.set_xlim(int(args.cost_range[0]), int(args.cost_range[1] - args.cost_range[2]))
-        ax4.set_xlim(int(args.cost_range[0]), int(args.cost_range[1] - args.cost_range[2]))
+        ax1.set_xlim(int(args.cost_range[0]), int(int(args.cost_range[1]) - int(args.cost_range[2])))
+        ax2.set_xlim(int(args.cost_range[0]), int(int(args.cost_range[1]) - int(args.cost_range[2])))
+        ax3.set_xlim(int(args.cost_range[0]), int(int(args.cost_range[1]) - int(args.cost_range[2])))
+        ax4.set_xlim(int(args.cost_range[0]), int(int(args.cost_range[1]) - int(args.cost_range[2])))
         fig.suptitle('Resulting data for ' + str(algorithm) + ' with line of sight ' + str(lof))
         for cost in costs:
 
