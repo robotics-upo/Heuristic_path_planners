@@ -127,7 +127,7 @@ PathData AStarGeneratorSafetyCost::findPath(const Vec3i &_source, const Vec3i &_
     }else{
         std::cout<< "Error impossible to calcualte a solution" << std::endl;
     }
-    result_data["algorithm"] = std::string("cost_aware_astar");
+    result_data["algorithm"] = std::string("astarsafetycost");
     result_data["cost_weight"] = cost_weight_;
     result_data["path"] = path;
     result_data["time_spent"] = main_timer.getElapsedMillisecs();

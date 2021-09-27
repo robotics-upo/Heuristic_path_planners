@@ -640,7 +640,7 @@ namespace Planners
         {
             std::cout << "Error impossible to calcualte a solution" << std::endl;
         }
-        result_data["algorithm"] = std::string("thtetastar");
+        result_data["algorithm"] = std::string("thtetastarsafetycost");
         result_data["path"] = path;
         result_data["time_spent"] = main_timer.getElapsedMillisecs();
         result_data["explored_nodes"] = closedSet.size();
@@ -649,7 +649,9 @@ namespace Planners
         result_data["path_length"] = geometry::calculatePathLength(path, discrete_world_.getResolution());
         std::cout << "Line of sight checks: " << line_of_sight_checks << std::endl;
         result_data["line_of_sight_checks"] = line_of_sight_checks;
-
+        result_data["cost_weight"] = cost_weight_;
+        result_data["max_line_of_sight_cells"] = max_line_of_sight_cells_;
+        
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)
         explored_node_marker_.points.clear();
 #endif
