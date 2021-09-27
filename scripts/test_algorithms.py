@@ -209,7 +209,7 @@ for algorithm in args.algorithm:
                 print("Service call failed: %s"%e)
 
         fig.show()
-        fig_name = str(args.algorithm[0])+'_lof_'+str(round(float(lof)))+'_cost_range_' + str(round(float(costs[0]),3)) + '_' + str(round(float(costs[-1]),3))    
+        fig_name = str(algorithm)+'_lof_'+str(round(float(lof)))+'_cost_range_' + str(round(float(costs[0]),3)) + '_' + str(round(float(costs[-1]),3))    
         plt.savefig(fig_name+".png")
         # plt.cla()
         # plt.clf()
