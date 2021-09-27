@@ -29,7 +29,7 @@ namespace Planners
         using CoordinateList     = std::vector<Planners::utils::Vec3i>;
         using CoordinateListPtr  = std::shared_ptr<std::vector<Planners::utils::Vec3i>>;
         using NodeSet            = std::set<Node*, NodeComparator>;
-        using DataVariant        = std::variant<std::string, Vec3i, CoordinateList, double, size_t, int, bool, float, unsigned int>;
+        using DataVariant        = std::variant<std::string, Vec3i, CoordinateList, double, size_t, int, bool, unsigned int>;
         using PathData           = std::map<std::string, DataVariant>;
         
         //Compile time constants

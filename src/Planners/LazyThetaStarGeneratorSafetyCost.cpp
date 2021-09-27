@@ -359,7 +359,6 @@ namespace Planners
         result_data["line_of_sight_checks"] = line_of_sight_checks;
         result_data["max_line_of_sight_cells"] = max_line_of_sight_cells_;
         result_data["cost_weight"] = cost_weight_;
-        result_data["max_line_of_sight_cells"] = max_line_of_sight_cells_;
         
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)
         explored_node_marker_.points.clear();

@@ -166,7 +166,7 @@ namespace Planners
         unsigned int inflate_steps_{1};
         bool do_inflate_{true};
 
-        float cost_weight_{0};
+        double cost_weight_{0};
         unsigned int max_line_of_sight_cells_;
 
     private:

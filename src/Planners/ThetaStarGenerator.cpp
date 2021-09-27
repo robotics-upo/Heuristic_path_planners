@@ -168,7 +168,6 @@ namespace Planners
         result_data["start_coords"] = _source;
         result_data["goal_coords"] = _target;
         result_data["path_length"] = geometry::calculatePathLength(path, discrete_world_.getResolution());
-        std::cout << "Line of sight checks: " << line_of_sight_checks << std::endl;
         result_data["line_of_sight_checks"] = line_of_sight_checks;
 
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)

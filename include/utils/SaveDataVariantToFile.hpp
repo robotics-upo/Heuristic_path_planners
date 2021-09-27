@@ -54,7 +54,7 @@ namespace Planners
             DataVariantSaver(const std::string &_data_file, 
                              const std::vector<std::string> &_fields =
                             {"algorithm", "goal_coords", "start_coords", "time_spent",
-                             "explored_nodes", "path_length", "line_of_sight_checks", "solved", "cost_weight"}): fields_(_fields)
+                             "explored_nodes", "path_length", "line_of_sight_checks", "solved", "cost_weight","max_line_of_sight_cells" }): fields_(_fields)
             {
                 out_file_data_.open(_data_file, std::ofstream::app);
             }
@@ -67,6 +67,7 @@ namespace Planners
              */
             bool savePathDataToFile(const PathData &_data)
             {
+                std::cout << "Saving..." << std::endl;
                 for (auto &it : fields_)
                 {
                     auto field = _data.find(it);
@@ -82,6 +83,9 @@ namespace Planners
                 }
                 out_file_data_ << std::endl;
                 out_file_data_.close();
+
+                std::cout << "Saved" << std::endl;
+
                 return true;
             }
 
