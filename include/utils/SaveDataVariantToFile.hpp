@@ -67,7 +67,6 @@ namespace Planners
              */
             bool savePathDataToFile(const PathData &_data)
             {
-                std::cout << "Saving..." << std::endl;
                 for (auto &it : fields_)
                 {
                     auto field = _data.find(it);
@@ -84,7 +83,6 @@ namespace Planners
                 out_file_data_ << std::endl;
                 out_file_data_.close();
 
-                std::cout << "Saved" << std::endl;
 
                 return true;
             }
