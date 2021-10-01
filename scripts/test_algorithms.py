@@ -149,7 +149,6 @@ for algorithm in args.algorithm:
 
     set_algorithm_request.algorithm.data = str(algorithm)
 
-
     ## FOR EACH LINE OF SIGHT
     for lof in line_of_sights:
         ## FOR EACH COST
@@ -159,10 +158,10 @@ for algorithm in args.algorithm:
         ax2.set_ylabel("Time spent")
         ax3.set_ylabel("Path Lenght")
         ax4.set_ylabel("Sight Checks")
-        ax1.set_xlim(int(args.cost_range[0]), int(int(args.cost_range[1]) - int(args.cost_range[2])))
-        ax2.set_xlim(int(args.cost_range[0]), int(int(args.cost_range[1]) - int(args.cost_range[2])))
-        ax3.set_xlim(int(args.cost_range[0]), int(int(args.cost_range[1]) - int(args.cost_range[2])))
-        ax4.set_xlim(int(args.cost_range[0]), int(int(args.cost_range[1]) - int(args.cost_range[2])))
+        ax1.set_xlim(float(args.cost_range[0]), float(float(args.cost_range[1]) - float(args.cost_range[2])))
+        ax2.set_xlim(float(args.cost_range[0]), float(float(args.cost_range[1]) - float(args.cost_range[2])))
+        ax3.set_xlim(float(args.cost_range[0]), float(float(args.cost_range[1]) - float(args.cost_range[2])))
+        ax4.set_xlim(float(args.cost_range[0]), float(float(args.cost_range[1]) - float(args.cost_range[2])))
         fig.suptitle('Resulting data for ' + str(algorithm) + ' with line of sight ' + str(lof))
         for cost in costs:
 
@@ -211,6 +210,7 @@ for algorithm in args.algorithm:
         fig.show()
         fig_name = str(algorithm)+'_lof_'+str(round(float(lof)))+'_cost_range_' + str(round(float(costs[0]),3)) + '_' + str(round(float(costs[-1]),3))    
         plt.savefig(fig_name+".png")
+        plt.close()
         # plt.cla()
         # plt.clf()
 
