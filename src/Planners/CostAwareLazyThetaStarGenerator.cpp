@@ -57,6 +57,7 @@ namespace Planners
 
         utils::Clock main_timer;
         main_timer.tic();
+        line_of_sight_checks_ = 0;
 
         while (!openSet.empty())
         {

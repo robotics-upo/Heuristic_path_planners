@@ -5,7 +5,7 @@ namespace Planners
     
     void LazyThetaStarGenerator::UpdateVertex(Node *_s, Node *_s2, NodeSet &_openset)
     {
-        float g_old = _s2->G;
+        unsigned int g_old = _s2->G;
 
         ComputeCost(_s, _s2);
         if (_s2->G < g_old)
@@ -18,11 +18,9 @@ namespace Planners
     }
     void LazyThetaStarGenerator::SetVertex(Node *_s_aux)
     {
-        utils::CoordinateListPtr checked_nodes;
-        checked_nodes.reset(new CoordinateList);
+        line_of_sight_checks_++;
 
-        //if (!LineOfSight::bresenham3D((_s_aux->parent), _s_aux, discrete_world_))
-        if (!LineOfSight::bresenham3D((_s_aux->parent), _s_aux, discrete_world_, checked_nodes))
+        if (!LineOfSight::bresenham3D((_s_aux->parent), _s_aux, discrete_world_))
         {
             unsigned int G_max = std::numeric_limits<unsigned int>::max(); 
             unsigned int G_new;
@@ -48,13 +46,6 @@ namespace Planners
                 }
             }
         }
-        // To print the checked_nodes with Bresenham
-        if( !checked_nodes->empty() ){
-            // std::cout << "Theta Star cells checked in line of sight check between " << _s_aux->parent->coordinates << " and " << _s_aux->coordinates << " : " << std::endl;
-            //std::cout << *(checked_nodes.get()) << std::endl;
-            // std::cout << checked_nodes->size() << std::endl;
-            //std::cout << checked_nodes.coordinates << std::endl;
-        }
     }
     void LazyThetaStarGenerator::ComputeCost(Node *_s_aux, Node *_s2_aux)
     {
@@ -64,7 +55,6 @@ namespace Planners
         {
             _s2_aux->parent = _s_aux->parent;
             _s2_aux->G = _s2_aux->parent->G + distanceParent2;
-            //_s2_aux->G = _s2_aux->parent->G + geometry::distanceBetween2Nodes(_s2_aux->parent, _s2_aux);
         }
     }
 
@@ -82,7 +72,7 @@ namespace Planners
         utils::Clock main_timer;
         main_timer.tic();
 
-        int line_of_sight_checks{0};
+        line_of_sight_checks_ = 0;
 
         while (!openSet.empty())
         {
@@ -102,8 +92,6 @@ namespace Planners
             discrete_world_.setClosedValue(*current, true);
 
             SetVertex(current);
-            //in every setVertex the line of sight function is called 
-            line_of_sight_checks++;
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)
             publishROSDebugData(current, openSet, closedSet);
 #endif
@@ -116,6 +104,7 @@ namespace Planners
                 if (discrete_world_.isOccupied(newCoordinates) ||
                     discrete_world_.isInClosedList(newCoordinates))
                     continue;
+
                 Node *successor = discrete_world_.getNodePtr(newCoordinates);
 
                 if (successor == nullptr) continue;
@@ -132,7 +121,6 @@ namespace Planners
 
                     successor->parent = current;
                     successor->G = totalCost; 
-                    //successor->G = totalCost+successor->parent->G; 
                     successor->H = heuristic(successor->coordinates, _target);
                     openSet.insert(successor);
                     discrete_world_.setOpenValue(*successor, true);
@@ -165,7 +153,7 @@ namespace Planners
         result_data["start_coords"] = _source;
         result_data["goal_coords"] = _target;
         result_data["path_length"] = geometry::calculatePathLength(path, discrete_world_.getResolution());
-        result_data["line_of_sight_checks"] = line_of_sight_checks;
+        result_data["line_of_sight_checks"] = line_of_sight_checks_;
 
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)
         explored_node_marker_.points.clear();
