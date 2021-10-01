@@ -4,6 +4,8 @@ namespace Planners
 {
     void CostAwareLazyThetaStarGenerator::SetVertex(Node *_s_aux)
     {   
+        line_of_sight_checks_++;
+
         if (!LineOfSight::bresenham3DWithMaxThreshold((_s_aux->parent), _s_aux, discrete_world_, max_line_of_sight_cells_ ))
         {
             unsigned int G_max = std::numeric_limits<unsigned int>::max(); 
@@ -20,7 +22,7 @@ namespace Planners
                     Node *successor2 = discrete_world_.getNodePtr(newCoordinates);
                     if (successor2 == nullptr) continue;
 
-                    G_new = successor2->G +  geometry::distanceBetween2Nodes(successor2, _s_aux) + static_cast<int>(cost_weight_ * successor2->cost);
+                    G_new = successor2->G +  geometry::distanceBetween2Nodes(successor2, _s_aux) + static_cast<unsigned int>(cost_weight_ * successor2->cost);
                     if (G_new < G_max)
                     {
                         G_max = G_new;
@@ -38,7 +40,7 @@ namespace Planners
         if ((_s_aux->parent->G + distanceParent2 ) < (_s2_aux->G))
         {
             _s2_aux->parent = _s_aux->parent;
-            _s2_aux->G = _s2_aux->parent->G + geometry::distanceBetween2Nodes(_s2_aux->parent, _s2_aux) +  static_cast<int>(cost_weight_ * _s_aux->cost);
+            _s2_aux->G = _s2_aux->parent->G + geometry::distanceBetween2Nodes(_s2_aux->parent, _s2_aux) +  static_cast<unsigned int>(cost_weight_ * _s_aux->cost);
         }
     }
 
@@ -55,8 +57,6 @@ namespace Planners
 
         utils::Clock main_timer;
         main_timer.tic();
-
-        int line_of_sight_checks{0};
 
         while (!openSet.empty())
         {
@@ -77,7 +77,6 @@ namespace Planners
 
             SetVertex(current);
             //in every setVertex the line of sight function is called 
-            line_of_sight_checks++;
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)
             publishROSDebugData(current, openSet, closedSet);
 #endif
@@ -106,12 +105,9 @@ namespace Planners
                     }
 
                     successor->parent = current;
-                    //if (successor->cost >0) std::cout << "Successor Cost " << successor->cost << " : " << std::endl;
-                    successor->G = totalCost + static_cast<int>(cost_weight_ * successor->cost);
-                    //successor->G = totalCost + successor->parent->G + static_cast<int>(cost_weight_ * successor->cost);
+                    successor->G = totalCost + static_cast<unsigned int>(cost_weight_ * successor->cost);
                     successor->H = heuristic(successor->coordinates, _target);
                     openSet.insert(successor);
-                    //discrete_world_.setOpenValue(successor->coordinates, true);
                     discrete_world_.setOpenValue(*successor, true);
                 }
                 UpdateVertex(current, successor, openSet);
@@ -142,7 +138,7 @@ namespace Planners
         result_data["start_coords"] = _source;
         result_data["goal_coords"] = _target;
         result_data["path_length"] = geometry::calculatePathLength(path, discrete_world_.getResolution());
-        result_data["line_of_sight_checks"] = line_of_sight_checks;
+        result_data["line_of_sight_checks"] = line_of_sight_checks_;
         result_data["cost_weight"] = cost_weight_;
         result_data["max_line_of_sight_cells"] = max_line_of_sight_cells_;
         
