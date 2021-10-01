@@ -21,7 +21,7 @@
 
 #include "utils/utils.hpp"
 
-#include "voro++-0.4.6/src/voro++.hh"
+//#include "voro++-0.4.6/src/voro++.hh"
 
 class Grid3d
 {
