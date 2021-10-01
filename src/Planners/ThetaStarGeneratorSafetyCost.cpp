@@ -2,33 +2,6 @@
 
 namespace Planners
 {
-    void ThetaStarGeneratorSafetyCost::UpdateVertex(Node *_s, Node *_s2, NodeSet &_openset)
-    {
-        float g_old = _s2->G;
-        // std::cout << "s1 G 1: " << _s->G << std::endl;
-        // std::cout << "s1 Parent G 1: " << _s->parent->G << std::endl;
-        // std::cout << "s1 cost: " << _s->cost << std::endl;        
-        // std::cout << "s2 G 1: " << _s2->G << std::endl;
-        // std::cout << "s2 Parent G 1: " << _s->parent->G << std::endl;
-        // std::cout << "s2 cost: " << _s2->cost << std::endl;
-        // std::cout << "Update1 " << std::endl;
-        ComputeCost(_s, _s2);
-        // std::cout << "s2 G 2: " << _s2->G << std::endl;
-        if (_s2->G < g_old)
-        // if (_s2->non_uni < g_old)
-        {
-            /*
-            The node is erased and after that inserted to simply 
-            re-order the open list thus we can be sure that the node at
-            the front of the list will be the one with the lowest cost
-            */
-            // std::cout << "Update2 " << std::endl;
-            if (discrete_world_.isInOpenList(*_s2))
-                _openset.erase(_s2);
-
-            _openset.insert(_s2);
-        }
-    }
 
     void ThetaStarGeneratorSafetyCost::ComputeCost(Node *_s_aux, Node *_s2_aux)
     {
