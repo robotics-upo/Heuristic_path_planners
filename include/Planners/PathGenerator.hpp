@@ -169,6 +169,8 @@ namespace Planners
         double cost_weight_{0};
         unsigned int max_line_of_sight_cells_;
 
+        const std::string algorithm_name_{""};
+
     private:
     };
 }
