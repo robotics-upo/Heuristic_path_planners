@@ -41,15 +41,7 @@ namespace Planners
         virtual PathData findPath(const Vec3i &_source, const Vec3i &_target) override;
 
     protected:
-        /**
-         * @brief Update Vertex function
-         * 
-         * @param s Pointer to node s
-         * @param s2 Pointer to node s2
-         * @param openset reference to openset to erase and insert the nodes in some cases
-         */
-        virtual void UpdateVertex(Node *_s, Node *_s2, NodeSet &_openset) override;
-        
+
         /**
          * @brief Compute cost algorithm function
          * 
