@@ -42,62 +42,45 @@ namespace Planners
         utils::CoordinateListPtr checked_nodes;
         checked_nodes.reset(new CoordinateList);
 
+        // TODO PArametrized these two numbers
         float dist_max=100; // This parameter should appear in mean_dist_cost2 instead of *100.
         float scale=1.0; // Increase the influence of the distance cost. Important change between 5 and 6.
+
         line_of_sight_checks_++;
         if (LineOfSight::bresenham3D((_s_aux->parent), _s2_aux, discrete_world_, checked_nodes)) {
             
-            float dist_cost2= 0;
-            float mean_dist_cost2 = 0;
-            float edge2 = 0;
-            float cost_origin2;
-            float cost_goal2;
-            auto dist2 = geometry::distanceBetween2Nodes(_s_aux->parent, _s2_aux);
-
             los_neighbour_ = true;
 
-            if (checked_nodes->size() > 1){
-                for(auto &it: *checked_nodes){
-                    auto node = discrete_world_.getNodePtr(it);
-                    dist_cost2 += node->cost;
-                }
-                cost_origin2 = _s_aux->parent->cost;
+            double dist_cost2{0};
+            double mean_dist_cost2{0};
+            
+            auto n_checked_nodes = checked_nodes->size();
+            if( n_checked_nodes >= 1 )
+                for(auto &it: *checked_nodes)
+                    dist_cost2 += discrete_world_.getNodePtr(it)->cost;
 
-                cost_goal2=  _s2_aux->cost;
+            double cost_origin2    = _s_aux->parent->cost;
+            double cost_goal2      = _s2_aux->cost;
+            
+            if( n_checked_nodes > 1){
+                mean_dist_cost2 = ( ( ( cost_origin2 - cost_goal2 ) / 2 + dist_cost2 ) / ( n_checked_nodes*dist_max ) ); //A
+            }
+            else if (n_checked_nodes == 1){
+                mean_dist_cost2 = ( ( ( cost_origin2 + cost_goal2 ) / 2 + dist_cost2 ) / ( n_checked_nodes * dist_max * dist_max ) ); //A
+            }
+            else{ 
+                mean_dist_cost2 = ( cost_origin2 + cost_goal2 ) / ( 2 * dist_max);
+            }
 
-                float var1, var2, var3;
-                var1=(checked_nodes->size());
-                var2=var1-1;  // Because the checked_nodes also considers the origina and goal cost.
-                var3=1/var2;
-                mean_dist_cost2 = ((dist_cost2+(cost_origin2/2)-(cost_goal2/2))/(var1*dist_max)); //A
+            auto dist2          = geometry::distanceBetween2Nodes(_s_aux->parent, _s2_aux);
+            auto edge2          = static_cast<unsigned int>( mean_dist_cost2  * dist2 * scale );
 
-                edge2=(mean_dist_cost2)*dist2*scale; 
-            }
-            else if (checked_nodes->size() == 1){
-                for(auto &it: *checked_nodes){
-                    auto node = discrete_world_.getNodePtr(it);
-                    dist_cost2 += node->cost;
-                }    
-                cost_origin2 = _s_aux->parent->cost/dist_max;
-                cost_goal2=  _s2_aux->cost/dist_max;
-                mean_dist_cost2 = (((cost_origin2 + cost_goal2)/2 + ((dist_cost2)/dist_max)));
-                edge2=(mean_dist_cost2)*dist2*scale;    //Parece que no mejora mucho respecto al mean_dist_cost2*dist2*scale
-            }
-            else{
-                cost_origin2 = _s_aux->parent->cost/dist_max;
-                cost_goal2=  _s2_aux->cost/dist_max;
-                
-                mean_dist_cost2 = (cost_origin2 + cost_goal2)/2;
-                edge2=(mean_dist_cost2)*dist2*scale;
-            }
-            if ((_s_aux->parent->G + dist2 + edge2) < (_s2_aux->G))
+            if ( ( _s_aux->parent->G + dist2 + edge2 ) < ( _s2_aux->G ) )
             {
                 _s2_aux->parent = _s_aux->parent;
-                _s2_aux->G = _s2_aux->parent->G + dist2 + edge2;
+                _s2_aux->G      = _s2_aux->parent->G + dist2 + edge2;
             }            
         } 
-
-
     }
 
     PathData LazyThetaStarGeneratorSafetyCost::findPath(const Vec3i &_source, const Vec3i &_target)
