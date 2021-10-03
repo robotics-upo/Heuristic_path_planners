@@ -172,7 +172,7 @@ namespace Planners
         bool do_inflate_{true};
 
         double cost_weight_{0};
-        unsigned int max_line_of_sight_cells_;
+        unsigned int max_line_of_sight_cells_{0};
 
         const std::string algorithm_name_{""};
 

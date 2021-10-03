@@ -66,30 +66,9 @@ PathData CostAwareAStarGenerator::findPath(const Vec3i &_source, const Vec3i &_t
     }
     main_timer.toc();
     
-    PathData result_data;
-    result_data["solved"] = solved;
-
-    CoordinateList path;
-    if(solved){
-        while (current != nullptr) {
-            path.push_back(current->coordinates);
-            current = current->parent;
-        }
-    }else{
-        std::cout<< "Error impossible to calcualte a solution" << std::endl;
-    }
-    result_data["algorithm"] = std::string("costastar");
-    result_data["cost_weight"] = cost_weight_;
-    result_data["path"] = path;
-    result_data["time_spent"] = main_timer.getElapsedMillisecs();
-    result_data["explored_nodes"] = closedSet.size();
-    result_data["start_coords"] = _source;
-    result_data["goal_coords"] = _target;
-    result_data["path_length"] = geometry::calculatePathLength(path, discrete_world_.getResolution());
-    result_data["line_of_sight_checks"] = 0;
-    result_data["cost_weight"] = cost_weight_;
-    result_data["max_line_of_sight_cells"] = max_line_of_sight_cells_;
-    
+    PathData result_data = createResultDataObject(current, main_timer, closedSet.size(), 
+                                                  solved, _source, 0);
+   
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)
     explored_node_marker_.points.clear();
 #endif

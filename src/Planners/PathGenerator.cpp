@@ -97,13 +97,15 @@ namespace Planners
         }else{
             std::cout << "Error impossible to calcualte a solution" << std::endl;
         }
-        result_data["algorithm"] = algorithm_name_;
-        result_data["path"] = path;
-        result_data["time_spent"] = _timer.getElapsedMillisecs();
-        result_data["explored_nodes"] = _explored_nodes;
-        result_data["start_coords"] = _start;
-        result_data["path_length"] = geometry::calculatePathLength(path, discrete_world_.getResolution());
-        result_data["line_of_sight_checks"] = _sight_checks;
+        result_data["algorithm"]               = algorithm_name_;
+        result_data["path"]                    = path;
+        result_data["time_spent"]              = _timer.getElapsedMillisecs();
+        result_data["explored_nodes"]          = _explored_nodes;
+        result_data["start_coords"]            = _start;
+        result_data["path_length"]             = geometry::calculatePathLength(path, discrete_world_.getResolution());
+        result_data["line_of_sight_checks"]    = _sight_checks;
+        result_data["max_line_of_sight_cells"] = max_line_of_sight_cells_;
+        result_data["cost_weight"]             = cost_weight_;
     
         return result_data;
     }
