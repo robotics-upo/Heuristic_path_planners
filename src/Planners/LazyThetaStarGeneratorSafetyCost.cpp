@@ -2,6 +2,9 @@
 
 namespace Planners
 {
+    LazyThetaStarGeneratorSafetyCost::LazyThetaStarGeneratorSafetyCost(bool _use_3d):ThetaStarGeneratorSafetyCost(_use_3d, "lazythetastarsafetycost") {}
+    LazyThetaStarGeneratorSafetyCost::LazyThetaStarGeneratorSafetyCost(bool _use_3d, std::string _name = "lazythetastarsafetycost" ):ThetaStarGeneratorSafetyCost(_use_3d, _name) {}
+    
     void LazyThetaStarGeneratorSafetyCost::SetVertex(Node *_s_aux)
     {   
         unsigned int G_max = std::numeric_limits<unsigned int>::max(); 

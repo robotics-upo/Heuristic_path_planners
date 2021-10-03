@@ -2,6 +2,9 @@
 
 namespace Planners
 {
+    CostAwareLazyThetaStarGenerator::CostAwareLazyThetaStarGenerator(bool _use_3d):LazyThetaStarGenerator(_use_3d, "costlazythetastar") {}
+    CostAwareLazyThetaStarGenerator::CostAwareLazyThetaStarGenerator(bool _use_3d, std::string _name = "costlazythetastar" ):LazyThetaStarGenerator(_use_3d, _name) {}
+    
     void CostAwareLazyThetaStarGenerator::SetVertex(Node *_s_aux)
     {   
         line_of_sight_checks_++;

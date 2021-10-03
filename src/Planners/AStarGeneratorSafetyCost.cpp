@@ -2,6 +2,9 @@
 
 namespace Planners{
     
+AStarGeneratorSafetyCost::AStarGeneratorSafetyCost(bool _use_3d):AStarGenerator(_use_3d, "astarsafety") {}
+AStarGeneratorSafetyCost::AStarGeneratorSafetyCost(bool _use_3d, std::string _name = "astarsafety" ):AStarGenerator(_use_3d, _name) {}
+
 PathData AStarGeneratorSafetyCost::findPath(const Vec3i &_source, const Vec3i &_target)
 {
     Node *current = nullptr;

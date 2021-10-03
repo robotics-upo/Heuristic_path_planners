@@ -2,7 +2,10 @@
 
 namespace Planners
 {
-
+    ThetaStarGeneratorSafetyCost::ThetaStarGeneratorSafetyCost(bool _use_3d):ThetaStarGenerator(_use_3d, "thetastarsafetycost") {}
+    
+    ThetaStarGeneratorSafetyCost::ThetaStarGeneratorSafetyCost(bool _use_3d, std::string _name = "thetastarsafetycost" ):ThetaStarGenerator(_use_3d, _name) {}
+    
     void ThetaStarGeneratorSafetyCost::ComputeCost(Node *_s_aux, Node *_s2_aux)
     {
         utils::CoordinateListPtr checked_nodes, checked_nodes_current;

@@ -2,6 +2,9 @@
 
 namespace Planners
 {
+    CostAwareThetaStarGenerator::CostAwareThetaStarGenerator(bool _use_3d):ThetaStarGenerator(_use_3d, "costthetastar") {}
+    CostAwareThetaStarGenerator::CostAwareThetaStarGenerator(bool _use_3d, std::string _name = "costthetastar" ):ThetaStarGenerator(_use_3d, _name) {}
+
     void CostAwareThetaStarGenerator::ComputeCost(Node *_s_aux, Node *_s2_aux)
     {
         auto distanceParent2 = geometry::distanceBetween2Nodes(_s_aux->parent, _s2_aux);

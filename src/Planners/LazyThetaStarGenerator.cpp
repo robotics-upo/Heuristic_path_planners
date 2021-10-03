@@ -2,6 +2,8 @@
 
 namespace Planners
 {
+    LazyThetaStarGenerator::LazyThetaStarGenerator(bool _use_3d):ThetaStarGenerator(_use_3d, "lazythetastar") {}
+    LazyThetaStarGenerator::LazyThetaStarGenerator(bool _use_3d, std::string _name = "lazythetastar" ):ThetaStarGenerator(_use_3d, _name) {}
     
     void LazyThetaStarGenerator::UpdateVertex(Node *_s, Node *_s2, NodeSet &_openset)
     {

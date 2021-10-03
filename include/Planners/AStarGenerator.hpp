@@ -32,6 +32,7 @@ namespace Planners{
          * @brief Construct a new AStarGenerator object
          * @param _use_3d This parameter allows the user to choose between planning on a plane (8 directions possibles) or in the 3D full space (26 directions)
          */
+        AStarGenerator(bool _use_3d, std::string _name);
         AStarGenerator(bool _use_3d);
         /**
          * @brief Main function of the algorithm
@@ -58,6 +59,16 @@ namespace Planners{
         void publishROSDebugData(const Node* _node, const NodeSet &_open_set, const NodeSet &_closed_set);
         
     protected:
+
+        void configROS();
+        /**
+         * @brief 
+         * 
+         * @param _current 
+         * @param _openset 
+         */
+        virtual void exploreNeighbours(Node* _current, const Vec3i &_target,NodeSet &_openset);
+
 
 #ifdef ROS
         ros::NodeHandle lnh_{"~"};

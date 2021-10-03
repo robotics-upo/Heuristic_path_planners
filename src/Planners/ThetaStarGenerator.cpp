@@ -2,6 +2,10 @@
 
 namespace Planners
 {
+    ThetaStarGenerator::ThetaStarGenerator(bool _use_3d):AStarGenerator(_use_3d, "thetastar") {}
+    
+    ThetaStarGenerator::ThetaStarGenerator(bool _use_3d, std::string _name = "thetastar" ):AStarGenerator(_use_3d, _name) {}
+    
     void ThetaStarGenerator::UpdateVertex(Node *_s, Node *_s2, NodeSet &_openset)
     {
         unsigned int g_old = _s2->G;

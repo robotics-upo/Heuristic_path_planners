@@ -28,7 +28,8 @@ namespace Planners
          * 
          * @param _use_3d This parameter allows the user to choose between planning on a plane (8 directions possibles) or in the 3D full space (26 directions)
          */
-        LazyThetaStarGeneratorSafetyCost(bool _use_3d ):ThetaStarGeneratorSafetyCost(_use_3d) {}
+        LazyThetaStarGeneratorSafetyCost(bool _use_3d, std::string _name );
+        LazyThetaStarGeneratorSafetyCost(bool _use_3d);
 
         /**
          * @brief Main function of the algorithm

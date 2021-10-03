@@ -44,9 +44,11 @@ namespace Planners
         /**
          * @brief Construct a new Path Generator object
          * 
-         * @param _use_3d This parameter allows the user to choose between planning on a plane (8 directions possibles) or in the 3D full space (26 directions)
+         * @param _use_3d 
+         * @param _algorithm_name 
          */
-        PathGenerator(bool _use_3d);
+        PathGenerator(bool _use_3d, std::string _algorithm_name);
+
         /**
          * @brief Set the World Size object
          * 
@@ -159,6 +161,9 @@ namespace Planners
                                const CoordinateList &_directions,
                                const unsigned int &_inflate_steps);
         
+        virtual PathData createResultDataObject(const Node* _last, utils::Clock &_timer, 
+                                                const size_t _explored_nodes, bool _solved, 
+                                                const Vec3i &_start, const unsigned int _sight_checks);
         HeuristicFunction heuristic;
         CoordinateList direction;
 

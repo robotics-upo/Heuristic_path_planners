@@ -3,7 +3,7 @@
 namespace Planners
 {
 
-    PathGenerator::PathGenerator(bool _use_3d = true){
+    PathGenerator::PathGenerator(bool _use_3d = true,  std::string _algorithm_name = "generic_3d_algorithm"): algorithm_name_(_algorithm_name){
         setHeuristic(&Heuristic::euclidean);
         CoordinateList directions2d, directions3d;
         directions2d = {
@@ -20,10 +20,10 @@ namespace Planners
             { -1, -1, 1 }, { 1, 1, 1 },  { -1, 1, 1 }, { 1, -1, 1 }, { -1, -1, -1 }, { 1, 1, -1 }, { -1, 1, -1 }, { 1, -1, -1 }, 
         };
         if(_use_3d){
-            std::cout << "Using 3D Directions" << std::endl;
+            std::cout << "[Algorithm] Using 3D Directions" << std::endl;
             direction = directions3d;
         }else{
-            std::cout << "Using 2D Directions" << std::endl;
+            std::cout << "[Algorithm] Using 2D Directions" << std::endl;
             direction = directions2d;
         }
     }
@@ -78,6 +78,34 @@ namespace Planners
                 discrete_world_.setOccupied(new_vec);
             }
         }
+    }
+    PathData PathGenerator::createResultDataObject(const Node* _last, utils::Clock &_timer, 
+                                                    const size_t _explored_nodes, bool _solved,
+                                                    const Vec3i &_start, const unsigned int _sight_checks){
+                                    
+        PathData result_data;
+
+        result_data["solved"] = _solved;
+        result_data["goal_coords"] = _last->coordinates;
+
+        CoordinateList path;
+        if(_solved){
+            while (_last != nullptr) {
+                path.push_back(_last->coordinates);
+                _last = _last->parent;
+            }
+        }else{
+            std::cout << "Error impossible to calcualte a solution" << std::endl;
+        }
+        result_data["algorithm"] = algorithm_name_;
+        result_data["path"] = path;
+        result_data["time_spent"] = _timer.getElapsedMillisecs();
+        result_data["explored_nodes"] = _explored_nodes;
+        result_data["start_coords"] = _start;
+        result_data["path_length"] = geometry::calculatePathLength(path, discrete_world_.getResolution());
+        result_data["line_of_sight_checks"] = _sight_checks;
+    
+        return result_data;
     }
 
 }

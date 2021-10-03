@@ -2,6 +2,9 @@
 
 namespace Planners{
     
+CostAwareAStarGenerator::CostAwareAStarGenerator(bool _use_3d):AStarGenerator(_use_3d, "costastar") {}
+CostAwareAStarGenerator::CostAwareAStarGenerator(bool _use_3d, std::string _name = "costastar" ):AStarGenerator(_use_3d, _name) {}
+
 PathData CostAwareAStarGenerator::findPath(const Vec3i &_source, const Vec3i &_target)
 {
     Node *current = nullptr;

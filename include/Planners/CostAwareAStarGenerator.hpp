@@ -23,8 +23,9 @@ namespace Planners{
          * @brief Construct a new CostAwareAStarGenerator object
          * @param _use_3d This parameter allows the user to choose between planning on a plane (8 directions possibles) or in the 3D full space (26 directions)
          */
-        CostAwareAStarGenerator(bool _use_3d): AStarGenerator(_use_3d) {}
-        
+        CostAwareAStarGenerator(bool _use_3d, std::string _name );
+        CostAwareAStarGenerator(bool _use_3d);
+
         /**
          * @brief Main function of the algorithm
          * 
