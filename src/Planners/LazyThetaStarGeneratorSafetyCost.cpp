@@ -143,7 +143,7 @@ namespace Planners
         main_timer.toc();
     
         PathData result_data = createResultDataObject(current, main_timer, closedSet.size(), 
-                                                  solved, _source, 0);
+                                                  solved, _source, line_of_sight_checks_);
    
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)
         explored_node_marker_.points.clear();
