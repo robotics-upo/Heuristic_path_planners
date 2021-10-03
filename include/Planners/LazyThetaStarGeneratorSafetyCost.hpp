@@ -10,7 +10,7 @@
  * @copyright Copyright (c) 2021
  * 
  */
-#include <Planners/LazyThetaStarGenerator.hpp>
+#include <Planners/ThetaStarGeneratorSafetyCost.hpp>
 
 namespace Planners
 {
@@ -18,7 +18,7 @@ namespace Planners
      * @brief Lazy Theta* Algorithm Class
      * 
      */
-    class LazyThetaStarGeneratorSafetyCost : public LazyThetaStarGenerator
+    class LazyThetaStarGeneratorSafetyCost : public ThetaStarGeneratorSafetyCost
     {
 
     public:
@@ -28,7 +28,7 @@ namespace Planners
          * 
          * @param _use_3d This parameter allows the user to choose between planning on a plane (8 directions possibles) or in the 3D full space (26 directions)
          */
-        LazyThetaStarGeneratorSafetyCost(bool _use_3d ):LazyThetaStarGenerator(_use_3d) {}
+        LazyThetaStarGeneratorSafetyCost(bool _use_3d ):ThetaStarGeneratorSafetyCost(_use_3d) {}
 
         /**
          * @brief Main function of the algorithm
@@ -54,7 +54,7 @@ namespace Planners
          * Line of sight is checked inside this function
          * @param s_aux 
          */
-        virtual void SetVertex(Node *_s_aux) override;
+        virtual void SetVertex(Node *_s_aux);
 
         // Variable to ensure that the los is true between the parent of the current and one neighbour, so SetVertex function should not be executed
         bool los_neighbour_{false};

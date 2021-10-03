@@ -42,38 +42,13 @@ namespace Planners
         utils::CoordinateListPtr checked_nodes;
         checked_nodes.reset(new CoordinateList);
 
-        // TODO PArametrized these two numbers
-        float dist_max=100; // This parameter should appear in mean_dist_cost2 instead of *100.
-        float scale=1.0; // Increase the influence of the distance cost. Important change between 5 and 6.
-
         line_of_sight_checks_++;
         if (LineOfSight::bresenham3D((_s_aux->parent), _s2_aux, discrete_world_, checked_nodes)) {
             
             los_neighbour_ = true;
 
-            double dist_cost2{0};
-            double mean_dist_cost2{0};
-            
-            auto n_checked_nodes = checked_nodes->size();
-            if( n_checked_nodes >= 1 )
-                for(auto &it: *checked_nodes)
-                    dist_cost2 += discrete_world_.getNodePtr(it)->cost;
-
-            double cost_origin2    = _s_aux->parent->cost;
-            double cost_goal2      = _s2_aux->cost;
-            
-            if( n_checked_nodes > 1){
-                mean_dist_cost2 = ( ( ( cost_origin2 - cost_goal2 ) / 2 + dist_cost2 ) / ( n_checked_nodes*dist_max ) ); //A
-            }
-            else if (n_checked_nodes == 1){
-                mean_dist_cost2 = ( ( ( cost_origin2 + cost_goal2 ) / 2 + dist_cost2 ) / ( n_checked_nodes * dist_max * dist_max ) ); //A
-            }
-            else{ 
-                mean_dist_cost2 = ( cost_origin2 + cost_goal2 ) / ( 2 * dist_max);
-            }
-
-            auto dist2          = geometry::distanceBetween2Nodes(_s_aux->parent, _s2_aux);
-            auto edge2          = static_cast<unsigned int>( mean_dist_cost2  * dist2 * scale );
+            auto dist2   = geometry::distanceBetween2Nodes(_s_aux->parent, _s2_aux);
+            auto edge2   = ComputeEdgeCost(checked_nodes, _s_aux, _s2_aux, dist2);
 
             if ( ( _s_aux->parent->G + dist2 + edge2 ) < ( _s2_aux->G ) )
             {
@@ -180,6 +155,7 @@ namespace Planners
         {
             std::cout << "Error impossible to calcualte a solution" << std::endl;
         }
+
         result_data["algorithm"] = std::string("lazythetastarsafetycost");
         result_data["path"] = path;
         result_data["time_spent"] = main_timer.getElapsedMillisecs();

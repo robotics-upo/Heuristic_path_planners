@@ -49,6 +49,17 @@ namespace Planners
          * @param s2_aux Pointer to the second node
          */
         virtual void ComputeCost(Node *_s_aux, Node *_s2_aux) override;
+
+        /**
+         * @brief Compute edge distance
+         * 
+         * @param _checked_nodes 
+         * @param _s 
+         * @param _s2 
+         * @param _dist Distance between _s and _s2
+         * @return unsigned int 
+         */
+        virtual unsigned int ComputeEdgeCost(const utils::CoordinateListPtr _checked_nodes, const Node* _s, const Node* _s2, unsigned int _dist);
     };
 
 }
