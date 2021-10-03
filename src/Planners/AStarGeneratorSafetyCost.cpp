@@ -60,16 +60,21 @@ PathData AStarGeneratorSafetyCost::findPath(const Vec3i &_source, const Vec3i &_
 
             auto edge_neighbour = static_cast<unsigned int>( ( ( ( current->cost + bb ) / ( 2 * 100 ) ) * totalCost ) * scale);
             
+            totalCost += ( current->G + edge_neighbour );
+            
             if (!discrete_world_.isInOpenList(newCoordinates)) { 
                 successor->parent = current;
-                successor->G = current->G + totalCost + edge_neighbour; //Method B
+                // successor->G = current->G + totalCost + edge_neighbour; //Method B
+                successor->G = totalCost; //Method B
                 successor->H = heuristic(successor->coordinates, _target);
                 openSet.insert(successor);
                 discrete_world_.setOpenValue(successor->coordinates, true);
             }
-            else if ((current->G + totalCost + edge_neighbour) < (successor->G)) { //B
+            // else if ((current->G + totalCost + edge_neighbour) < (successor->G)) { //B
+            else if (totalCost < successor->G) { //B
                 successor->parent = current;
-                successor->G = current->G + totalCost + edge_neighbour; //B
+                // successor->G = current->G + totalCost + edge_neighbour; //B
+                successor->G = totalCost; //B
             }
         }
     }
