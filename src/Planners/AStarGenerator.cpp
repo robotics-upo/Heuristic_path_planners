@@ -173,11 +173,14 @@ PathData AStarGenerator::findPath(const Vec3i &_source, const Vec3i &_target)
     bool solved{false};
 
     openSet.insert(discrete_world_.getNodePtr(_source));
+    discrete_world_.getNodePtr(_source)->parent = new Node(_source);
     discrete_world_.setOpenValue(_source, true);
     
     utils::Clock main_timer;
     main_timer.tic();
 
+    line_of_sight_checks_ = 0;
+    
     while (!openSet.empty()) {
 
         current = *openSet.begin();
@@ -199,7 +202,7 @@ PathData AStarGenerator::findPath(const Vec3i &_source, const Vec3i &_target)
     main_timer.toc();
     
     PathData result_data = createResultDataObject(current, main_timer, closedSet.size(), 
-                                                 solved, _source, 0);
+                                                 solved, _source, line_of_sight_checks_);
    
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)
     explored_node_marker_.points.clear();

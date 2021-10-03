@@ -59,7 +59,7 @@ namespace Planners
          */
         virtual void ComputeCost(Node *_s_aux, Node *_s2_aux);
 
-        unsigned int line_of_sight_checks_{0}; 
+
     };
 
 }

@@ -69,6 +69,7 @@ namespace Planners{
          */
         virtual void exploreNeighbours(Node* _current, const Vec3i &_target,NodeSet &_openset);
 
+        unsigned int line_of_sight_checks_{0}; 
 
 #ifdef ROS
         ros::NodeHandle lnh_{"~"};
