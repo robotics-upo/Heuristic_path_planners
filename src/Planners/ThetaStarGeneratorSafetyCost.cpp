@@ -443,12 +443,8 @@ namespace Planners
         NodeSet openSet, closedSet;
         bool solved{false};
 
-        float factor_cost = 1.4142;
-        float factor_cost2 = 1.73;
-
         openSet.insert(discrete_world_.getNodePtr(_source));
         discrete_world_.getNodePtr(_source)->parent = new Node(_source);
-        // discrete_world_.getNodePtr(_source)->parent = discrete_world_.getNodePtr(_source); // Para resolver inicialización de cost del parent pero peta el algoritmo al final
         discrete_world_.setOpenValue(_source, true);
         
         utils::Clock main_timer;
@@ -458,11 +454,6 @@ namespace Planners
 
         while (!openSet.empty())
         {
-            //std::cout << "SAFETY COST" << std::endl;
-
-            float aa, bb;
-            aa=0;
-            
             current = *openSet.begin();
 
             if (current->coordinates == _target)
@@ -477,13 +468,6 @@ namespace Planners
             discrete_world_.setOpenValue(*current, false);
             discrete_world_.setClosedValue(*current, true);
 
-            aa=current->cost;
-
-            // std::cout << "Current G: " << current->G << std::endl;
-            // std::cout << "Current Parent G: " << current->parent->G << std::endl;
-            // std::cout << "Current Cost: " << aa << std::endl;
-            
-            
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)        
             publishROSDebugData(current, openSet, closedSet);
 #endif
@@ -492,8 +476,6 @@ namespace Planners
             {
 
                 Vec3i newCoordinates(current->coordinates + direction[i]);
-                float edge_neighbour = 0;
-                bb=0;
 
                 if (discrete_world_.isOccupied(newCoordinates) ||
                     discrete_world_.isInClosedList(newCoordinates))
@@ -506,92 +488,23 @@ namespace Planners
                 if (!discrete_world_.isInOpenList(newCoordinates))
                 {
                     unsigned int totalCost = 0;
-                    // unsigned int totalCost = current->G;
-                    // unsigned int totalCost = current->non_uni;
-                    // std::cout << "totalCost " << totalCost << " : " << std::endl;
 
                     if(direction.size()  == 8){
                         totalCost += (i < 4 ? dist_scale_factor_ : dd_2D_); //This is more efficient
-                        // std::cout << "Current Cost: " << current->cost << std::endl;
-                        // std::cout << "Successor Cost: " << successor->cost << std::endl;
-
-                        // Method 1
-                        // bb=successor->cost;
-                        // Method 2
-                        if (totalCost > 100) {
-                            bb=(successor->cost)/(factor_cost);
-                            // std::cout << "Cost scaled " << bb << " : " << std::endl;
-                        }
-                        else {
-                            bb=successor->cost;
-                        }
-
-                        edge_neighbour = (((aa+bb)/(2*100))*totalCost);
-                        // edge_neighbour = totalCost + ((aa+bb)/2);  // G + normalized cost, 17-09-2021
-                        // edge_neighbour = totalCost + ((aa+bb)/(2*100))*totalCost;
-                        // std::cout << "edge_neighbour: " << edge_neighbour << std::endl;
-                        // totalCost += edge_neighbour;
-                        // totalCost= current->G + edge_neighbour;
-                        // std::cout << "edge neighbour: " << edge_neighbour << std::endl;
-                        
-                        
-                        // std::cout << "total Cost1: " << totalCost << std::endl;
-                        // std::cout << "Successor Cost: " << successor->cost << std::endl;                        
-                        // totalCost += (successor->cost)/100; //JAC: Include the cost of non_uni? That is, the cost to go from current to succesor.
-                        // std::cout << "total Cost2: " << totalCost << std::endl;                        
-                        
-
                     }else{
                         totalCost += (i < 6 ? dist_scale_factor_ : (i < 18 ? dd_2D_ : dd_3D_)); //This is more efficient
-
-                        // Method 1
-                        // bb=successor->cost;
-                        // Method 2
-                        if ((totalCost > 100) && (totalCost < 150)) {
-                            bb=(successor->cost)/(factor_cost);
-                            // std::cout << "Cost scaled " << bb << " : " << std::endl;
-                        }
-                        else if ((totalCost > 150) && (totalCost < 200)){
-                            bb=(successor->cost)/(factor_cost2);
-                        }
-                        else {
-                            bb=successor->cost;
-                        }
-
-                        // edge_neighbour = (((aa+bb)/(2*100))*totalCost);
-                        edge_neighbour = 0;
-
-                        //edge_neighbour = totalCost + ((aa+bb)/2);   // G + normalized cost, 17-09-2021
-                        // edge_neighbour = totalCost + ((aa+bb)/(2*100))*totalCost;
-
-                        // totalCost += edge_neighbour;
-                        
-                        // std::cout << "total Cost1: " << totalCost << std::endl;
-                        // totalCost += (successor->cost)/100; //JAC: Include the cost of non_uni? That is, the cost to go from current to succesor.
-                        // std::cout << "total Cost2: " << totalCost << std::endl;                        
-                        // std::cout << "Successor Cost: " << successor->cost << std::endl;                        
                     }
-                    //std::cout << "totalCost2 " << totalCost << " : " << std::endl;
+                    double bb = static_cast<double>( static_cast<double>(successor->cost) / (static_cast<double>(totalCost) / static_cast<double>(dist_scale_factor_)) );
 
-                    // std::cout << "Current Coordinates: " << current->coordinates << std::endl;
-                    // std::cout << "Parent Current Coordinates: " << current->parent->coordinates << std::endl;
-                    // std::cout << "Successor Coordinates: " << successor->coordinates << std::endl;
-
-                    // successor->G = edge_neighbour; 
-                    // successor->G = current->G + edge_neighbour; // This is the right
+                    auto edge_neighbour = static_cast<unsigned int>( ( ( ( current->cost + bb ) / ( 2 * 100 ) ) * totalCost ) );
+            
                     successor->G = current->G + totalCost + edge_neighbour; // This is the same than A*
-                    // successor->G = totalCost; 
-
-                    // std::cout << "Successor G: " << successor->G << std::endl;                        
                     successor->H = heuristic(successor->coordinates, _target);
-                    // std::cout << "Heuristic: " << successor->H << std::endl;
                     openSet.insert(successor);
-                    //discrete_world_.setOpenValue(successor->coordinates, true);
                     discrete_world_.setOpenValue(*successor, true);
                 }
                 
                 UpdateVertex(current, successor, openSet); 
-                //Every time a vertex is updated, a line of sight check is 
                 line_of_sight_checks++;
             }
         }
