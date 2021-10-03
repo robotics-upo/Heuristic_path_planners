@@ -6,35 +6,27 @@ namespace Planners
     {   
         unsigned int G_max = std::numeric_limits<unsigned int>::max(); 
         unsigned int G_new;
-        float mean_dist_cost;
-        float cost_current;
-        float cost_successor;
-        float dist;
-        float edge;
-        float dist_max = 100;
 
+        //TODO WHat is this value? dist_scale_factor_ ?
+        unsigned int dist_max = 100;
 
         for (const auto &i: direction)
         {
             Vec3i newCoordinates(_s_aux->coordinates + i);
+
             if ( discrete_world_.isOccupied(newCoordinates) ) continue;
+            
             if ( discrete_world_.isInClosedList(newCoordinates) )
             {
                 Node *successor2 = discrete_world_.getNodePtr(newCoordinates);
                 if (successor2 == nullptr) continue;
 
-                cost_current = 0;
-                cost_successor = 0;
-                mean_dist_cost = 0;
-
-                dist = geometry::distanceBetween2Nodes(successor2, _s_aux);
-                cost_current = _s_aux->cost/dist_max;
-                cost_successor =  successor2->cost/dist_max;
-                mean_dist_cost = (cost_current + cost_successor)/2;
-                edge=(mean_dist_cost)*dist;
+                auto dist = geometry::distanceBetween2Nodes(successor2, _s_aux);
                 
+                // Be careful with castings here. Its already checked before and after is the same result.
+                G_new  = static_cast<unsigned int>(  successor2-> G + dist +  
+                ( static_cast<double>(_s_aux->cost) + static_cast<double>(successor2->cost) ) / ( 2 * static_cast<double>(dist_max) ) * dist);
 
-                G_new = successor2-> G + dist + edge;
                 if (G_new < G_max)
                 {
                     G_max = G_new;
