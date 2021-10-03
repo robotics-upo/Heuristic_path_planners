@@ -50,17 +50,18 @@ PathData CostAwareAStarGenerator::findPath(const Vec3i &_source, const Vec3i &_t
             }else{
                 totalCost += (i < 6 ? dist_scale_factor_ : (i < 18 ? dd_2D_ : dd_3D_)); //This is more efficient
             }
-            
+            totalCost += static_cast<unsigned int>(cost_weight_ * successor->cost);
+
             if (!discrete_world_.isInOpenList(newCoordinates)) { 
                 successor->parent = current;
-                successor->G = totalCost + static_cast<unsigned int>(cost_weight_ * successor->cost);
+                successor->G = totalCost;
                 successor->H = heuristic(successor->coordinates, _target);
                 openSet.insert(successor);
                 discrete_world_.setOpenValue(successor->coordinates, true);
             }
-            else if (totalCost < successor->G) {
+            else if ( totalCost  < successor->G) {
                 successor->parent = current;
-                successor->G = totalCost + static_cast<unsigned int>(cost_weight_ * successor->cost);
+                successor->G = totalCost;
             }
         }
     }
