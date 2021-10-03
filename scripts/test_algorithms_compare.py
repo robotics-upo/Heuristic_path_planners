@@ -18,6 +18,15 @@ from heuristic_planners.srv import *
 from geometry_msgs.msg import Point
 from visualization_msgs.msg import Marker
 
+def maximize():
+    plot_backend = plt.get_backend()
+    mng = plt.get_current_fig_manager()
+    if plot_backend == 'TkAgg':
+        mng.resize(*mng.window.maxsize())
+    elif plot_backend == 'wxAgg':
+        mng.frame.Maximize(True)
+    elif plot_backend == 'Qt4Agg':
+        mng.window.showMaximized()
 class colors: # You may need to change color settings
     RED = '\033[31m'
     ENDC = '\033[m'
@@ -213,10 +222,19 @@ for lof in line_of_sights:
             except rospy.ServiceException as e:
                 print("Service call failed: %s"%e)
         
+        maximize()
+
+        if i+4 >= len(color_list):
+            i = 0
+        else:
+            i = i+1
+        print(str(i))
         ax1.plot(algorithms_data[algorithm][0], algorithms_data[algorithm][1], color=color_list[i])
         ax2.plot(algorithms_data[algorithm][0], algorithms_data[algorithm][2], color=color_list[i+1])
         ax3.plot(algorithms_data[algorithm][0], algorithms_data[algorithm][3], color=color_list[i+2])
         ax4.plot(algorithms_data[algorithm][0], algorithms_data[algorithm][4], color=color_list[i+3])
+
+
         ax1.legend(args.algorithm)
         ax2.legend(args.algorithm)
         ax3.legend(args.algorithm)
@@ -224,10 +242,6 @@ for lof in line_of_sights:
         fig.canvas.draw()
         plt.pause(0.05)
 
-        if i+3 == len(color_list):
-            i = 0
-        else:
-            i = i+1
 
     fig.show()
     fig_name = str(args.algorithm)+'_lof_'+str(round(float(lof)))+'_cost_range_' + str(round(float(costs[0]),3)) + '_' + str(round(float(costs[-1]),3))    
