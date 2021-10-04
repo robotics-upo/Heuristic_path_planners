@@ -283,6 +283,19 @@ As it is configured right now, the script will create a multiple graphic visuali
 ```bash
 ./test_algorithms.py --launch planner.launch --algorithm costlazythetastar lazythetastarsafetycost --map-name mbzirc_challenge3.bt --start-coords 20 20 3 --goal-coords 40 40 3 --cost-range 1 20 1 --lof-value 1 5 1
 ```
+
+### Comparing algorithms in RViz
+
+For that purpose you can use the script ```compare_trajectories_rviz.py``` :
+
+```bash
+roscd heuristic_planners/scripts
+./compare_trajectories_rviz.py --launch planner.launch --algorithm astar costastar astarsafetycost thetastar costhetastar thetastarsafetycost lazythetastar lazythetastarsafetycost costlazythetastar --map-name mbzirc_challenge3.bt --start-coords 20 20 3 --goal-coords 40 40 3 --cost-value 1 --lof-value 1
+```
+
+For the script to finish you should press some key with in the running terminal.
+
+
 ## TODOs
 
 - [ ] Add bash/python scripts to generate data from a set of parameters
