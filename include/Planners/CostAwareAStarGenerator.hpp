@@ -26,14 +26,18 @@ namespace Planners{
         CostAwareAStarGenerator(bool _use_3d, std::string _name );
         CostAwareAStarGenerator(bool _use_3d);
 
+    protected:
+        
         /**
-         * @brief Main function of the algorithm
+         * @brief 
          * 
-         * @param _source Start discrete coordinates
-         * @param _target Goal discrete coordinates
-         * @return PathData PathData Results stored as PathData object
+         * @param _current 
+         * @param _suc 
+         * @param _n_i 
+         * @param _dirs 
+         * @return unsigned int 
          */
-        virtual PathData findPath(const Vec3i &_source, const Vec3i &_target) override;
+        virtual unsigned int computeG(const Node* _current, const Node* _suc,  unsigned int _n_i, unsigned int _dirs) override;
 
     };
 
