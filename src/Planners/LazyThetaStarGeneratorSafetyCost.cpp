@@ -61,6 +61,23 @@ namespace Planners
         } 
     }
 
+    unsigned int LazyThetaStarGeneratorSafetyCost::computeG(const Node* _current, const Node* _suc,  unsigned int _n_i, unsigned int _dirs){
+
+        unsigned int cost = 0;
+
+        if(_dirs == 8){
+            cost = (_n_i < 4 ? dist_scale_factor_ : dd_2D_); //This is more efficient
+        }else{
+            cost = (_n_i < 6 ? dist_scale_factor_ : (_n_i < 18 ? dd_2D_ : dd_3D_)); //This is more efficient
+        }
+
+        double bb = static_cast<double>( static_cast<double>(_suc->cost) / (static_cast<double>(cost) / static_cast<double>(dist_scale_factor_)) );
+        auto edge_neighbour = static_cast<unsigned int>( ( ( ( _current->cost + bb ) / ( 2 * 100 ) ) * cost ) );
+    
+        cost += ( _current->G + edge_neighbour );
+
+        return cost;
+    }
     PathData LazyThetaStarGeneratorSafetyCost::findPath(const Vec3i &_source, const Vec3i &_target)
     {
         Node *current = nullptr;
@@ -102,43 +119,8 @@ namespace Planners
             publishROSDebugData(current, openSet, closedSet);
 #endif
 
-            for (unsigned int i = 0; i < direction.size(); ++i)
-            {
+            exploreNeighbours(current, _target, openSet);
 
-                Vec3i newCoordinates(current->coordinates + direction[i]);
-
-                if (discrete_world_.isOccupied(newCoordinates) ||
-                    discrete_world_.isInClosedList(newCoordinates))
-                    continue;
-                Node *successor = discrete_world_.getNodePtr(newCoordinates);
-
-                if (successor == nullptr)
-                    continue;
-
-                if (!discrete_world_.isInOpenList(newCoordinates))
-                {
-                    //TODO : Check that this is OK. Before it was 
-                    // unsigned int totalCost = current->G;
-                    unsigned int totalCost = 0;
-
-                    if(direction.size()  == 8){
-                        totalCost += (i < 4 ? dist_scale_factor_ : dd_2D_); //This is more efficient
-                    }else{
-                        totalCost += (i < 6 ? dist_scale_factor_ : (i < 18 ? dd_2D_ : dd_3D_)); //This is more efficient
-                    }
-
-                    double bb = static_cast<double>( static_cast<double>(successor->cost) / (static_cast<double>(totalCost) / static_cast<double>(dist_scale_factor_)) );
-
-                    auto edge_neighbour = static_cast<unsigned int>( ( ( ( current->cost + bb ) / ( 2 * 100 ) ) * totalCost ) );
-            
-                    successor->parent = current;
-                    successor->G = current->G + totalCost + edge_neighbour; // This is the same than A*
-                    successor->H = heuristic(successor->coordinates, _target);
-                    openSet.insert(successor);
-                    discrete_world_.setOpenValue(*successor, true);
-                }
-                UpdateVertex(current, successor, openSet);
-            }
         }
         main_timer.toc();
     

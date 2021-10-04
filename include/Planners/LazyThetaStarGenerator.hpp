@@ -51,20 +51,23 @@ namespace Planners
         virtual void ComputeCost(Node *_s_aux, Node *_s2_aux) override;
 
         /**
-         * @brief Update vertex function
-         * 
-         * @param s 
-         * @param s2 
-         * @param openset 
-         */
-        virtual void UpdateVertex(Node *_s, Node *_s2, NodeSet &_openset) override;
-
-        /**
          * @brief SetVertex function
          * Line of sight is checked inside this function
          * @param s_aux 
          */
         virtual void SetVertex(Node *_s_aux);
+
+        /**
+         * @brief 
+         * 
+         * @param _current 
+         * @param _suc 
+         * @param _n_i 
+         * @param _dirs 
+         * @return unsigned int 
+         */
+        virtual unsigned int computeG(const Node* _current, const Node* _suc,  unsigned int _n_i, unsigned int _dirs) override;
+
                 
     };
 

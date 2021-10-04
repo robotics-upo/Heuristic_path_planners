@@ -57,6 +57,18 @@ namespace Planners
          */
         virtual void SetVertex(Node *_s_aux);
 
+        /**
+         * @brief 
+         * 
+         * @param _current 
+         * @param _suc 
+         * @param _n_i 
+         * @param _dirs 
+         * @return unsigned int 
+         */
+        virtual unsigned int computeG(const Node* _current, const Node* _suc,  unsigned int _n_i, unsigned int _dirs) override;
+
+
         // Variable to ensure that the los is true between the parent of the current and one neighbour, so SetVertex function should not be executed
         bool los_neighbour_{false};
 
