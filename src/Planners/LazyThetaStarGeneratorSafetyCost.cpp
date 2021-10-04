@@ -11,6 +11,7 @@ namespace Planners
         unsigned int G_new;
 
         //TODO WHat is this value? dist_scale_factor_ ?
+        //TODO 2 "scale" does not appear here? 
         unsigned int dist_max = 100;
 
         for (const auto &i: direction)

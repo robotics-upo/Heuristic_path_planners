@@ -8,9 +8,6 @@ AStarGeneratorSafetyCost::AStarGeneratorSafetyCost(bool _use_3d, std::string _na
 
 unsigned int AStarGeneratorSafetyCost::computeG(const Node* _current, const Node* _suc, unsigned int _n_i, unsigned int _dirs){
     
-    //TODO Change this scale variable to a parameter or something else
-    double scale=1; // Increase the influence of the distance cost. Important change between 5 and 6.
-
     unsigned int cost = 0;
 
     if(_dirs == 8){
@@ -21,7 +18,7 @@ unsigned int AStarGeneratorSafetyCost::computeG(const Node* _current, const Node
 
     //TODO Give bb a more precise name
     double bb = static_cast<double>( static_cast<double>(_suc->cost) / (static_cast<double>(cost) / static_cast<double>(dist_scale_factor_)) );
-    auto edge_neighbour = static_cast<unsigned int>( ( ( ( _current->cost + bb ) / ( 2 * 100 ) ) * cost ) * scale);
+    auto edge_neighbour = static_cast<unsigned int>( ( ( ( _current->cost + bb ) / ( 2 * 100 ) ) * cost ) *  cost_weight_);
     
     cost += ( _current->G + edge_neighbour );
     return cost;
