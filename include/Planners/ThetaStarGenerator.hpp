@@ -32,15 +32,6 @@ namespace Planners
         ThetaStarGenerator(bool _use_3d, std::string _name );
         ThetaStarGenerator(bool _use_3d);
 
-        /**
-         * @brief Main function of the algorithm
-         * 
-         * @param _source Start discrete coordinates
-         * @param _target Goal discrete coordinates
-         * @return PathData PathData Results stored as PathData object
-         */
-        virtual PathData findPath(const Vec3i &_source, const Vec3i &_target) override;
-
     protected:
         /**
          * @brief Update Vertex function
@@ -58,6 +49,26 @@ namespace Planners
          * @param s2_aux Pointer to the second node
          */
         virtual void ComputeCost(Node *_s_aux, Node *_s2_aux);
+
+        /**
+         * @brief 
+         * 
+         * @param _current 
+         * @param _target 
+         * @param _openset 
+         */
+        virtual void exploreNeighbours(Node* _current, const Vec3i &_target,NodeSet &_openset) override;
+
+        /**
+         * @brief 
+         * 
+         * @param _current 
+         * @param _suc 
+         * @param _n_i 
+         * @param _dirs 
+         * @return unsigned int 
+         */
+        virtual unsigned int computeG(const Node* _current, const Node* _suc,  unsigned int _n_i, unsigned int _dirs) override;
 
 
     };

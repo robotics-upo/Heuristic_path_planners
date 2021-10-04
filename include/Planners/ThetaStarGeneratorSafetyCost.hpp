@@ -32,15 +32,6 @@ namespace Planners
         ThetaStarGeneratorSafetyCost(bool _use_3d, std::string _name );
         ThetaStarGeneratorSafetyCost(bool _use_3d);
 
-        /**
-         * @brief Main function of the algorithm
-         * 
-         * @param _source Start discrete coordinates
-         * @param _target Goal discrete coordinates
-         * @return PathData PathData Results stored as PathData object
-         */
-        virtual PathData findPath(const Vec3i &_source, const Vec3i &_target) override;
-
     protected:
 
         /**
@@ -61,6 +52,19 @@ namespace Planners
          * @return unsigned int 
          */
         virtual unsigned int ComputeEdgeCost(const utils::CoordinateListPtr _checked_nodes, const Node* _s, const Node* _s2, unsigned int _dist);
+
+        /**
+         * @brief 
+         * 
+         * @param _current 
+         * @param _suc 
+         * @param _n_i 
+         * @param _dirs 
+         * @return unsigned int 
+         */
+        virtual unsigned int computeG(const Node* _current, const Node* _suc,  unsigned int _n_i, unsigned int _dirs) override;
+
+    
     };
 
 }

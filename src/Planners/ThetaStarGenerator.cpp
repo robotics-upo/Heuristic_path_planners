@@ -34,98 +34,59 @@ namespace Planners
             if ((_s_aux->parent->G + distanceParent2) < (_s2_aux->G))
             {
                 _s2_aux->parent = _s_aux->parent;
-                _s2_aux->G = _s_aux->parent->G + distanceParent2;
+                _s2_aux->G      = _s_aux->parent->G + distanceParent2;
             }
-        }
-        else {
+
+        } else {
+
             auto distance2 = geometry::distanceBetween2Nodes(_s_aux, _s2_aux);
-            if ((_s_aux->G + distance2) < _s2_aux->G){
-                _s2_aux->parent=_s_aux;
-                _s2_aux->G=_s_aux->G + distance2;
+            if ( ( _s_aux->G + distance2 ) < _s2_aux->G )
+            {
+                _s2_aux->parent = _s_aux;
+                _s2_aux->G      =_s_aux->G + distance2;
             }
         }
     }
 
-    PathData ThetaStarGenerator::findPath(const Vec3i &_source, const Vec3i &_target)
-    {
-        Node *current = nullptr;
-        NodeSet openSet, closedSet;
-        bool solved{false};
+    void ThetaStarGenerator::exploreNeighbours(Node* _current, const Vec3i &_target,NodeSet &_openset){
 
-        openSet.insert(discrete_world_.getNodePtr(_source));
-        discrete_world_.getNodePtr(_source)->parent = new Node(_source);
-        discrete_world_.setOpenValue(_source, true);
+        for (unsigned int i = 0; i < direction.size(); ++i) {
 
-        utils::Clock main_timer;
-        main_timer.tic();
-        
-        line_of_sight_checks_ = 0;
+            Vec3i newCoordinates = _current->coordinates + direction[i];
 
-        while (!openSet.empty())
-        {
-
-            current = *openSet.begin();
-
-            if (current->coordinates == _target)
-            {
-                solved = true;
-                break;
-            }
-
-            openSet.erase(openSet.begin());
-            closedSet.insert(current);
-
-            discrete_world_.setOpenValue(*current, false);
-            discrete_world_.setClosedValue(*current, true);
-            
-#if defined(ROS) && defined(PUB_EXPLORED_NODES)        
-            publishROSDebugData(current, openSet, closedSet);
-#endif
-
-            for (unsigned int i = 0; i < direction.size(); ++i)
-            {
-
-                Vec3i newCoordinates(current->coordinates + direction[i]);
-
-                if (discrete_world_.isOccupied(newCoordinates) ||
-                    discrete_world_.isInClosedList(newCoordinates))
-                    continue;
-
-                Node *successor = discrete_world_.getNodePtr(newCoordinates);
-
-                if (successor == nullptr) continue;
-
-                if (!discrete_world_.isInOpenList(newCoordinates))
-                {
-                    unsigned int totalCost = current->G;
-
-                    if(direction.size()  == 8){
-                        totalCost += (i < 4 ? dist_scale_factor_ : dd_2D_); //This is more efficient
-                    }else{
-                        totalCost += (i < 6 ? dist_scale_factor_ : (i < 18 ? dd_2D_ : dd_3D_)); //This is more efficient
-                    }
-
-                    successor->parent = current;
-                    successor->G = totalCost + successor->parent->G; //also current->G like succesor->parent->G
-                    successor->H = heuristic(successor->coordinates, _target);
-                    openSet.insert(successor);
-                    discrete_world_.setOpenValue(*successor, true);
-                }
-                
-                UpdateVertex(current, successor, openSet); 
-            }
-        }
-        main_timer.toc();
+            if ( discrete_world_.isOccupied(newCoordinates) || 
+                 discrete_world_.isInClosedList(newCoordinates) ) 
+                continue;
     
-        PathData result_data = createResultDataObject(current, main_timer, closedSet.size(), 
-                                                  solved, _source, line_of_sight_checks_);
-   
-#if defined(ROS) && defined(PUB_EXPLORED_NODES)
-        explored_node_marker_.points.clear();
-#endif
+            Node *successor = discrete_world_.getNodePtr(newCoordinates);
 
-        discrete_world_.resetWorld();
-        return result_data;
+            if(successor == nullptr) continue;
+
+            if (!discrete_world_.isInOpenList(newCoordinates)) { 
+
+                successor->parent = _current;
+                successor->G = computeG(_current, successor, i, direction.size());
+                successor->H = heuristic(successor->coordinates, _target);
+                _openset.insert(successor);
+                discrete_world_.setOpenValue(*successor, true);
+            }
+         
+            UpdateVertex(_current, successor, _openset); 
+        }
     }
+    
+    unsigned int ThetaStarGenerator::computeG(const Node* _current, const Node* _suc,  unsigned int _n_i, unsigned int _dirs){
+        unsigned int cost = _current->G;
 
+        if(_dirs  == 8){
+            cost += (_n_i < 4 ? dist_scale_factor_ : dd_2D_); //This is more efficient
+        }else{
+            cost += (_n_i < 6 ? dist_scale_factor_ : (_n_i < 18 ? dd_2D_ : dd_3D_)); //This is more efficient
+        }
+        
+        cost += _suc->parent->G;
+
+        return cost;
+    }
+     
 }
