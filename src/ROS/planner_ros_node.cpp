@@ -11,6 +11,8 @@
 #include "Planners/LazyThetaStarGeneratorSafetyCost.hpp"
 #include "utils/ros/ROSInterfaces.hpp"
 #include "utils/SaveDataVariantToFile.hpp"
+#include "utils/misc.hpp"
+
 #include "Grid3D/grid3d.hpp"
 
 #include <ros/ros.h>
@@ -142,7 +144,6 @@ private:
 
         }else{
             ROS_INFO("Could not calculate path between request points");
-            
         }
 
         return true;
@@ -239,6 +240,9 @@ private:
         lnh_.param("cost_weight", cost_weight, (float)0.0);
         algorithm_->setMaxLineOfSight(sight_dist);
         algorithm_->setCostFactor(cost_weight);
+
+
+        lnh_.param("overlay_markers", overlay_markers_, (bool)false);
     }
     void configMarkers(const std::string &_ns, const std::string &_frame, const double &_scale){
 
@@ -278,10 +282,34 @@ private:
     void publishMarker(visualization_msgs::Marker &_marker, const ros::Publisher &_pub){
         
         //Clear previous marker
-        _marker.action = visualization_msgs::Marker::DELETEALL;
-        _pub.publish(_marker);
+        if( !overlay_markers_ ){
+            _marker.action = visualization_msgs::Marker::DELETEALL;
+            _pub.publish(_marker);
+        }else{
+            path_points_markers_.id           = rand();
+            path_points_markers_.header.stamp = ros::Time::now();
+            setRandomColor(path_points_markers_.color);
+
+            path_line_markers_.id             = rand();
+            path_line_markers_.header.stamp   = ros::Time::now();
+            setRandomColor(path_line_markers_.color);
+        }
         _marker.action = visualization_msgs::Marker::ADD;
         _pub.publish(_marker);
+    }
+    void setRandomColor(std_msgs::ColorRGBA &_color, unsigned int _n_div = 20){
+        //Using golden angle approximation
+        const double golden_angle = 180 * (3 - sqrt(5));
+        double hue = color_id_ * golden_angle + 60;
+        color_id_++;
+        if(color_id_ == _n_div)
+            color_id_ = 1;
+
+        auto random_color = Misc::HSVtoRGB(hue, 100, 100);
+
+        _color.r = random_color.x;
+        _color.g = random_color.y;
+        _color.b = random_color.z;
     }
 
 
@@ -305,7 +333,8 @@ private:
     bool inflate_{false};
     unsigned int inflation_steps_{0};
     std::string file_data_path_;
-    
+    bool overlay_markers_{0};
+    unsigned int color_id_{0};
     nav_msgs::OccupancyGrid occupancy_grid_;
     pcl::PointCloud<pcl::PointXYZ> cloud_;
     //0: no map yet
