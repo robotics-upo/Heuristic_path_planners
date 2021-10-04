@@ -168,6 +168,8 @@ if(BUILD_ROS_SUPPORT)
   )
   
   catkin_install_python(PROGRAMS  scripts/test_algorithms.py
+                                  scripts/test_algorithms_compare.py
+                                  scripts/test_algorithms_performance.py
                                   setup.py
                                   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
   )
