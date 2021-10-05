@@ -37,7 +37,7 @@ namespace Planners
                     G_max = G_new;
                     _s_aux->parent = successor2;
                     _s_aux->G = G_new;
-                    _s_aux->C = static_cast<double>(_s_aux->cost) + static_cast<double>(successor2->cost) ) / ( 2 * 100 ) * dist;
+                    _s_aux->C = static_cast<double>(_s_aux->cost) + static_cast<double>(successor2->cost) / ( 2 * 100 ) * dist;
                 }
             }
         }
