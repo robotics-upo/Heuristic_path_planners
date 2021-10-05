@@ -40,6 +40,15 @@ namespace Planners
         Vec3i discretePoint(const pcl::PointXYZ &_point, const double &_res);
 
         /**
+         * @brief 
+         * 
+         * @param _point 
+         * @param _res 
+         * @return Vec3i 
+         */
+        Vec3i discretePoint(const pcl::PointXYZI &_point, const double &_res);
+
+        /**
          * @brief Discretize a geometry_msgs::Point into a Vec3i object
          * 
          * @param _msg geoemtry_msgs::Point object
@@ -64,6 +73,17 @@ namespace Planners
          * @return geometry_msgs::Point 
          */
         geometry_msgs::Point continousPoint(const Vec3i &_vec, const double &_res);
+
+        /**
+         * @brief 
+         * 
+         * @tparam T 
+         * @param _vec 
+         * @param _res 
+         * @return T 
+         */
+       
+        pcl::PointXYZI continousPointPCLXYZI(const Vec3i &_vec, const double &_res);
         /**
          * @brief Helper function for the configureWorldFromOccupancy (Grid) function 
          * Given a index an a grid(matrix) width, returns the associated (x,y,0) 

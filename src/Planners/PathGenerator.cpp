@@ -37,6 +37,10 @@ namespace Planners
     double PathGenerator::getWorldResolution(){
         return discrete_world_.getResolution();
     }
+    utils::DiscreteWorld* PathGenerator::getInnerWorld(){
+        return &discrete_world_;
+    }
+
     void PathGenerator::setHeuristic(HeuristicFunction heuristic_)
     {
         heuristic = std::bind(heuristic_, std::placeholders::_1, std::placeholders::_2);

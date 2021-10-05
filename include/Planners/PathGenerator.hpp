@@ -68,6 +68,13 @@ namespace Planners
          * @return double resolution
          */
         double getWorldResolution();
+
+        /**
+         * @brief Get the Inner World object
+         * 
+         * @return utils::DiscreteWorld& 
+         */
+        utils::DiscreteWorld* getInnerWorld();
         /**
          * @brief Configure the heuristic
          * 

@@ -20,13 +20,17 @@ namespace Planners
             }
             unsigned int distanceBetween2Nodes(const Node &_n1, const Node &_n2)
             {
-                return static_cast<unsigned int>(dist_scale_factor_ * sqrt(pow(_n1.coordinates.x - _n2.coordinates.x, 2) +
-                                                                           pow(_n1.coordinates.y - _n2.coordinates.y, 2) +
-                                                                           pow(_n1.coordinates.z - _n2.coordinates.z, 2)));
+                return distanceBetween2Nodes(_n1.coordinates, _n2.coordinates);
             }
             unsigned int distanceBetween2Nodes(const Node *_n1, const Node *_n2)
             {
                 return distanceBetween2Nodes(*_n1, *_n2);
+            }
+            unsigned int distanceBetween2Nodes(const Vec3i &_v1, const Vec3i &_v2)
+            {
+                return static_cast<unsigned int>(dist_scale_factor_ * sqrt(pow(_v1.x - _v2.x, 2) +
+                                                                           pow(_v1.y - _v2.y, 2) +
+                                                                           pow(_v1.z - _v2.z, 2)));
             }
             Vec3i abs(const Vec3i &_vec)
             {

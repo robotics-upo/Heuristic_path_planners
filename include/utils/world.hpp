@@ -116,7 +116,7 @@ namespace utils
             for(auto &it: discrete_world_vector_){
                 it.isInClosedList = false;
                 it.isInOpenList = false;
-                it.H = it.G = 0;
+                it.H = it.G = it.C = 0;
                 it.parent = nullptr;
             }
         }

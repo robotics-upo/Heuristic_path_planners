@@ -21,6 +21,18 @@ namespace Planners
         namespace LineOfSight
         {
             /**
+             * @brief 
+             * 
+             * @param _lnode 
+             * @param _rnode 
+             * @param _world 
+             * @param _visited_nodes 
+             * @return true 
+             * @return false 
+             */
+            bool bresenham3D(const Vec3i _lnode, const Vec3i _rnode, DiscreteWorld &_world, CoordinateListPtr _visited_nodes);
+
+            /**
              * @brief Implementation of bressenham 3D line of sight algorithm
              * 
              * @param _lnode First node
@@ -31,6 +43,7 @@ namespace Planners
              * @return false If there is no line of sight between both nodes
              */
             bool bresenham3D(const Node *_lnode, const Node *_rnode, DiscreteWorld &_world, CoordinateListPtr _visited_nodes = nullptr);
+
 
             /**
              * @brief 

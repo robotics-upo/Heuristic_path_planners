@@ -251,12 +251,33 @@ private:
         
         std::vector<std::pair<utils::Vec3i, double>> result;
         //TODO grid3d distances does not take into account the inflation added internally by the algorithm
-        for(const auto &it: _path)
+        utils::CoordinateList adjacent_path;
+        adjacent_path.push_back(_path[0]);
+        
+        utils::CoordinateListPtr visited_nodes;
+        visited_nodes.reset(new CoordinateList);
+
+        for(size_t i = 0; i < _path.size() -1 ; ++i){
+            utils::LineOfSight::bresenham3D(_path[i], _path[i+1], *algorithm_->getInnerWorld(), visited_nodes);
+
+            if(visited_nodes->size() > 0){
+                for(auto &it: *visited_nodes){
+                    std::cout << "Inserting " << it << std::endl;
+                    adjacent_path.push_back(it);
+                }
+            }else if( i != 0) {
+                adjacent_path.push_back(_path[i]);
+            }
+            
+            visited_nodes.reset(new utils::CoordinateList);
+        }
+
+        for(const auto &it: adjacent_path)
             result.push_back( m_grid3d_->getClosestObstacle(it) );
         
         utils::DataVariantSaver saver(data_folder_ + "/path_metrics.txt");
 
-        if(saver.savePathDistancesToFile(_path, result)){
+        if(saver.savePathDistancesToFile(adjacent_path, result)){
             ROS_INFO("Path data metrics saved");
         }else{
             ROS_ERROR("Couldn't save path data metrics. Path and results does not have same size");

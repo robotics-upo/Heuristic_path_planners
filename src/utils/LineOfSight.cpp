@@ -6,13 +6,13 @@ namespace Planners
     {
         namespace LineOfSight
         {
-
             bool bresenham3D(const Node *_lnode, const Node *_rnode, DiscreteWorld &_world, CoordinateListPtr _visited_nodes)
             {
-                if( geometry::distanceBetween2Nodes(_lnode, _rnode) <= dd_3D_ //&&
-                    // !_world.isOccupied(_lnode->coordinates) &&
-                    // !_world.isOccupied(_rnode->coordinates) )
-                    )
+                return bresenham3D(_lnode->coordinates, _rnode->coordinates, _world, _visited_nodes);
+            }
+            bool bresenham3D(const Vec3i _lnode, const Vec3i _rnode, DiscreteWorld &_world, CoordinateListPtr _visited_nodes)
+            {
+                if( geometry::distanceBetween2Nodes(_lnode, _rnode) <= dd_3D_ )
                     return true;
                 
                 if( _visited_nodes == nullptr ){ //Case in which its not used
@@ -20,7 +20,7 @@ namespace Planners
                 }
                 int d1, d2;
 
-                Vec3i vecS, vecDiff, vec0{_lnode->coordinates}, vec1{_rnode->coordinates};
+                Vec3i vecS, vecDiff, vec0{_lnode}, vec1{_rnode};
                 vecDiff = geometry::abs(vec1 - vec0);
 
                 vec1.x > vec0.x ? vecS.x = 1 : vecS.x = -1;
