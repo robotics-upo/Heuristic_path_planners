@@ -1,8 +1,22 @@
 geometry_msgs/Point start
 geometry_msgs/Point goal
+std_msgs/String algorithm
 ---
-geometry_msgs/Point[] path_points
 std_msgs/Int32 explored_nodes
 std_msgs/Int32 time_spent
 std_msgs/Int32 line_of_sight_checks
+
+std_msgs/Int32 total_cost
+std_msgs/Int32 h_cost
+std_msgs/Int32 g_cost
+std_msgs/Int32 c_cost
+std_msgs/Int32 n_points
+
 std_msgs/Float32 path_length
+std_msgs/Float32 min_distance_to_obstacle
+std_msgs/Float32 max_distance_to_obstacle
+std_msgs/Float32 mean_distance_to_obstacle
+std_msgs/Float32 mean_std_dev_to_obstacle
+
+std_msgs/Float32 cost_weight
+std_msgs/Float32 max_los

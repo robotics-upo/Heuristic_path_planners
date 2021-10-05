@@ -53,7 +53,8 @@ namespace Planners
             DataVariantSaver(const std::string &_data_file, 
                              const std::vector<std::string> &_fields =
                             {"algorithm", "goal_coords", "start_coords", "time_spent",
-                             "explored_nodes", "path_length", "total_cost", "line_of_sight_checks", "solved", "cost_weight","max_line_of_sight_cells" }): fields_(_fields), data_file_(_data_file)
+                             "explored_nodes", "path_length", "total_cost", "h_cost", "g_cost", "c_cost",
+                             "line_of_sight_checks", "solved", "cost_weight","max_line_of_sight_cells" }): fields_(_fields), data_file_(_data_file)
             {
 
                 out_file_data_.open(data_file_, std::ofstream::app);
@@ -100,7 +101,9 @@ namespace Planners
                 for(auto &it: _results)
                     distances.push_back(it.second);
 
+                out_file_data_ << "Size: "  << _path.size() << std::endl;
                 const auto [min, max] = std::minmax_element(begin(distances), end(distances));
+
                 out_file_data_ << "Min: "  << *min << std::endl;
                 out_file_data_ << "Max: "  << *max << std::endl;
                 double mean = std::accumulate(distances.begin(), distances.end(), 0.0)/distances.size();

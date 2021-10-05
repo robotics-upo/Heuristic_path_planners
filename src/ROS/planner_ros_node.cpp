@@ -89,6 +89,9 @@ private:
     }
     bool requestPathService(heuristic_planners::GetPathRequest &_req, heuristic_planners::GetPathResponse &_rep){
 
+        if(!_req.algorithm.data.empty())
+            configureAlgorithm(_req.algorithm.data);
+
         ROS_INFO("Path requested, computing path");
         //delete previous markers
         publishMarker(path_line_markers_, line_markers_pub_);
@@ -111,19 +114,61 @@ private:
         auto path_data = algorithm_->findPath(discrete_start, discrete_goal);
         
         if( std::get<bool>(path_data["solved"]) ){
-            
+            utils::CoordinateList path;
             try{
-                
                 _rep.time_spent.data           = std::get<double>(path_data["time_spent"] );
                 _rep.path_length.data          = std::get<double>(path_data["path_length"] );
                 _rep.explored_nodes.data       = std::get<size_t>(path_data["explored_nodes"] );
-                _rep.line_of_sight_checks.data = std::get<unsigned int>(   path_data["line_of_sight_checks"] );
+                _rep.line_of_sight_checks.data = std::get<unsigned int>(path_data["line_of_sight_checks"] );
+
+                _rep.total_cost.data           = std::get<unsigned int>(path_data["total_cost"] );
+                _rep.h_cost.data               = std::get<unsigned int>(path_data["h_cost"]);
+                _rep.g_cost.data               = std::get<unsigned int>(path_data["g_cost"]);
+                _rep.c_cost.data               = std::get<unsigned int>(path_data["c_cost"]);
+
+                _rep.cost_weight.data          = std::get<double>(path_data["cost_weight"]);
+                _rep.max_los.data              = std::get<unsigned int>(path_data["max_line_of_sight_cells"]);
+                path = std::get<CoordinateList>(path_data["path"]);
+
             }catch(std::bad_variant_access const& ex){
                 std::cerr << "Bad variant error: " << ex.what() << std::endl;
             }
 
+            auto adjacent_path    = getAdjacentPath(path);
+            auto result_distances = getClosestObstaclesToPathPoints(adjacent_path);
+
+            std::vector<double> distances; 
+            double sigma = 0;
+            for(auto &it: result_distances)
+                distances.push_back(it.second);
+
+            const auto [min, max] = std::minmax_element(begin(distances), end(distances));
+            double mean = std::accumulate(distances.begin(), distances.end(), 0.0)/distances.size();
+
+            for(const auto &it: distances)
+                sigma += pow(it - mean,2);
+            sigma = sqrt(sigma/distances.size());
+
+            _rep.n_points.data   = adjacent_path.size();
+            _rep.min_distance_to_obstacle.data   = *min;
+            _rep.max_distance_to_obstacle.data   = *max;
+            _rep.mean_distance_to_obstacle.data  = mean;
+            _rep.mean_std_dev_to_obstacle.data   = sigma;
+
+            if(save_data_){
+                utils::DataVariantSaver saver1(data_folder_ + "/planning.txt");
+                utils::DataVariantSaver saver2(data_folder_ + "/path_metrics.txt");
+
+                if(saver1.savePathDataToFile(path_data) && 
+                   saver2.savePathDistancesToFile(adjacent_path, result_distances)){
+                    ROS_INFO("Path data metrics saved");
+                }else{
+                    ROS_ERROR("Couldn't save path data metrics. Path and results does not have same size");
+                }
+            }
+
             for(const auto &it: std::get<CoordinateList>(path_data["path"])){
-                _rep.path_points.push_back(continousPoint(it, resolution_));
+                // _rep.path_points.push_back(continousPoint(it, resolution_));
                 path_line_markers_.points.push_back(continousPoint(it, resolution_));
                 path_points_markers_.points.push_back(continousPoint(it, resolution_));
             }
@@ -135,16 +180,6 @@ private:
             path_points_markers_.points.clear();
 
             ROS_INFO("Path calculated succesfully");
-
-            if(save_data_){
-                utils::DataVariantSaver saver(data_folder_ + "/planning.txt");
-                if(saver.savePathDataToFile(path_data))
-                    ROS_INFO("Data saved succesfully");
-
-                getClosestObstaclesToPathPoints(std::get<CoordinateList>(path_data["path"]));
-                
-            }
-
         }else{
             ROS_INFO("Could not calculate path between request points");
         }
@@ -244,13 +279,13 @@ private:
         algorithm_->setMaxLineOfSight(sight_dist);
         algorithm_->setCostFactor(cost_weight);
 
-
         lnh_.param("overlay_markers", overlay_markers_, (bool)false);
     }
-    std::vector<std::pair<utils::Vec3i, double>> getClosestObstaclesToPathPoints(const utils::CoordinateList &_path){
+    utils::CoordinateList getAdjacentPath(const utils::CoordinateList &_path){
         
-        std::vector<std::pair<utils::Vec3i, double>> result;
-        //TODO grid3d distances does not take into account the inflation added internally by the algorithm
+        if( _path.size() == 0)
+            return {};
+
         utils::CoordinateList adjacent_path;
         adjacent_path.push_back(_path[0]);
         
@@ -261,27 +296,24 @@ private:
             utils::LineOfSight::bresenham3D(_path[i], _path[i+1], *algorithm_->getInnerWorld(), visited_nodes);
 
             if(visited_nodes->size() > 0){
-                for(auto &it: *visited_nodes){
-                    std::cout << "Inserting " << it << std::endl;
+                for(auto &it: *visited_nodes)
                     adjacent_path.push_back(it);
-                }
+                
             }else if( i != 0) {
                 adjacent_path.push_back(_path[i]);
             }
             
             visited_nodes.reset(new utils::CoordinateList);
         }
-
-        for(const auto &it: adjacent_path)
-            result.push_back( m_grid3d_->getClosestObstacle(it) );
+        return adjacent_path;
+    }
+    std::vector<std::pair<utils::Vec3i, double>> getClosestObstaclesToPathPoints(const utils::CoordinateList &_path){
         
-        utils::DataVariantSaver saver(data_folder_ + "/path_metrics.txt");
+        std::vector<std::pair<utils::Vec3i, double>> result;
+        //TODO grid3d distances does not take into account the inflation added internally by the algorithm
 
-        if(saver.savePathDistancesToFile(adjacent_path, result)){
-            ROS_INFO("Path data metrics saved");
-        }else{
-            ROS_ERROR("Couldn't save path data metrics. Path and results does not have same size");
-        }
+        for(const auto &it: _path)
+            result.push_back( m_grid3d_->getClosestObstacle(it) );
 
         return result;
     }

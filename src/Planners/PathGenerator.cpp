@@ -93,18 +93,14 @@ namespace Planners
         result_data["goal_coords"] = _last->coordinates;
 
         CoordinateList path;
-        double total_cost{0};
-        double total_H{0};
-        double total_G{0};
-        double total_C{0};
+        unsigned int total_cost{0};
+        unsigned int total_H{0};
+        unsigned int total_G{0};
+        unsigned int total_C{0};
 
         if(_solved){
             while (_last != nullptr) {
-                double g_real = _last->G - _last->C;
-                std::cout << "Node " << _last->coordinates << std::endl;
-                std::cout << "Adding G " <<  + g_real   << std::endl;
-                std::cout << "Adding H " <<  + _last->H << std::endl;
-                std::cout << "Adding C " <<  + _last->C << std::endl;
+                unsigned int g_real = _last->G - _last->C;
                 total_H += _last->H;
                 total_G += g_real;
                 total_C +=  _last->C;
@@ -113,7 +109,6 @@ namespace Planners
                 path.push_back(_last->coordinates);
                 _last = _last->parent;
             }
-            std::cout << "Total cost: " << total_cost <<" (G,H,C): " << total_G << ", " << total_H << ", " << total_C  << std::endl;
         }else{
             std::cout << "Error impossible to calcualte a solution" << std::endl;
         }
@@ -123,7 +118,12 @@ namespace Planners
         result_data["explored_nodes"]          = _explored_nodes;
         result_data["start_coords"]            = _start;
         result_data["path_length"]             = geometry::calculatePathLength(path, discrete_world_.getResolution());
+
         result_data["total_cost"]              = total_cost;
+        result_data["h_cost"]                  = total_H;
+        result_data["g_cost"]                  = total_G;
+        result_data["c_cost"]                  = total_C;
+
         result_data["line_of_sight_checks"]    = _sight_checks;
         result_data["max_line_of_sight_cells"] = max_line_of_sight_cells_;
         result_data["cost_weight"]             = cost_weight_;
