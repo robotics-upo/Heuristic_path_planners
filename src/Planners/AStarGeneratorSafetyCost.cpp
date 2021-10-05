@@ -6,7 +6,7 @@ AStarGeneratorSafetyCost::AStarGeneratorSafetyCost(bool _use_3d):AStarGenerator(
 AStarGeneratorSafetyCost::AStarGeneratorSafetyCost(bool _use_3d, std::string _name = "astarsafety" ):AStarGenerator(_use_3d, _name) {}
 
 
-unsigned int AStarGeneratorSafetyCost::computeG(const Node* _current, const Node* _suc, unsigned int _n_i, unsigned int _dirs){
+unsigned int AStarGeneratorSafetyCost::computeG(const Node* _current, Node* _suc, unsigned int _n_i, unsigned int _dirs){
     
     unsigned int cost = 0;
 
@@ -21,6 +21,9 @@ unsigned int AStarGeneratorSafetyCost::computeG(const Node* _current, const Node
     auto edge_neighbour = static_cast<unsigned int>( ( ( ( _current->cost + bb ) / ( 2 * 100 ) ) * cost ) *  cost_weight_);
     
     cost += ( _current->G + edge_neighbour );
+
+    _suc->C = edge_neighbour;
+    
     return cost;
 }
 }

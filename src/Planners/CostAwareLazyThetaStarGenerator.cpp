@@ -31,6 +31,7 @@ namespace Planners
                         G_max = G_new;
                         _s_aux->parent = successor2;
                         _s_aux->G = G_new;
+                        _s_aux->C = static_cast<unsigned int>(cost_weight_ * successor2->cost);
                     }
                 }
             }
@@ -44,11 +45,13 @@ namespace Planners
         {
             _s2_aux->parent = _s_aux->parent;
             _s2_aux->G = _s2_aux->parent->G + geometry::distanceBetween2Nodes(_s2_aux->parent, _s2_aux) +  static_cast<unsigned int>(cost_weight_ * _s2_aux->cost);
+            _s2_aux->C = static_cast<unsigned int>(cost_weight_ * _s2_aux->cost);
+        
         }
     }
 
 
-    unsigned int CostAwareLazyThetaStarGenerator::computeG(const Node* _current, const Node* _suc,  unsigned int _n_i, unsigned int _dirs){
+    unsigned int CostAwareLazyThetaStarGenerator::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs){
 
         unsigned int cost = _current->G;
 
@@ -60,6 +63,7 @@ namespace Planners
 
         cost += static_cast<unsigned int>(cost_weight_ * _suc->cost);
 
+        _suc->C = static_cast<unsigned int>(cost_weight_ * _suc->cost);
         return cost;
     }
     

@@ -37,6 +37,7 @@ namespace Planners
                     G_max = G_new;
                     _s_aux->parent = successor2;
                     _s_aux->G = G_new;
+                    _s_aux->C = static_cast<double>(_s_aux->cost) + static_cast<double>(successor2->cost) ) / ( 2 * 100 ) * dist;
                 }
             }
         }
@@ -59,11 +60,12 @@ namespace Planners
             {
                 _s2_aux->parent = _s_aux->parent;
                 _s2_aux->G      = _s2_aux->parent->G + dist2 + edge2;
+                _s2_aux->C      = edge2;
             }            
         } 
     }
 
-    unsigned int LazyThetaStarGeneratorSafetyCost::computeG(const Node* _current, const Node* _suc,  unsigned int _n_i, unsigned int _dirs){
+    unsigned int LazyThetaStarGeneratorSafetyCost::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs){
 
         unsigned int cost = 0;
 
@@ -78,6 +80,8 @@ namespace Planners
     
         cost += ( _current->G + edge_neighbour );
 
+        _suc->C = edge_neighbour;
+        
         return cost;
     }
     PathData LazyThetaStarGeneratorSafetyCost::findPath(const Vec3i &_source, const Vec3i &_target)

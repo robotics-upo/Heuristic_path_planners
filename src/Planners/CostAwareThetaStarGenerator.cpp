@@ -15,6 +15,7 @@ namespace Planners
             {
                 _s2_aux->parent = _s_aux->parent;
                 _s2_aux->G = _s_aux->parent->G + distanceParent2 +  static_cast<unsigned int>(cost_weight_ * _s_aux->cost);
+                _s2_aux->C = static_cast<int>(cost_weight_ * _s_aux->cost);
             }
 
         } else {
@@ -24,10 +25,11 @@ namespace Planners
             if ( G_new < _s2_aux->G){
                 _s2_aux->parent=_s_aux;
                 _s2_aux->G=_s_aux->G + distance2 +  static_cast<unsigned int>(cost_weight_ * _s_aux->cost);
+                _s2_aux->C = static_cast<int>(cost_weight_ * _s_aux->cost);
             }
         }
     }
-    unsigned int CostAwareThetaStarGenerator::computeG(const Node* _current, const Node* _suc,  unsigned int _n_i, unsigned int _dirs){
+    unsigned int CostAwareThetaStarGenerator::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs){
         
         unsigned int cost = _current->G;
 
@@ -39,6 +41,8 @@ namespace Planners
 
         cost += static_cast<int>(cost_weight_ * _suc->cost);
 
+        _suc->C = static_cast<int>(cost_weight_ * _suc->cost);
+        
         return cost;
     }
 }

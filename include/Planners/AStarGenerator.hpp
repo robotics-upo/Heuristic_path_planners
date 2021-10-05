@@ -78,7 +78,7 @@ namespace Planners{
          * @param _dirs 
          * @return unsigned int 
          */
-        virtual unsigned int computeG(const Node* _current, const Node* _suc, unsigned int _n_i, unsigned int _dirs);
+        virtual unsigned int computeG(const Node* _current, Node* _suc, unsigned int _n_i, unsigned int _dirs);
 
         unsigned int line_of_sight_checks_{0}; 
 

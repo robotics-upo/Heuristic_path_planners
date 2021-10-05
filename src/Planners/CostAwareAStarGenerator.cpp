@@ -5,7 +5,7 @@ namespace Planners{
 CostAwareAStarGenerator::CostAwareAStarGenerator(bool _use_3d):AStarGenerator(_use_3d, "costastar") {}
 CostAwareAStarGenerator::CostAwareAStarGenerator(bool _use_3d, std::string _name = "costastar" ):AStarGenerator(_use_3d, _name) {}
 
-unsigned int CostAwareAStarGenerator::computeG(const Node* _current, const Node* _suc, unsigned int _n_i, unsigned int _dirs){
+unsigned int CostAwareAStarGenerator::computeG(const Node* _current, Node* _suc, unsigned int _n_i, unsigned int _dirs){
     
     unsigned int cost = _current->G;
 
@@ -16,6 +16,9 @@ unsigned int CostAwareAStarGenerator::computeG(const Node* _current, const Node*
     }
     
     cost += static_cast<unsigned int>(cost_weight_ * _suc->cost);
+
+    _suc->C = static_cast<unsigned int>(cost_weight_ * _suc->cost);
+    
     return cost;
 }
 }

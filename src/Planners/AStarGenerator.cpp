@@ -130,7 +130,7 @@ void AStarGenerator::publishROSDebugData(const Node* _node, const NodeSet &_open
 
 }
 
-unsigned int AStarGenerator::computeG(const Node* _current, const Node* _suc,  unsigned int _n_i, unsigned int _dirs){
+unsigned int AStarGenerator::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs){
     unsigned int cost = _current->G;
 
     if(_dirs  == 8){

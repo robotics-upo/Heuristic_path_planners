@@ -190,7 +190,7 @@ namespace Planners
             Node *parent{nullptr};
 
             Planners::utils::Vec3i coordinates;
-            unsigned int G{0}, H{0};
+            unsigned int G{0}, H{0}, C{0};
             unsigned int cost{0}, non_uni{0};
             
             bool occuppied{false};

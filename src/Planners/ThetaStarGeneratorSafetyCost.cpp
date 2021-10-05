@@ -28,10 +28,12 @@ namespace Planners
             {
                 _s2_aux->parent = _s_aux->parent;
                 _s2_aux->G      = _s_aux->parent->G + dist2 + edge2;  // This is the same than A*
+                _s2_aux->C      = edge2;
             }
             else{
                 _s2_aux->parent =_s_aux;
-                _s2_aux->G      = _s_aux->G + dist1 + edge1;   // This is the same than A*             
+                _s2_aux->G      = _s_aux->G + dist1 + edge1;   // This is the same than A*       
+                _s2_aux->C      = edge1;      
             }
         } else {
 
@@ -44,6 +46,7 @@ namespace Planners
             auto edge1   =  ComputeEdgeCost(checked_nodes, _s_aux, _s2_aux, dist1);
 
             _s2_aux->G     =  _s_aux->G + dist1 + edge1;  // This is the same than A*
+            _s2_aux->C     =  edge1;
         }
     }
 
@@ -74,11 +77,11 @@ namespace Planners
             // mean_dist_cost = ( cost_origin + cost_goal ) / ( 2 * dist_max);
             mean_dist_cost = ( cost_origin + cost_goal ) / ( 2 * 100);
         }
-
+        // std::cout << static_cast<unsigned int>( mean_dist_cost  * _dist * cost_weight_ )  << std::endl;
         return static_cast<unsigned int>( mean_dist_cost  * _dist * cost_weight_ );        
     }
 
-    unsigned int ThetaStarGeneratorSafetyCost::computeG(const Node* _current, const Node* _suc,  unsigned int _n_i, unsigned int _dirs){
+    unsigned int ThetaStarGeneratorSafetyCost::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs){
         
         unsigned int cost = 0;
 
@@ -93,6 +96,7 @@ namespace Planners
         
         cost += _current->G;
         cost += edge_neighbour;
+        _suc->C = edge_neighbour;
 
         return cost;
     }

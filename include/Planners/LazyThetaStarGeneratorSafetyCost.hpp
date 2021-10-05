@@ -66,7 +66,7 @@ namespace Planners
          * @param _dirs 
          * @return unsigned int 
          */
-        virtual unsigned int computeG(const Node* _current, const Node* _suc,  unsigned int _n_i, unsigned int _dirs) override;
+        virtual unsigned int computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs) override;
 
 
         // Variable to ensure that the los is true between the parent of the current and one neighbour, so SetVertex function should not be executed
