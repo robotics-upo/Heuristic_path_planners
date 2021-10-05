@@ -16,7 +16,8 @@
     <arg name="inflation_size"      default="$(arg resolution)"/>
 
     <arg name="save_data"           default="true"/>
-    <arg name="data_file_path"      default="$(env HOME)/planning.txt"/>
+    <!-- This should be a folder -->
+    <arg name="data_folder"         default="$(env HOME)"/>
 
     <arg name="overlay_markers"     default="false"/>
     
@@ -41,7 +42,7 @@
         
         <param name="save_data"             value="$(arg save_data)"/>
         <param name="overlay_markers"       value="$(arg overlay_markers)"/>
-        <param name="file_path"             value="$(arg data_file_path)"/>
+        <param name="data_folder"           value="$(arg data_folder)"/>
         <param name="algorithm"             value="$(arg algorithm_name)"/>
         <param name="cost_weight"           value="$(arg cost_weight)"/>
         <param name="max_line_of_sight_distance"   value="$(arg max_line_of_sight_distance)"/>

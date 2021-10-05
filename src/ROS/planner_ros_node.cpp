@@ -137,9 +137,12 @@ private:
             ROS_INFO("Path calculated succesfully");
 
             if(save_data_){
-                utils::DataVariantSaver saver(file_data_path_);
+                utils::DataVariantSaver saver(data_folder_ + "/planning.txt");
                 if(saver.savePathDataToFile(path_data))
                     ROS_INFO("Data saved succesfully");
+
+                getClosestObstaclesToPathPoints(std::get<CoordinateList>(path_data["path"]));
+                
             }
 
         }else{
@@ -223,9 +226,9 @@ private:
         configMarkers(algorithm_name, frame_id, resolution_);
 
         lnh_.param("save_data_file", save_data_, (bool)true);		
-        lnh_.param("file_path", file_data_path_, std::string("planing_data.txt"));		
+        lnh_.param("data_folder", data_folder_, std::string("planing_data.txt"));		
         if(save_data_)
-            ROS_INFO("Saving path planning data results to %s", file_data_path_.c_str());
+            ROS_INFO("Saving path planning data results to %s", data_folder_.c_str());
 
         //
         if( input_map_ == 1 ){
@@ -243,6 +246,23 @@ private:
 
 
         lnh_.param("overlay_markers", overlay_markers_, (bool)false);
+    }
+    std::vector<std::pair<utils::Vec3i, double>> getClosestObstaclesToPathPoints(const utils::CoordinateList &_path){
+        
+        std::vector<std::pair<utils::Vec3i, double>> result;
+        //TODO grid3d distances does not take into account the inflation added internally by the algorithm
+        for(const auto &it: _path)
+            result.push_back( m_grid3d_->getClosestObstacle(it) );
+        
+        utils::DataVariantSaver saver(data_folder_ + "/path_metrics.txt");
+
+        if(saver.savePathDistancesToFile(_path, result)){
+            ROS_INFO("Path data metrics saved");
+        }else{
+            ROS_ERROR("Couldn't save path data metrics. Path and results does not have same size");
+        }
+
+        return result;
     }
     void configMarkers(const std::string &_ns, const std::string &_frame, const double &_scale){
 
@@ -332,7 +352,7 @@ private:
     bool save_data_;
     bool inflate_{false};
     unsigned int inflation_steps_{0};
-    std::string file_data_path_;
+    std::string data_folder_;
     bool overlay_markers_{0};
     unsigned int color_id_{0};
     nav_msgs::OccupancyGrid occupancy_grid_;

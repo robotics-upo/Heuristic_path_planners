@@ -18,10 +18,14 @@
 #include <pcl/point_cloud.h>
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl_conversions/pcl_conversions.h>
+#include <math.h>
 
 #include "utils/utils.hpp"
+// #include "utils/ros/ROSInterfaces.hpp"
 
-//#include "voro++-0.4.6/src/voro++.hh"
+// #ifdef BUILD_VORONOI
+// #include "voro++-0.4.6/src/voro++.hh"
+// #endif
 
 class Grid3d
 {
@@ -204,6 +208,33 @@ public:
 		
 		return m_grid[index].prob;
 	}
+	
+	std::pair<Planners::utils::Vec3i, double>  getClosestObstacle(const Planners::utils::Vec3i& _coords){
+
+		pcl::PointXYZI searchPoint;
+
+		searchPoint.x = _coords.x * m_resolution;
+		searchPoint.y = _coords.y * m_resolution;
+		searchPoint.z = _coords.z * m_resolution;
+
+		int k = 1;
+		m_kdtree.setInputCloud(m_cloud);
+		std::vector<int> pointIdxNKNSearch(k);
+		std::vector<float> pointNKNSquaredDistance(k);
+
+		if(m_kdtree.nearestKSearch(searchPoint, k, pointIdxNKNSearch, pointNKNSquaredDistance) > 0){
+
+			Planners::utils::Vec3i result;
+
+			result.x = std::round(m_cloud->points[pointIdxNKNSearch[0]].x / m_resolution);
+			result.y = std::round(m_cloud->points[pointIdxNKNSearch[0]].y / m_resolution);
+			result.z = std::round(m_cloud->points[pointIdxNKNSearch[0]].z / m_resolution);
+
+			return std::make_pair(result, std::sqrt(pointNKNSquaredDistance[k-1]));	
+		}else{
+			return std::make_pair(Planners::utils::Vec3i{}, std::numeric_limits<double>::max());
+		}	
+	}
 
 protected:
 
@@ -372,7 +403,7 @@ protected:
 		pcl::toROSMsg(*m_cloud, m_pcMsg);
 		m_pcMsg.header.frame_id = m_globalFrameId;
 	}
-	
+
 	void computeGrid(void)
 	{
 		//Publish percent variable

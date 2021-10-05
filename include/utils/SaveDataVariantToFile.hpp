@@ -14,9 +14,8 @@
 
 #include <iostream>
 #include <fstream>
-
+#include <algorithm>
 #include "utils/utils.hpp"
-
 namespace Planners
 {
     namespace utils
@@ -54,9 +53,10 @@ namespace Planners
             DataVariantSaver(const std::string &_data_file, 
                              const std::vector<std::string> &_fields =
                             {"algorithm", "goal_coords", "start_coords", "time_spent",
-                             "explored_nodes", "path_length", "line_of_sight_checks", "solved", "cost_weight","max_line_of_sight_cells" }): fields_(_fields)
+                             "explored_nodes", "path_length", "line_of_sight_checks", "solved", "cost_weight","max_line_of_sight_cells" }): fields_(_fields), data_file_(_data_file)
             {
-                out_file_data_.open(_data_file, std::ofstream::app);
+
+                out_file_data_.open(data_file_, std::ofstream::app);
             }
             /**
              * @brief Main function that reads the incoming pathdata object and save to file in append mode
@@ -86,10 +86,44 @@ namespace Planners
 
                 return true;
             }
+            bool savePathDistancesToFile(const utils::CoordinateList &_path,
+                                         const std::vector<std::pair<utils::Vec3i, double>> &_results){
+
+                if( _path.size() != _results.size() )
+                    return false;
+                
+                for(size_t i = 0; i < _path.size(); ++i)
+                    out_file_data_ << _path[i] << ", " << _results[i].first << ", " << _results[i].second << std::endl;
+                
+                std::vector<double> distances;
+                
+                for(auto &it: _results)
+                    distances.push_back(it.second);
+
+                const auto [min, max] = std::minmax_element(begin(distances), end(distances));
+                out_file_data_ << "Min: "  << *min << std::endl;
+                out_file_data_ << "Max: "  << *max << std::endl;
+                double mean = std::accumulate(distances.begin(), distances.end(), 0.0)/distances.size();
+                out_file_data_ << "Mean: " << mean<<  std::endl;
+                
+                double sigma = 0;
+                for(const auto &it: distances)
+                    sigma += pow(it - mean,2);
+                sigma = sqrt(sigma/distances.size());
+
+                out_file_data_ << "Dev: "    <<  sigma << std::endl;
+        
+                out_file_data_ << " ----------------- " << std::endl;
+
+                out_file_data_.close();
+
+                return true;
+            }
 
         private:
             std::ofstream out_file_data_;
             std::vector<std::string> fields_;
+            std::string data_file_;
         };
     } // utils ns
 } //planners ns
