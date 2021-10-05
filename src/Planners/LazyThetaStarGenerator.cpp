@@ -46,27 +46,7 @@ namespace Planners
             _s2_aux->G = _s2_aux->parent->G + distanceParent2;
         }
     }
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
 
-    unsigned int LazyThetaStarGenerator::computeG(const Node* _current, const Node* _suc,  unsigned int _n_i, unsigned int _dirs){
-
-        unsigned int cost = _current->G;
-
-        if(_dirs  == 8){
-            cost += (_n_i < 4 ? dist_scale_factor_ : dd_2D_); //This is more efficient
-        }else{
-            cost += (_n_i < 6 ? dist_scale_factor_ : (_n_i < 18 ? dd_2D_ : dd_3D_)); //This is more efficient
-        }
-        // TODO In Theta* we add this to the cost, should it be the same here?? Its more efficient if we dont
-        // add this term to the cost
-        // cost += _suc->parent->G;
-
-        return cost;
-    }
-#pragma GCC diagnostic pop
-
-    
     PathData LazyThetaStarGenerator::findPath(const Vec3i &_source, const Vec3i &_target)
     {
         Node *current = nullptr;

@@ -56,18 +56,6 @@ namespace Planners
          * @param s_aux 
          */
         virtual void SetVertex(Node *_s_aux);
-
-        /**
-         * @brief 
-         * 
-         * @param _current 
-         * @param _suc 
-         * @param _n_i 
-         * @param _dirs 
-         * @return unsigned int 
-         */
-        virtual unsigned int computeG(const Node* _current, const Node* _suc,  unsigned int _n_i, unsigned int _dirs) override;
-
                 
     };
 
