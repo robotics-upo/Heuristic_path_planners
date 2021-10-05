@@ -12,7 +12,7 @@ namespace Planners
 
         //TODO WHat is this value? dist_scale_factor_ ?
         //TODO 2 "scale" does not appear here? 
-        unsigned int dist_max = 100;
+        // unsigned int dist_max = 100;
 
         for (const auto &i: direction)
         {
@@ -28,8 +28,9 @@ namespace Planners
                 auto dist = geometry::distanceBetween2Nodes(successor2, _s_aux);
                 
                 // Be careful with castings here. Its already checked before and after is the same result.
+                //TODO Add comment explaining the "100" in the equation
                 G_new  = static_cast<unsigned int>(  successor2-> G + dist +  
-                ( static_cast<double>(_s_aux->cost) + static_cast<double>(successor2->cost) ) / ( 2 * static_cast<double>(dist_max) ) * dist);
+                ( static_cast<double>(_s_aux->cost) + static_cast<double>(successor2->cost) ) / ( 2 * 100 ) * dist);
 
                 if (G_new < G_max)
                 {
