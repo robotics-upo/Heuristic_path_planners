@@ -17,6 +17,16 @@ from heuristic_planners.srv import *
 from geometry_msgs.msg import Point
 from visualization_msgs.msg import Marker
 
+
+def get_file_list(path : str, extension : str, result_list : list):
+    ## Fill launch list
+    for file in listdir(path):
+        file_path = join(path, file)
+        if isfile(file_path):
+            file_extension  = os.path.splitext(file_path)[1]
+            if file_extension.lower() == extension:
+                result_list.append(file)
+
 class colors: # You may need to change color settings
     RED = '\033[31m'
     ENDC = '\033[m'
@@ -37,33 +47,12 @@ map3dpath = str(rospack.get_path('heuristic_planners') )+ str("/resources/3dmaps
 launch_list=[]
 maps_list=[]
 
-## Fill launch list
-for file in listdir(launch_path):
-    file_path = join(launch_path, file)
-    if isfile(file_path):
-        file_extension  = os.path.splitext(file_path)[1]
-        if file_extension.lower() == ".launch":
-            launch_list.append(file)
-
-## Fill 2D Map list
-for file in listdir(map2dpath):
-    file_path = join(map2dpath, file)
-    if isfile(file_path):
-        file_extension  = os.path.splitext(file_path)[1]
-        if file_extension.lower() == ".pgm":
-            maps_list.append(file)
-
-## Fill 3D Map list
-for file in listdir(map3dpath):
-    file_path = join(map3dpath, file)
-    if isfile(file_path):
-        file_extension  = os.path.splitext(file_path)[1]
-        if file_extension.lower() == ".bt":
-            maps_list.append(file)
-
+get_file_list(launch_path, ".launch", launch_list)
+get_file_list(map2dpath, ".pgm", maps_list)
+get_file_list(map3dpath, ".bt", maps_list)
 
 print( colors.YELLOW + "Available Launch list: " + str(launch_list) + colors.ENDC)
-print( colors.YELLOW + "Available 2D Map list: " + str(maps_list)   + colors.ENDC)
+print( colors.YELLOW + "Available Maps list: " + str(maps_list)   + colors.ENDC)
 
 ## ARGUMENT PARSING
 
