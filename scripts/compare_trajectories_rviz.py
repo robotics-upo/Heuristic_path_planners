@@ -45,6 +45,15 @@ map3dpath = str(rospack.get_path('heuristic_planners') )+ str("/resources/3dmaps
 launch_list=[]
 maps_list=[]
 
+get_file_list(launch_path, ".launch", launch_list)
+get_file_list(map2dpath, ".pgm", maps_list)
+get_file_list(map3dpath, ".bt", maps_list)
+
+plot_choices = ['explored_nodes', 'time_spent', 'line_of_sight_checks', 
+                'total_cost', 'h_cost', 'c_cost', 'g_cost', 'n_points', 
+                'path_length', 'min_distance_to_obstacle', 'max_distance_to_obstacle',
+                'mean_distance_to_obstacle', 'mean_std_dev_to_obstacle']
+
 print( colors.YELLOW + "Available Launch list: " + str(launch_list) + colors.ENDC)
 print( colors.YELLOW + "Available 2D Map list: " + str(maps_list)   + colors.ENDC)
 
@@ -82,7 +91,8 @@ print(colors.GREEN + "Using the following line of sight value: " + colors.RED + 
 
 # LAUNCH SELECTED launch file
 
-cli_args = [launch_path + args.launch[0],'map_name:='+args.map_name[0].split('.')[0], 'overlay_markers:=true']
+cli_args = [launch_path + args.launch[0],'output:=log','map_name:='+args.map_name[0].split('.')[0], 
+'overlay_markers:=true', 'cost_weight:='+str(args.cost_value[0]), 'max_line_of_sight_distance:='+str(args.lof_value[0])]
 roslaunch_args = cli_args[1:]
 roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cli_args)[0], roslaunch_args)]
 
@@ -125,9 +135,6 @@ for algorithm in args.algorithm:
     print(colors.GREEN + "Testing algorithm: " + str(algorithm) + " with line of sight " + str(args.lof_value[0]) + " with cost " + str(args.cost_value[0]) + colors.ENDC)
     
     try:
-        rosparam.set_param_raw("/planner_ros_node/cost_weight", float(args.cost_value[0]), False)
-        rosparam.set_param_raw("/planner_ros_node/max_line_of_sight_distance", float(args.lof_value[0]), False)
-        rospy.sleep(1)
         rospy.wait_for_service('/planner_ros_node/request_path')
         get_path = rospy.ServiceProxy('/planner_ros_node/request_path', GetPath)
         resp = get_path.call(path_request)

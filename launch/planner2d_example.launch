@@ -34,7 +34,8 @@
         <rosparam command="load" file="$(find heuristic_planners)/config/example_costmap_params.yaml"/>
     </node>
 
-    <node pkg="heuristic_planners" type="planner_ros_node" name="planner_ros_node" output="screen">
+    <arg name="output" default="screen"/>
+    <node pkg="heuristic_planners" type="planner_ros_node" name="planner_ros_node" output="$(arg output)">
         <!-- <remap from="points" to="/grid3d/map_point_cloud"/> -->
         <remap from="grid" to="/map"                        unless="$(arg use_costs)"/>
         <remap from="grid" to="/costmap_2d/costmap/costmap" if="$(arg use_costs)"/>
