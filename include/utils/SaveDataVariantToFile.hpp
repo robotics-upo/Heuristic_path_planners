@@ -17,6 +17,15 @@
 #include <algorithm>
 #include <numeric>
 #include "utils/utils.hpp"
+
+/* Test for GCC > 9.0.0 */
+#if __GNUC__ >= 9 
+#include <filesystem>
+namespace fs = std::filesystem;
+#else
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#endif
 namespace Planners
 {
     namespace utils
@@ -57,8 +66,14 @@ namespace Planners
                              "explored_nodes", "path_length", "total_cost", "h_cost", "g_cost", "c_cost",
                              "line_of_sight_checks", "solved", "cost_weight","max_line_of_sight_cells" }): fields_(_fields), data_file_(_data_file)
             {
+                if( ! fs::exists(data_file_) ){ //If file does not exist, write a header with field names
+                    std::cout << "File does not exists. Creating header at first line" << std::endl;   
+                    out_file_data_.open(data_file_, std::ofstream::app);
+                    out_file_data_ << _fields << std::endl;
+                }else{
+                    out_file_data_.open(data_file_, std::ofstream::app);
+                }
 
-                out_file_data_.open(data_file_, std::ofstream::app);
             }
             /**
              * @brief Main function that reads the incoming pathdata object and save to file in append mode

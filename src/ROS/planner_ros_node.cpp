@@ -200,39 +200,38 @@ private:
         world_size_.y = std::floor(ws_y / resolution_);
         world_size_.z = std::floor(ws_z / resolution_);
         
-        bool use3d{true};
-        lnh_.param("use3d", use3d, (bool)true);
+        lnh_.param("use3d", use3d_, (bool)true);
 
         if( algorithm_name == "astar" ){
             ROS_INFO("Using A*");
-            algorithm_.reset(new AStarGenerator(use3d));
+            algorithm_.reset(new AStarGenerator(use3d_));
         }else if( algorithm_name == "costastar" ){
             ROS_INFO("Using Cost Aware A*");
-            algorithm_.reset(new CostAwareAStarGenerator(use3d));
+            algorithm_.reset(new CostAwareAStarGenerator(use3d_));
         }else if( algorithm_name == "astarsafetycost" ){
             ROS_INFO("Using A* Safety Cost");
-            algorithm_.reset(new AStarGeneratorSafetyCost(use3d));    
+            algorithm_.reset(new AStarGeneratorSafetyCost(use3d_));    
         }else if ( algorithm_name == "thetastar" ){
             ROS_INFO("Using Theta*");
-            algorithm_.reset(new ThetaStarGenerator(use3d));
+            algorithm_.reset(new ThetaStarGenerator(use3d_));
         }else if ( algorithm_name == "costhetastar" ){
             ROS_INFO("Using Cost Aware Theta* ");
-            algorithm_.reset(new CostAwareThetaStarGenerator(use3d));
+            algorithm_.reset(new CostAwareThetaStarGenerator(use3d_));
         }else if ( algorithm_name == "thetastarsafetycost" ){
             ROS_INFO("Using Theta* Safety Cost");
-            algorithm_.reset(new ThetaStarGeneratorSafetyCost(use3d));
+            algorithm_.reset(new ThetaStarGeneratorSafetyCost(use3d_));
         }else if( algorithm_name == "lazythetastar" ){
             ROS_INFO("Using LazyTheta*");
-            algorithm_.reset(new LazyThetaStarGenerator(use3d));
+            algorithm_.reset(new LazyThetaStarGenerator(use3d_));
         }else if( algorithm_name == "costlazythetastar"){
             ROS_INFO("Using Cost Aware LazyTheta*");
-            algorithm_.reset(new CostAwareLazyThetaStarGenerator(use3d));
+            algorithm_.reset(new CostAwareLazyThetaStarGenerator(use3d_));
         }else if( algorithm_name == "lazythetastarsafetycost"){
             ROS_INFO("Using LazyTheta* Safety Cost");
-            algorithm_.reset(new LazyThetaStarGeneratorSafetyCost(use3d));
+            algorithm_.reset(new LazyThetaStarGeneratorSafetyCost(use3d_));
         }else{
             ROS_WARN("Wrong algorithm name parameter. Using ASTAR by default");
-            algorithm_.reset(new AStarGenerator(use3d));
+            algorithm_.reset(new AStarGenerator(use3d_));
         }
 
         algorithm_->setWorldSize(world_size_, resolution_);
@@ -310,11 +309,16 @@ private:
     std::vector<std::pair<utils::Vec3i, double>> getClosestObstaclesToPathPoints(const utils::CoordinateList &_path){
         
         std::vector<std::pair<utils::Vec3i, double>> result;
-        //TODO grid3d distances does not take into account the inflation added internally by the algorithm
+        if ( use3d_ ){
+            //TODO grid3d distances does not take into account the inflation added internally by the algorithm
 
-        for(const auto &it: _path)
-            result.push_back( m_grid3d_->getClosestObstacle(it) );
+            for(const auto &it: _path)
+                result.push_back( m_grid3d_->getClosestObstacle(it) );
+            }
 
+        else{//TODO IMplement for 2d
+            result.push_back(std::make_pair<utils::Vec3i, double>(Vec3i{0,0,0}, 0.0));
+        }
         return result;
     }
     void configMarkers(const std::string &_ns, const std::string &_frame, const double &_scale){
@@ -403,6 +407,8 @@ private:
     float resolution_;
 
     bool save_data_;
+    bool use3d_{true};
+
     bool inflate_{false};
     unsigned int inflation_steps_{0};
     std::string data_folder_;
