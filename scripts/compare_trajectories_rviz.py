@@ -108,14 +108,9 @@ launch.start()
 
 rospy.init_node('planners_test_node', anonymous=True)
 
-set_algorithm_request = SetAlgorithmRequest()
 path_request = GetPathRequest()
-
-
 path_request.start = Point(float(args.start_coords[0]), float(args.start_coords[1]), float(args.start_coords[2]))
 path_request.goal  = Point(float(args.goal_coords[0]),  float(args.goal_coords[1]),  float(args.goal_coords[2]))
-
-set_algorithm_request.algorithm.data = str(args.algorithm[0])
 
 ## End of options
 
@@ -142,18 +137,13 @@ rospy.sleep(10)
 ## FOR EACH ALGORITHM
 for algorithm in args.algorithm:
 
-    set_algorithm_request.algorithm.data = str(algorithm)
-
+    path_request.algorithm.data = str(algorithm)
     print(colors.GREEN + "Testing algorithm: " + str(algorithm) + " with line of sight " + str(args.lof_value[0]) + " with cost " + str(args.cost_value[0]) + colors.ENDC)
     
     try:
         rosparam.set_param_raw("/planner_ros_node/cost_weight", float(args.cost_value[0]), False)
         rosparam.set_param_raw("/planner_ros_node/max_line_of_sight_distance", float(args.lof_value[0]), False)
         rospy.sleep(1)
-        rospy.wait_for_service('/planner_ros_node/set_algorithm')
-        set_algorithm = rospy.ServiceProxy('/planner_ros_node/set_algorithm', SetAlgorithm)
-        set_algorithm.call(set_algorithm_request)
-        rospy.sleep(2)
         rospy.wait_for_service('/planner_ros_node/request_path')
         get_path = rospy.ServiceProxy('/planner_ros_node/request_path', GetPath)
         resp = get_path.call(path_request)

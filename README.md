@@ -239,7 +239,14 @@ The package also include pythons scripts to easily automatize test of ROS launch
 - numpy: ```pip3 install numpy```
 - ROS Melodic/Noetic
 
-Right now there is only one script called ```test_algorithms.py```. The usage is the following:
+Right now there are several scripts 
+
+* test_algorithms.py: Test multiple algorithms with multiple parameters
+* test_algorithms_compare.py : Test multiple algorithms with same parameters for comparison purposes and plot them in same plot
+* compare_trajectories_rviz.py : Test N algorithms overlaying the trajectories in RVIZ
+
+
+The general usage is the following:
  
 ```bash
 usage: test_algorithms.py [-h] --launch {planner2d_example.launch,planner.launch}
@@ -271,7 +278,7 @@ optional arguments:
 
 ```bash
 roscd heuristic_planners 
-./scripts/test_algorithms.py --launch planner2d_example.launch --algorithm costastar --start-coords 1.5 0.5 0.0 --goal-coords 1.0 3.0 0.0 --cost-range 140 150 1 --lof-value 1 3 1 
+./scripts/test_algorithms.py --launch planner2d_example.launch --map-name test.pgm --algorithm costastar --start-coords 1.5 0.5 0.0 --goal-coords 1.0 3.0 0.0 --cost-range 140 150 1 --lof-value 1 3 1 
 ```
 
 Another example: 

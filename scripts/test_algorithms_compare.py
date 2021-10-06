@@ -186,6 +186,12 @@ for lof in line_of_sights:
         set_algorithm_request.algorithm.data = str(algorithm)
         algorithms_data[algorithm] = [ [], [], [], [], [] ]
         
+        rospy.wait_for_service('/planner_ros_node/set_algorithm')
+        set_algorithm = rospy.ServiceProxy('/planner_ros_node/set_algorithm', SetAlgorithm)
+        set_algorithm.call(set_algorithm_request)
+
+        rospy.sleep(2)
+        
         for cost in costs:
 
             print(colors.GREEN + "Testing algorithm: " + str(algorithm) + " with line of sight " + str(lof) + " with cost " + str(cost) + colors.ENDC)
@@ -195,11 +201,6 @@ for lof in line_of_sights:
 
                 rospy.sleep(1)
 
-                rospy.wait_for_service('/planner_ros_node/set_algorithm')
-                set_algorithm = rospy.ServiceProxy('/planner_ros_node/set_algorithm', SetAlgorithm)
-                set_algorithm.call(set_algorithm_request)
-
-                rospy.sleep(2)
                 rospy.wait_for_service('/planner_ros_node/request_path')
                 get_path = rospy.ServiceProxy('/planner_ros_node/request_path', GetPath)
                 resp = get_path.call(path_request)
