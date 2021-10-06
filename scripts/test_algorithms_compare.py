@@ -201,7 +201,7 @@ for lof in line_of_sights:
                 for iar in args.plots:
                     attribute = getattr(resp, iar)
                     algorithms_data[algorithm][str(iar)].append(getattr(attribute, 'data'))
-                    text_marker.text = text_marker.text + "\n" + str(iar) + ": " + str(round(getattr(attribute, 'data')))
+                    text_marker.text = text_marker.text + "\n" + str(iar) + ": " + str(round(getattr(attribute, 'data'),3))
 
                 markerPub.publish(text_marker)
                 
