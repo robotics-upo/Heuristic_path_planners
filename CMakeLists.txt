@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.10.2)
 project(heuristic_planners)
 
 add_compile_options(-std=c++17 -Wall -Wextra -pedantic)
@@ -56,6 +56,7 @@ if(BUILD_ROS_SUPPORT)
 ################################################
 ## Declare ROS messages, services and actions ##
 ################################################
+catkin_python_setup()
 
 ## Generate services in the 'srv' folder
 add_service_files(
@@ -169,6 +170,7 @@ if(BUILD_ROS_SUPPORT)
   
   catkin_install_python(PROGRAMS  scripts/test_algorithms.py
                                   scripts/test_algorithms_compare.py
+                                  scripts/compare_trajectories_rviz.py
                                   scripts/test_algorithms_performance.py
                                   setup.py
                                   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
