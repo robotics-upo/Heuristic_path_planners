@@ -278,7 +278,7 @@ optional arguments:
 
 ```bash
 roscd heuristic_planners 
-./scripts/test_algorithms.py --launch planner2d_example.launch --map-name test.pgm --algorithm costastar --start-coords 1.5 0.5 0.0 --goal-coords 1.0 3.0 0.0 --cost-range 140 150 1 --lof-value 1 3 1 
+./scripts/test_algorithms.py --launch planner.launch --map-name mbzirc_challenge3.bt --algorithm costastar --start-coords 20.0 20.0 3.0 --goal-coords 40.0 40.0 3.0 --cost-range 1 5 1 --lof-value 1 3 1 --plots total_cost path_length mean_distance_to_obstacle
 ```
 
 Another example: 
@@ -288,9 +288,14 @@ Run the launch ```planner.launch``` with algorithms costlazythetastar and lazyth
 As it is configured right now, the script will create a multiple graphic visualization of the data with the resulting data for every algorithm with every line of sight i.e. DATA VS COST. They will be saved in the same folder the script is executed. 
 
 ```bash
-./test_algorithms.py --launch planner.launch --algorithm costlazythetastar lazythetastarsafetycost --map-name mbzirc_challenge3.bt --start-coords 20 20 3 --goal-coords 40 40 3 --cost-range 1 20 1 --lof-value 1 5 1
+./test_algorithms.py --launch planner.launch --algorithm costlazythetastar lazythetastarsafetycost --map-name mbzirc_challenge3.bt --start-coords 20 20 3 --goal-coords 40 40 3 --cost-range 1 20 1 --lof-value 1 5 1 --plots total_cost path_length mean_distance_to_obstacle
 ```
 
+To plot in the same figure multiple algorithms:
+
+```bash
+/scripts/test_algorithms_compare.py --launch planner_example.launch --map-name mbzirc_challenge3.bt --algorithm costastar astarsafetycost --start-coords 20.0 20.0 4.0 --goal-coords 40.0 40.0 3.0 --cost-range 1 5 1 --lof-value 1 3 1 --plots total_cost g_cost c_cost h_cost
+```
 ### Comparing algorithms in RViz
 
 For that purpose you can use the script ```compare_trajectories_rviz.py``` :

@@ -12,7 +12,6 @@ import rospy
 import roslaunch
 import rospkg
 import rosparam
-
 ## Import ROS Messages 
 from heuristic_planners.srv import *
 from geometry_msgs.msg import Point
@@ -61,8 +60,11 @@ get_file_list(launch_path, ".launch", launch_list)
 get_file_list(map2dpath, ".pgm", maps_list)
 get_file_list(map3dpath, ".bt", maps_list)
 
-print( colors.YELLOW + "Available Launch list: " + str(launch_list) + colors.ENDC)
-print( colors.YELLOW + "Available Maps list: " + str(maps_list)   + colors.ENDC)
+plot_choices = ['explored_nodes', 'time_spent', 'line_of_sight_checks', 
+                'total_cost', 'h_cost', 'c_cost', 'g_cost', 'n_points', 
+                'path_length', 'min_distance_to_obstacle', 'max_distance_to_obstacle',
+                'mean_distance_to_obstacle', 'mean_std_dev_to_obstacle']
+
 
 ## ARGUMENT PARSING
 
@@ -77,6 +79,10 @@ parser.add_argument("--map-name",     help="name of the map to use. This map sho
                     nargs='+', type=str, required=True,
                     choices=maps_list)
 
+parser.add_argument("--plots",     help="List of result variables to plot",     
+                    nargs='+', type=str, required=True,
+                    choices=plot_choices)
+
 parser.add_argument("--start-coords", help="start coordinates (x,y,z). Set z to 0 when testing with 2D",         
                     nargs=3,   required=True)
 parser.add_argument("--goal-coords", help="goal coordinates (x,y,z). Set z to 0 when testing with 2D",           
@@ -89,16 +95,11 @@ parser.add_argument("--lof-value", help="Line of sight range to evaluate. (min, 
 
 args = parser.parse_args()
 
-print(colors.GREEN + "\nUsing the following algorithms: " +        colors.RED + str(args.algorithm) + colors.ENDC)
-print(colors.GREEN + "Using the following map: " +                 colors.RED + str(args.map_name)           + colors.ENDC)
-print(colors.GREEN + "Using the following cost range: " +          colors.RED + str(args.cost_range)           + colors.ENDC)
-print(colors.GREEN + "Using the following line of sight range: " + colors.RED + str(args.lof_value)           + colors.ENDC)
-
 ### END OF ARGUMENT PARSING
 
 # LAUNCH SELECTED launch file
 
-cli_args = [launch_path + args.launch[0],'map_name:='+args.map_name[0].split('.')[0]]
+cli_args = [launch_path + args.launch[0],'map_name:='+args.map_name[0].split('.')[0], 'output:=log',]
 roslaunch_args = cli_args[1:]
 roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cli_args)[0], roslaunch_args)]
 
@@ -107,18 +108,23 @@ launch = roslaunch.parent.ROSLaunchParent(uuid, roslaunch_file,  is_core=True)
 launch.start()
 
 rospy.init_node('planners_test_node', anonymous=True)
+print( colors.YELLOW + "\nAvailable Launch list: " + str(launch_list) + colors.ENDC)
+print( colors.YELLOW + "\nAvailable Maps list: " + str(maps_list)   + colors.ENDC)
+print( colors.YELLOW + "\nAvailable Plot choices: " + str(plot_choices)   + colors.ENDC)
 
-set_algorithm_request = SetAlgorithmRequest()
-path_request = GetPathRequest()
+print(colors.GREEN + "\nUsing the following algorithms: " +        colors.RED + str(args.algorithm) + colors.ENDC)
+print(colors.GREEN + "Using the following map: " +                 colors.RED + str(args.map_name)           + colors.ENDC)
+print(colors.GREEN + "Using the following cost range: " +          colors.RED + str(args.cost_range)           + colors.ENDC)
+print(colors.GREEN + "Using the following line of sight range: " + colors.RED + str(args.lof_value)           + colors.ENDC)
+print(colors.GREEN + "Plotting the following result variables: " + colors.RED + str(args.plots)           + colors.ENDC)
 
 # Test Options: Goal, Start, Algorithm type and range of costs
 costs          = np.arange(float(args.cost_range[0]), float(args.cost_range[1]), float(args.cost_range[2]))
 line_of_sights = np.arange(float(args.lof_value[0]), float(args.lof_value[1]), float(args.lof_value[2]))
 
+path_request = GetPathRequest()
 path_request.start = Point(float(args.start_coords[0]), float(args.start_coords[1]), float(args.start_coords[2]))
 path_request.goal  = Point(float(args.goal_coords[0]),  float(args.goal_coords[1]),  float(args.goal_coords[2]))
-
-set_algorithm_request.algorithm.data = str(args.algorithm[0])
 
 ## End of options
 
@@ -144,50 +150,41 @@ text_marker.text = ""
 
 rospy.sleep(10)
 ## FOR EACH ALGORITHM
-algorithms_data = dict()
 
 color_list = ['b', 'g', 'r', 'y', 'c', 'm', 'y', 'k']
 i = 0
+
+algorithms_data = {}
+#Initialzie algorithm_data structure
+for algorithm in args.algorithm:
+    algorithms_data[algorithm] = {}
+    algorithms_data[algorithm]['cost'] = []
+    for plot in args.plots:
+        algorithms_data[algorithm][str(plot)] = []
+
+
 for lof in line_of_sights:
     
-    # 0 ev cost
-    # 1 explored nodes
-    # 2 durations
-    # 3 path len
-    # 4 sight checks
-    ## FOR EACH LINE OF SIGHT
+    rosparam.set_param_raw("/planner_ros_node/max_line_of_sight_distance", float(lof), False)
 
-    fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, sharex=True)
-    ax1.set_ylabel("Explored nodes")
-    ax2.set_ylabel("Time spent")
-    ax3.set_ylabel("Path Lenght")
-    ax4.set_ylabel("Sight Checks")
-            
+    axis_list=list()
+    fig, axis_list = plt.subplots(len(args.plots), sharex=True)
+    ip=0
+    for ax in axis_list:
+        ax.set_ylabel(args.plots[ip])
+        ax.set_xlim(float(args.cost_range[0]), float(float(args.cost_range[1]) - float(args.cost_range[2])))
+        ip=ip+1
 
-    ax1.set_xlim(float(args.cost_range[0]), float(float(args.cost_range[1]) - float(args.cost_range[2])))
-    ax2.set_xlim(float(args.cost_range[0]), float(float(args.cost_range[1]) - float(args.cost_range[2])))
-    ax3.set_xlim(float(args.cost_range[0]), float(float(args.cost_range[1]) - float(args.cost_range[2])))
-    ax4.set_xlim(float(args.cost_range[0]), float(float(args.cost_range[1]) - float(args.cost_range[2])))
     fig.suptitle('Resulting comparison data for algorithms with line of sight ' + str(lof))
         
     for algorithm in args.algorithm:
-        ## FOR EACH COST
-        set_algorithm_request.algorithm.data = str(algorithm)
-        algorithms_data[algorithm] = [ [], [], [], [], [] ]
-        
-        rospy.wait_for_service('/planner_ros_node/set_algorithm')
-        set_algorithm = rospy.ServiceProxy('/planner_ros_node/set_algorithm', SetAlgorithm)
-        set_algorithm.call(set_algorithm_request)
-
-        rospy.sleep(2)
+        path_request.algorithm.data = str(algorithm)
         
         for cost in costs:
 
             print(colors.GREEN + "Testing algorithm: " + str(algorithm) + " with line of sight " + str(lof) + " with cost " + str(cost) + colors.ENDC)
             try:
                 rosparam.set_param_raw("/planner_ros_node/cost_weight", float(cost), False)
-                rosparam.set_param_raw("/planner_ros_node/max_line_of_sight_distance", float(lof), False)
-
                 rospy.sleep(1)
 
                 rospy.wait_for_service('/planner_ros_node/request_path')
@@ -196,18 +193,16 @@ for lof in line_of_sights:
 
                 text_marker.text = "Algorithm: "            + str(algorithm) +\
                                  "\nCost "                  + str(round(cost,3)) +\
-                                 "\nLoS "                   + str(round(lof,3)) +\
-                                 "\nTime spent: "           + str(resp.time_spent.data) + " ms" +\
-                                 "\nExplored nodes: "       + str(resp.explored_nodes.data) +\
-                                 "\nLine of sight checks: " + str(resp.line_of_sight_checks.data) +\
-                                 "\nPath Length: "          + str(round(resp.path_length.data,3)) + " m"
-                markerPub.publish(text_marker)
+                                 "\nLoS "                   + str(round(lof,3)) # +\
 
-                algorithms_data[algorithm][0].append(cost)
-                algorithms_data[algorithm][1].append(resp.explored_nodes.data)
-                algorithms_data[algorithm][2].append(resp.time_spent.data)
-                algorithms_data[algorithm][3].append(resp.path_length.data)
-                algorithms_data[algorithm][4].append(resp.line_of_sight_checks.data)
+                for iar in args.plots:
+                    attribute = getattr(resp, iar)
+                    algorithms_data[algorithm][str(iar)].append(getattr(attribute, 'data'))
+                    text_marker.text = text_marker.text + "\n" + str(iar) + ": " + str(round(getattr(attribute, 'data')))
+
+                markerPub.publish(text_marker)
+                
+                algorithms_data[algorithm]['cost'].append(cost)
 
             except rospy.ServiceException as e:
                 print("Service call failed: %s"%e)
@@ -218,17 +213,17 @@ for lof in line_of_sights:
             i = 0
         else:
             i = i+1
-        print(str(i))
-        ax1.plot(algorithms_data[algorithm][0], algorithms_data[algorithm][1], color=color_list[i])
-        ax2.plot(algorithms_data[algorithm][0], algorithms_data[algorithm][2], color=color_list[i+1])
-        ax3.plot(algorithms_data[algorithm][0], algorithms_data[algorithm][3], color=color_list[i+2])
-        ax4.plot(algorithms_data[algorithm][0], algorithms_data[algorithm][4], color=color_list[i+3])
+        
+        iar = 0
+        for ax in axis_list:
+            ax.plot(algorithms_data[algorithm]['cost'], 
+                    algorithms_data[algorithm][str(args.plots[iar])], 
+                    color=color_list[i] )
+            iar = iar+1
 
-
-        ax1.legend(args.algorithm)
-        ax2.legend(args.algorithm)
-        ax3.legend(args.algorithm)
-        ax4.legend(args.algorithm)
+        for ax in axis_list:
+            ax.legend(args.algorithm)
+        
         fig.canvas.draw()
         plt.pause(0.05)
 

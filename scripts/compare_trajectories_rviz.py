@@ -54,9 +54,6 @@ plot_choices = ['explored_nodes', 'time_spent', 'line_of_sight_checks',
                 'path_length', 'min_distance_to_obstacle', 'max_distance_to_obstacle',
                 'mean_distance_to_obstacle', 'mean_std_dev_to_obstacle']
 
-print( colors.YELLOW + "Available Launch list: " + str(launch_list) + colors.ENDC)
-print( colors.YELLOW + "Available 2D Map list: " + str(maps_list)   + colors.ENDC)
-
 ## ARGUMENT PARSING
 
 parser.add_argument("--launch",     help="name of the launch file",     
@@ -82,10 +79,6 @@ parser.add_argument("--lof-value", help="Line of sight to evaluate.",
 
 args = parser.parse_args()
 
-print(colors.GREEN + "\nUsing the following algorithms: " +        colors.RED + str(args.algorithm) + colors.ENDC)
-print(colors.GREEN + "Using the following map: " +                 colors.RED + str(args.map_name)           + colors.ENDC)
-print(colors.GREEN + "Using the following cost value: " +          colors.RED + str(args.cost_value)           + colors.ENDC)
-print(colors.GREEN + "Using the following line of sight value: " + colors.RED + str(args.lof_value)           + colors.ENDC)
 
 ### END OF ARGUMENT PARSING
 
@@ -101,6 +94,15 @@ launch = roslaunch.parent.ROSLaunchParent(uuid, roslaunch_file,  is_core=True)
 launch.start()
 
 rospy.init_node('planners_test_node', anonymous=True)
+
+print( colors.YELLOW + "\nAvailable Launch list: " + str(launch_list) + colors.ENDC)
+print( colors.YELLOW + "\nAvailable 2D Map list: " + str(maps_list)   + colors.ENDC)
+
+print(colors.GREEN + "\nUsing the following algorithms: " +        colors.RED + str(args.algorithm) + colors.ENDC)
+print(colors.GREEN + "Using the following map: " +                 colors.RED + str(args.map_name)           + colors.ENDC)
+print(colors.GREEN + "Using the following cost value: " +          colors.RED + str(args.cost_value)           + colors.ENDC)
+print(colors.GREEN + "Using the following line of sight value: " + colors.RED + str(args.lof_value)           + colors.ENDC)
+
 
 path_request = GetPathRequest()
 path_request.start = Point(float(args.start_coords[0]), float(args.start_coords[1]), float(args.start_coords[2]))
