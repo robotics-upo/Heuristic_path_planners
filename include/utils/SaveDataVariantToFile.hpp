@@ -64,7 +64,8 @@ namespace Planners
                              const std::vector<std::string> &_fields =
                             {"algorithm", "goal_coords", "start_coords", "time_spent",
                              "explored_nodes", "path_length", "total_cost", "h_cost", "g_cost", "c_cost",
-                             "line_of_sight_checks", "solved", "cost_weight","max_line_of_sight_cells" }): fields_(_fields), data_file_(_data_file)
+                             "line_of_sight_checks", "min_dist", "max_dist", "mean_dist", "std_dev",
+                             "solved", "cost_weight","max_line_of_sight_cells" }): fields_(_fields), data_file_(_data_file)
             {
                 if( ! fs::exists(data_file_) ){ //If file does not exist, write a header with field names
                     std::cout << "File does not exists. Creating header at first line" << std::endl;   

@@ -155,6 +155,11 @@ private:
             _rep.mean_distance_to_obstacle.data  = mean;
             _rep.mean_std_dev_to_obstacle.data   = sigma;
 
+            path_data["min_dist"]  = *min;
+            path_data["max_dist"]  = *max;
+            path_data["mean_dist"] = mean;
+            path_data["std_dev"]   = sigma;
+            
             if(save_data_){
                 utils::DataVariantSaver saver1(data_folder_ + "/planning.txt");
                 utils::DataVariantSaver saver2(data_folder_ + "/path_metrics.txt");

@@ -167,6 +167,10 @@ for algorithm in args.algorithm:
             ax.set_xlim(float(args.cost_range[0]), float(float(args.cost_range[1]) - float(args.cost_range[2])))
             ip=ip+1
 
+        algorithms_data[algorithm]['cost'] = []
+        for iar in args.plots:
+            algorithms_data[algorithm][str(iar)] = []
+
         fig.suptitle('Resulting data for ' + str(algorithm) + ' with line of sight ' + str(lof))
         for cost in costs:
 

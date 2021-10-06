@@ -176,7 +176,10 @@ for lof in line_of_sights:
         ip=ip+1
 
     fig.suptitle('Resulting comparison data for algorithms with line of sight ' + str(lof))
-        
+    algorithms_data[algorithm]['cost'] = []
+    for iar in args.plots:
+        algorithms_data[algorithm][str(iar)] = []
+
     for algorithm in args.algorithm:
         path_request.algorithm.data = str(algorithm)
         
