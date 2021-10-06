@@ -15,6 +15,7 @@
 #include <iostream>
 #include <fstream>
 #include <algorithm>
+#include <numeric>
 #include "utils/utils.hpp"
 namespace Planners
 {
