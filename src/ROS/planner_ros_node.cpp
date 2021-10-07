@@ -12,6 +12,7 @@
 #include "utils/ros/ROSInterfaces.hpp"
 #include "utils/SaveDataVariantToFile.hpp"
 #include "utils/misc.hpp"
+#include "utils/geometry_utils.hpp"
 
 #include "Grid3D/grid3d.hpp"
 
@@ -134,7 +135,7 @@ private:
                 std::cerr << "Bad variant error: " << ex.what() << std::endl;
             }
 
-            auto adjacent_path    = getAdjacentPath(path);
+            auto adjacent_path    = utils::geometry::getAdjacentPath(path, *algorithm_->getInnerWorld());
             auto result_distances = getClosestObstaclesToPathPoints(adjacent_path);
 
             std::vector<double> distances; 
@@ -284,32 +285,6 @@ private:
         algorithm_->setCostFactor(cost_weight);
 
         lnh_.param("overlay_markers", overlay_markers_, (bool)false);
-    }
-    utils::CoordinateList getAdjacentPath(const utils::CoordinateList &_path){
-        
-        if( _path.size() == 0)
-            return {};
-
-        utils::CoordinateList adjacent_path;
-        adjacent_path.push_back(_path[0]);
-        
-        utils::CoordinateListPtr visited_nodes;
-        visited_nodes.reset(new CoordinateList);
-
-        for(size_t i = 0; i < _path.size() -1 ; ++i){
-            utils::LineOfSight::bresenham3D(_path[i], _path[i+1], *algorithm_->getInnerWorld(), visited_nodes);
-
-            if(visited_nodes->size() > 0){
-                for(auto &it: *visited_nodes)
-                    adjacent_path.push_back(it);
-                
-            }else if( i != 0) {
-                adjacent_path.push_back(_path[i]);
-            }
-            
-            visited_nodes.reset(new utils::CoordinateList);
-        }
-        return adjacent_path;
     }
     std::vector<std::pair<utils::Vec3i, double>> getClosestObstaclesToPathPoints(const utils::CoordinateList &_path){
         

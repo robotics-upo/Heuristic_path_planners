@@ -89,29 +89,40 @@ namespace Planners
                                     
         PathData result_data;
 
-        result_data["solved"] = _solved;
+        result_data["solved"]      = _solved;
         result_data["goal_coords"] = _last->coordinates;
 
         CoordinateList path;
-        unsigned int total_cost{0};
-        unsigned int total_H{0};
-        unsigned int total_G{0};
-        unsigned int total_C{0};
-
+        
         if(_solved){
             while (_last != nullptr) {
-                unsigned int g_real = _last->G - _last->C;
-                total_H += _last->H;
-                total_G += g_real;
-                total_C +=  _last->C;
-
-                total_cost += g_real + _last->H + _last->C;
+                
                 path.push_back(_last->coordinates);
                 _last = _last->parent;
             }
         }else{
             std::cout << "Error impossible to calcualte a solution" << std::endl;
         }
+
+        auto adjacent_path = utils::geometry::getAdjacentPath(path, discrete_world_);
+        int i = 0;
+
+        unsigned int total_cost{0};
+        unsigned int total_H{0};
+        unsigned int total_G{0};
+        unsigned int total_C{0};
+
+        for(const auto &it: adjacent_path){
+            auto node = discrete_world_.getNodePtr(it);
+            if( node == nullptr )
+                continue;
+            unsigned int g_real = node->G - node->C;
+            total_H += node->H;
+            total_G += g_real;
+            total_C +=  node->C;
+            total_cost += g_real + node->H + node->C;
+        }
+
         result_data["algorithm"]               = algorithm_name_;
         result_data["path"]                    = path;
         result_data["time_spent"]              = _timer.getElapsedMillisecs();

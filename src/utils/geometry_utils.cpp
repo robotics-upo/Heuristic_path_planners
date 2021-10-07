@@ -36,6 +36,32 @@ namespace Planners
             {
                 return { std::abs(_vec.x), std::abs(_vec.y), std::abs(_vec.z) };
             }
+            utils::CoordinateList getAdjacentPath(const utils::CoordinateList &_path, const utils::DiscreteWorld &_world){
+        
+                if( _path.size() == 0)
+                    return {};
+
+                utils::CoordinateList adjacent_path;
+                adjacent_path.push_back(_path[0]);
+        
+                utils::CoordinateListPtr visited_nodes;
+                visited_nodes.reset(new CoordinateList);
+
+                for(size_t i = 0; i < _path.size() -1 ; ++i){
+                    utils::LineOfSight::bresenham3D(_path[i], _path[i+1], _world, visited_nodes);
+
+                if(visited_nodes->size() > 0){
+                    for(auto &it: *visited_nodes)
+                        adjacent_path.push_back(it);
+                
+                }else if( i != 0) {
+                    adjacent_path.push_back(_path[i]);
+                }
+            
+                    visited_nodes.reset(new utils::CoordinateList);
+                }
+                return adjacent_path;
+            }
         }
     }
 }

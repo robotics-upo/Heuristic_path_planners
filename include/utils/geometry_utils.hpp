@@ -15,6 +15,9 @@
 #include <math.h>
 
 #include "utils/utils.hpp"
+#include "utils/LineOfSight.hpp"
+#include "utils/world.hpp"
+
 
 namespace Planners
 {
@@ -30,6 +33,15 @@ namespace Planners
              * @return float continous path length
              */
             float calculatePathLength(const CoordinateList &_path, const double &_resolution);
+
+            /**
+             * @brief Get the Adjacent Path object
+             * 
+             * @param _path 
+             * @param _algorithm 
+             * @return utils::CoordinateList 
+             */
+            utils::CoordinateList getAdjacentPath(const utils::CoordinateList &_path, const utils::DiscreteWorld &_world);
             /**
              * @brief Discrete distance multiplied by dist_scale_factor_
              * 

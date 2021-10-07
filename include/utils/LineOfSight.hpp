@@ -30,7 +30,7 @@ namespace Planners
              * @return true 
              * @return false 
              */
-            bool bresenham3D(const Vec3i _lnode, const Vec3i _rnode, DiscreteWorld &_world, CoordinateListPtr _visited_nodes);
+            bool bresenham3D(const Vec3i _lnode, const Vec3i _rnode, const DiscreteWorld &_world, CoordinateListPtr _visited_nodes);
 
             /**
              * @brief Implementation of bressenham 3D line of sight algorithm
@@ -42,7 +42,7 @@ namespace Planners
              * @return true If there exists line of sight between both nodes
              * @return false If there is no line of sight between both nodes
              */
-            bool bresenham3D(const Node *_lnode, const Node *_rnode, DiscreteWorld &_world, CoordinateListPtr _visited_nodes = nullptr);
+            bool bresenham3D(const Node *_lnode, const Node *_rnode, const DiscreteWorld &_world, CoordinateListPtr _visited_nodes = nullptr);
 
 
             /**
@@ -55,7 +55,7 @@ namespace Planners
              * @return true 
              * @return false 
              */
-            bool bresenham3DWithMaxThreshold(const Node *_lnode, const Node *_rnode, DiscreteWorld &_world, const unsigned int _threshold);
+            bool bresenham3DWithMaxThreshold(const Node *_lnode, const Node *_rnode, const DiscreteWorld &_world, const unsigned int _threshold);
         }
     }
 }

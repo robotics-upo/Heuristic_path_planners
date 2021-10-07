@@ -6,11 +6,11 @@ namespace Planners
     {
         namespace LineOfSight
         {
-            bool bresenham3D(const Node *_lnode, const Node *_rnode, DiscreteWorld &_world, CoordinateListPtr _visited_nodes)
+            bool bresenham3D(const Node *_lnode, const Node *_rnode, const DiscreteWorld &_world, CoordinateListPtr _visited_nodes)
             {
                 return bresenham3D(_lnode->coordinates, _rnode->coordinates, _world, _visited_nodes);
             }
-            bool bresenham3D(const Vec3i _lnode, const Vec3i _rnode, DiscreteWorld &_world, CoordinateListPtr _visited_nodes)
+            bool bresenham3D(const Vec3i _lnode, const Vec3i _rnode, const DiscreteWorld &_world, CoordinateListPtr _visited_nodes)
             {
                 if( geometry::distanceBetween2Nodes(_lnode, _rnode) <= dd_3D_ )
                     return true;
@@ -113,7 +113,7 @@ namespace Planners
 
                 return true;
             }
-            bool bresenham3DWithMaxThreshold(const Node *_lnode, const Node *_rnode, DiscreteWorld &_world, const unsigned int _threshold){
+            bool bresenham3DWithMaxThreshold(const Node *_lnode, const Node *_rnode, const DiscreteWorld &_world, const unsigned int _threshold){
                 
                 if( utils::geometry::distanceBetween2Nodes(_lnode, _rnode) >= ( dist_scale_factor_ * _threshold ) ) //100 is because of the internal distance units
                     return false;

@@ -129,7 +129,7 @@ namespace utils
          * @return true if node valid and not occupied
          * @return false if node is outside the workspace of is marked as occupied
          */
-        bool isOccupied(const int _x, const int _y, const int _z)
+        bool isOccupied(const int _x, const int _y, const int _z) const
         {
             if (!checkValid(_x, _y, _z))
                 return true;
@@ -148,7 +148,7 @@ namespace utils
          * @return true if node valid and not occupied 
          * @return false if node is outside the workspace of is marked as occupied 
          */
-        bool isOccupied(const Vec3i &_coord){
+        bool isOccupied(const Vec3i &_coord) const{
             return isOccupied(_coord.x, _coord.y, _coord.z);
         }
         /**
@@ -158,7 +158,7 @@ namespace utils
          * @return true if node valid and not occupied 
          * @return false if node is outside the workspace of is marked as occupied 
          */
-        bool isOccupied(const Node &_node){
+        bool isOccupied(const Node &_node) const{
             return isOccupied(_node.coordinates.x, _node.coordinates.y, _node.coordinates.z);
         }
         /**
@@ -382,7 +382,7 @@ namespace utils
          * @return true if position inside the workspace 
          * @return false if any of the coordinates is bigger than the associated world size dimension
          */
-        bool checkValid(const Vec3i &_pos){
+        bool checkValid(const Vec3i &_pos) const{
 
             return checkValid(_pos.x, _pos.y, _pos.z);
         }
@@ -397,7 +397,7 @@ namespace utils
          */
         bool checkValid(const unsigned int _x, 
                         const unsigned int _y, 
-                        const unsigned int _z) {
+                        const unsigned int _z) const{
 
             if ( _x >= world_x_size_ ||
                  _y >= world_y_size_ ||
@@ -412,7 +412,7 @@ namespace utils
          * @param _pos discrete position 
          * @return unsigned int world index associated to the requested discrete position
          */
-        unsigned int getWorldIndex(const Vec3i &_pos){
+        unsigned int getWorldIndex(const Vec3i &_pos) const{
 
             return getWorldIndex(_pos.x, _pos.y, _pos.z);
         }
@@ -424,7 +424,7 @@ namespace utils
          * @param z discrete coordinates
          * @return unsigned int world index of the vector
          */
-        unsigned int getWorldIndex(const int _x, const int _y, const int _z)
+        unsigned int getWorldIndex(const int _x, const int _y, const int _z) const
         {
             return (unsigned int)( _z * world_x_size_ * world_y_size_ + _y * world_x_size_ + _x);
         }
