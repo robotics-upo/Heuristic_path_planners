@@ -105,7 +105,6 @@ namespace Planners
         }
 
         auto adjacent_path = utils::geometry::getAdjacentPath(path, discrete_world_);
-        int i = 0;
 
         unsigned int total_cost{0};
         unsigned int total_H{0};
