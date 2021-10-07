@@ -67,13 +67,6 @@ namespace Planners
                              "line_of_sight_checks", "min_dist", "max_dist", "mean_dist", "std_dev",
                              "solved", "cost_weight","max_line_of_sight_cells" }): fields_(_fields), data_file_(_data_file)
             {
-                if( ! fs::exists(data_file_) ){ //If file does not exist, write a header with field names
-                    std::cout << "File does not exists. Creating header at first line" << std::endl;   
-                    out_file_data_.open(data_file_, std::ofstream::app);
-                    out_file_data_ << _fields << std::endl;
-                }else{
-                    out_file_data_.open(data_file_, std::ofstream::app);
-                }
 
             }
             /**
@@ -85,6 +78,13 @@ namespace Planners
              */
             bool savePathDataToFile(const PathData &_data)
             {
+                if( ! fs::exists(data_file_) ){ //If file does not exist, write a header with field names
+                    std::cout << "File does not exists. Creating header at first line" << std::endl;   
+                    out_file_data_.open(data_file_, std::ofstream::app);
+                    out_file_data_ << fields_ << std::endl;
+                }else{
+                    out_file_data_.open(data_file_, std::ofstream::app);
+                }
                 for (auto &it : fields_)
                 {
                     auto field = _data.find(it);
@@ -106,34 +106,16 @@ namespace Planners
             }
             bool savePathDistancesToFile(const utils::CoordinateList &_path,
                                          const std::vector<std::pair<utils::Vec3i, double>> &_results){
+                
+                out_file_data_.open(data_file_, std::ofstream::app);
 
                 if( _path.size() != _results.size() )
                     return false;
                 
-                for(size_t i = 0; i < _path.size(); ++i)
-                    out_file_data_ << _path[i] << ", " << _results[i].first << ", " << _results[i].second << std::endl;
-                
-                std::vector<double> distances;
-                
-                for(auto &it: _results)
-                    distances.push_back(it.second);
+                for(size_t i = 0; i < _results.size() -1 ; ++i)
+                    out_file_data_ << _results[i].second << ", ";
 
-                out_file_data_ << "Size: "  << _path.size() << std::endl;
-                const auto [min, max] = std::minmax_element(begin(distances), end(distances));
-
-                out_file_data_ << "Min: "  << *min << std::endl;
-                out_file_data_ << "Max: "  << *max << std::endl;
-                double mean = std::accumulate(distances.begin(), distances.end(), 0.0)/distances.size();
-                out_file_data_ << "Mean: " << mean<<  std::endl;
-                
-                double sigma = 0;
-                for(const auto &it: distances)
-                    sigma += pow(it - mean,2);
-                sigma = sqrt(sigma/distances.size());
-
-                out_file_data_ << "Dev: "    <<  sigma << std::endl;
-        
-                out_file_data_ << " ----------------- " << std::endl;
+                out_file_data_ << _results[static_cast<size_t>(_results.size() -1)].second << std::endl;;
 
                 out_file_data_.close();
 
