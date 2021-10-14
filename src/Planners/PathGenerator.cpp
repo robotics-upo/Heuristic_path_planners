@@ -89,8 +89,9 @@ namespace Planners
                                     
         PathData result_data;
 
-        result_data["solved"]      = _solved;
-        result_data["goal_coords"] = _last->coordinates;
+        result_data["solved"]       = _solved;
+        result_data["goal_coords"]  = _last->coordinates;
+        result_data["g_final_node"] = _last->G;
 
         CoordinateList path;
         
