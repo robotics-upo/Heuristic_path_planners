@@ -110,6 +110,7 @@ namespace Planners
         unsigned int total_H{0};
         unsigned int total_G{0};
         unsigned int total_C{0};
+        unsigned int total_grid_cost{0};
 
         for(const auto &it: adjacent_path){
             auto node = discrete_world_.getNodePtr(it);
@@ -118,7 +119,8 @@ namespace Planners
             unsigned int g_real = node->G - node->C;
             total_H += node->H;
             total_G += g_real;
-            total_C +=  node->cost;
+            total_C +=  node->C;
+            total_grid_cost +=  node->cost;
             total_cost += g_real + node->H + node->C;
         }
 
@@ -133,6 +135,8 @@ namespace Planners
         result_data["h_cost"]                  = total_H;
         result_data["g_cost"]                  = total_G;
         result_data["c_cost"]                  = total_C;
+        result_data["grid_cost"]               = total_grid_cost;
+
 
         result_data["line_of_sight_checks"]    = _sight_checks;
         result_data["max_line_of_sight_cells"] = max_line_of_sight_cells_;
