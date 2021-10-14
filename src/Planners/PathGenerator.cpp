@@ -118,7 +118,7 @@ namespace Planners
             unsigned int g_real = node->G - node->C;
             total_H += node->H;
             total_G += g_real;
-            total_C +=  node->C;
+            total_C +=  node->cost;
             total_cost += g_real + node->H + node->C;
         }
 
