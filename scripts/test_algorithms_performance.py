@@ -35,12 +35,18 @@ parser.add_argument("--goal-coords", help="goal coordinates (x,y,z). Set z to 0 
                     nargs=3,   required=True)
 parser.add_argument("--iterations", help="Number of iterations to evaluate",
                     nargs=1,   default=[100])
-
+parser.add_argument("--cost-weight", help="cost",  
+                    nargs=1,   default=[1])
 
 args = parser.parse_args()
 
-launch = roslaunch.parent.ROSLaunchParent(
-    uuid, [launch_path + args.launch[0]], is_core=True)
+
+cli_args = [launch_path + args.launch[0],'cost_weight:='+args.cost_weight[0].split('.')[0],'output:=log']
+roslaunch_args = cli_args[1:]
+roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(cli_args)[0], roslaunch_args)]
+
+launch = roslaunch.parent.ROSLaunchParent(uuid, roslaunch_file,  is_core=True)
+
 launch.start()
 
 rospy.init_node('planners_speed_test_node', anonymous=True)
@@ -85,18 +91,15 @@ rospy.wait_for_service('/planner_ros_node/set_algorithm')
 set_algorithm = rospy.ServiceProxy('/planner_ros_node/set_algorithm', SetAlgorithm)
 set_algorithm.call(set_algorithm_request)
 
-rospy.sleep(2)
+rospy.sleep(20)
 total_time = 0
 for iter in range(0,int(args.iterations[0])):
     try:
-        # rospy.wait_for_service('/planner_ros_node/set_algorithm')
-        # set_algorithm = rospy.ServiceProxy('/planner_ros_node/set_algorithm', SetAlgorithm)
-        # set_algorithm.call(set_algorithm_request)
-        # rospy.sleep(5)
 
         rospy.wait_for_service('/planner_ros_node/request_path')
         get_path = rospy.ServiceProxy(
             '/planner_ros_node/request_path', GetPath)
+
         resp = get_path.call(path_request)
         text_marker.text = "\nTime spent: " + str(resp.time_spent.data) + " ms"
         total_time += resp.time_spent.data
