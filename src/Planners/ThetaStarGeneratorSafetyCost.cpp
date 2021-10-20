@@ -16,7 +16,7 @@ namespace Planners
         if (LineOfSight::bresenham3D((_s_aux->parent), _s2_aux, discrete_world_, checked_nodes))  
         {
             auto dist2   = geometry::distanceBetween2Nodes(_s_aux->parent, _s2_aux);
-            auto edge2   = ComputeEdgeCost(checked_nodes, _s_aux, _s2_aux, dist2);
+            auto edge2   = ComputeEdgeCost(checked_nodes, _s_aux->parent, _s2_aux, dist2);
 
             line_of_sight_checks_++;
             LineOfSight::bresenham3D(_s_aux, _s2_aux, discrete_world_, checked_nodes_current);
@@ -62,7 +62,7 @@ namespace Planners
             for(auto &it: *_checked_nodes)
                 dist_cost += discrete_world_.getNodePtr(it)->cost;
 
-        double cost_origin    = _s->parent->cost;
+        double cost_origin    = _s->cost;
         double cost_goal      = _s2->cost;
         
         if( n_checked_nodes > 1){
@@ -71,11 +71,11 @@ namespace Planners
         }
         else if (n_checked_nodes == 1){
             // mean_dist_cost = ( ( ( cost_origin + cost_goal ) / 2 + dist_cost ) / ( n_checked_nodes * dist_max * dist_max ) ); //A
-            mean_dist_cost = ( ( ( cost_origin + cost_goal ) / 2 + dist_cost ) / ( _dist * _dist  ) ); //A
+            mean_dist_cost = ( ( ( cost_origin + cost_goal ) / 2 + dist_cost ) / ( _dist ) ); //A
         }
         else{ 
             // mean_dist_cost = ( cost_origin + cost_goal ) / ( 2 * dist_max);
-            mean_dist_cost = ( cost_origin + cost_goal ) / ( 2 * 100);
+            mean_dist_cost = ( cost_origin + cost_goal ) / ( 2 * _dist);
         }
         // std::cout << static_cast<unsigned int>( mean_dist_cost  * _dist * cost_weight_ )  << std::endl;
         return static_cast<unsigned int>( mean_dist_cost  * _dist * cost_weight_ );        

@@ -21,8 +21,8 @@
 
     <arg name="overlay_markers"     default="false"/>
     
-    <arg name="cost_weight" default="1.0"/>
-    <arg name="max_line_of_sight_distance" default="3.0"/>
+    <arg name="cost_weight" default="4.0"/>
+    <arg name="max_line_of_sight_distance" default="2.0"/>
 
     <arg name="scale" default="1"/>  
     <!-- <arg name="cost_scaling_factor" default="0.8"/>  

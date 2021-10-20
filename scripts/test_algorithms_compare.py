@@ -61,7 +61,7 @@ get_file_list(map2dpath, ".pgm", maps_list)
 get_file_list(map3dpath, ".bt", maps_list)
 
 plot_choices = ['explored_nodes', 'time_spent', 'line_of_sight_checks', 
-                'total_cost', 'h_cost', 'c_cost', 'g_cost', 'n_points', 
+                'total_cost', 'h_cost', 'c_cost', 'g_cost', 'grid_cost', 'n_points', 
                 'path_length', 'min_distance_to_obstacle', 'max_distance_to_obstacle',
                 'mean_distance_to_obstacle', 'mean_std_dev_to_obstacle']
 
