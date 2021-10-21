@@ -75,6 +75,13 @@ namespace Planners
              * @return Vec3i 
              */
             Vec3i abs(const Vec3i &_vec);
+
+
+            int dotProduct(const Vec3i &_v1, const Vec3i &_v2);
+
+            double moduleVector(const Vec3i &_v);
+
+            double angleBetweenThreePoints(const Vec3i &_v1, const Vec3i &_v2, const Vec3i &_v3);
             
         }//namespace geometry
     }//namespace utils

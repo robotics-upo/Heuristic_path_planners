@@ -62,6 +62,22 @@ namespace Planners
                 }
                 return adjacent_path;
             }
+
+            inline int dotProduct(const Vec3i &_v1, const Vec3i &_v2){
+                return _v1.x * _v2.x + _v1.y * _v2.y + _v1.z * _v2.z;
+            }
+            inline double moduleVector(const Vec3i &_v){
+                return sqrt( _v.x * _v.x + _v.y * _v.y + _v.z * _v.z);
+            }
+
+            double angleBetweenThreePoints(const Vec3i &_v1, const Vec3i &_v2, const Vec3i &_v3){
+
+                auto z1 = ( _v1 - _v2 );
+                auto z2 = ( _v3 - _v2 );
+
+                return  std::acos(dotProduct(z1, z2) / (moduleVector(z1) * moduleVector(z2)) );
+            }
+
         }
     }
 }
