@@ -134,32 +134,72 @@ private:
             }catch(std::bad_variant_access const& ex){
                 std::cerr << "Bad variant error: " << ex.what() << std::endl;
             }
-            std::vector<double> curvatures;
-            double av_curvature{0};
-            double curv_sigma{0};
+            std::vector<double> curvatures, angles;
+            double av_curvature{0}, av_angles{0};
+            double curv_sigma{0}, angles_sigma{0};
             for(size_t i = 1; i < path.size() - 2; ++i){
                 double R = utils::geometry::getCircunferenceRadius(path[i-1], path[i], path[i+1]);
                 if ( R != std::numeric_limits<double>::infinity() ){
                     curvatures.push_back(1/R);
-                }else{
+                }
+                else{
                     curvatures.push_back(0);
                 }
             }
-            
+
+            // Angles between three points
+            int changes=0;
+            for(size_t i = 1; i < path.size() - 2; ++i){
+                double alpha = utils::geometry::angleBetweenThreePoints(path[i-1], path[i], path[i+1]);
+                alpha=(3.14159-alpha);
+
+                // if ( alpha != 0 ){
+                if ( (alpha > 0.034906585) || (alpha < -0.034906585) ){ // Two degreess
+                    angles.push_back(alpha);
+                    std::cout << "angulo"  << alpha << std::endl;
+                    changes++;
+                    // Compute both distances between path[i-1] and path[i] and path[i] and path[i+1] to measure the distance between changes of angles.
+                }
+                else{
+                    //angles.push_back(0);
+                    // std::cout << "Recta"  << std::endl;
+                }
+            }
+
+            //std::cout << "Changes" << changes  << std::endl;
+
             if ( curvatures.size() > 0 ){
                 av_curvature = std::accumulate(curvatures.begin(), curvatures.end(), 0.0)/curvatures.size();
 
                 for(const auto &it: curvatures)
                     curv_sigma += pow(it - av_curvature,2);
-                curv_sigma = sqrt(curv_sigma/curvatures.size());
+                    curv_sigma = sqrt(curv_sigma/curvatures.size());
 
             }
             const auto [curv_min, curv_max] = std::minmax_element(begin(curvatures), end(curvatures));
-            std::cout << "Average curvature: " << av_curvature << " 1/m"<< std::endl;
+            // std::cout << "Average curvature: " << av_curvature << " 1/m"<< std::endl;
             path_data["av_curv"]  = av_curvature;
             path_data["std_dev_curv"]   = curv_sigma;
             path_data["min_curv"]  = *curv_min;
             path_data["max_curv"]  = *curv_max;
+
+            // Angles between three points
+            if ( angles.size() > 0 ){
+                av_angles = std::accumulate(angles.begin(), angles.end(), 0.0)/angles.size();
+
+                for(const auto &it: angles)
+                    angles_sigma += pow(it - av_angles,2);
+                    angles_sigma = sqrt(angles_sigma/angles.size());
+
+            }
+            const auto [angles_min, angles_max] = std::minmax_element(begin(angles), end(angles));
+            std::cout << "Average angles: " << av_angles << " 1/m"<< std::endl;
+            path_data["av_angles"]  = av_angles;
+            path_data["std_dev_angles"]   = angles_sigma;
+            path_data["min_angle"]  = *angles_min;
+            path_data["max_angle"]  = *angles_max;         
+            path_data["angle_cnanges"]  = changes;
+            ///////////////////////////////////////////////////////////////////////////////////////////////  
 
             auto adjacent_path    = utils::geometry::getAdjacentPath(path, *algorithm_->getInnerWorld());
             auto result_distances = getClosestObstaclesToPathPoints(adjacent_path);
