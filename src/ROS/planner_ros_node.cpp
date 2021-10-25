@@ -136,6 +136,7 @@ private:
             }
             std::vector<double> curvatures;
             double av_curvature{0};
+            double curv_sigma{0};
             for(size_t i = 1; i < path.size() - 2; ++i){
                 double R = utils::geometry::getCircunferenceRadius(path[i-1], path[i], path[i+1]);
                 if ( R != std::numeric_limits<double>::infinity() ){
@@ -147,9 +148,18 @@ private:
             
             if ( curvatures.size() > 0 ){
                 av_curvature = std::accumulate(curvatures.begin(), curvatures.end(), 0.0)/curvatures.size();
+
+                for(const auto &it: curvatures)
+                    curv_sigma += pow(it - av_curvature,2);
+                curv_sigma = sqrt(curv_sigma/curvatures.size());
+
             }
+            const auto [curv_min, curv_max] = std::minmax_element(begin(curvatures), end(curvatures));
             std::cout << "Average curvature: " << av_curvature << " 1/m"<< std::endl;
             path_data["av_curv"]  = av_curvature;
+            path_data["std_dev_curv"]   = curv_sigma;
+            path_data["min_curv"]  = *curv_min;
+            path_data["max_curv"]  = *curv_max;
 
             auto adjacent_path    = utils::geometry::getAdjacentPath(path, *algorithm_->getInnerWorld());
             auto result_distances = getClosestObstaclesToPathPoints(adjacent_path);
