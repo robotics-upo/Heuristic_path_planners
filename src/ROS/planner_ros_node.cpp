@@ -134,6 +134,22 @@ private:
             }catch(std::bad_variant_access const& ex){
                 std::cerr << "Bad variant error: " << ex.what() << std::endl;
             }
+            std::vector<double> curvatures;
+            double av_curvature{0};
+            for(size_t i = 1; i < path.size() - 2; ++i){
+                double R = utils::geometry::getCircunferenceRadius(path[i-1], path[i], path[i+1]);
+                if ( R != std::numeric_limits<double>::infinity() ){
+                    curvatures.push_back(1/R);
+                }else{
+                    curvatures.push_back(0);
+                }
+            }
+            
+            if ( curvatures.size() > 0 ){
+                av_curvature = std::accumulate(curvatures.begin(), curvatures.end(), 0.0)/curvatures.size();
+            }
+            std::cout << "Average curvature: " << av_curvature << " 1/m"<< std::endl;
+            path_data["av_curv"]  = av_curvature;
 
             auto adjacent_path    = utils::geometry::getAdjacentPath(path, *algorithm_->getInnerWorld());
             auto result_distances = getClosestObstaclesToPathPoints(adjacent_path);

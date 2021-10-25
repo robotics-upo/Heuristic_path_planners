@@ -63,19 +63,77 @@ namespace Planners
                 return adjacent_path;
             }
 
-            inline int dotProduct(const Vec3i &_v1, const Vec3i &_v2){
-                return _v1.x * _v2.x + _v1.y * _v2.y + _v1.z * _v2.z;
-            }
             inline double moduleVector(const Vec3i &_v){
                 return sqrt( _v.x * _v.x + _v.y * _v.y + _v.z * _v.z);
             }
-
+            
             double angleBetweenThreePoints(const Vec3i &_v1, const Vec3i &_v2, const Vec3i &_v3){
+                return angleBetweenThreePoints(_v1.toEigen(), _v2.toEigen(), _v3.toEigen());
+            }
+            double angleBetweenThreePoints(const Eigen::Vector3d &_v1, const Eigen::Vector3d &_v2, const Eigen::Vector3d &_v3){
 
-                auto z1 = ( _v1 - _v2 );
-                auto z2 = ( _v3 - _v2 );
+                Eigen::Vector3d z1 = ( _v1 - _v2 );
+                Eigen::Vector3d z2 = ( _v3 - _v2 );
+                z1.normalize();
+                z2.normalize();
 
-                return  std::acos(dotProduct(z1, z2) / (moduleVector(z1) * moduleVector(z2)) );
+                return  std::acos( z1.dot(z2) );
+            }
+
+            double getCircunferenceRadius(const Vec3i &_v1, const Vec3i &_v2, const Vec3i &_v3){
+                return getCircunferenceRadius(_v1.toEigen(), _v2.toEigen(), _v3.toEigen());
+            }
+            double getCircunferenceRadius(const Eigen::Vector3d &_v1, const Eigen::Vector3d &_v2, const Eigen::Vector3d &_v3){
+            
+                Eigen::Vector3d PQ = _v2 - _v1;
+                Eigen::Vector3d PR = _v3 - _v1;
+                Eigen::Vector3d n = PQ.cross(PR);   
+
+                if ( n.norm() == 0){
+                    // std::cerr << "Error, given vector are colinears so the solution is not defined" << std::endl;
+                    return std::numeric_limits<double>::infinity();;
+                }
+
+                PQ.normalize();
+                PR.normalize();
+                n.normalize();
+
+                Eigen::Vector3d e1 = n.cross(PQ);
+                Eigen::Vector3d e2 = PQ;
+                Eigen::Vector3d e3 = n;
+                e1.normalize();
+                e2.normalize();
+                e3.normalize();
+
+                Eigen::Matrix3d m;
+                m << e1 , e2, e3;
+
+                Eigen::Vector3d Pn = m.inverse() * _v1;
+                Eigen::Vector3d Qn = m.inverse() * _v2;
+                Eigen::Vector3d Rn = m.inverse() * _v3;
+
+                Eigen::MatrixXd M(3,3);
+
+                M << Pn(0), Pn(1), 1,
+                     Qn(0), Qn(1), 1,
+                     Rn(0), Rn(1), 1;
+
+                double d1 = Pn(0)*Pn(0) + Pn(1)*Pn(1);
+                double d2 = Qn(0)*Qn(0) + Qn(1)*Qn(1);
+                double d3 = Rn(0)*Rn(0) + Rn(1)*Rn(1);
+                Eigen::Vector3d D(-1 * d1, -1*d2, -1*d3 );
+
+                Eigen::FullPivLU<Eigen::Matrix3d> lu(M);
+                lu.setThreshold(1e-4);
+                Eigen::Vector3d result = lu.solve(D);
+
+                double x0 = -result(0)/2;
+                double y0 = -result(1)/2;
+                double R  = sqrt(x0*x0 + y0*y0 - result(2));
+                // std::cout << "X0,Y0: " << x0 << ", " << y0 << std::endl;
+                // std::cout << "R: " << R << std::endl;
+
+                return R;
             }
 
         }

@@ -17,6 +17,7 @@
 #include <variant>
 #include <math.h>
 #include <memory>
+#include <Eigen/Dense>
 
 namespace Planners
 {
@@ -154,6 +155,10 @@ namespace Planners
             inline Vec3i operator*(int &_mult) const
             {
                 return {this->x * _mult, this->y * _mult, this->z * _mult };
+            }
+
+            Eigen::Vector3d toEigen() const{
+                return Eigen::Vector3d(x, y, y);
             }
 
         };

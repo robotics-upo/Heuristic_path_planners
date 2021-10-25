@@ -13,6 +13,7 @@
 #include <iostream>
 #include <vector>
 #include <math.h>
+#include <Eigen/Dense>
 
 #include "utils/utils.hpp"
 #include "utils/LineOfSight.hpp"
@@ -82,6 +83,12 @@ namespace Planners
             double moduleVector(const Vec3i &_v);
 
             double angleBetweenThreePoints(const Vec3i &_v1, const Vec3i &_v2, const Vec3i &_v3);
+
+            double angleBetweenThreePoints(const Eigen::Vector3d &_v1, const Eigen::Vector3d &_v2, const Eigen::Vector3d &_v3);
+
+            double getCircunferenceRadius(const Vec3i &_v1, const Vec3i &_v2, const Vec3i &_v3);
+
+            double getCircunferenceRadius(const Eigen::Vector3d &_v1, const Eigen::Vector3d &_v2, const Eigen::Vector3d &_v3);
             
         }//namespace geometry
     }//namespace utils

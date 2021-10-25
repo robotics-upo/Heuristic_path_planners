@@ -47,6 +47,8 @@ if(BUILD_ROS_SUPPORT)
     octomap_ros
     costmap_2d
   )
+  #Eigen is used to calculate metrics parameters
+  find_package (Eigen3 REQUIRED NO_MODULE)
   
   if(BUILD_DEBUG)
     add_definitions(-DPUB_EXPLORED_NODES)
@@ -154,7 +156,7 @@ list(APPEND ${PROJECT_NAME}_TARGETS ${${PROJECT_NAME}_LIBRARIES})
 if(BUILD_ROS_SUPPORT)
   add_executable(planner_ros_node src/ROS/planner_ros_node.cpp )
   add_dependencies(planner_ros_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_LIBRARIES})
-  target_link_libraries(planner_ros_node ${catkin_LIBRARIES} ${${PROJECT_NAME}_LIBRARIES} -lstdc++fs)
+  target_link_libraries(planner_ros_node ${catkin_LIBRARIES} ${${PROJECT_NAME}_LIBRARIES} -lstdc++fs Eigen3::Eigen)
   list(APPEND ${PROJECT_NAME}_TARGETS planner_ros_node)
 #############
   ## Install ##
