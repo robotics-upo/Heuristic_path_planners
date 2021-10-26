@@ -147,33 +147,12 @@ private:
                 }
             }
 
-            // Angles between three points
-            int changes=0;
-            for(size_t i = 1; i < path.size() - 2; ++i){
-                double alpha = utils::geometry::angleBetweenThreePoints(path[i-1], path[i], path[i+1]);
-                alpha=(3.14159-alpha);
-
-                // if ( alpha != 0 ){
-                if ( (alpha > 0.034906585) || (alpha < -0.034906585) ){ // Two degreess
-                    angles.push_back(alpha);
-                    std::cout << "angulo"  << alpha << std::endl;
-                    changes++;
-                    // Compute both distances between path[i-1] and path[i] and path[i] and path[i+1] to measure the distance between changes of angles.
-                }
-                else{
-                    //angles.push_back(0);
-                    // std::cout << "Recta"  << std::endl;
-                }
-            }
-
-            //std::cout << "Changes" << changes  << std::endl;
-
             if ( curvatures.size() > 0 ){
                 av_curvature = std::accumulate(curvatures.begin(), curvatures.end(), 0.0)/curvatures.size();
 
                 for(const auto &it: curvatures)
                     curv_sigma += pow(it - av_curvature,2);
-                    curv_sigma = sqrt(curv_sigma/curvatures.size());
+                curv_sigma = sqrt(curv_sigma/curvatures.size());
 
             }
             const auto [curv_min, curv_max] = std::minmax_element(begin(curvatures), end(curvatures));
@@ -184,12 +163,24 @@ private:
             path_data["max_curv"]  = *curv_max;
 
             // Angles between three points
+            int changes=0;
+            for(size_t i = 1; i < path.size() - 2; ++i){
+                double alpha = (M_PI - utils::geometry::angleBetweenThreePoints(path[i-1], path[i], path[i+1]));
+
+                if ( alpha > 2/180.0*M_PI || 
+                     alpha < -2/180*M_PI  ){ // Two degreess
+                    angles.push_back(alpha);
+                    changes++;
+                }
+            }
+
+            // Angles between three points
             if ( angles.size() > 0 ){
                 av_angles = std::accumulate(angles.begin(), angles.end(), 0.0)/angles.size();
 
                 for(const auto &it: angles)
                     angles_sigma += pow(it - av_angles,2);
-                    angles_sigma = sqrt(angles_sigma/angles.size());
+                angles_sigma = sqrt(angles_sigma/angles.size());
 
             }
             const auto [angles_min, angles_max] = std::minmax_element(begin(angles), end(angles));
@@ -198,7 +189,7 @@ private:
             path_data["std_dev_angles"]   = angles_sigma;
             path_data["min_angle"]  = *angles_min;
             path_data["max_angle"]  = *angles_max;         
-            path_data["angle_cnanges"]  = changes;
+            path_data["angle_changes"]  = changes;
             ///////////////////////////////////////////////////////////////////////////////////////////////  
 
             auto adjacent_path    = utils::geometry::getAdjacentPath(path, *algorithm_->getInnerWorld());
@@ -230,9 +221,11 @@ private:
             if(save_data_){
                 utils::DataVariantSaver saver1(data_folder_ + "/planning.txt");
                 utils::DataVariantSaver saver2(data_folder_ + "/path_metrics.txt");
+                utils::DataVariantSaver angles_saver(data_folder_ + "/angles.txt");
 
                 if(saver1.savePathDataToFile(path_data) && 
-                   saver2.savePathDistancesToFile(adjacent_path, result_distances)){
+                   saver2.savePathDistancesToFile(adjacent_path, result_distances) &&
+                   angles_saver.saveAnglesToFile(angles) ){
                     ROS_INFO("Path data metrics saved");
                 }else{
                     ROS_ERROR("Couldn't save path data metrics. Path and results does not have same size");

@@ -65,7 +65,8 @@ namespace Planners
                             {"algorithm", "goal_coords", "start_coords", "time_spent",
                              "explored_nodes", "path_length", "total_cost", "h_cost", "g_cost", "c_cost", "grid_cost", "g_final_node",
                              "line_of_sight_checks", "min_dist", "max_dist", "mean_dist", "std_dev",
-                             "solved", "cost_weight","max_line_of_sight_cells", "av_curv", "std_dev_curv", "min_curv", "max_curv", "av_angles", "std_dev_angles", "min_angle", "max_angle", "angle_cnanges" }): fields_(_fields), data_file_(_data_file)
+                             "solved", "cost_weight","max_line_of_sight_cells", "av_curv", "std_dev_curv", "min_curv", "max_curv", 
+                             "av_angles", "std_dev_angles", "min_angle", "max_angle", "angle_changes" }): fields_(_fields), data_file_(_data_file)
             {
 
             }
@@ -120,6 +121,21 @@ namespace Planners
                 out_file_data_.close();
 
                 return true;
+            }
+            bool saveAnglesToFile(const std::vector<double> &_angles){
+
+                out_file_data_.open(data_file_, std::ofstream::app);
+                if ( _angles.size() == 0 )
+                    return true;
+                
+                for(size_t i = 0; i < _angles.size() - 1; ++i)
+                    out_file_data_ << _angles[i] << ", ";
+
+                out_file_data_ << _angles[static_cast<size_t>(_angles.size() - 1)] << std::endl;
+
+                out_file_data_.close();
+
+                return true;    
             }
 
         private:
