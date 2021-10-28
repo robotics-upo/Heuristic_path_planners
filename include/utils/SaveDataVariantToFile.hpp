@@ -60,13 +60,12 @@ namespace Planners
              * @param _fields A std::vector<std::string> of fields to look for on the input map. The default values 
              * are: algorithm, goal_coords, start_coords, time_spent, explored_nodes, path_length, line_of_sight_checks and solved
              */
-            DataVariantSaver(const std::string &_data_file, 
-                             const std::vector<std::string> &_fields =
+            DataVariantSaver(const std::vector<std::string> &_fields =
                             {"algorithm", "goal_coords", "start_coords", "time_spent",
                              "explored_nodes", "path_length", "total_cost", "h_cost", "g_cost", "c_cost", "grid_cost", "g_final_node",
                              "line_of_sight_checks", "min_dist", "max_dist", "mean_dist", "std_dev",
                              "solved", "cost_weight","max_line_of_sight_cells", "av_curv", "std_dev_curv", "min_curv", "max_curv", 
-                             "av_angles", "std_dev_angles", "min_angle", "max_angle", "angle_changes" }): fields_(_fields), data_file_(_data_file)
+                             "av_angles", "std_dev_angles", "min_angle", "max_angle", "angle_changes" }): fields_(_fields)
             {
 
             }
@@ -77,14 +76,14 @@ namespace Planners
              * @return true Always returns true at this version
              * @return false Never returns false right now
              */
-            bool savePathDataToFile(const PathData &_data)
+            bool savePathDataToFile(const PathData &_data, const std::string &_file_path)
             {
                 if( ! fs::exists(data_file_) ){ //If file does not exist, write a header with field names
                     std::cout << "File does not exists. Creating header at first line" << std::endl;   
-                    out_file_data_.open(data_file_, std::ofstream::app);
+                    out_file_data_.open(_file_path, std::ofstream::app);
                     out_file_data_ << fields_ << std::endl;
                 }else{
-                    out_file_data_.open(data_file_, std::ofstream::app);
+                    out_file_data_.open(_file_path, std::ofstream::app);
                 }
                 for (auto &it : fields_)
                 {
@@ -106,9 +105,10 @@ namespace Planners
                 return true;
             }
             bool savePathDistancesToFile(const utils::CoordinateList &_path,
-                                         const std::vector<std::pair<utils::Vec3i, double>> &_results){
+                                         const std::vector<std::pair<utils::Vec3i, double>> &_results,
+                                         const std::string &_file_path){
                 
-                out_file_data_.open(data_file_, std::ofstream::app);
+                out_file_data_.open(_file_path, std::ofstream::app);
 
                 if( _path.size() != _results.size() )
                     return false;
@@ -122,9 +122,10 @@ namespace Planners
 
                 return true;
             }
-            bool saveAnglesToFile(const std::vector<double> &_angles){
+            bool saveAnglesToFile(const std::vector<double> &_angles, 
+                                  const std::string &_file_path){
 
-                out_file_data_.open(data_file_, std::ofstream::app);
+                out_file_data_.open(_file_path, std::ofstream::app);
                 if ( _angles.size() == 0 )
                     return true;
                 

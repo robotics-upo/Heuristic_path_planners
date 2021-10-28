@@ -125,6 +125,7 @@ list(APPEND ${PROJECT_NAME}_UTILS_SOURCES src/utils/geometry_utils.cpp
                                           src/utils/heuristic.cpp
                                           src/utils/LineOfSight.cpp
                                           src/utils/utils.cpp       
+                                          src/utils/metrics.cpp       
                                           )
 if(BUILD_ROS_SUPPORT)
 list(APPEND ${PROJECT_NAME}_UTILS_SOURCES src/utils/ros/ROSInterfaces.cpp)

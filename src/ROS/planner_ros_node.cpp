@@ -13,6 +13,7 @@
 #include "utils/SaveDataVariantToFile.hpp"
 #include "utils/misc.hpp"
 #include "utils/geometry_utils.hpp"
+#include "utils/metrics.hpp"
 
 #include "Grid3D/grid3d.hpp"
 
@@ -134,98 +135,43 @@ private:
             }catch(std::bad_variant_access const& ex){
                 std::cerr << "Bad variant error: " << ex.what() << std::endl;
             }
-            std::vector<double> curvatures, angles;
-            double av_curvature{0}, av_angles{0};
-            double curv_sigma{0}, angles_sigma{0};
-            for(size_t i = 1; i < path.size() - 2; ++i){
-                double R = utils::geometry::getCircunferenceRadius(path[i-1], path[i], path[i+1]);
-                if ( R != std::numeric_limits<double>::infinity() ){
-                    curvatures.push_back(1/R);
-                }
-                else{
-                    curvatures.push_back(0);
-                }
-            }
 
-            if ( curvatures.size() > 0 ){
-                av_curvature = std::accumulate(curvatures.begin(), curvatures.end(), 0.0)/curvatures.size();
+            const auto [av_curvature, curv_sigma, curv_min, curv_max] = utils::metrics::calculatePathCurvature(path);
 
-                for(const auto &it: curvatures)
-                    curv_sigma += pow(it - av_curvature,2);
-                curv_sigma = sqrt(curv_sigma/curvatures.size());
+            const auto [av_angles, angles_sigma, angles_min, angles_max, changes, angles] = utils::metrics::calculatePathAnglesMetrics(path, 2);
 
-            }
-            const auto [curv_min, curv_max] = std::minmax_element(begin(curvatures), end(curvatures));
-            // std::cout << "Average curvature: " << av_curvature << " 1/m"<< std::endl;
-            path_data["av_curv"]  = av_curvature;
+            const auto adjacent_path    = utils::geometry::getAdjacentPath(path, *algorithm_->getInnerWorld());
+            const auto result_distances = getClosestObstaclesToPathPoints(adjacent_path);
+            const auto [mean_dist, dist_stddev, min_dist, max_dist] = utils::metrics::calculateDistancesMetrics(result_distances );
+
+            path_data["av_curv"]        = av_curvature;
             path_data["std_dev_curv"]   = curv_sigma;
-            path_data["min_curv"]  = *curv_min;
-            path_data["max_curv"]  = *curv_max;
+            path_data["min_curv"]       = curv_min;
+            path_data["max_curv"]       = curv_max;
 
-            // Angles between three points
-            int changes=0;
-            for(size_t i = 1; i < path.size() - 2; ++i){
-                double alpha = (M_PI - utils::geometry::angleBetweenThreePoints(path[i-1], path[i], path[i+1]));
-
-                if ( alpha > 2/180.0*M_PI || 
-                     alpha < -2/180*M_PI  ){ // Two degreess
-                    angles.push_back(alpha);
-                    changes++;
-                }
-            }
-
-            // Angles between three points
-            if ( angles.size() > 0 ){
-                av_angles = std::accumulate(angles.begin(), angles.end(), 0.0)/angles.size();
-
-                for(const auto &it: angles)
-                    angles_sigma += pow(it - av_angles,2);
-                angles_sigma = sqrt(angles_sigma/angles.size());
-
-            }
-            const auto [angles_min, angles_max] = std::minmax_element(begin(angles), end(angles));
-            std::cout << "Average angles: " << av_angles << " 1/m"<< std::endl;
-            path_data["av_angles"]  = av_angles;
-            path_data["std_dev_angles"]   = angles_sigma;
-            path_data["min_angle"]  = *angles_min;
-            path_data["max_angle"]  = *angles_max;         
+            path_data["av_angles"]      = av_angles;
+            path_data["std_dev_angles"] = angles_sigma;
+            path_data["min_angle"]      = angles_min;
+            path_data["max_angle"]      = angles_max;         
             path_data["angle_changes"]  = changes;
-            ///////////////////////////////////////////////////////////////////////////////////////////////  
 
-            auto adjacent_path    = utils::geometry::getAdjacentPath(path, *algorithm_->getInnerWorld());
-            auto result_distances = getClosestObstaclesToPathPoints(adjacent_path);
+            path_data["mean_dist"]      = mean_dist;
+            path_data["std_dev"]        = dist_stddev;
+            path_data["min_dist"]       = min_dist;
+            path_data["max_dist"]       = max_dist;
 
-            std::vector<double> distances; 
-            double sigma = 0;
-            for(auto &it: result_distances)
-                distances.push_back(it.second);
+            _rep.n_points.data                   = adjacent_path.size();
+            _rep.mean_distance_to_obstacle.data  = mean_dist;
+            _rep.mean_std_dev_to_obstacle.data   = dist_stddev;
+            _rep.min_distance_to_obstacle.data   = min_dist;
+            _rep.max_distance_to_obstacle.data   = max_dist;
 
-            const auto [min, max] = std::minmax_element(begin(distances), end(distances));
-            double mean = std::accumulate(distances.begin(), distances.end(), 0.0)/distances.size();
-
-            for(const auto &it: distances)
-                sigma += pow(it - mean,2);
-            sigma = sqrt(sigma/distances.size());
-
-            _rep.n_points.data   = adjacent_path.size();
-            _rep.min_distance_to_obstacle.data   = *min;
-            _rep.max_distance_to_obstacle.data   = *max;
-            _rep.mean_distance_to_obstacle.data  = mean;
-            _rep.mean_std_dev_to_obstacle.data   = sigma;
-
-            path_data["min_dist"]  = *min;
-            path_data["max_dist"]  = *max;
-            path_data["mean_dist"] = mean;
-            path_data["std_dev"]   = sigma;
-            
             if(save_data_){
-                utils::DataVariantSaver saver1(data_folder_ + "/planning.txt");
-                utils::DataVariantSaver saver2(data_folder_ + "/path_metrics.txt");
-                utils::DataVariantSaver angles_saver(data_folder_ + "/angles.txt");
+                utils::DataVariantSaver saver;
 
-                if(saver1.savePathDataToFile(path_data) && 
-                   saver2.savePathDistancesToFile(adjacent_path, result_distances) &&
-                   angles_saver.saveAnglesToFile(angles) ){
+                if(saver.savePathDataToFile(path_data, data_folder_ + "/planning.txt") && 
+                   saver.savePathDistancesToFile(adjacent_path, result_distances, data_folder_ + "/path_metrics.txt") &&
+                   saver.saveAnglesToFile(angles, data_folder_ + "/angles.txt") ){
                     ROS_INFO("Path data metrics saved");
                 }else{
                     ROS_ERROR("Couldn't save path data metrics. Path and results does not have same size");
@@ -233,7 +179,6 @@ private:
             }
 
             for(const auto &it: std::get<CoordinateList>(path_data["path"])){
-                // _rep.path_points.push_back(continousPoint(it, resolution_));
                 path_line_markers_.points.push_back(continousPoint(it, resolution_));
                 path_points_markers_.points.push_back(continousPoint(it, resolution_));
             }
