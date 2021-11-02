@@ -87,7 +87,8 @@ void AStarGenerator::publishOccupationMarkersMap()
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
-void AStarGenerator::publishROSDebugData(const Node* _node, const NodeSet &_open_set, const NodeSet &_closed_set)
+template<typename T, typename U>
+void AStarGenerator::publishROSDebugData(const Node* _node, const T &_open_set, const U &_closed_set)
 {
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)
 
@@ -178,7 +179,8 @@ void AStarGenerator::exploreNeighbours(Node* _current, const Vec3i &_target,Node
 PathData AStarGenerator::findPath(const Vec3i &_source, const Vec3i &_target)
 {
     Node *current = nullptr;
-    NodeSet openSet, closedSet;
+    NodeSet openSet;
+    std::vector<Node*> closedSet;
     bool solved{false};
 
     openSet.insert(discrete_world_.getNodePtr(_source));
@@ -197,13 +199,14 @@ PathData AStarGenerator::findPath(const Vec3i &_source, const Vec3i &_target)
         if (current->coordinates == _target) { solved = true; break; }
         
         openSet.erase(openSet.begin());
-        closedSet.insert(current);
+        // closedSet.insert(current);
+        closedSet.push_back(current);
 
         discrete_world_.setOpenValue(*current, false);
         discrete_world_.setClosedValue(*current, true);
 
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)
-        publishROSDebugData(current, openSet, closedSet);
+        publishROSDebugData<NodeSet, std::vector<Node*>>(current, openSet, closedSet);
 #endif
 
         exploreNeighbours(current, _target, openSet);     

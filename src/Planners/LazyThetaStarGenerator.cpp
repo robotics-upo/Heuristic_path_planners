@@ -50,7 +50,8 @@ namespace Planners
     PathData LazyThetaStarGenerator::findPath(const Vec3i &_source, const Vec3i &_target)
     {
         Node *current = nullptr;
-        NodeSet openSet, closedSet;
+        NodeSet openSet;
+        std::vector<Node*> closedSet;
         bool solved{false};
 
         openSet.insert(discrete_world_.getNodePtr(_source));
@@ -75,7 +76,8 @@ namespace Planners
             }
 
             openSet.erase(openSet.begin());
-            closedSet.insert(current);
+            // closedSet.insert(current);
+            closedSet.push_back(current);
 
             discrete_world_.setOpenValue(*current, false);
             discrete_world_.setClosedValue(*current, true);
