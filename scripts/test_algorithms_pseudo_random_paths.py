@@ -123,7 +123,7 @@ while success_iterations < int(args.iterations[0]):
         text_marker.text = "\nTime spent: " + str(resp.time_spent.data) + " ms"
         markerPub.publish(text_marker)
         rospy.sleep(2)
-        
+        success_iterations += 1
     except rospy.ServiceException as e:
         print("Service call failed: %s" %e)
 
