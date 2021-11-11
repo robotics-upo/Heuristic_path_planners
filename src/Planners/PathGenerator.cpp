@@ -112,8 +112,18 @@ namespace Planners
         unsigned int total_G{0};
         unsigned int total_C{0};
         unsigned int total_grid_cost{0};
-
-        for(const auto &it: adjacent_path){
+        for(size_t i = 0; i < adjacent_path.size() - 1; ++i){
+            auto node = discrete_world_.getNodePtr(adjacent_path[i]);
+            if( node == nullptr )
+                continue;
+            
+            total_H         += node->H;
+            total_C         += node->C;
+            total_grid_cost += node->cost; 
+            total_G         += utils::geometry::distanceBetween2Nodes(adjacent_path[i], adjacent_path[i+1]);              
+        }
+        total_cost = total_G + total_H + total_C;
+        /*for(const auto &it: adjacent_path){
             auto node = discrete_world_.getNodePtr(it);
             if( node == nullptr )
                 continue;
@@ -123,7 +133,7 @@ namespace Planners
             total_C +=  node->C;
             total_grid_cost +=  node->cost;
             total_cost += g_real + node->H + node->C;
-        }
+        }*/
 
         result_data["algorithm"]               = algorithm_name_;
         result_data["path"]                    = path;
