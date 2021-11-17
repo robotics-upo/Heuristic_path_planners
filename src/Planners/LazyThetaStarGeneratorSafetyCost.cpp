@@ -29,15 +29,21 @@ namespace Planners
                 
                 // Be careful with castings here. Its already checked before and after is the same result.
                 //TODO Add comment explaining the "100" in the equation
+                // G_new  = static_cast<unsigned int>(  successor2-> G + dist +  
+                // ( static_cast<double>(_s_aux->cost) + static_cast<double>(successor2->cost) ) / ( 2 * 100 ) * dist);
+
+                // CONMESURABLE
                 G_new  = static_cast<unsigned int>(  successor2-> G + dist +  
-                ( static_cast<double>(_s_aux->cost) + static_cast<double>(successor2->cost) ) / ( 2 * 100 ) * dist);
+                ( static_cast<double>(_s_aux->cost) + static_cast<double>(successor2->cost) ) / 2);
 
                 if (G_new < G_max)
                 {
                     G_max = G_new;
                     _s_aux->parent = successor2;
                     _s_aux->G = G_new;
-                    _s_aux->C = static_cast<double>(_s_aux->cost) + static_cast<double>(successor2->cost) / ( 2 * 100 ) * dist;
+                    // _s_aux->C = static_cast<double>(_s_aux->cost) + static_cast<double>(successor2->cost) / ( 2 * 100 ) * dist;
+                    // CONMESURABLE
+                    _s_aux->C = (static_cast<double>(_s_aux->cost) + static_cast<double>(successor2->cost)) / 2;
                 }
             }
         }
@@ -75,8 +81,12 @@ namespace Planners
             cost = (_n_i < 6 ? dist_scale_factor_ : (_n_i < 18 ? dd_2D_ : dd_3D_)); //This is more efficient
         }
 
-        double bb = static_cast<double>( static_cast<double>(_suc->cost) / (static_cast<double>(cost) / static_cast<double>(dist_scale_factor_)) );
-        auto edge_neighbour = static_cast<unsigned int>( ( ( ( _current->cost + bb ) / ( 2 * 100 ) ) * cost ) );
+        // double bb = static_cast<double>( static_cast<double>(_suc->cost) / (static_cast<double>(cost) / static_cast<double>(dist_scale_factor_)) );
+        // auto edge_neighbour = static_cast<unsigned int>( ( ( ( _current->cost + bb ) / ( 2 * 100 ) ) * cost ) );
+
+        // CONMESURABLE
+        double bb = static_cast<double>( static_cast<double>(_suc->cost) );
+        auto edge_neighbour = static_cast<unsigned int>( (( _current->cost + bb )/2) *  cost_weight_); 
     
         cost += ( _current->G + edge_neighbour );
 

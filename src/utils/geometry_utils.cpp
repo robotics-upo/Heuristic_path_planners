@@ -32,6 +32,20 @@ namespace Planners
                                                                            pow(_v1.y - _v2.y, 2) +
                                                                            pow(_v1.z - _v2.z, 2)));
             }
+            unsigned int NodesBetween2Nodes(const Node &_n1, const Node &_n2)
+            {
+                return NodesBetween2Nodes(_n1.coordinates, _n2.coordinates);
+            }
+            unsigned int NodesBetween2Nodes(const Node *_n1, const Node *_n2)
+            {
+                return NodesBetween2Nodes(*_n1, *_n2);
+            }
+            unsigned int NodesBetween2Nodes(const Vec3i &_v1, const Vec3i &_v2)
+            {
+                return static_cast<unsigned int>(sqrt(pow(_v1.x - _v2.x, 2) +
+                                                      pow(_v1.y - _v2.y, 2) +
+                                                      pow(_v1.z - _v2.z, 2)));
+            }
             Vec3i abs(const Vec3i &_vec)
             {
                 return { std::abs(_vec.x), std::abs(_vec.y), std::abs(_vec.z) };

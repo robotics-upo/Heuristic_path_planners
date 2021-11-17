@@ -67,18 +67,28 @@ namespace Planners
         
         if( n_checked_nodes > 1){
             // mean_dist_cost = ( ( ( cost_origin - cost_goal ) / 2 + dist_cost ) / ( n_checked_nodes * dist_max ) ); //A
-            mean_dist_cost = ( ( ( cost_origin - cost_goal ) / 2 + dist_cost ) / ( _dist ) ); //A
+            // mean_dist_cost = ( ( ( cost_origin - cost_goal ) / 2 + dist_cost ) / ( _dist ) ); //A
+            //CONMENSURABLE
+            mean_dist_cost = (( cost_origin - cost_goal ) / 2) + dist_cost;
+            // std::cout << mean_dist_cost  << std::endl;
         }
         else if (n_checked_nodes == 1){
             // mean_dist_cost = ( ( ( cost_origin + cost_goal ) / 2 + dist_cost ) / ( n_checked_nodes * dist_max * dist_max ) ); //A
-            mean_dist_cost = ( ( ( cost_origin + cost_goal ) / 2 + dist_cost ) / ( _dist ) ); //A
+            // mean_dist_cost = ( ( ( cost_origin + cost_goal ) / 2 + dist_cost ) / ( _dist ) ); //A
+            //CONMENSURABLE
+            mean_dist_cost = (( cost_origin + cost_goal ) / 2) + dist_cost;
+            // std::cout << mean_dist_cost  << std::endl;
         }
         else{ 
             // mean_dist_cost = ( cost_origin + cost_goal ) / ( 2 * dist_max);
-            mean_dist_cost = ( cost_origin + cost_goal ) / ( 2 * _dist);
+            // mean_dist_cost = ( cost_origin + cost_goal ) / ( 2 * _dist);
+            //CONMENSURABLE
+            mean_dist_cost = (( cost_origin + cost_goal ) / 2) + dist_cost;
         }
         // std::cout << static_cast<unsigned int>( mean_dist_cost  * _dist * cost_weight_ )  << std::endl;
-        return static_cast<unsigned int>( mean_dist_cost  * _dist * cost_weight_ );        
+        // return static_cast<unsigned int>( mean_dist_cost  * _dist * cost_weight_ );        
+        // CONMENSURABLE
+        return static_cast<unsigned int>( mean_dist_cost * cost_weight_ );
     }
 
     unsigned int ThetaStarGeneratorSafetyCost::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs){
@@ -90,10 +100,14 @@ namespace Planners
         }else{
             cost += (_n_i < 6 ? dist_scale_factor_ : (_n_i < 18 ? dd_2D_ : dd_3D_)); //This is more efficient
         }
-        double bb = static_cast<double>( static_cast<double>(_suc->cost) / (static_cast<double>(cost) / static_cast<double>(dist_scale_factor_)) );
 
-        auto edge_neighbour = static_cast<unsigned int>( ( ( ( _current->cost + bb ) / ( 2 * 100 ) ) * cost ) );
+        // double bb = static_cast<double>( static_cast<double>(_suc->cost) / (static_cast<double>(cost) / static_cast<double>(dist_scale_factor_)) );
+        // auto edge_neighbour = static_cast<unsigned int>( ( ( ( _current->cost + bb ) / ( 2 * 100 ) ) * cost ) );
         
+        //CONMENSURABLE
+        double bb = static_cast<double>( static_cast<double>(_suc->cost) );
+        auto edge_neighbour = static_cast<unsigned int>( (( _current->cost + bb )/2) *  cost_weight_); 
+
         cost += _current->G;
         cost += edge_neighbour;
         _suc->C = edge_neighbour;

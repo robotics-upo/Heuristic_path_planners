@@ -25,13 +25,15 @@ namespace Planners
                     Node *successor2 = discrete_world_.getNodePtr(newCoordinates);
                     if (successor2 == nullptr) continue;
 
-                    G_new = successor2->G +  geometry::distanceBetween2Nodes(successor2, _s_aux) + static_cast<unsigned int>(cost_weight_ * successor2->cost);
+                    // G_new = successor2->G +  geometry::distanceBetween2Nodes(successor2, _s_aux) + static_cast<unsigned int>(cost_weight_ * successor2->cost);
+                    // CONMENSURABLE
+                    G_new = successor2->G +  geometry::distanceBetween2Nodes(successor2, _s_aux) + static_cast<unsigned int>(cost_weight_ * successor2->cost) * (geometry::NodesBetween2Nodes(successor2, _s_aux)); 
                     if (G_new < G_max)
                     {
                         G_max = G_new;
                         _s_aux->parent = successor2;
                         _s_aux->G = G_new;
-                        _s_aux->C = static_cast<unsigned int>(cost_weight_ * successor2->cost);
+                        _s_aux->C = static_cast<unsigned int>(cost_weight_ * successor2->cost) * (geometry::NodesBetween2Nodes(successor2, _s_aux));
                     }
                 }
             }
@@ -40,12 +42,18 @@ namespace Planners
     void CostAwareLazyThetaStarGenerator::ComputeCost(Node *_s_aux, Node *_s2_aux)
     {
         auto distanceParent2 = geometry::distanceBetween2Nodes(_s_aux->parent, _s2_aux);
+        auto distanceParent2_nodes = geometry::NodesBetween2Nodes(_s_aux->parent, _s2_aux);
 
-        if ((_s_aux->parent->G + distanceParent2 + static_cast<unsigned int>(cost_weight_ * _s2_aux->cost)) < (_s2_aux->G))
+        if ((_s_aux->parent->G + distanceParent2 + static_cast<unsigned int>(cost_weight_ * _s2_aux->cost)*distanceParent2_nodes) < (_s2_aux->G))
         {
+            // _s2_aux->parent = _s_aux->parent;
+            // _s2_aux->G = _s2_aux->parent->G + geometry::distanceBetween2Nodes(_s2_aux->parent, _s2_aux) +  static_cast<unsigned int>(cost_weight_ * _s2_aux->cost);
+            // _s2_aux->C = static_cast<unsigned int>(cost_weight_ * _s2_aux->cost);
+
+            // CONMENSURABLES
             _s2_aux->parent = _s_aux->parent;
-            _s2_aux->G = _s2_aux->parent->G + geometry::distanceBetween2Nodes(_s2_aux->parent, _s2_aux) +  static_cast<unsigned int>(cost_weight_ * _s2_aux->cost);
-            _s2_aux->C = static_cast<unsigned int>(cost_weight_ * _s2_aux->cost);
+            _s2_aux->G = _s2_aux->parent->G + geometry::distanceBetween2Nodes(_s2_aux->parent, _s2_aux) +  static_cast<unsigned int>(cost_weight_ * _s2_aux->cost) * distanceParent2_nodes;
+            _s2_aux->C = static_cast<unsigned int>(cost_weight_ * _s2_aux->cost) * distanceParent2_nodes;
         
         }
     }

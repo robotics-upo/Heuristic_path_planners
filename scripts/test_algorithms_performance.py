@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from os import listdir, getpid, system
+from os import listdir
 from os.path import isfile, join
 import argparse
 import numpy as np
@@ -14,9 +14,6 @@ import rosparam
 from heuristic_planners.srv import *
 from geometry_msgs.msg import Point
 from visualization_msgs.msg import Marker
-
-pid = getpid()
-system("sudo renice -20 -p " + str(pid))
 
 uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
 

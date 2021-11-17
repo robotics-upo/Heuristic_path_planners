@@ -123,9 +123,11 @@ private:
                 _rep.explored_nodes.data       = std::get<size_t>(path_data["explored_nodes"] );
                 _rep.line_of_sight_checks.data = std::get<unsigned int>(path_data["line_of_sight_checks"] );
 
-                _rep.total_cost.data           = std::get<unsigned int>(path_data["total_cost"] );
+                _rep.total_cost1.data           = std::get<unsigned int>(path_data["total_cost1"] );
+                _rep.total_cost2.data           = std::get<unsigned int>(path_data["total_cost2"] );
                 _rep.h_cost.data               = std::get<unsigned int>(path_data["h_cost"]);
-                _rep.g_cost.data               = std::get<unsigned int>(path_data["g_cost"]);
+                _rep.g_cost1.data               = std::get<unsigned int>(path_data["g_cost1"]);
+                _rep.g_cost2.data               = std::get<unsigned int>(path_data["g_cost2"]);
                 _rep.c_cost.data               = std::get<unsigned int>(path_data["c_cost"]);
 
                 _rep.cost_weight.data          = std::get<double>(path_data["cost_weight"]);

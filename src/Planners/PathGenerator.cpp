@@ -83,6 +83,7 @@ namespace Planners
             }
         }
     }
+
     PathData PathGenerator::createResultDataObject(const Node* _last, utils::Clock &_timer, 
                                                     const size_t _explored_nodes, bool _solved,
                                                     const Vec3i &_start, const unsigned int _sight_checks){
@@ -107,33 +108,45 @@ namespace Planners
 
         auto adjacent_path = utils::geometry::getAdjacentPath(path, discrete_world_);
 
-        unsigned int total_cost{0};
+        unsigned int total_cost1{0};
+        unsigned int total_cost2{0};
         unsigned int total_H{0};
-        unsigned int total_G{0};
+        unsigned int total_G1{0};
+        unsigned int total_G2{0};
         unsigned int total_C{0};
-        unsigned int total_grid_cost{0};
+        unsigned int total_grid_cost1{0};
+        unsigned int total_grid_cost2{0};
+
         for(size_t i = 0; i < adjacent_path.size() - 1; ++i){
-            auto node = discrete_world_.getNodePtr(adjacent_path[i]);
+            auto node_current = discrete_world_.getNodePtr(adjacent_path[i]);
+            auto node = discrete_world_.getNodePtr(adjacent_path[i+1]);
             if( node == nullptr )
                 continue;
             
             total_H         += node->H;
             total_C         += node->C;
-            total_grid_cost += node->cost; 
-            total_G         += utils::geometry::distanceBetween2Nodes(adjacent_path[i], adjacent_path[i+1]);              
+            // total_grid_cost1 += cost_weight_ * (node->cost);  // CAA*+M1
+            // total_grid_cost2 += cost_weight_ * ((node->cost + node_current->cost)/2); //CAA*+M2
+
+            total_grid_cost1 = cost_weight_ * (node->cost);  // CAA*+M1
+            total_grid_cost2 = cost_weight_ * ((node->cost + node_current->cost)/2); //CAA*+M2
+       
+            // unsigned int g_real1 = utils::geometry::distanceBetween2Nodes(adjacent_path[i], adjacent_path[i+1]) + cost_weight_ * node->cost;  // Con este M1 y M2 --> Mejores resultados
+            // total_G1 += g_real1;            
+            
+            unsigned int g_real1 = utils::geometry::distanceBetween2Nodes(adjacent_path[i], adjacent_path[i+1]); 
+            // total_G1 += g_real1;            
+            total_G1 += g_real1 + total_grid_cost1;            
+            unsigned int g_real2 = utils::geometry::distanceBetween2Nodes(adjacent_path[i], adjacent_path[i+1]);  // Conmensurable
+            // total_G2 += g_real2;            
+            total_G2 += g_real2 + total_grid_cost2;            
         }
-        total_cost = total_G + total_H + total_C;
-        /*for(const auto &it: adjacent_path){
-            auto node = discrete_world_.getNodePtr(it);
-            if( node == nullptr )
-                continue;
-            unsigned int g_real = node->G - node->C;
-            total_H += node->H;
-            total_G += g_real;
-            total_C +=  node->C;
-            total_grid_cost +=  node->cost;
-            total_cost += g_real + node->H + node->C;
-        }*/
+        
+        // total_cost1 = total_G1 + total_grid_cost1; // With total_grid_cost1 += cost_weight_ * (node->cost);
+        // total_cost2 = total_G2 + total_grid_cost2; // With total_grid_cost2 += cost_weight_ * ((node->cost + node_current->cost)/2);
+
+        total_cost1 = total_G1;
+        total_cost2 = total_G2;
 
         result_data["algorithm"]               = algorithm_name_;
         result_data["path"]                    = path;
@@ -142,11 +155,14 @@ namespace Planners
         result_data["start_coords"]            = _start;
         result_data["path_length"]             = geometry::calculatePathLength(path, discrete_world_.getResolution());
 
-        result_data["total_cost"]              = total_cost;
+        result_data["total_cost1"]              = total_cost1;
+        result_data["total_cost2"]              = total_cost2;
         result_data["h_cost"]                  = total_H;
-        result_data["g_cost"]                  = total_G;
+        result_data["g_cost1"]                  = total_G1;
+        result_data["g_cost2"]                  = total_G2;
         result_data["c_cost"]                  = total_C;
-        result_data["grid_cost"]               = total_grid_cost;
+        result_data["grid_cost1"]               = total_grid_cost1;
+        result_data["grid_cost2"]               = total_grid_cost2;
 
 
         result_data["line_of_sight_checks"]    = _sight_checks;

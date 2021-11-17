@@ -17,8 +17,12 @@ unsigned int AStarGeneratorSafetyCost::computeG(const Node* _current, Node* _suc
     }
 
     //TODO Give bb a more precise name
-    double bb = static_cast<double>( static_cast<double>(_suc->cost) / (static_cast<double>(cost) / static_cast<double>(dist_scale_factor_)) );
-    auto edge_neighbour = static_cast<unsigned int>( ( ( ( _current->cost + bb ) / ( 2 * 100 ) ) * cost ) *  cost_weight_);
+    // double bb = static_cast<double>( static_cast<double>(_suc->cost) / (static_cast<double>(cost) / static_cast<double>(dist_scale_factor_)) );
+    // auto edge_neighbour = static_cast<unsigned int>( ( ( ( _current->cost + bb ) / ( 2 * 100 ) ) * cost ) *  cost_weight_);
+
+    // CONMENSURABLE
+    double bb = static_cast<double>( static_cast<double>(_suc->cost) );
+    auto edge_neighbour = static_cast<unsigned int>( ((_current->cost + bb )/2) *  cost_weight_); 
     
     cost += ( _current->G + edge_neighbour );
 
