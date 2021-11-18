@@ -24,7 +24,7 @@ namespace Planners
             auto dist1   = geometry::distanceBetween2Nodes(_s_aux, _s2_aux);  
             auto edge1   =  ComputeEdgeCost(checked_nodes_current, _s_aux, _s2_aux, dist1);
 
-            if ( ( _s_aux->parent->G + dist2 + edge2 ) <= ( _s_aux->G + dist1 + edge1)) 
+            if ( ( _s_aux->parent->G + dist2 + edge2 ) < ( _s_aux->G + dist1 + edge1)) 
             {
                 _s2_aux->parent = _s_aux->parent;
                 _s2_aux->G      = _s_aux->parent->G + dist2 + edge2;  // This is the same than A*
@@ -33,7 +33,7 @@ namespace Planners
             else{
                 _s2_aux->parent =_s_aux;
                 _s2_aux->G      = _s_aux->G + dist1 + edge1;   // This is the same than A*       
-                _s2_aux->C      = edge1;      
+                _s2_aux->C      = edge1; 
             }
         } else {
 
@@ -53,7 +53,7 @@ namespace Planners
     unsigned int ThetaStarGeneratorSafetyCost::ComputeEdgeCost(const utils::CoordinateListPtr _checked_nodes, const Node* _s, const Node* _s2, unsigned int _dist){ 
         
         //TODO 2 The commented equations of mean_dist_cost calculates it using the dist_max = 100 old factor, the new ones
-        // should be more consistent and reduce explroed nodes and line of sight checks
+        // should be more consistent and reduce explored nodes and line of sight checks
         double dist_cost{0};
         double mean_dist_cost{0};
             
@@ -64,26 +64,28 @@ namespace Planners
 
         double cost_origin    = _s->cost;
         double cost_goal      = _s2->cost;
-        
+        // std::cout << "Nodos: " <<  _checked_nodes->size() << std::endl;
         if( n_checked_nodes > 1){
             // mean_dist_cost = ( ( ( cost_origin - cost_goal ) / 2 + dist_cost ) / ( n_checked_nodes * dist_max ) ); //A
             // mean_dist_cost = ( ( ( cost_origin - cost_goal ) / 2 + dist_cost ) / ( _dist ) ); //A
             //CONMENSURABLE
             mean_dist_cost = (( cost_origin - cost_goal ) / 2) + dist_cost;
-            // std::cout << mean_dist_cost  << std::endl;
+            // std::cout << "mean_dist_cost1: " << mean_dist_cost  << std::endl;
         }
         else if (n_checked_nodes == 1){
             // mean_dist_cost = ( ( ( cost_origin + cost_goal ) / 2 + dist_cost ) / ( n_checked_nodes * dist_max * dist_max ) ); //A
             // mean_dist_cost = ( ( ( cost_origin + cost_goal ) / 2 + dist_cost ) / ( _dist ) ); //A
             //CONMENSURABLE
             mean_dist_cost = (( cost_origin + cost_goal ) / 2) + dist_cost;
-            // std::cout << mean_dist_cost  << std::endl;
+            // std::cout << "mean_dist_cost2: " << mean_dist_cost  << std::endl;
         }
         else{ 
             // mean_dist_cost = ( cost_origin + cost_goal ) / ( 2 * dist_max);
             // mean_dist_cost = ( cost_origin + cost_goal ) / ( 2 * _dist);
             //CONMENSURABLE
-            mean_dist_cost = (( cost_origin + cost_goal ) / 2) + dist_cost;
+            // mean_dist_cost = (( cost_origin + cost_goal ) / 2) + dist_cost;
+            mean_dist_cost = (( cost_origin + cost_goal ) / 2);
+            // std::cout << "mean_dist_cost3: " << mean_dist_cost  << std::endl;
         }
         // std::cout << static_cast<unsigned int>( mean_dist_cost  * _dist * cost_weight_ )  << std::endl;
         // return static_cast<unsigned int>( mean_dist_cost  * _dist * cost_weight_ );        

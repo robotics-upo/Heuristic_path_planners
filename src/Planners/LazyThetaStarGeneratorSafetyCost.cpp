@@ -9,7 +9,7 @@ namespace Planners
     {   
         unsigned int G_max = std::numeric_limits<unsigned int>::max(); 
         unsigned int G_new;
-
+        std::cout << "NO DEBERÍA ENTRAR " << std::endl; 
         //TODO WHat is this value? dist_scale_factor_ ?
         //TODO 2 "scale" does not appear here? 
         // unsigned int dist_max = 100;
@@ -60,9 +60,12 @@ namespace Planners
             los_neighbour_ = true;
 
             auto dist2   = geometry::distanceBetween2Nodes(_s_aux->parent, _s2_aux);
-            auto edge2   = ComputeEdgeCost(checked_nodes, _s_aux, _s2_aux, dist2);
+            // auto edge2   = ComputeEdgeCost(checked_nodes, _s_aux, _s2_aux, dist2);
+            auto edge2   = ComputeEdgeCost(checked_nodes, _s_aux->parent, _s2_aux, dist2);
 
-            if ( ( _s_aux->parent->G + dist2 + edge2 ) < ( _s2_aux->G ) )
+            // std::cout << "mean_dist_cost: " << (edge2/cost_weight_)  << std::endl;          
+
+            if ( ( _s_aux->parent->G + dist2 + edge2 ) < ( _s2_aux->G ) ) 
             {
                 _s2_aux->parent = _s_aux->parent;
                 _s2_aux->G      = _s2_aux->parent->G + dist2 + edge2;
