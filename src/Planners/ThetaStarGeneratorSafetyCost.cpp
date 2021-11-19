@@ -90,7 +90,7 @@ namespace Planners
         // std::cout << static_cast<unsigned int>( mean_dist_cost  * _dist * cost_weight_ )  << std::endl;
         // return static_cast<unsigned int>( mean_dist_cost  * _dist * cost_weight_ );        
         // CONMENSURABLE
-        return static_cast<unsigned int>( mean_dist_cost * cost_weight_ );
+        return static_cast<unsigned int>( mean_dist_cost * cost_weight_ * (dist_scale_factor_/100));
     }
 
     unsigned int ThetaStarGeneratorSafetyCost::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs){
@@ -108,7 +108,7 @@ namespace Planners
         
         //CONMENSURABLE
         double bb = static_cast<double>( static_cast<double>(_suc->cost) );
-        auto edge_neighbour = static_cast<unsigned int>( (( _current->cost + bb )/2) *  cost_weight_); 
+        auto edge_neighbour = static_cast<unsigned int>( (( _current->cost + bb )/2) *  cost_weight_ * (dist_scale_factor_/100)); 
 
         cost += _current->G;
         cost += edge_neighbour;

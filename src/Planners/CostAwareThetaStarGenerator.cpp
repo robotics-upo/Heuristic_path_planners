@@ -13,7 +13,7 @@ namespace Planners
         if (LineOfSight::bresenham3DWithMaxThreshold((_s_aux->parent), _s2_aux, discrete_world_, max_line_of_sight_cells_))
         {
             // if ((_s_aux->parent->G + distanceParent2 + static_cast<unsigned int>(cost_weight_ * _s2_aux->cost)) < (_s2_aux->G))
-            if (_s_aux->parent->G + distanceParent2 + ((static_cast<unsigned int>(cost_weight_ * _s2_aux->cost))*(distanceParent2_nodes)) < (_s2_aux->G))  // Conmensurable
+            if (_s_aux->parent->G + distanceParent2 + ((static_cast<unsigned int>(cost_weight_ * _s2_aux->cost * (dist_scale_factor_/100)))*(distanceParent2_nodes)) < (_s2_aux->G))  // Conmensurable
             {
                 // _s2_aux->parent = _s_aux->parent;
                 // _s2_aux->G = _s_aux->parent->G + distanceParent2 +  static_cast<unsigned int>(cost_weight_ * _s2_aux->cost);
@@ -21,8 +21,8 @@ namespace Planners
 
                 // CONMENSURABLE
                 _s2_aux->parent = _s_aux->parent;
-                _s2_aux->G = _s_aux->parent->G + distanceParent2 +  (static_cast<unsigned int>(cost_weight_ * _s2_aux->cost)*(distanceParent2_nodes));
-                _s2_aux->C = static_cast<int>(cost_weight_ * _s2_aux->cost)*(distanceParent2_nodes);
+                _s2_aux->G = _s_aux->parent->G + distanceParent2 +  (static_cast<unsigned int>(cost_weight_ * _s2_aux->cost * (dist_scale_factor_/100))*(distanceParent2_nodes));
+                _s2_aux->C = static_cast<int>(cost_weight_ * _s2_aux->cost * (dist_scale_factor_/100))*(distanceParent2_nodes);
 
             }
 
@@ -33,7 +33,7 @@ namespace Planners
             // unsigned int G_new = _s_aux->G + distance2 + static_cast<unsigned int>(cost_weight_ * _s2_aux->cost);
 
             // CONMENSURABLE
-            unsigned int G_new = _s_aux->G + distance2 + static_cast<unsigned int>(cost_weight_ * _s2_aux->cost)*(distance2_nodes);
+            unsigned int G_new = _s_aux->G + distance2 + static_cast<unsigned int>(cost_weight_ * _s2_aux->cost * (dist_scale_factor_/100))*(distance2_nodes);
 
             // Both terms consider the same cost_weight_ * suc->cost
             if ( G_new < _s2_aux->G){
@@ -43,8 +43,8 @@ namespace Planners
 
                 // CONMENSURABLE
                 _s2_aux->parent = _s_aux;
-                _s2_aux->G = _s_aux->G + distance2 +  (static_cast<unsigned int>(cost_weight_ * _s2_aux->cost)*(distance2_nodes));
-                _s2_aux->C = static_cast<int>(cost_weight_ * _s2_aux->cost)*(distance2_nodes);                
+                _s2_aux->G = _s_aux->G + distance2 +  (static_cast<unsigned int>(cost_weight_ * _s2_aux->cost * (dist_scale_factor_/100))*(distance2_nodes));
+                _s2_aux->C = static_cast<int>(cost_weight_ * _s2_aux->cost * (dist_scale_factor_/100))*(distance2_nodes);                
             }
         }
     }
@@ -58,9 +58,9 @@ namespace Planners
             cost += (_n_i < 6 ? dist_scale_factor_ : (_n_i < 18 ? dd_2D_ : dd_3D_)); //This is more efficient
         }
 
-        cost += static_cast<int>(cost_weight_ * _suc->cost);
+        cost += static_cast<int>(cost_weight_ * _suc->cost * (dist_scale_factor_/100));
 
-        _suc->C = static_cast<int>(cost_weight_ * _suc->cost);
+        _suc->C = static_cast<int>(cost_weight_ * _suc->cost * (dist_scale_factor_/100));
         
         return cost;
     }
