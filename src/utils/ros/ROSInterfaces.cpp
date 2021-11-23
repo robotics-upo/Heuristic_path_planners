@@ -116,7 +116,10 @@ namespace Planners
                 {
                     for (int k = 0; k < world_size.z; k++)
                     {
-                        auto cost = _grid.getCellCost(i * resolution, j * resolution, k * resolution);
+                        //JAC: Precision
+                        // auto cost = _grid.getCellCost(i * resolution, j * resolution, k * resolution);
+                        float cost = _grid.getCellCost(i * resolution, j * resolution, k * resolution);
+                        // std::cout << "Cost: " << cost << std::endl;   
                         _algorithm.configureCellCost({i, j, k}, cost);
                     }
                 }

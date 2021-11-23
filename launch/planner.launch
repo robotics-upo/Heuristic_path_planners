@@ -27,7 +27,7 @@
     <arg name="scale" default="1"/>  
     <!-- <arg name="cost_scaling_factor" default="0.8"/>  
     <arg name="robot_radius"        default="0.4"/>  -->
-    <arg name="cost_scaling_factor" default="2.0"/>  
+    <arg name="cost_scaling_factor" default="1.0"/>  
     <arg name="robot_radius"        default="0.4"/> 
     
     <arg name="output" default="screen"/>

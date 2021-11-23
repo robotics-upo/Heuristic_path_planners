@@ -107,8 +107,17 @@ namespace Planners
         // auto edge_neighbour = static_cast<unsigned int>( ( ( ( _current->cost + bb ) / ( 2 * 100 ) ) * cost ) );
         
         //CONMENSURABLE
-        double bb = static_cast<double>( static_cast<double>(_suc->cost) );
-        auto edge_neighbour = static_cast<unsigned int>( (( _current->cost + bb )/2) *  cost_weight_ * (dist_scale_factor_/100)); 
+        float aa = static_cast<double>( static_cast<double>(_current->cost) );
+        float bb = static_cast<double>( static_cast<double>(_suc->cost) );
+        float cc=(aa+bb)/2;
+        // std::cout << "Cost Current: " << _current->cost << std::endl; 
+        // std::cout << "Cost Suc: " << _suc->cost << std::endl; 
+        // std::cout << "CC: " << cc << std::endl; 
+        
+        // auto edge_neighbour = static_cast<unsigned int>( ((_current->cost + bb )/2) *  cost_weight_ * (dist_scale_factor_/100)); 
+        auto edge_neighbour = static_cast<unsigned int>( cc *  cost_weight_ * (dist_scale_factor_/100)); 
+    
+        // std::cout << "edge: " << edge_neighbour << std::endl; 
 
         cost += _current->G;
         cost += edge_neighbour;

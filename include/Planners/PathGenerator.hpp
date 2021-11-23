@@ -107,6 +107,8 @@ namespace Planners
          * @return false 
          */
         bool configureCellCost(const Vec3i &coordinates_, const unsigned int &_cost);
+        // JAC: Precision
+        // bool configureCellCost(const Vec3i &coordinates_, float &_cost);
 
         /**
          * @brief Check if a set of discrete coordinates are marked as occupied
