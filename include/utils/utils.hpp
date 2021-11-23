@@ -199,9 +199,9 @@ namespace Planners
             // unsigned int cost{0}, non_uni{0};
             //JAC
             unsigned int G{0}, H{0};
-            unsigned int non_uni{0};
-            float C{0};
-            float cost{0};
+            unsigned int non_uni{0}; //This is unused currently
+            double cost{0};
+            double C{0};
             
             bool occuppied{false};
             bool isInOpenList{false};

@@ -45,9 +45,7 @@ namespace Planners
     {
         heuristic = std::bind(heuristic_, std::placeholders::_1, std::placeholders::_2);
     }
-    bool PathGenerator::configureCellCost(const Vec3i &coordinates_, const unsigned int &_cost){
-    // JAC: Precision
-    // bool PathGenerator::configureCellCost(const Vec3i &coordinates_, float &_cost){
+    bool PathGenerator::configureCellCost(const Vec3i &coordinates_, const double &_cost){
 
         return discrete_world_.setNodeCost(coordinates_, _cost);
     }
