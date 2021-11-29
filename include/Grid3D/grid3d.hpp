@@ -21,6 +21,12 @@
 #include <math.h>
 
 #include "utils/utils.hpp"
+
+#include <sstream> //for std::ostringstream
+#include <fstream>
+#include <iomanip> //for std::setw, std::hex, and std::setfill
+#include <openssl/evp.h> //for all other OpenSSL function calls
+#include <openssl/sha.h> //for SHA512_DIGEST_LENGTH
 // #include "utils/ros/ROSInterfaces.hpp"
 
 // #ifdef BUILD_VORONOI
@@ -311,7 +317,30 @@ protected:
 		
 		return true;
 	}
-	
+	std::string bytes_to_hex_string(const std::vector<uint8_t>& bytes)
+	{
+	    std::ostringstream stream;
+	    for (uint8_t b : bytes)
+	    {
+	        stream << std::setw(2) << std::setfill('0') << std::hex << static_cast<int>(b);
+	    }
+	    return stream.str();
+	}
+	//perform the SHA3-512 hash
+	std::string sha3_512(const char * _input,int _size)
+	{
+	    uint32_t digest_length = SHA512_DIGEST_LENGTH;
+	    const EVP_MD* algorithm = EVP_sha3_512();
+	    uint8_t* digest = static_cast<uint8_t*>(OPENSSL_malloc(digest_length));
+	    EVP_MD_CTX* context = EVP_MD_CTX_new();
+	    EVP_DigestInit_ex(context, algorithm, nullptr);
+	    EVP_DigestUpdate(context, _input, _size);
+	    EVP_DigestFinal_ex(context, digest, &digest_length);
+	    EVP_MD_CTX_destroy(context);
+	    std::string output = bytes_to_hex_string(std::vector<uint8_t>(digest, digest + digest_length));
+	    OPENSSL_free(digest);
+	    return output;
+	}
 	bool saveGrid(std::string &fileName)
 	{
 		FILE *pf;
@@ -334,6 +363,12 @@ protected:
 		// Write grid cells
 		fwrite(m_grid, sizeof(Planners::utils::gridCell), m_gridSize, pf);
 		
+		auto sha_value = sha3_512((const char*)m_grid, m_gridSize);
+		std::cout << "Sha512 value: " << sha_value << std::endl;
+		std::ofstream sha_file;
+		sha_file.open(fileName+"sha", std::ofstream::trunc);
+		sha_file << sha_value; 
+		sha_file.close();
 		// Close file
 		fclose(pf);
 		
@@ -366,9 +401,27 @@ protected:
 			delete []m_grid;
 		m_grid = new Planners::utils::gridCell[m_gridSize];
 		fread(m_grid, sizeof(Planners::utils::gridCell), m_gridSize, pf);
-		
-		// Close file
 		fclose(pf);
+		
+		std::ifstream input_sha;
+		auto sha_value = sha3_512((const char*)m_grid, m_gridSize);
+		ROS_INFO("[Grid3D] Calculated SHA512 value: %s", sha_value.c_str());
+
+		input_sha.open(fileName+"sha");
+		std::string readed_sha;
+		if(input_sha.is_open()){
+			getline(input_sha, readed_sha);
+			ROS_INFO("[Grid3D] Readed SHA512 from file: %s", readed_sha.c_str());
+			input_sha.close();
+		}else{
+			ROS_ERROR("[Grid3D] Couldn't read SHA512 data of gridm file, recomputing grid");
+			return false;
+		}
+		//Check that both are the same
+		if(readed_sha.compare(sha_value) != 0){
+			ROS_ERROR("[Grid3D] Found different SHA values between for gridm!");
+			return false;
+		}
 		
 		return true;
 	}
