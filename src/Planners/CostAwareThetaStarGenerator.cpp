@@ -8,7 +8,9 @@ namespace Planners
     void CostAwareThetaStarGenerator::ComputeCost(Node *_s_aux, Node *_s2_aux)
     {
         auto distanceParent2 = geometry::distanceBetween2Nodes(_s_aux->parent, _s2_aux);
-        auto distanceParent2_nodes = geometry::NodesBetween2Nodes(_s_aux->parent, _s2_aux);
+        // auto distanceParent2_nodes = geometry::NodesBetween2Nodes(_s_aux->parent, _s2_aux);
+        auto distanceParent2_nodes = LineOfSight::nodesInLineBetweenTwoNodes(_s_aux->parent, _s2_aux, discrete_world_, max_line_of_sight_cells_);
+
         line_of_sight_checks_++;
         if (LineOfSight::bresenham3DWithMaxThreshold((_s_aux->parent), _s2_aux, discrete_world_, max_line_of_sight_cells_))
         {
@@ -28,7 +30,9 @@ namespace Planners
 
         } else {
             auto distance2 = geometry::distanceBetween2Nodes(_s_aux, _s2_aux);
-            auto distance2_nodes = geometry::NodesBetween2Nodes(_s_aux, _s2_aux);
+            // auto distance2_nodes = geometry::NodesBetween2Nodes(_s_aux, _s2_aux);
+            auto distance2_nodes = LineOfSight::nodesInLineBetweenTwoNodes(_s_aux, _s2_aux, discrete_world_, max_line_of_sight_cells_);
+
             // std::cout << "Nodes:" << distance2_nodes  << std::endl;
             // unsigned int G_new = _s_aux->G + distance2 + static_cast<unsigned int>(cost_weight_ * _s2_aux->cost);
 
