@@ -120,6 +120,19 @@ namespace Planners
                 
                 return bresenham3D(_lnode, _rnode, _world);
             }
+            int nodesInLineBetweenTwoNodes(const Node *_lnode, const Node *_rnode, const DiscreteWorld &_world, const unsigned int _threshold){
+                if( utils::geometry::distanceBetween2Nodes(_lnode, _rnode) >= ( dist_scale_factor_ * _threshold ) ){
+                    return 0;
+                }
+                utils::CoordinateListPtr nodes;
+                nodes.reset(new CoordinateList);
+
+                if(bresenham3D(_lnode, _rnode, _world, nodes)){
+                    return nodes->size();
+                }else{
+                    return 0;
+                }
+            }
         }
     }
 }

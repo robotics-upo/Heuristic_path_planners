@@ -42,8 +42,8 @@ namespace Planners
     void CostAwareLazyThetaStarGenerator::ComputeCost(Node *_s_aux, Node *_s2_aux)
     {
         auto distanceParent2 = geometry::distanceBetween2Nodes(_s_aux->parent, _s2_aux);
-        auto distanceParent2_nodes = geometry::NodesBetween2Nodes(_s_aux->parent, _s2_aux);
-
+        // auto distanceParent2_nodes = geometry::NodesBetween2Nodes(_s_aux->parent, _s2_aux);
+        auto distanceParent2_nodes = LineOfSight::nodesInLineBetweenTwoNodes(_s_aux, _s2_aux, discrete_world_, max_line_of_sight_cells_);
         if ((_s_aux->parent->G + distanceParent2 + static_cast<unsigned int>(cost_weight_ * _s2_aux->cost * (dist_scale_factor_/100))*distanceParent2_nodes) < (_s2_aux->G))
         {
             // _s2_aux->parent = _s_aux->parent;
