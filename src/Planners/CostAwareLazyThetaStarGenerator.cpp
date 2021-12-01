@@ -27,13 +27,13 @@ namespace Planners
 
                     // G_new = successor2->G +  geometry::distanceBetween2Nodes(successor2, _s_aux) + static_cast<unsigned int>(cost_weight_ * successor2->cost);
                     // CONMENSURABLE
-                    G_new = successor2->G +  geometry::distanceBetween2Nodes(successor2, _s_aux) + static_cast<unsigned int>(cost_weight_ * successor2->cost * (dist_scale_factor_/100)) * (geometry::NodesBetween2Nodes(successor2, _s_aux)); 
+                    G_new = successor2->G +  geometry::distanceBetween2Nodes(successor2, _s_aux) + static_cast<unsigned int>(cost_weight_ * successor2->cost * (dist_scale_factor_/100)); 
                     if (G_new < G_max)
                     {
                         G_max = G_new;
                         _s_aux->parent = successor2;
                         _s_aux->G = G_new;
-                        _s_aux->C = static_cast<unsigned int>(cost_weight_ * successor2->cost * (dist_scale_factor_/100)) * (geometry::NodesBetween2Nodes(successor2, _s_aux));
+                        _s_aux->C = static_cast<unsigned int>(cost_weight_ * successor2->cost * (dist_scale_factor_/100));
                     }
                 }
             }
@@ -43,7 +43,9 @@ namespace Planners
     {
         auto distanceParent2 = geometry::distanceBetween2Nodes(_s_aux->parent, _s2_aux);
         // auto distanceParent2_nodes = geometry::NodesBetween2Nodes(_s_aux->parent, _s2_aux);
-        auto distanceParent2_nodes = LineOfSight::nodesInLineBetweenTwoNodes(_s_aux, _s2_aux, discrete_world_, max_line_of_sight_cells_);
+        auto distanceParent2_nodes = LineOfSight::nodesInLineBetweenTwoNodes(_s_aux->parent, _s2_aux, discrete_world_, max_line_of_sight_cells_);  //REVISAR _s_aux->parent o _s_aux
+        if (distanceParent2_nodes==0)
+            distanceParent2_nodes = distanceParent2_nodes + 1;
         if ((_s_aux->parent->G + distanceParent2 + static_cast<unsigned int>(cost_weight_ * _s2_aux->cost * (dist_scale_factor_/100))*distanceParent2_nodes) < (_s2_aux->G))
         {
             // _s2_aux->parent = _s_aux->parent;

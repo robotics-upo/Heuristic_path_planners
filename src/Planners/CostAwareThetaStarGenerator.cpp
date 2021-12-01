@@ -18,14 +18,14 @@ namespace Planners
         {
             auto n_checked_nodes = checked_nodes->size();
             if (n_checked_nodes==0)
-                    n_checked_nodes = n_checked_nodes + 1;
+                    n_checked_nodes = 1;
 
             // if ((_s_aux->parent->G + distanceParent2 + static_cast<unsigned int>(cost_weight_ * _s2_aux->cost)) < (_s2_aux->G))
             if (_s_aux->parent->G + distanceParent2 + ((static_cast<unsigned int>(cost_weight_ * _s2_aux->cost * (dist_scale_factor_/100)))*(n_checked_nodes)) < (_s2_aux->G))  // Conmensurable
             {
                 _s2_aux->parent = _s_aux->parent;
                 _s2_aux->G = _s_aux->parent->G + distanceParent2 +  (static_cast<unsigned int>(cost_weight_ * _s2_aux->cost * (dist_scale_factor_/100))*(n_checked_nodes));
-                _s2_aux->C = static_cast<int>(cost_weight_ * _s2_aux->cost * (dist_scale_factor_/100));
+                _s2_aux->C = static_cast<int>(cost_weight_ * _s2_aux->cost * (dist_scale_factor_/100)) * (n_checked_nodes);
             }
 
         } else {

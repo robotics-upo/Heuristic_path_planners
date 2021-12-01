@@ -103,7 +103,7 @@ namespace Planners
                 _last = _last->parent;
             }
         }else{
-            std::cout << "Error impossible to calcualte a solution" << std::endl;
+            std::cout << "Error impossible to calculate a solution" << std::endl;
         }
 
         std::cout << "NODES OF PATH:" << path.size() << std::endl;  
