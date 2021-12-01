@@ -52,8 +52,6 @@ namespace Planners
 
     unsigned int ThetaStarGeneratorSafetyCost::ComputeEdgeCost(const utils::CoordinateListPtr _checked_nodes, const Node* _s, const Node* _s2, unsigned int _dist){ 
         
-        //TODO 2 The commented equations of mean_dist_cost calculates it using the dist_max = 100 old factor, the new ones
-        // should be more consistent and reduce explored nodes and line of sight checks
         double dist_cost{0};
         double mean_dist_cost{0};
             
@@ -64,33 +62,16 @@ namespace Planners
 
         double cost_origin    = _s->cost;
         double cost_goal      = _s2->cost;
-        // std::cout << "Nodos: " <<  _checked_nodes->size() << std::endl;
         if( n_checked_nodes > 1){
-            // mean_dist_cost = ( ( ( cost_origin - cost_goal ) / 2 + dist_cost ) / ( n_checked_nodes * dist_max ) ); //A
-            // mean_dist_cost = ( ( ( cost_origin - cost_goal ) / 2 + dist_cost ) / ( _dist ) ); //A
-            //CONMENSURABLE
             mean_dist_cost = (( cost_origin - cost_goal ) / 2) + dist_cost;
-            // std::cout << "mean_dist_cost1: " << mean_dist_cost  << std::endl;
         }
         else if (n_checked_nodes == 1){
-            // mean_dist_cost = ( ( ( cost_origin + cost_goal ) / 2 + dist_cost ) / ( n_checked_nodes * dist_max * dist_max ) ); //A
-            // mean_dist_cost = ( ( ( cost_origin + cost_goal ) / 2 + dist_cost ) / ( _dist ) ); //A
-            //CONMENSURABLE
             mean_dist_cost = (( cost_origin + cost_goal ) / 2) + dist_cost;
-            // std::cout << "mean_dist_cost2: " << mean_dist_cost  << std::endl;
         }
         else{ 
-            // mean_dist_cost = ( cost_origin + cost_goal ) / ( 2 * dist_max);
-            // mean_dist_cost = ( cost_origin + cost_goal ) / ( 2 * _dist);
-            //CONMENSURABLE
-            // mean_dist_cost = (( cost_origin + cost_goal ) / 2) + dist_cost;
             mean_dist_cost = (( cost_origin + cost_goal ) / 2);
-            // std::cout << "mean_dist_cost3: " << mean_dist_cost  << std::endl;
         }
-        // std::cout << static_cast<unsigned int>( mean_dist_cost  * _dist * cost_weight_ )  << std::endl;
-        // return static_cast<unsigned int>( mean_dist_cost  * _dist * cost_weight_ );        
-        // CONMENSURABLE
-        return static_cast<unsigned int>( mean_dist_cost * cost_weight_ * (dist_scale_factor_/100));
+        return static_cast<unsigned int>( mean_dist_cost * cost_weight_ * dist_scale_factor_reduced_);
     }
 
     unsigned int ThetaStarGeneratorSafetyCost::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs){
@@ -103,22 +84,10 @@ namespace Planners
             cost += (_n_i < 6 ? dist_scale_factor_ : (_n_i < 18 ? dd_2D_ : dd_3D_)); //This is more efficient
         }
 
-        // double bb = static_cast<double>( static_cast<double>(_suc->cost) / (static_cast<double>(cost) / static_cast<double>(dist_scale_factor_)) );
-        // auto edge_neighbour = static_cast<unsigned int>( ( ( ( _current->cost + bb ) / ( 2 * 100 ) ) * cost ) );
+        double cc = (_current->cost + _suc->cost) / 2;
         
-        //CONMENSURABLE
-        float aa = static_cast<double>( static_cast<double>(_current->cost) );
-        float bb = static_cast<double>( static_cast<double>(_suc->cost) );
-        float cc=(aa+bb)/2;
-        // std::cout << "Cost Current: " << _current->cost << std::endl; 
-        // std::cout << "Cost Suc: " << _suc->cost << std::endl; 
-        // std::cout << "CC: " << cc << std::endl; 
-        
-        // auto edge_neighbour = static_cast<unsigned int>( ((_current->cost + bb )/2) *  cost_weight_ * (dist_scale_factor_/100)); 
-        auto edge_neighbour = static_cast<unsigned int>( cc *  cost_weight_ * (dist_scale_factor_/100)); 
+        auto edge_neighbour = static_cast<unsigned int>( cc *  cost_weight_ * dist_scale_factor_reduced_); 
     
-        // std::cout << "edge: " << edge_neighbour << std::endl; 
-
         cost += _current->G;
         cost += edge_neighbour;
         _suc->C = edge_neighbour;

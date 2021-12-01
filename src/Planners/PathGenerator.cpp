@@ -120,10 +120,6 @@ namespace Planners
         // unsigned int total_C2{0};
         unsigned int total_grid_cost1{0};
         unsigned int total_grid_cost2{0};
-        float A;
-        float B;
-        float C;
-        float D;
 
         for(size_t i = 0; i < adjacent_path.size() - 1; ++i){
             auto node_current = discrete_world_.getNodePtr(adjacent_path[i]);
@@ -133,23 +129,13 @@ namespace Planners
             
             total_H         += node->H;
             total_C         += node->C;
-            // std::cout << "Cost: " << node_current->cost << std::endl;   
-            // std::cout << "Cost previous: " << node->cost << std::endl;   
 
-            A=node->cost;
-            B=node_current->cost;
-            C=2;
-            D=(A+B)/C;
             total_grid_cost1 += static_cast<unsigned int>(cost_weight_ * node_current->cost * (dist_scale_factor_/100));  // CAA*+M1
             total_grid_cost2 += static_cast<unsigned int>( ((node->cost + node_current->cost)/2) *  cost_weight_ * (dist_scale_factor_/100)); ; //CAA*+M2         
-            // total_grid_cost2 += static_cast<unsigned int>( D *  cost_weight_ * (dist_scale_factor_/100)); ; //CAA*+M2         
-            // std::cout << "Cost: " << static_cast<unsigned int>(cost_weight_ * node_current->cost * (dist_scale_factor_/100)) << std::endl;  
-            // std::cout << "Cost: " << static_cast<unsigned int>( D *  cost_weight_ * (dist_scale_factor_/100)) << std::endl;  
-            // std::cout << "Cost D: " << D << std::endl;  
 
             unsigned int g_real1 = utils::geometry::distanceBetween2Nodes(adjacent_path[i], adjacent_path[i+1]); 
             total_G1 += g_real1; 
-            // std::cout << "Distance: " << g_real1 << std::endl;                     
+
             unsigned int g_real2 = utils::geometry::distanceBetween2Nodes(adjacent_path[i], adjacent_path[i+1]);  // Conmensurable
             total_G2 += g_real2;            
         }

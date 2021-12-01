@@ -34,7 +34,9 @@ namespace Planners
         using PathData           = std::map<std::string, DataVariant>;
         
         //Compile time constants
-        static constexpr int const dist_scale_factor_{100000};
+        static constexpr int const dist_scale_factor_{100};
+        //To use with costs
+        static constexpr int const dist_scale_factor_reduced_{ dist_scale_factor_ / 100 };
         //Dont touch these ones (diagonal distances in 2D and 3D)
         //The static cast from floating point to integer returns the truncated value 
         //i.e discards the decimal part
