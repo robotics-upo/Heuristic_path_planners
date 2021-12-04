@@ -9,10 +9,7 @@ namespace Planners
     {   
         unsigned int G_max = std::numeric_limits<unsigned int>::max(); 
         unsigned int G_new;
-        //TODO WHat is this value? dist_scale_factor_ ?
-        //TODO 2 "scale" does not appear here? 
-        // unsigned int dist_max = 100;
-
+        
         for (const auto &i: direction)
         {
             Vec3i newCoordinates(_s_aux->coordinates + i);
@@ -26,23 +23,15 @@ namespace Planners
 
                 auto dist = geometry::distanceBetween2Nodes(successor2, _s_aux);
                 
-                // Be careful with castings here. Its already checked before and after is the same result.
-                //TODO Add comment explaining the "100" in the equation
-                // G_new  = static_cast<unsigned int>(  successor2-> G + dist +  
-                // ( static_cast<double>(_s_aux->cost) + static_cast<double>(successor2->cost) ) / ( 2 * 100 ) * dist);
-
-                // CONMESURABLE
                 G_new  = static_cast<unsigned int>(  successor2-> G + dist +  
                 ( static_cast<double>(_s_aux->cost) + static_cast<double>(successor2->cost) ) / 2);
 
                 if (G_new < G_max)
                 {
-                    G_max = G_new;
                     _s_aux->parent = successor2;
-                    _s_aux->G = G_new;
-                    // _s_aux->C = static_cast<double>(_s_aux->cost) + static_cast<double>(successor2->cost) / ( 2 * 100 ) * dist;
-                    // CONMESURABLE
-                    _s_aux->C = (static_cast<double>(_s_aux->cost) + static_cast<double>(successor2->cost)) / 2;
+                    _s_aux->G      = G_new;
+                    _s_aux->C      = (static_cast<double>(_s_aux->cost) + static_cast<double>(successor2->cost)) / 2;
+                    _s_aux->gplush = _s_aux->G + _s_aux->H;
                 }
             }
         }
@@ -54,20 +43,19 @@ namespace Planners
         checked_nodes.reset(new CoordinateList);
 
         line_of_sight_checks_++;
-        if (LineOfSight::bresenham3D((_s_aux->parent), _s2_aux, discrete_world_, checked_nodes)) {
+        if (LineOfSight::bresenham3D(_s_aux->parent, _s2_aux, discrete_world_, checked_nodes)) {
             
             los_neighbour_ = true;
 
             auto dist2   = geometry::distanceBetween2Nodes(_s_aux->parent, _s2_aux);
-            // auto edge2   = ComputeEdgeCost(checked_nodes, _s_aux, _s2_aux, dist2);
-            auto edge2   = ComputeEdgeCost(checked_nodes, _s_aux->parent, _s2_aux, dist2);
+            auto edge2   = ComputeEdgeCost(checked_nodes, _s_aux->parent, _s2_aux);
 
-
-            if ( ( _s_aux->parent->G + dist2 + edge2 ) < ( _s2_aux->G ) ) 
+            if ( ( _s_aux->parent->G + dist2 + edge2 ) < _s2_aux->G ) 
             {
                 _s2_aux->parent = _s_aux->parent;
                 _s2_aux->G      = _s2_aux->parent->G + dist2 + edge2;
                 _s2_aux->C      = edge2;
+                _s2_aux->gplush = _s2_aux->G + _s2_aux->H;
             }            
         } 
     }
@@ -83,7 +71,6 @@ namespace Planners
         }
 
         double cc = ( _current->cost + _suc->cost ) / 2;
-
         auto edge_neighbour = static_cast<unsigned int>( cc *  cost_weight_ * (dist_scale_factor_/100)); 
     
         cost += ( _current->G + edge_neighbour );

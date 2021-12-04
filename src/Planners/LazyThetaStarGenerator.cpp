@@ -18,19 +18,20 @@ namespace Planners
             {
                 Vec3i newCoordinates(_s_aux->coordinates + i);
 
-                if ( discrete_world_.isOccupied(newCoordinates) ) continue;
+                if ( discrete_world_.isOccupied(newCoordinates) ) continue; 
 
-                if ( discrete_world_.isInClosedList(newCoordinates) )
+                if ( discrete_world_.isInClosedList(newCoordinates) ) 
                 {
                     Node *successor2 = discrete_world_.getNodePtr(newCoordinates);
                     if (successor2 == nullptr) continue;
 
-                    G_new = successor2->G +  geometry::distanceBetween2Nodes(successor2, _s_aux);
+                    G_new = successor2->G + geometry::distanceBetween2Nodes(successor2, _s_aux);
                     if (G_new < G_max)
                     {
                         G_max = G_new;
                         _s_aux->parent = successor2;
                         _s_aux->G = G_new;
+                        _s_aux->gplush = _s_aux->G + _s_aux->H;
                     }
                 }
             }
@@ -40,21 +41,20 @@ namespace Planners
     {
         auto distanceParent2 = geometry::distanceBetween2Nodes(_s_aux->parent, _s2_aux);
 
-        if ((_s_aux->parent->G + distanceParent2) < (_s2_aux->G))
+        if ( (_s_aux->parent->G + distanceParent2) < _s2_aux->G )
         {
             _s2_aux->parent = _s_aux->parent;
-            _s2_aux->G = _s2_aux->parent->G + distanceParent2;
+            _s2_aux->G      = _s2_aux->parent->G + distanceParent2;
+            _s2_aux->gplush = _s2_aux->G + _s2_aux->H;
         }
     }
 
     PathData LazyThetaStarGenerator::findPath(const Vec3i &_source, const Vec3i &_target)
     {
         Node *current = nullptr;
-        // NodeSet openSet;
+
         std::vector<Node*> closedSet;
         bool solved{false};
-
-        // openSet.insert(discrete_world_.getNodePtr(_source));
 
         discrete_world_.getNodePtr(_source)->parent = new Node(_source);
         discrete_world_.setOpenValue(_source, true);
