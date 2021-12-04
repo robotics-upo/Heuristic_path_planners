@@ -137,38 +137,38 @@ private:
             }catch(std::bad_variant_access const& ex){
                 std::cerr << "Bad variant error: " << ex.what() << std::endl;
             }
-
-            const auto [av_curvature, curv_sigma, curv_min, curv_max] = utils::metrics::calculatePathCurvature(path);
-
-            const auto [av_angles, angles_sigma, angles_min, angles_max, changes, angles] = utils::metrics::calculatePathAnglesMetrics(path, 2);
-
-            const auto adjacent_path    = utils::geometry::getAdjacentPath(path, *algorithm_->getInnerWorld());
-            const auto result_distances = getClosestObstaclesToPathPoints(adjacent_path);
-            const auto [mean_dist, dist_stddev, min_dist, max_dist] = utils::metrics::calculateDistancesMetrics(result_distances );
-
-            path_data["av_curv"]        = av_curvature;
-            path_data["std_dev_curv"]   = curv_sigma;
-            path_data["min_curv"]       = curv_min;
-            path_data["max_curv"]       = curv_max;
-
-            path_data["av_angles"]      = av_angles;
-            path_data["std_dev_angles"] = angles_sigma;
-            path_data["min_angle"]      = angles_min;
-            path_data["max_angle"]      = angles_max;         
-            path_data["angle_changes"]  = changes;
-
-            path_data["mean_dist"]      = mean_dist;
-            path_data["std_dev"]        = dist_stddev;
-            path_data["min_dist"]       = min_dist;
-            path_data["max_dist"]       = max_dist;
-
-            _rep.n_points.data                   = adjacent_path.size();
-            _rep.mean_distance_to_obstacle.data  = mean_dist;
-            _rep.mean_std_dev_to_obstacle.data   = dist_stddev;
-            _rep.min_distance_to_obstacle.data   = min_dist;
-            _rep.max_distance_to_obstacle.data   = max_dist;
-
             if(save_data_){
+            
+                const auto [av_curvature, curv_sigma, curv_min, curv_max] = utils::metrics::calculatePathCurvature(path);
+    
+                const auto [av_angles, angles_sigma, angles_min, angles_max, changes, angles] = utils::metrics::calculatePathAnglesMetrics(path, 2);
+    
+                const auto adjacent_path    = utils::geometry::getAdjacentPath(path, *algorithm_->getInnerWorld());
+                const auto result_distances = getClosestObstaclesToPathPoints(adjacent_path);
+                const auto [mean_dist, dist_stddev, min_dist, max_dist] = utils::metrics::calculateDistancesMetrics(result_distances );
+    
+                path_data["av_curv"]        = av_curvature;
+                path_data["std_dev_curv"]   = curv_sigma;
+                path_data["min_curv"]       = curv_min;
+                path_data["max_curv"]       = curv_max;
+    
+                path_data["av_angles"]      = av_angles;
+                path_data["std_dev_angles"] = angles_sigma;
+                path_data["min_angle"]      = angles_min;
+                path_data["max_angle"]      = angles_max;         
+                path_data["angle_changes"]  = changes;
+    
+                path_data["mean_dist"]      = mean_dist;
+                path_data["std_dev"]        = dist_stddev;
+                path_data["min_dist"]       = min_dist;
+                path_data["max_dist"]       = max_dist;
+    
+                _rep.n_points.data                   = adjacent_path.size();
+                _rep.mean_distance_to_obstacle.data  = mean_dist;
+                _rep.mean_std_dev_to_obstacle.data   = dist_stddev;
+                _rep.min_distance_to_obstacle.data   = min_dist;
+                _rep.max_distance_to_obstacle.data   = max_dist;
+
                 utils::DataVariantSaver saver;
 
                 if(saver.savePathDataToFile(path_data, data_folder_ + "/planning.txt") && 
