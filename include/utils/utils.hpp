@@ -39,13 +39,8 @@ namespace Planners
 
         using CoordinateList     = std::vector<Planners::utils::Vec3i>;
         using CoordinateListPtr  = std::shared_ptr<std::vector<Planners::utils::Vec3i>>;
-        using NodeSet            = std::set<Node*, NodeComparator>;
         using DataVariant        = std::variant<std::string, Vec3i, CoordinateList, double, size_t, int, bool, unsigned int>;
         using PathData           = std::map<std::string, DataVariant>;
-        
-        struct IndexByCost {};
-        struct IndexByWorldPosition {};
-
 
         //Compile time constants
         static constexpr int const dist_scale_factor_{100};
@@ -231,6 +226,10 @@ namespace Planners
             unsigned int getScoreWithSafetyCost();
 
         };
+                
+        struct IndexByCost {};
+        struct IndexByWorldPosition {};
+
         using MagicalMultiSet = boost::multi_index_container<
           Node*, // the data type stored
           boost::multi_index::indexed_by< // list of indexes
@@ -245,46 +244,8 @@ namespace Planners
           >
         >;
 
-
         typedef MagicalMultiSet::index<IndexByWorldPosition>::type node_by_position;
         typedef MagicalMultiSet::index<IndexByCost>::type          node_by_cost;
-        /**
-         * @brief Comparator passed to the Open and Closed sets to automatically order the lists depending
-         * on the nodes total costs 
-         */
-        struct NodeComparator{
-            
-            bool operator()(const Node *const &_lhs, const Node *const &_rhs) const
-	        {
-		        auto res = static_cast<long int>(_lhs->G + _lhs->H) - static_cast<long int>(_rhs->G + _rhs->H);
-		        if (res == 0)
-		        {
-		        	res = _lhs->coordinates.x - _rhs->coordinates.x;
-		        }
-		        if (res == 0)
-		        {
-		        	res = _lhs->coordinates.y - _rhs->coordinates.y;
-		        }
-		        if (res == 0)
-		        {
-		        	res = _lhs->coordinates.z - _rhs->coordinates.z;
-		        }
-
-		        if (res == 0)
-		        {
-		        	res = _lhs->parent->coordinates.x - _rhs->parent->coordinates.x;
-		        }
-		        if (res == 0)
-		        {
-		        	res = _lhs->parent->coordinates.y - _rhs->parent->coordinates.y;
-		        }
-		        if (res == 0)
-		        {
-		        	res = _lhs->parent->coordinates.z - _rhs->parent->coordinates.z;
-		        }
-		    return res < 0;
-        	}
-        };
 
     }
 }

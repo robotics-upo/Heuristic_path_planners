@@ -135,11 +135,12 @@ list(APPEND ${PROJECT_NAME}_UTILS_SOURCES src/utils/geometry_utils.cpp
                                           src/utils/metrics.cpp       
                                           )
 if(BUILD_ROS_SUPPORT)
-list(APPEND ${PROJECT_NAME}_UTILS_SOURCES src/utils/ros/ROSInterfaces.cpp)
+  list(APPEND ${PROJECT_NAME}_UTILS_SOURCES src/utils/ros/ROSInterfaces.cpp)
 endif()
 
 add_library(PathGenerator                   src/Planners/PathGenerator.cpp 
                                             ${${PROJECT_NAME}_UTILS_SOURCES})
+
 add_library(AStarGenerator                  src/Planners/AStarGenerator.cpp
                                             src/Planners/PathGenerator.cpp 
                                             ${${PROJECT_NAME}_UTILS_SOURCES}
@@ -157,7 +158,7 @@ add_library(LazyThetaStarGeneratorSafetyCost src/Planners/LazyThetaStarGenerator
 
 
 list(APPEND ${PROJECT_NAME}_LIBRARIES PathGenerator AStarGenerator CostAwareAStarGenerator AStarGeneratorSafetyCost ThetaStarGenerator CostAwareThetaStarGenerator ThetaStarGeneratorSafetyCost LazyThetaStarGenerator CostAwareLazyThetaStarGenerator LazyThetaStarGeneratorSafetyCost)  
-target_link_libraries(${${PROJECT_NAME}_LIBRARIES} ${catkin_LIBRARIES})
+target_link_libraries(${${PROJECT_NAME}_LIBRARIES} ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 add_dependencies( ${${PROJECT_NAME}_LIBRARIES} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 list(APPEND ${PROJECT_NAME}_TARGETS ${${PROJECT_NAME}_LIBRARIES})
 

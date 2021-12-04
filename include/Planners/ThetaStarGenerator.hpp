@@ -55,10 +55,9 @@ namespace Planners
          * 
          * @param _current 
          * @param _target 
-         * @param _openset 
+         * @param _index_by_pos 
+         * @param _index_by_cost 
          */
-        // virtual void exploreNeighbours(Node* _current, const Vec3i &_target,NodeSet &_openset) override;
-
         virtual void exploreNeighbours(Node* _current, const Vec3i &_target,node_by_position &_index_by_pos, node_by_cost &_index_by_cost) override;
     };
 

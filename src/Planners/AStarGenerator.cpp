@@ -113,7 +113,7 @@ void AStarGenerator::publishROSDebugData(const Node* _node, const T &_open_set, 
     best_node_marker_.pose.position = continousPoint(_node->coordinates, resolution_);
     best_node_marker_.pose.position.z += resolution_;
 
-    aux_text_marker_.text = "Best node G = " + std::to_string(_node->G) + "Best node G+H = " + std::to_string(_node->G+_node->H) +
+    aux_text_marker_.text = "Best node G = " + std::to_string(_node->G) + "\nBest node G+H = " + std::to_string(_node->G+_node->H) +
                  std::string("\nCost = ") + std::to_string(static_cast<int>(cost_weight_ * _node->cost * (dist_scale_factor_/100)));
 	aux_text_marker_.pose = best_node_marker_.pose;
     aux_text_marker_.pose.position.z += 5 * resolution_;
@@ -217,7 +217,7 @@ PathData AStarGenerator::findPath(const Vec3i &_source, const Vec3i &_target)
         discrete_world_.setClosedValue(*current, true);
 
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)
-        publishROSDebugData<NodeSet, std::vector<Node*>>(current, openSet, closedSet);
+        publishROSDebugData(current, indexByCost, closedSet);
 #endif
 
         exploreNeighbours(current, _target, indexByWorldPosition, indexByCost);     

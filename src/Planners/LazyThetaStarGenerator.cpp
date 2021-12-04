@@ -89,7 +89,7 @@ namespace Planners
 
             SetVertex(current);
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)
-            publishROSDebugData(current, openSet, closedSet);
+            publishROSDebugData(current, indexByCost, closedSet);
 #endif
 
             exploreNeighbours(current, _target, indexByWorldPosition, indexByCost);
