@@ -18,15 +18,9 @@ namespace Planners
             re-order the open list thus we can be sure that the node at
             the front of the list will be the one with the lowest cost
             */
-            // if (discrete_world_.isInOpenList(*_s2)){
-                // _openset.erase(_s2);
-                _s2->gplush = _s2->G + _s2->H;
-                auto found = _index_by_pos.find(_s2->world_index);
-                _index_by_pos.erase(found);
-                _index_by_cost.insert(_s2);
-            // }
-
-            // _openset.insert(_s2);
+            auto found = _index_by_pos.find(_s2->world_index);
+            _index_by_pos.erase(found);
+            _index_by_cost.insert(_s2);
         }
     }
 
@@ -34,12 +28,13 @@ namespace Planners
     {
         auto distanceParent2 = geometry::distanceBetween2Nodes(_s_aux->parent, _s2_aux);
         line_of_sight_checks_++;
-        if (LineOfSight::bresenham3D((_s_aux->parent), _s2_aux, discrete_world_))
+        if ( LineOfSight::bresenham3D(_s_aux->parent, _s2_aux, discrete_world_) )
         {
-            if ((_s_aux->parent->G + distanceParent2) < (_s2_aux->G))
+            if ( ( _s_aux->parent->G + distanceParent2 ) < _s2_aux->G )
             {
                 _s2_aux->parent = _s_aux->parent;
                 _s2_aux->G      = _s_aux->parent->G + distanceParent2;
+                _s2_aux->gplush = _s2_aux->G + _s2_aux->H;
             }
 
         } else {
@@ -48,7 +43,8 @@ namespace Planners
             if ( ( _s_aux->G + distance2 ) < _s2_aux->G )
             {
                 _s2_aux->parent = _s_aux;
-                _s2_aux->G      =_s_aux->G + distance2;
+                _s2_aux->G      = _s_aux->G + distance2;
+                _s2_aux->gplush = _s2_aux->G + _s2_aux->H;
             }
         }
     }
