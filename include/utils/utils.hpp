@@ -19,6 +19,16 @@
 #include <memory>
 #include <Eigen/Dense>
 
+#include <boost/multi_index_container.hpp>
+#include <boost/multi_index/ordered_index.hpp>
+#include <boost/multi_index/identity.hpp>
+#include <boost/multi_index/member.hpp>
+#include <boost/multi_index/hashed_index.hpp>
+#include <boost/multi_index/key_extractors.hpp>
+
+using namespace ::boost;
+using namespace ::boost::multi_index;
+
 namespace Planners
 {
     namespace utils
@@ -33,6 +43,10 @@ namespace Planners
         using DataVariant        = std::variant<std::string, Vec3i, CoordinateList, double, size_t, int, bool, unsigned int>;
         using PathData           = std::map<std::string, DataVariant>;
         
+        struct IndexByCost {};
+        struct IndexByWorldPosition {};
+
+
         //Compile time constants
         static constexpr int const dist_scale_factor_{100};
         //To use with costs
@@ -204,7 +218,9 @@ namespace Planners
             unsigned int non_uni{0}; //This is unused currently
             double cost{0};
             double C{0};
-            
+            unsigned int gplush{0};
+            unsigned int world_index{0};
+
             bool occuppied{false};
             bool isInOpenList{false};
             bool isInClosedList{false};
@@ -215,7 +231,23 @@ namespace Planners
             unsigned int getScoreWithSafetyCost();
 
         };
+        using MagicalMultiSet = boost::multi_index_container<
+          Node*, // the data type stored
+          boost::multi_index::indexed_by< // list of indexes
+            boost::multi_index::hashed_unique<  //hashed index over 'l'
+              boost::multi_index::tag<IndexByWorldPosition>, // give that index a name
+              boost::multi_index::member<Node, unsigned int, &Node::world_index> // what will be the index's key
+            >,
+            boost::multi_index::ordered_non_unique<  //ordered index over 'i1'
+              boost::multi_index::tag<IndexByCost>, // give that index a name
+              boost::multi_index::member<Node, unsigned int, &Node::gplush> // what will be the index's key
+            >
+          >
+        >;
 
+
+        typedef MagicalMultiSet::index<IndexByWorldPosition>::type node_by_position;
+        typedef MagicalMultiSet::index<IndexByCost>::type          node_by_cost;
         /**
          * @brief Comparator passed to the Open and Closed sets to automatically order the lists depending
          * on the nodes total costs 

@@ -7,6 +7,11 @@ option(BUILD_DOC         "Build documentation   " ON)
 option(BUILD_ROS_SUPPORT "Build with ROS Support" ON)
 option(BUILD_DEBUG       "Build debug features  " OFF)
 option(BUILD_VOROCPP     "Build voro++ features  " OFF)
+option(OPTIMIZE_FLAG     "Enable Compiler Optimization for Runtime Performance" OFF)
+
+if(OPTIMIZE_FLAG)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
+endif()
 
 if(BUILD_DOC)
 # check if Doxygen is installed
@@ -31,6 +36,8 @@ if(BUILD_DOC)
   endif (DOXYGEN_FOUND)
 endif()
 unset(BUILD_DOC CACHE)
+
+find_package(Boost)
 
 if(BUILD_ROS_SUPPORT)
   add_definitions(-DROS)

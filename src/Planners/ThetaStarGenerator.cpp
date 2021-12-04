@@ -6,7 +6,7 @@ namespace Planners
     
     ThetaStarGenerator::ThetaStarGenerator(bool _use_3d, std::string _name = "thetastar" ):AStarGenerator(_use_3d, _name) {}
     
-    void ThetaStarGenerator::UpdateVertex(Node *_s, Node *_s2, NodeSet &_openset)
+    void ThetaStarGenerator::UpdateVertex(Node *_s, Node *_s2, node_by_position &_index_by_pos, node_by_cost &_index_by_cost)
     {
         unsigned int g_old = _s2->G;
 
@@ -18,10 +18,15 @@ namespace Planners
             re-order the open list thus we can be sure that the node at
             the front of the list will be the one with the lowest cost
             */
-            if (discrete_world_.isInOpenList(*_s2))
-                _openset.erase(_s2);
+            // if (discrete_world_.isInOpenList(*_s2)){
+                // _openset.erase(_s2);
+                _s2->gplush = _s2->G + _s2->H;
+                auto found = _index_by_pos.find(_s2->world_index);
+                _index_by_pos.erase(found);
+                _index_by_cost.insert(_s2);
+            // }
 
-            _openset.insert(_s2);
+            // _openset.insert(_s2);
         }
     }
 
@@ -48,7 +53,7 @@ namespace Planners
         }
     }
 
-    void ThetaStarGenerator::exploreNeighbours(Node* _current, const Vec3i &_target,NodeSet &_openset){
+    void ThetaStarGenerator::exploreNeighbours(Node* _current, const Vec3i &_target,node_by_position &_index_by_pos, node_by_cost &_index_by_cost){
 
         for (unsigned int i = 0; i < direction.size(); ++i) {
 
@@ -67,11 +72,12 @@ namespace Planners
                 successor->parent = _current;
                 successor->G = computeG(_current, successor, i, direction.size());
                 successor->H = heuristic(successor->coordinates, _target);
-                _openset.insert(successor);
+                successor->gplush = successor->G + successor->H;
+                _index_by_cost.insert(successor);
                 discrete_world_.setOpenValue(*successor, true);
             }
          
-            UpdateVertex(_current, successor, _openset); 
+            UpdateVertex(_current, successor, _index_by_pos, _index_by_cost); 
         }
     }
 }

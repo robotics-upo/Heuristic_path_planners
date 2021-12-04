@@ -50,11 +50,11 @@ namespace Planners
     PathData LazyThetaStarGenerator::findPath(const Vec3i &_source, const Vec3i &_target)
     {
         Node *current = nullptr;
-        NodeSet openSet;
+        // NodeSet openSet;
         std::vector<Node*> closedSet;
         bool solved{false};
 
-        openSet.insert(discrete_world_.getNodePtr(_source));
+        // openSet.insert(discrete_world_.getNodePtr(_source));
 
         discrete_world_.getNodePtr(_source)->parent = new Node(_source);
         discrete_world_.setOpenValue(_source, true);
@@ -64,19 +64,24 @@ namespace Planners
 
         line_of_sight_checks_ = 0;
 
-        while (!openSet.empty())
+        MagicalMultiSet openSet;
+
+        node_by_cost& indexByCost              = openSet.get<IndexByCost>();
+        node_by_position& indexByWorldPosition = openSet.get<IndexByWorldPosition>();
+
+        indexByCost.insert(discrete_world_.getNodePtr(_source));
+        while (!indexByCost.empty())
         {
 
-            current = *openSet.begin();
-
+            auto it = indexByCost.begin();
+            current = *it;
+            indexByCost.erase(indexByCost.begin());
+        
             if (current->coordinates == _target)
             {
                 solved = true;
                 break;
             }
-
-            openSet.erase(openSet.begin());
-            // closedSet.insert(current);
             closedSet.push_back(current);
 
             discrete_world_.setOpenValue(*current, false);
@@ -87,7 +92,7 @@ namespace Planners
             publishROSDebugData(current, openSet, closedSet);
 #endif
 
-            exploreNeighbours(current, _target, openSet);
+            exploreNeighbours(current, _target, indexByWorldPosition, indexByCost);
 
         }
         main_timer.toc();

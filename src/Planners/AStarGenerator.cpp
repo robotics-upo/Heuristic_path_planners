@@ -147,7 +147,7 @@ unsigned int AStarGenerator::computeG(const Node* _current, Node* _suc,  unsigne
 
 #pragma GCC diagnostic pop
 
-void AStarGenerator::exploreNeighbours(Node* _current, const Vec3i &_target,NodeSet &_openset){
+void AStarGenerator::exploreNeighbours(Node* _current, const Vec3i &_target, node_by_position &_index_by_pos, node_by_cost &_index_by_cost){
     
     for (unsigned int i = 0; i < direction.size(); ++i) {
             
@@ -167,23 +167,27 @@ void AStarGenerator::exploreNeighbours(Node* _current, const Vec3i &_target,Node
             successor->parent = _current;
             successor->G = totalCost;
             successor->H = heuristic(successor->coordinates, _target);
-            _openset.insert(successor);
+            successor->gplush = successor->G + successor->H;
+            _index_by_cost.insert(successor);
             discrete_world_.setOpenValue(successor->coordinates, true);
         }
         else if (totalCost < successor->G) {
             successor->parent = _current;
             successor->G = totalCost;
+            successor->gplush = successor->G + successor->H;
+            auto found = _index_by_pos.find(successor->world_index);
+            _index_by_pos.erase(found);
+            _index_by_cost.insert(successor);
         }
     }
 }
 PathData AStarGenerator::findPath(const Vec3i &_source, const Vec3i &_target)
 {
     Node *current = nullptr;
-    NodeSet openSet;
+
     std::vector<Node*> closedSet;
     bool solved{false};
 
-    openSet.insert(discrete_world_.getNodePtr(_source));
     discrete_world_.getNodePtr(_source)->parent = new Node(_source);
     discrete_world_.setOpenValue(_source, true);
     
@@ -192,14 +196,21 @@ PathData AStarGenerator::findPath(const Vec3i &_source, const Vec3i &_target)
 
     line_of_sight_checks_ = 0;
     
-    while (!openSet.empty()) {
+    MagicalMultiSet openSet;
 
-        current = *openSet.begin();
+    node_by_cost& indexByCost              = openSet.get<IndexByCost>();
+    node_by_position& indexByWorldPosition = openSet.get<IndexByWorldPosition>();
 
+    indexByCost.insert(discrete_world_.getNodePtr(_source));
+    
+    while (!indexByCost.empty()) {
+        
+        auto it = indexByCost.begin();
+        current = *it;
+        indexByCost.erase(indexByCost.begin());
+        
         if (current->coordinates == _target) { solved = true; break; }
         
-        openSet.erase(openSet.begin());
-        // closedSet.insert(current);
         closedSet.push_back(current);
 
         discrete_world_.setOpenValue(*current, false);
@@ -209,7 +220,7 @@ PathData AStarGenerator::findPath(const Vec3i &_source, const Vec3i &_target)
         publishROSDebugData<NodeSet, std::vector<Node*>>(current, openSet, closedSet);
 #endif
 
-        exploreNeighbours(current, _target, openSet);     
+        exploreNeighbours(current, _target, indexByWorldPosition, indexByCost);     
     }
     main_timer.toc();
     

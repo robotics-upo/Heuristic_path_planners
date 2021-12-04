@@ -9,7 +9,6 @@ namespace Planners
     {   
         unsigned int G_max = std::numeric_limits<unsigned int>::max(); 
         unsigned int G_new;
-        std::cout << "NO DEBERÍA ENTRAR " << std::endl; 
         //TODO WHat is this value? dist_scale_factor_ ?
         //TODO 2 "scale" does not appear here? 
         // unsigned int dist_max = 100;
@@ -63,7 +62,6 @@ namespace Planners
             // auto edge2   = ComputeEdgeCost(checked_nodes, _s_aux, _s2_aux, dist2);
             auto edge2   = ComputeEdgeCost(checked_nodes, _s_aux->parent, _s2_aux, dist2);
 
-            // std::cout << "mean_dist_cost: " << (edge2/cost_weight_)  << std::endl;          
 
             if ( ( _s_aux->parent->G + dist2 + edge2 ) < ( _s2_aux->G ) ) 
             {
@@ -84,21 +82,9 @@ namespace Planners
             cost = (_n_i < 6 ? dist_scale_factor_ : (_n_i < 18 ? dd_2D_ : dd_3D_)); //This is more efficient
         }
 
-        // double bb = static_cast<double>( static_cast<double>(_suc->cost) / (static_cast<double>(cost) / static_cast<double>(dist_scale_factor_)) );
-        // auto edge_neighbour = static_cast<unsigned int>( ( ( ( _current->cost + bb ) / ( 2 * 100 ) ) * cost ) );
+        double cc = ( _current->cost + _suc->cost ) / 2;
 
-        // CONMESURABLE
-        float aa = static_cast<double>( static_cast<double>(_current->cost) );
-        float bb = static_cast<double>( static_cast<double>(_suc->cost) );
-        float cc=(aa+bb)/2;
-        // std::cout << "Cost Current: " << _current->cost << std::endl; 
-        // std::cout << "Cost Suc: " << _suc->cost << std::endl; 
-        // std::cout << "CC: " << cc << std::endl; 
-        
-        // auto edge_neighbour = static_cast<unsigned int>( ((_current->cost + bb )/2) *  cost_weight_ * (dist_scale_factor_/100)); 
         auto edge_neighbour = static_cast<unsigned int>( cc *  cost_weight_ * (dist_scale_factor_/100)); 
-    
-        // std::cout << "edge: " << edge_neighbour << std::endl; 
     
         cost += ( _current->G + edge_neighbour );
 
@@ -109,11 +95,8 @@ namespace Planners
     PathData LazyThetaStarGeneratorSafetyCost::findPath(const Vec3i &_source, const Vec3i &_target)
     {
         Node *current = nullptr;
-        NodeSet openSet;
         std::vector<Node*> closedSet;
         bool solved{false};
-
-        openSet.insert(discrete_world_.getNodePtr(_source));
 
         discrete_world_.getNodePtr(_source)->parent = new Node(_source);
         discrete_world_.setOpenValue(_source, true);
@@ -122,10 +105,17 @@ namespace Planners
         main_timer.tic();
 
         line_of_sight_checks_ = 0;
+        MagicalMultiSet openSet;
 
+        node_by_cost& indexByCost              = openSet.get<IndexByCost>();
+        node_by_position& indexByWorldPosition = openSet.get<IndexByWorldPosition>();
+
+        indexByCost.insert(discrete_world_.getNodePtr(_source));
         while (!openSet.empty())
         {
-            current = *openSet.begin();
+            auto it = indexByCost.begin();
+            current = *it;
+            indexByCost.erase(indexByCost.begin());
 
             if (current->coordinates == _target)
             {
@@ -133,8 +123,6 @@ namespace Planners
                 break;
             }
 
-            openSet.erase(openSet.begin());
-            // closedSet.insert(current);
             closedSet.push_back(current);
 
             discrete_world_.setOpenValue(*current, false);
@@ -148,8 +136,8 @@ namespace Planners
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)
             publishROSDebugData(current, openSet, closedSet);
 #endif
+            exploreNeighbours(current, _target, indexByWorldPosition, indexByCost);
 
-            exploreNeighbours(current, _target, openSet);
 
         }
         main_timer.toc();

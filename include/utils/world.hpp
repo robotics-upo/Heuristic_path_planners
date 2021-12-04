@@ -71,6 +71,7 @@ namespace utils
             
             for(long unsigned int i = 0; i < discrete_world_vector_.size(); ++i){
                 discrete_world_vector_[i].coordinates =  getDiscreteWorldPositionFromIndex(i);
+                discrete_world_vector_[i].world_index = i;
             }
             
         }

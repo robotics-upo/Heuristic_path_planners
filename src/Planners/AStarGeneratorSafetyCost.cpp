@@ -16,22 +16,9 @@ unsigned int AStarGeneratorSafetyCost::computeG(const Node* _current, Node* _suc
         cost = (_n_i < 6 ? dist_scale_factor_ : (_n_i < 18 ? dd_2D_ : dd_3D_)); //This is more efficient
     }
 
-    //TODO Give bb a more precise name
-    // double bb = static_cast<double>( static_cast<double>(_suc->cost) / (static_cast<double>(cost) / static_cast<double>(dist_scale_factor_)) );
-    // auto edge_neighbour = static_cast<unsigned int>( ( ( ( _current->cost + bb ) / ( 2 * 100 ) ) * cost ) *  cost_weight_);
-
-    // CONMENSURABLE
-    float aa = static_cast<double>( static_cast<double>(_current->cost) );
-    float bb = static_cast<double>( static_cast<double>(_suc->cost) );
-    float cc=(aa+bb)/2;
-    // std::cout << "Cost Current: " << _current->cost << std::endl; 
-    // std::cout << "Cost Suc: " << _suc->cost << std::endl; 
-    std::cout << "CC: " << cc << std::endl; 
+    double cc = ( _current->cost + _suc->cost ) / 2;
     
-    // auto edge_neighbour = static_cast<unsigned int>( ((_current->cost + bb )/2) *  cost_weight_ * (dist_scale_factor_/100)); 
     auto edge_neighbour = static_cast<unsigned int>( cc *  cost_weight_ * (dist_scale_factor_/100)); 
-    
-    std::cout << "edge: " << edge_neighbour << std::endl; 
 
     cost += ( _current->G + edge_neighbour );
 
