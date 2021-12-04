@@ -18,7 +18,7 @@ unsigned int AStarGeneratorSafetyCost::computeG(const Node* _current, Node* _suc
 
     double cc = ( _current->cost + _suc->cost ) / 2;
     
-    auto edge_neighbour = static_cast<unsigned int>( cc *  cost_weight_ * (dist_scale_factor_/100)); 
+    auto edge_neighbour = static_cast<unsigned int>( cc *  cost_weight_ * dist_scale_factor_reduced_); 
 
     cost += ( _current->G + edge_neighbour );
 

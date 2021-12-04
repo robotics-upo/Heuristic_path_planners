@@ -198,7 +198,7 @@ PathData AStarGenerator::findPath(const Vec3i &_source, const Vec3i &_target)
     
     MagicalMultiSet openSet;
 
-    node_by_cost& indexByCost              = openSet.get<IndexByCost>();
+    node_by_cost&     indexByCost          = openSet.get<IndexByCost>();
     node_by_position& indexByWorldPosition = openSet.get<IndexByWorldPosition>();
 
     indexByCost.insert(discrete_world_.getNodePtr(_source));
