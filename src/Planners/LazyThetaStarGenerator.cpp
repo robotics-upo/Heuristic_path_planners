@@ -92,7 +92,7 @@ namespace Planners
             publishROSDebugData(current, indexByCost, closedSet);
 #endif
 
-            exploreNeighbours(current, _target, indexByWorldPosition, indexByCost);
+            exploreNeighbours(current, _target, indexByWorldPosition);
 
         }
         main_timer.toc();

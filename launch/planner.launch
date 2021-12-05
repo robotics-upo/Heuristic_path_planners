@@ -39,7 +39,7 @@
         <param name="inflate_map"           value="$(arg inflate_map)"/>
         <param name="inflation_size"        value="$(arg inflation_size)"/>
         
-        <param name="save_data"             value="$(arg save_data)"/>
+        <param name="save_data_file"        value="$(arg save_data)"/>
         <param name="overlay_markers"       value="$(arg overlay_markers)"/>
         <param name="data_folder"           value="$(arg data_folder)"/>
         <param name="algorithm"             value="$(arg algorithm_name)"/>

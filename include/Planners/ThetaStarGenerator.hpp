@@ -40,7 +40,7 @@ namespace Planners
          * @param s2 Pointer to node s2
          * @param openset reference to openset to erase and insert the nodes in some cases
          */
-        virtual void UpdateVertex(Node *_s, Node *_s2, node_by_position &_index_by_pos, node_by_cost &_index_by_cost);
+        virtual void UpdateVertex(Node *_s, Node *_s2, node_by_position &_index_by_pos);
         
         /**
          * @brief Compute cost algorithm function
@@ -58,7 +58,7 @@ namespace Planners
          * @param _index_by_pos 
          * @param _index_by_cost 
          */
-        virtual void exploreNeighbours(Node* _current, const Vec3i &_target,node_by_position &_index_by_pos, node_by_cost &_index_by_cost) override;
+        virtual void exploreNeighbours(Node* _current, const Vec3i &_target,node_by_position &_index_by_pos) override;
     };
 
 }

@@ -6,7 +6,7 @@ namespace Planners
     
     ThetaStarGenerator::ThetaStarGenerator(bool _use_3d, std::string _name = "thetastar" ):AStarGenerator(_use_3d, _name) {}
     
-    void ThetaStarGenerator::UpdateVertex(Node *_s, Node *_s2, node_by_position &_index_by_pos, node_by_cost &_index_by_cost)
+    void ThetaStarGenerator::UpdateVertex(Node *_s, Node *_s2, node_by_position &_index_by_pos)
     {
         unsigned int g_old = _s2->G;
 
@@ -20,7 +20,7 @@ namespace Planners
             */
             auto found = _index_by_pos.find(_s2->world_index);
             _index_by_pos.erase(found);
-            _index_by_cost.insert(_s2);
+            _index_by_pos.insert(_s2);
         }
     }
 
@@ -49,7 +49,7 @@ namespace Planners
         }
     }
 
-    void ThetaStarGenerator::exploreNeighbours(Node* _current, const Vec3i &_target,node_by_position &_index_by_pos, node_by_cost &_index_by_cost){
+    void ThetaStarGenerator::exploreNeighbours(Node* _current, const Vec3i &_target,node_by_position &_index_by_pos){
 
         for (unsigned int i = 0; i < direction.size(); ++i) {
 
@@ -69,11 +69,11 @@ namespace Planners
                 successor->G = computeG(_current, successor, i, direction.size());
                 successor->H = heuristic(successor->coordinates, _target);
                 successor->gplush = successor->G + successor->H;
-                _index_by_cost.insert(successor);
+                _index_by_pos.insert(successor);
                 discrete_world_.setOpenValue(*successor, true);
             }
          
-            UpdateVertex(_current, successor, _index_by_pos, _index_by_cost); 
+            UpdateVertex(_current, successor, _index_by_pos); 
         }
     }
 }

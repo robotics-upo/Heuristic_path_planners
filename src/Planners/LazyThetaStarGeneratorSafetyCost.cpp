@@ -123,7 +123,7 @@ namespace Planners
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)
             publishROSDebugData(current, indexByCost, closedSet);
 #endif
-            exploreNeighbours(current, _target, indexByWorldPosition, indexByCost);
+            exploreNeighbours(current, _target, indexByWorldPosition);
 
 
         }

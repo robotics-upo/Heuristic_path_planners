@@ -1,6 +1,7 @@
 geometry_msgs/Point start
 geometry_msgs/Point goal
 std_msgs/String algorithm
+std_msgs/Int32 tries
 ---
 std_msgs/Int32 explored_nodes
 std_msgs/Float32 time_spent

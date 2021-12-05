@@ -147,7 +147,7 @@ unsigned int AStarGenerator::computeG(const Node* _current, Node* _suc,  unsigne
 
 #pragma GCC diagnostic pop
 
-void AStarGenerator::exploreNeighbours(Node* _current, const Vec3i &_target, node_by_position &_index_by_pos, node_by_cost &_index_by_cost){
+void AStarGenerator::exploreNeighbours(Node* _current, const Vec3i &_target, node_by_position &_index_by_pos){
     
     for (unsigned int i = 0; i < direction.size(); ++i) {
             
@@ -168,7 +168,7 @@ void AStarGenerator::exploreNeighbours(Node* _current, const Vec3i &_target, nod
             successor->G = totalCost;
             successor->H = heuristic(successor->coordinates, _target);
             successor->gplush = successor->G + successor->H;
-            _index_by_cost.insert(successor);
+            _index_by_pos.insert(successor);
             discrete_world_.setOpenValue(successor->coordinates, true);
         }
         else if (totalCost < successor->G) {
@@ -177,7 +177,7 @@ void AStarGenerator::exploreNeighbours(Node* _current, const Vec3i &_target, nod
             successor->gplush = successor->G + successor->H;
             auto found = _index_by_pos.find(successor->world_index);
             _index_by_pos.erase(found);
-            _index_by_cost.insert(successor);
+            _index_by_pos.insert(successor);
         }
     }
 }
@@ -220,7 +220,7 @@ PathData AStarGenerator::findPath(const Vec3i &_source, const Vec3i &_target)
         publishROSDebugData(current, indexByCost, closedSet);
 #endif
 
-        exploreNeighbours(current, _target, indexByWorldPosition, indexByCost);     
+        exploreNeighbours(current, _target, indexByWorldPosition);     
     }
     main_timer.toc();
     
