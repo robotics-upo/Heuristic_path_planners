@@ -28,7 +28,7 @@ parser.add_argument("--launch",     help="name of the launch file",
                     choices=launch_list)
 parser.add_argument("--algorithm",  help="name of the algorithm",
                     nargs='+', type=str, required=True,
-                    choices=["astar", "costastar", "thetastar", "lazythetastar", "costlazythetastar"])
+                    choices=["astar", "costastar", "astarsafetycost", "thetastar", "costhetastar", "thetastarsafetycost", "lazythetastar", "costlazythetastar", "lazythetastarsafetycost"])
 parser.add_argument("--start-coords", help="start coordinates (x,y,z). Set z to 0 when testing with 2D",
                     nargs=3,   required=True)
 parser.add_argument("--goal-coords", help="goal coordinates (x,y,z). Set z to 0 when testing with 2D",
@@ -81,6 +81,7 @@ text_marker.text = ""
 it, durations = [], []
 
 fig, ax1 = plt.subplots(1, sharex=True)
+
 ax1.set_ylabel("Time spent")
 fig.suptitle('Resulting data')
 ax1.set_xlim(0, int(args.iterations[0]))
@@ -101,14 +102,14 @@ for iter in range(0,int(args.iterations[0])):
             '/planner_ros_node/request_path', GetPath)
 
         resp = get_path.call(path_request)
-        text_marker.text = "\nTime spent: " + str(resp.time_spent.data) + " ms"
+        text_marker.text = "\nTime spent: " + str(resp.time_spent.data) + " microsecs"
         total_time += resp.time_spent.data
         markerPub.publish(text_marker)
         
         it.append(iter)
         durations.append(resp.time_spent.data)
-        
-        ax1.plot(it, durations,      color='r')
+        plt.scatter(it, durations)
+        # ax1.plot(it, durations,      color='r')
         fig.canvas.draw()
         fig.show()
         plt.pause(0.05)

@@ -37,7 +37,8 @@ namespace Planners
              */
             void tic()
             {
-                start_ = std::chrono::high_resolution_clock::now();
+                // start_ = std::chrono::high_resolution_clock::now();
+                start_ = std::chrono::steady_clock::now();
                 started_ = true;
             }
             /**
@@ -50,13 +51,16 @@ namespace Planners
                 if (!started_)
                     return;
 
-                stop_ = std::chrono::high_resolution_clock::now();
+                // stop_ = std::chrono::high_resolution_clock::now();
+                stop_ = std::chrono::steady_clock::now();
+
                 started_ = false;
-                
-                elapsed_ = std::chrono::duration_cast<std::chrono::nanoseconds>(stop_ - start_);
+
+                duration = (stop_ - start_);
+                auto usec = std::chrono::duration_cast<std::chrono::microseconds>(duration);
 
                 if (verbose_)
-                    std::cout << "[ " << _msg << "] " << "Elapsed time: " << elapsed_.count() * 1e-6 << std::endl;
+                    std::cout << "[ " << _msg << "] " << "Elapsed time: " << usec.count() << std::endl;
             }
             /**
              * @brief Get the elapsed time in milliseconds
@@ -68,7 +72,7 @@ namespace Planners
                 if( started_ )
                     return 0;
                     
-                return elapsed_.count() * 1e-6;
+                return std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
             }
             /**
              * @brief Get the elapsed time in nanoseconds
@@ -80,7 +84,7 @@ namespace Planners
                 if( started_ )
                     return 0;
 
-                return elapsed_.count();
+                return duration.count();
             }
             /**
              * @brief Get the elapsed time in seconds
@@ -92,13 +96,19 @@ namespace Planners
                 if( started_ )
                     return 0;
 
-                return elapsed_.count() * 1e-9;
+                return std::chrono::duration_cast<std::chrono::seconds>(duration).count();
             }
+            double getElapsedMicroSeconds(){
 
+                if( started_ )
+                    return 0;
+
+                return std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
+            }
         private:
 
-            std::chrono::_V2::system_clock::time_point start_, stop_;
-            std::chrono::nanoseconds elapsed_{0};
+            std::chrono::nanoseconds duration{};
+            std::chrono::steady_clock::time_point start_{}, stop_{};
 
             bool started_{false};
             bool verbose_ { false };

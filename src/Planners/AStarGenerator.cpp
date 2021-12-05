@@ -87,7 +87,8 @@ void AStarGenerator::publishOccupationMarkersMap()
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
-void AStarGenerator::publishROSDebugData(const Node* _node, const NodeSet &_open_set, const NodeSet &_closed_set)
+template<typename T, typename U>
+void AStarGenerator::publishROSDebugData(const Node* _node, const T &_open_set, const U &_closed_set)
 {
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)
 
@@ -112,8 +113,8 @@ void AStarGenerator::publishROSDebugData(const Node* _node, const NodeSet &_open
     best_node_marker_.pose.position = continousPoint(_node->coordinates, resolution_);
     best_node_marker_.pose.position.z += resolution_;
 
-    aux_text_marker_.text = "Best node G = " + std::to_string(_node->G) + "Best node G+H = " + std::to_string(_node->G+_node->H) +
-                 std::string("\nCost = ") + std::to_string(static_cast<int>(cost_weight_ * _node->cost));
+    aux_text_marker_.text = "Best node G = " + std::to_string(_node->G) + "\nBest node G+H = " + std::to_string(_node->G+_node->H) +
+                 std::string("\nCost = ") + std::to_string(static_cast<int>(cost_weight_ * _node->cost * (dist_scale_factor_/100)));
 	aux_text_marker_.pose = best_node_marker_.pose;
     aux_text_marker_.pose.position.z += 5 * resolution_;
 
@@ -146,7 +147,7 @@ unsigned int AStarGenerator::computeG(const Node* _current, Node* _suc,  unsigne
 
 #pragma GCC diagnostic pop
 
-void AStarGenerator::exploreNeighbours(Node* _current, const Vec3i &_target,NodeSet &_openset){
+void AStarGenerator::exploreNeighbours(Node* _current, const Vec3i &_target, node_by_position &_index_by_pos){
     
     for (unsigned int i = 0; i < direction.size(); ++i) {
             
@@ -166,22 +167,27 @@ void AStarGenerator::exploreNeighbours(Node* _current, const Vec3i &_target,Node
             successor->parent = _current;
             successor->G = totalCost;
             successor->H = heuristic(successor->coordinates, _target);
-            _openset.insert(successor);
+            successor->gplush = successor->G + successor->H;
+            _index_by_pos.insert(successor);
             discrete_world_.setOpenValue(successor->coordinates, true);
         }
         else if (totalCost < successor->G) {
             successor->parent = _current;
             successor->G = totalCost;
+            successor->gplush = successor->G + successor->H;
+            auto found = _index_by_pos.find(successor->world_index);
+            _index_by_pos.erase(found);
+            _index_by_pos.insert(successor);
         }
     }
 }
 PathData AStarGenerator::findPath(const Vec3i &_source, const Vec3i &_target)
 {
     Node *current = nullptr;
-    NodeSet openSet, closedSet;
+
+    std::vector<Node*> closedSet;
     bool solved{false};
 
-    openSet.insert(discrete_world_.getNodePtr(_source));
     discrete_world_.getNodePtr(_source)->parent = new Node(_source);
     discrete_world_.setOpenValue(_source, true);
     
@@ -190,23 +196,31 @@ PathData AStarGenerator::findPath(const Vec3i &_source, const Vec3i &_target)
 
     line_of_sight_checks_ = 0;
     
-    while (!openSet.empty()) {
+    MagicalMultiSet openSet;
 
-        current = *openSet.begin();
+    node_by_cost&     indexByCost          = openSet.get<IndexByCost>();
+    node_by_position& indexByWorldPosition = openSet.get<IndexByWorldPosition>();
 
+    indexByCost.insert(discrete_world_.getNodePtr(_source));
+    
+    while (!indexByCost.empty()) {
+        
+        auto it = indexByCost.begin();
+        current = *it;
+        indexByCost.erase(indexByCost.begin());
+        
         if (current->coordinates == _target) { solved = true; break; }
         
-        openSet.erase(openSet.begin());
-        closedSet.insert(current);
+        closedSet.push_back(current);
 
         discrete_world_.setOpenValue(*current, false);
         discrete_world_.setClosedValue(*current, true);
 
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)
-        publishROSDebugData(current, openSet, closedSet);
+        publishROSDebugData(current, indexByCost, closedSet);
 #endif
 
-        exploreNeighbours(current, _target, openSet);     
+        exploreNeighbours(current, _target, indexByWorldPosition);     
     }
     main_timer.toc();
     

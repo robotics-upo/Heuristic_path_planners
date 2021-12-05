@@ -71,6 +71,7 @@ namespace utils
             
             for(long unsigned int i = 0; i < discrete_world_vector_.size(); ++i){
                 discrete_world_vector_[i].coordinates =  getDiscreteWorldPositionFromIndex(i);
+                discrete_world_vector_[i].world_index = i;
             }
             
         }
@@ -84,7 +85,7 @@ namespace utils
          * @return true if node is valid
          * @return false if requested coordinates correspond to invalid node (outside the world)
          */
-        bool setNodeCost(const double &_x, const double &_y, const double &_z, const unsigned int _cost){
+        bool setNodeCost(const double &_x, const double &_y, const double &_z, const double _cost){
             
             return setNodeCost( Vec3i{ static_cast<int>(std::round(_x / resolution_)),
                                        static_cast<int>(std::round(_y / resolution_)),
@@ -98,7 +99,7 @@ namespace utils
          * @return true if node is valid
          * @return false if requested coordinates correspond to invalid node (outside the world)
          */
-        bool setNodeCost(const Vec3i &_vec, const unsigned int _cost){
+        bool setNodeCost(const Vec3i &_vec, const double _cost){
 
             if(!checkValid(_vec))
                 return false;

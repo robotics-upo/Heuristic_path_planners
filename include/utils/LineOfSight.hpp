@@ -56,6 +56,9 @@ namespace Planners
              * @return false 
              */
             bool bresenham3DWithMaxThreshold(const Node *_lnode, const Node *_rnode, const DiscreteWorld &_world, const unsigned int _threshold);
+        
+
+            int nodesInLineBetweenTwoNodes(const Node *_lnode, const Node *_rnode, const DiscreteWorld &_world, const unsigned int _threshold);
         }
     }
 }

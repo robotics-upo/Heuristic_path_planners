@@ -50,7 +50,7 @@ get_file_list(map2dpath, ".pgm", maps_list)
 get_file_list(map3dpath, ".bt", maps_list)
 
 plot_choices = ['explored_nodes', 'time_spent', 'line_of_sight_checks', 
-                'total_cost', 'h_cost', 'c_cost', 'g_cost', 'n_points', 
+                'total_cost1', 'total_cost2', 'h_cost', 'c_cost', 'g_cost1', 'g_cost2', 'n_points', 
                 'path_length', 'min_distance_to_obstacle', 'max_distance_to_obstacle',
                 'mean_distance_to_obstacle', 'mean_std_dev_to_obstacle']
 
@@ -143,7 +143,7 @@ for algorithm in args.algorithm:
         text_marker.text = "Algorithm: "            + str(algorithm) + \
                          "\nCost "                  + str(args.cost_value[0]) + \
                          "\nLoS "                   + str(args.lof_value[0]) + \
-                         "\nTime spent: "           + str(resp.time_spent.data) + " ms" + \
+                         "\nTime spent: "           + str(resp.time_spent.data/1000) + " ms" + \
                          "\nExplored nodes: "       + str(resp.explored_nodes.data) + \
                          "\nLine of sight checks: " + str(resp.line_of_sight_checks.data) + \
                          "\nPath Length: "          + str(round(resp.path_length.data,3)) + " m"

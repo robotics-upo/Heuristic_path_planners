@@ -51,7 +51,7 @@ namespace Planners
          * @param _dist Distance between _s and _s2
          * @return unsigned int 
          */
-        virtual unsigned int ComputeEdgeCost(const utils::CoordinateListPtr _checked_nodes, const Node* _s, const Node* _s2, unsigned int _dist);
+        virtual unsigned int ComputeEdgeCost(const utils::CoordinateListPtr _checked_nodes, const Node* _s, const Node* _s2);
 
         /**
          * @brief 

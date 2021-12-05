@@ -112,88 +112,107 @@ private:
             std::cout << discrete_goal << ": Goal not valid" << std::endl;
             return false;
         }
+        std::vector<double> times;
+        times.reserve(_req.tries.data);
+        for(int i = 0; i < _req.tries.data; ++i){
 
-        auto path_data = algorithm_->findPath(discrete_start, discrete_goal);
-        
-        if( std::get<bool>(path_data["solved"]) ){
-            utils::CoordinateList path;
-            try{
-                _rep.time_spent.data           = std::get<double>(path_data["time_spent"] );
-                _rep.path_length.data          = std::get<double>(path_data["path_length"] );
-                _rep.explored_nodes.data       = std::get<size_t>(path_data["explored_nodes"] );
-                _rep.line_of_sight_checks.data = std::get<unsigned int>(path_data["line_of_sight_checks"] );
+            auto path_data = algorithm_->findPath(discrete_start, discrete_goal);
 
-                _rep.total_cost.data           = std::get<unsigned int>(path_data["total_cost"] );
-                _rep.h_cost.data               = std::get<unsigned int>(path_data["h_cost"]);
-                _rep.g_cost.data               = std::get<unsigned int>(path_data["g_cost"]);
-                _rep.c_cost.data               = std::get<unsigned int>(path_data["c_cost"]);
+            if( std::get<bool>(path_data["solved"]) ){
+                utils::CoordinateList path;
+                try{
+                    _rep.time_spent.data           = std::get<double>(path_data["time_spent"] );
+                    _rep.time_spent.data /= 1000;
+                    times.push_back(_rep.time_spent.data);
 
-                _rep.cost_weight.data          = std::get<double>(path_data["cost_weight"]);
-                _rep.max_los.data              = std::get<unsigned int>(path_data["max_line_of_sight_cells"]);
-                path = std::get<CoordinateList>(path_data["path"]);
+                    if(_req.tries.data < 2 || i == ( _req.tries.data - 1) ){
+                        _rep.path_length.data          = std::get<double>(path_data["path_length"] );
+                        _rep.explored_nodes.data       = std::get<size_t>(path_data["explored_nodes"] );
+                        _rep.line_of_sight_checks.data = std::get<unsigned int>(path_data["line_of_sight_checks"] );
 
-            }catch(std::bad_variant_access const& ex){
-                std::cerr << "Bad variant error: " << ex.what() << std::endl;
-            }
+                        _rep.total_cost1.data           = std::get<unsigned int>(path_data["total_cost1"] );
+                        _rep.total_cost2.data           = std::get<unsigned int>(path_data["total_cost2"] );
+                        _rep.h_cost.data               = std::get<unsigned int>(path_data["h_cost"]);
+                        _rep.g_cost1.data               = std::get<unsigned int>(path_data["g_cost1"]);
+                        _rep.g_cost2.data               = std::get<unsigned int>(path_data["g_cost2"]);
+                        _rep.c_cost.data               = std::get<unsigned int>(path_data["c_cost"]);
 
-            const auto [av_curvature, curv_sigma, curv_min, curv_max] = utils::metrics::calculatePathCurvature(path);
+                        _rep.cost_weight.data          = std::get<double>(path_data["cost_weight"]);
+                        _rep.max_los.data              = std::get<unsigned int>(path_data["max_line_of_sight_cells"]);
+                    }
+                    path = std::get<CoordinateList>(path_data["path"]);
 
-            const auto [av_angles, angles_sigma, angles_min, angles_max, changes, angles] = utils::metrics::calculatePathAnglesMetrics(path, 2);
-
-            const auto adjacent_path    = utils::geometry::getAdjacentPath(path, *algorithm_->getInnerWorld());
-            const auto result_distances = getClosestObstaclesToPathPoints(adjacent_path);
-            const auto [mean_dist, dist_stddev, min_dist, max_dist] = utils::metrics::calculateDistancesMetrics(result_distances );
-
-            path_data["av_curv"]        = av_curvature;
-            path_data["std_dev_curv"]   = curv_sigma;
-            path_data["min_curv"]       = curv_min;
-            path_data["max_curv"]       = curv_max;
-
-            path_data["av_angles"]      = av_angles;
-            path_data["std_dev_angles"] = angles_sigma;
-            path_data["min_angle"]      = angles_min;
-            path_data["max_angle"]      = angles_max;         
-            path_data["angle_changes"]  = changes;
-
-            path_data["mean_dist"]      = mean_dist;
-            path_data["std_dev"]        = dist_stddev;
-            path_data["min_dist"]       = min_dist;
-            path_data["max_dist"]       = max_dist;
-
-            _rep.n_points.data                   = adjacent_path.size();
-            _rep.mean_distance_to_obstacle.data  = mean_dist;
-            _rep.mean_std_dev_to_obstacle.data   = dist_stddev;
-            _rep.min_distance_to_obstacle.data   = min_dist;
-            _rep.max_distance_to_obstacle.data   = max_dist;
-
-            if(save_data_){
-                utils::DataVariantSaver saver;
-
-                if(saver.savePathDataToFile(path_data, data_folder_ + "/planning.txt") && 
-                   saver.savePathDistancesToFile(adjacent_path, result_distances, data_folder_ + "/path_metrics.txt") &&
-                   saver.saveAnglesToFile(angles, data_folder_ + "/angles.txt") ){
-                    ROS_INFO("Path data metrics saved");
-                }else{
-                    ROS_ERROR("Couldn't save path data metrics. Path and results does not have same size");
+                }catch(std::bad_variant_access const& ex){
+                    std::cerr << "Bad variant error: " << ex.what() << std::endl;
                 }
-            }
 
-            for(const auto &it: std::get<CoordinateList>(path_data["path"])){
-                path_line_markers_.points.push_back(continousPoint(it, resolution_));
-                path_points_markers_.points.push_back(continousPoint(it, resolution_));
-            }
-            
-            publishMarker(path_line_markers_, line_markers_pub_);
-            publishMarker(path_points_markers_, point_markers_pub_);
-            
-            path_line_markers_.points.clear();
-            path_points_markers_.points.clear();
+                if(save_data_){
+                
+                    const auto [av_curvature, curv_sigma, curv_min, curv_max] = utils::metrics::calculatePathCurvature(path);
 
-            ROS_INFO("Path calculated succesfully");
-        }else{
-            ROS_INFO("Could not calculate path between request points");
+                    const auto [av_angles, angles_sigma, angles_min, angles_max, changes, angles] = utils::metrics::calculatePathAnglesMetrics(path, 2);
+
+                    const auto adjacent_path    = utils::geometry::getAdjacentPath(path, *algorithm_->getInnerWorld());
+                    const auto result_distances = getClosestObstaclesToPathPoints(adjacent_path);
+                    const auto [mean_dist, dist_stddev, min_dist, max_dist] = utils::metrics::calculateDistancesMetrics(result_distances );
+
+                    path_data["av_curv"]        = av_curvature;
+                    path_data["std_dev_curv"]   = curv_sigma;
+                    path_data["min_curv"]       = curv_min;
+                    path_data["max_curv"]       = curv_max;
+
+                    path_data["av_angles"]      = av_angles;
+                    path_data["std_dev_angles"] = angles_sigma;
+                    path_data["min_angle"]      = angles_min;
+                    path_data["max_angle"]      = angles_max;         
+                    path_data["angle_changes"]  = changes;
+
+                    path_data["mean_dist"]      = mean_dist;
+                    path_data["std_dev"]        = dist_stddev;
+                    path_data["min_dist"]       = min_dist;
+                    path_data["max_dist"]       = max_dist;
+
+                    _rep.n_points.data                   = adjacent_path.size();
+                    _rep.mean_distance_to_obstacle.data  = mean_dist;
+                    _rep.mean_std_dev_to_obstacle.data   = dist_stddev;
+                    _rep.min_distance_to_obstacle.data   = min_dist;
+                    _rep.max_distance_to_obstacle.data   = max_dist;
+
+                    utils::DataVariantSaver saver;
+
+                    if(saver.savePathDataToFile(path_data, data_folder_ + "/planning.txt") && 
+                       saver.savePathDistancesToFile(adjacent_path, result_distances, data_folder_ + "/path_metrics.txt") &&
+                       saver.saveAnglesToFile(angles, data_folder_ + "/angles.txt") ){
+                        ROS_INFO("Path data metrics saved");
+                    }else{
+                        ROS_ERROR("Couldn't save path data metrics. Path and results does not have same size");
+                    }
+                }
+
+                if(_req.tries.data < 2 || i == ( _req.tries.data - 1) ){
+
+                    for(const auto &it: std::get<CoordinateList>(path_data["path"])){
+                        path_line_markers_.points.push_back(continousPoint(it, resolution_));
+                        path_points_markers_.points.push_back(continousPoint(it, resolution_));
+                    }
+
+                    publishMarker(path_line_markers_, line_markers_pub_);
+                    publishMarker(path_points_markers_, point_markers_pub_);
+
+                    path_line_markers_.points.clear();
+                    path_points_markers_.points.clear();
+
+                    ROS_INFO("Path calculated succesfully");
+                }
+            }else{
+                ROS_INFO("Could not calculate path between request points");
+            }
+        }  
+        if(_req.tries.data > 2){
+            auto av_time = std::accumulate(times.begin(), times.end(), 0.0) / times.size(); 
+            std::cout << "Average Time: "      << av_time  << " milisecs" << std::endl;
+            std::cout << "Average Frequency: " << 1000/av_time << std::endl;
         }
-
         return true;
     }
     void configureAlgorithm(const std::string &algorithm_name){

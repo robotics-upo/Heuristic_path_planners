@@ -56,7 +56,8 @@ namespace Planners{
          * @param _open_set 
          * @param _closed_set 
          */
-        void publishROSDebugData(const Node* _node, const NodeSet &_open_set, const NodeSet &_closed_set);
+        template<typename T, typename U>
+        void publishROSDebugData(const Node* _node, const T &_open_set, const U &_closed_set);
         
     protected:
 
@@ -67,7 +68,7 @@ namespace Planners{
          * @param _current 
          * @param _openset 
          */
-        virtual void exploreNeighbours(Node* _current, const Vec3i &_target,NodeSet &_openset);
+        virtual void exploreNeighbours(Node* _current, const Vec3i &_target,node_by_position &_index_by_pos);
 
         /**
          * @brief 

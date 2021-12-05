@@ -16,24 +16,26 @@ namespace Planners
         if (LineOfSight::bresenham3D((_s_aux->parent), _s2_aux, discrete_world_, checked_nodes))  
         {
             auto dist2   = geometry::distanceBetween2Nodes(_s_aux->parent, _s2_aux);
-            auto edge2   = ComputeEdgeCost(checked_nodes, _s_aux->parent, _s2_aux, dist2);
+            auto edge2   = ComputeEdgeCost(checked_nodes, _s_aux->parent, _s2_aux);
 
             line_of_sight_checks_++;
             LineOfSight::bresenham3D(_s_aux, _s2_aux, discrete_world_, checked_nodes_current);
 
             auto dist1   = geometry::distanceBetween2Nodes(_s_aux, _s2_aux);  
-            auto edge1   =  ComputeEdgeCost(checked_nodes_current, _s_aux, _s2_aux, dist1);
+            auto edge1   =  ComputeEdgeCost(checked_nodes_current, _s_aux, _s2_aux);
 
-            if ( ( _s_aux->parent->G + dist2 + edge2 ) <= ( _s_aux->G + dist1 + edge1)) 
+            if ( ( _s_aux->parent->G + dist2 + edge2 ) < ( _s_aux->G + dist1 + edge1)) 
             {
                 _s2_aux->parent = _s_aux->parent;
                 _s2_aux->G      = _s_aux->parent->G + dist2 + edge2;  // This is the same than A*
+                _s2_aux->gplush = _s2_aux->G + _s2_aux->H;
                 _s2_aux->C      = edge2;
             }
             else{
                 _s2_aux->parent =_s_aux;
-                _s2_aux->G      = _s_aux->G + dist1 + edge1;   // This is the same than A*       
-                _s2_aux->C      = edge1;      
+                _s2_aux->G      = _s_aux->G + dist1 + edge1;   // This is the same than A*      
+                _s2_aux->gplush = _s2_aux->G + _s2_aux->H;
+                _s2_aux->C      = edge1; 
             }
         } else {
 
@@ -43,17 +45,16 @@ namespace Planners
             LineOfSight::bresenham3D(_s_aux, _s2_aux, discrete_world_, checked_nodes);
             
             auto dist1     = geometry::distanceBetween2Nodes(_s_aux, _s2_aux);  
-            auto edge1   =  ComputeEdgeCost(checked_nodes, _s_aux, _s2_aux, dist1);
+            auto edge1   =  ComputeEdgeCost(checked_nodes, _s_aux, _s2_aux);
 
             _s2_aux->G     =  _s_aux->G + dist1 + edge1;  // This is the same than A*
+            _s2_aux->gplush = _s2_aux->G + _s2_aux->H;
             _s2_aux->C     =  edge1;
         }
     }
 
-    unsigned int ThetaStarGeneratorSafetyCost::ComputeEdgeCost(const utils::CoordinateListPtr _checked_nodes, const Node* _s, const Node* _s2, unsigned int _dist){ 
+    unsigned int ThetaStarGeneratorSafetyCost::ComputeEdgeCost(const utils::CoordinateListPtr _checked_nodes, const Node* _s, const Node* _s2){ 
         
-        //TODO 2 The commented equations of mean_dist_cost calculates it using the dist_max = 100 old factor, the new ones
-        // should be more consistent and reduce explroed nodes and line of sight checks
         double dist_cost{0};
         double mean_dist_cost{0};
             
@@ -62,23 +63,16 @@ namespace Planners
             for(auto &it: *_checked_nodes)
                 dist_cost += discrete_world_.getNodePtr(it)->cost;
 
-        double cost_origin    = _s->cost;
-        double cost_goal      = _s2->cost;
-        
         if( n_checked_nodes > 1){
-            // mean_dist_cost = ( ( ( cost_origin - cost_goal ) / 2 + dist_cost ) / ( n_checked_nodes * dist_max ) ); //A
-            mean_dist_cost = ( ( ( cost_origin - cost_goal ) / 2 + dist_cost ) / ( _dist ) ); //A
+            mean_dist_cost = (( _s->cost - _s2->cost ) / 2) + dist_cost;
         }
         else if (n_checked_nodes == 1){
-            // mean_dist_cost = ( ( ( cost_origin + cost_goal ) / 2 + dist_cost ) / ( n_checked_nodes * dist_max * dist_max ) ); //A
-            mean_dist_cost = ( ( ( cost_origin + cost_goal ) / 2 + dist_cost ) / ( _dist ) ); //A
+            mean_dist_cost = (( _s->cost + _s2->cost ) / 2) + dist_cost;
         }
         else{ 
-            // mean_dist_cost = ( cost_origin + cost_goal ) / ( 2 * dist_max);
-            mean_dist_cost = ( cost_origin + cost_goal ) / ( 2 * _dist);
+            mean_dist_cost = (( _s->cost + _s2->cost ) / 2);
         }
-        // std::cout << static_cast<unsigned int>( mean_dist_cost  * _dist * cost_weight_ )  << std::endl;
-        return static_cast<unsigned int>( mean_dist_cost  * _dist * cost_weight_ );        
+        return static_cast<unsigned int>( mean_dist_cost * cost_weight_ * dist_scale_factor_reduced_);
     }
 
     unsigned int ThetaStarGeneratorSafetyCost::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs){
@@ -90,10 +84,11 @@ namespace Planners
         }else{
             cost += (_n_i < 6 ? dist_scale_factor_ : (_n_i < 18 ? dd_2D_ : dd_3D_)); //This is more efficient
         }
-        double bb = static_cast<double>( static_cast<double>(_suc->cost) / (static_cast<double>(cost) / static_cast<double>(dist_scale_factor_)) );
 
-        auto edge_neighbour = static_cast<unsigned int>( ( ( ( _current->cost + bb ) / ( 2 * 100 ) ) * cost ) );
+        double cc = (_current->cost + _suc->cost) / 2;
         
+        auto edge_neighbour = static_cast<unsigned int>( cc *  cost_weight_ * dist_scale_factor_reduced_); 
+    
         cost += _current->G;
         cost += edge_neighbour;
         _suc->C = edge_neighbour;

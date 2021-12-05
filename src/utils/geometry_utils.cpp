@@ -32,6 +32,20 @@ namespace Planners
                                                                            pow(_v1.y - _v2.y, 2) +
                                                                            pow(_v1.z - _v2.z, 2)));
             }
+            unsigned int NodesBetween2Nodes(const Node &_n1, const Node &_n2)
+            {
+                return NodesBetween2Nodes(_n1.coordinates, _n2.coordinates);
+            }
+            unsigned int NodesBetween2Nodes(const Node *_n1, const Node *_n2)
+            {
+                return NodesBetween2Nodes(*_n1, *_n2);
+            }
+            unsigned int NodesBetween2Nodes(const Vec3i &_v1, const Vec3i &_v2)
+            {
+                return static_cast<unsigned int>(sqrt(pow(_v1.x - _v2.x, 2) +
+                                                      pow(_v1.y - _v2.y, 2) +
+                                                      pow(_v1.z - _v2.z, 2)));
+            }
             Vec3i abs(const Vec3i &_vec)
             {
                 return { std::abs(_vec.x), std::abs(_vec.y), std::abs(_vec.z) };
@@ -60,6 +74,20 @@ namespace Planners
             
                     visited_nodes.reset(new utils::CoordinateList);
                 }
+
+                // std::cout << "NODOS OFFLINE:" << adjacent_path.size() << std::endl;  
+
+                // for(size_t i = 0; i < _path.size() ; ++i){
+                //     std::cout << "PATH X:" << _path[i].x << std::endl; 
+                //     std::cout << "PATH Y:" << _path[i].y << std::endl; 
+                //     std::cout << "PATH Z:" << _path[i].z << std::endl; 
+                // }
+
+                // for(size_t i = 0; i < adjacent_path.size() ; ++i){
+                //     std::cout << "PATH X:" << adjacent_path[i].x << std::endl; 
+                //     std::cout << "PATH Y:" << adjacent_path[i].y << std::endl; 
+                //     std::cout << "PATH Z:" << adjacent_path[i].z << std::endl; 
+                // }
                 return adjacent_path;
             }
 

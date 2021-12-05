@@ -1,14 +1,17 @@
 geometry_msgs/Point start
 geometry_msgs/Point goal
 std_msgs/String algorithm
+std_msgs/Int32 tries
 ---
 std_msgs/Int32 explored_nodes
-std_msgs/Int32 time_spent
+std_msgs/Float32 time_spent
 std_msgs/Int32 line_of_sight_checks
 
-std_msgs/Int32 total_cost
+std_msgs/Int32 total_cost1
+std_msgs/Int32 total_cost2
 std_msgs/Int32 h_cost
-std_msgs/Int32 g_cost
+std_msgs/Int32 g_cost1
+std_msgs/Int32 g_cost2
 std_msgs/Int32 c_cost
 std_msgs/Int32 n_points
 

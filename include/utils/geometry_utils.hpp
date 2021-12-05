@@ -68,6 +68,30 @@ namespace Planners
              * @return unsigned int 
              */
             unsigned int distanceBetween2Nodes(const Vec3i &_v1, const Vec3i &_v2);
+            /**
+             * @brief Discrete distance 
+             * 
+             * @param n1 
+             * @param n2 
+             * @return unsigned int 
+             */
+            unsigned int NodesBetween2Nodes(const Node &_n1, const Node &_n2);
+            /**
+             * @brief  Discrete distance             * 
+             * @param n1 
+             * @param n2 
+             * @return unsigned int 
+             */
+            unsigned int NodesBetween2Nodes(const Node *_n1, const Node *_n2);
+            
+            /**
+             * @brief 
+             * 
+             * @param _v1 
+             * @param _v2 
+             * @return unsigned int 
+             */
+            unsigned int NodesBetween2Nodes(const Vec3i &_v1, const Vec3i &_v2);
 
             /**
              * @brief Returns the absolute value vector 

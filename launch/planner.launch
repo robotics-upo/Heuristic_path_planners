@@ -15,7 +15,7 @@
     <arg name="inflate_map"         default="true"/>
     <arg name="inflation_size"      default="$(arg resolution)"/>
 
-    <arg name="save_data"           default="true"/>
+    <arg name="save_data"           default="false"/>
     <!-- This should be a folder -->
     <arg name="data_folder"         default="$(env HOME)"/>
 
@@ -24,9 +24,7 @@
     <arg name="cost_weight" default="4.0"/>
     <arg name="max_line_of_sight_distance" default="2.0"/>
 
-    <arg name="scale" default="1"/>  
-    <!-- <arg name="cost_scaling_factor" default="0.8"/>  
-    <arg name="robot_radius"        default="0.4"/>  -->
+    <!-- GRIDM Generators Parameters -->
     <arg name="cost_scaling_factor" default="2.0"/>  
     <arg name="robot_radius"        default="0.4"/> 
     
@@ -41,7 +39,7 @@
         <param name="inflate_map"           value="$(arg inflate_map)"/>
         <param name="inflation_size"        value="$(arg inflation_size)"/>
         
-        <param name="save_data"             value="$(arg save_data)"/>
+        <param name="save_data_file"        value="$(arg save_data)"/>
         <param name="overlay_markers"       value="$(arg overlay_markers)"/>
         <param name="data_folder"           value="$(arg data_folder)"/>
         <param name="algorithm"             value="$(arg algorithm_name)"/>

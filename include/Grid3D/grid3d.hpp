@@ -205,7 +205,9 @@ public:
 	{
 		return (x >= 0.0 && y >= 0.0 && z >= 0.0 && x < m_maxX && y < m_maxY && z < m_maxZ);
 	}
-	int getCellCost(const float &_x, const float &_y, const float &_z){
+	// int getCellCost(const float &_x, const float &_y, const float &_z){
+	// JAC Precision
+	float getCellCost(const float &_x, const float &_y, const float &_z){
 		
 		if( !isIntoMap(_x, _y, _z) )
 			return 0;

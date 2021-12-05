@@ -3,10 +3,20 @@ project(heuristic_planners)
 
 add_compile_options(-std=c++17 -Wall -Wextra -pedantic)
 
-option(BUILD_DOC         "Build documentation   " ON)
-option(BUILD_ROS_SUPPORT "Build with ROS Support" ON)
-option(BUILD_DEBUG       "Build debug features  " OFF)
-option(BUILD_VOROCPP     "Build voro++ features  " OFF)
+option(BUILD_DOC            "Build documentation   " ON)
+option(BUILD_ROS_SUPPORT    "Build with ROS Support" ON)
+option(OPTIMIZE_FLAG        "Enable Compiler Optimization for Runtime Performance" ON)
+option(BUILD_DEBUG          "Build debug features  " OFF)
+option(BUILD_COMPUTE_STATS  "Build PathGenerator with statistics" OFF)
+option(BUILD_VOROCPP        "Build voro++ features  " OFF)
+
+if(OPTIMIZE_FLAG)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
+endif()
+
+if(BUILD_COMPUTE_STATS)
+  add_definitions(-DCOMPUTE_STATISTICS)
+endif()
 
 if(BUILD_DOC)
 # check if Doxygen is installed
@@ -31,6 +41,8 @@ if(BUILD_DOC)
   endif (DOXYGEN_FOUND)
 endif()
 unset(BUILD_DOC CACHE)
+
+find_package(Boost)
 
 if(BUILD_ROS_SUPPORT)
   add_definitions(-DROS)
@@ -128,11 +140,12 @@ list(APPEND ${PROJECT_NAME}_UTILS_SOURCES src/utils/geometry_utils.cpp
                                           src/utils/metrics.cpp       
                                           )
 if(BUILD_ROS_SUPPORT)
-list(APPEND ${PROJECT_NAME}_UTILS_SOURCES src/utils/ros/ROSInterfaces.cpp)
+  list(APPEND ${PROJECT_NAME}_UTILS_SOURCES src/utils/ros/ROSInterfaces.cpp)
 endif()
 
 add_library(PathGenerator                   src/Planners/PathGenerator.cpp 
                                             ${${PROJECT_NAME}_UTILS_SOURCES})
+
 add_library(AStarGenerator                  src/Planners/AStarGenerator.cpp
                                             src/Planners/PathGenerator.cpp 
                                             ${${PROJECT_NAME}_UTILS_SOURCES}
@@ -150,7 +163,7 @@ add_library(LazyThetaStarGeneratorSafetyCost src/Planners/LazyThetaStarGenerator
 
 
 list(APPEND ${PROJECT_NAME}_LIBRARIES PathGenerator AStarGenerator CostAwareAStarGenerator AStarGeneratorSafetyCost ThetaStarGenerator CostAwareThetaStarGenerator ThetaStarGeneratorSafetyCost LazyThetaStarGenerator CostAwareLazyThetaStarGenerator LazyThetaStarGeneratorSafetyCost)  
-target_link_libraries(${${PROJECT_NAME}_LIBRARIES} ${catkin_LIBRARIES})
+target_link_libraries(${${PROJECT_NAME}_LIBRARIES} ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 add_dependencies( ${${PROJECT_NAME}_LIBRARIES} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 list(APPEND ${PROJECT_NAME}_TARGETS ${${PROJECT_NAME}_LIBRARIES})
 

@@ -19,6 +19,16 @@
 #include <memory>
 #include <Eigen/Dense>
 
+#include <boost/multi_index_container.hpp>
+#include <boost/multi_index/ordered_index.hpp>
+#include <boost/multi_index/identity.hpp>
+#include <boost/multi_index/member.hpp>
+#include <boost/multi_index/hashed_index.hpp>
+#include <boost/multi_index/key_extractors.hpp>
+
+using namespace ::boost;
+using namespace ::boost::multi_index;
+
 namespace Planners
 {
     namespace utils
@@ -29,12 +39,13 @@ namespace Planners
 
         using CoordinateList     = std::vector<Planners::utils::Vec3i>;
         using CoordinateListPtr  = std::shared_ptr<std::vector<Planners::utils::Vec3i>>;
-        using NodeSet            = std::set<Node*, NodeComparator>;
         using DataVariant        = std::variant<std::string, Vec3i, CoordinateList, double, size_t, int, bool, unsigned int>;
         using PathData           = std::map<std::string, DataVariant>;
-        
+
         //Compile time constants
         static constexpr int const dist_scale_factor_{100};
+        //To use with costs
+        static constexpr int const dist_scale_factor_reduced_{ dist_scale_factor_ / 100 };
         //Dont touch these ones (diagonal distances in 2D and 3D)
         //The static cast from floating point to integer returns the truncated value 
         //i.e discards the decimal part
@@ -195,9 +206,14 @@ namespace Planners
             Node *parent{nullptr};
 
             Planners::utils::Vec3i coordinates;
+
             unsigned int G{0}, H{0}, C{0};
-            unsigned int cost{0}, non_uni{0};
             
+            unsigned int gplush{0};
+            unsigned int world_index{0};
+            
+            double cost{0};
+
             bool occuppied{false};
             bool isInOpenList{false};
             bool isInClosedList{false};
@@ -208,44 +224,26 @@ namespace Planners
             unsigned int getScoreWithSafetyCost();
 
         };
+                
+        struct IndexByCost {};
+        struct IndexByWorldPosition {};
 
-        /**
-         * @brief Comparator passed to the Open and Closed sets to automatically order the lists depending
-         * on the nodes total costs 
-         */
-        struct NodeComparator{
-            
-            bool operator()(const Node *const &_lhs, const Node *const &_rhs) const
-	        {
-		        auto res = static_cast<long int>(_lhs->G + _lhs->H) - static_cast<long int>(_rhs->G + _rhs->H);
-		        if (res == 0)
-		        {
-		        	res = _lhs->coordinates.x - _rhs->coordinates.x;
-		        }
-		        if (res == 0)
-		        {
-		        	res = _lhs->coordinates.y - _rhs->coordinates.y;
-		        }
-		        if (res == 0)
-		        {
-		        	res = _lhs->coordinates.z - _rhs->coordinates.z;
-		        }
+        using MagicalMultiSet = boost::multi_index_container<
+          Node*, // the data type stored
+          boost::multi_index::indexed_by< // list of indexes
+            boost::multi_index::hashed_unique<  //hashed index over 'l'
+              boost::multi_index::tag<IndexByWorldPosition>, // give that index a name
+              boost::multi_index::member<Node, unsigned int, &Node::world_index> // what will be the index's key
+            >,
+            boost::multi_index::ordered_non_unique<  //ordered index over 'i1'
+              boost::multi_index::tag<IndexByCost>, // give that index a name
+              boost::multi_index::member<Node, unsigned int, &Node::gplush> // what will be the index's key
+            >
+          >
+        >;
 
-		        if (res == 0)
-		        {
-		        	res = _lhs->parent->coordinates.x - _rhs->parent->coordinates.x;
-		        }
-		        if (res == 0)
-		        {
-		        	res = _lhs->parent->coordinates.y - _rhs->parent->coordinates.y;
-		        }
-		        if (res == 0)
-		        {
-		        	res = _lhs->parent->coordinates.z - _rhs->parent->coordinates.z;
-		        }
-		    return res < 0;
-        	}
-        };
+        typedef MagicalMultiSet::index<IndexByWorldPosition>::type node_by_position;
+        typedef MagicalMultiSet::index<IndexByCost>::type          node_by_cost;
 
     }
 }
