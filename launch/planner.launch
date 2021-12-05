@@ -14,6 +14,8 @@
 
     <arg name="inflate_map"         default="true"/>
     <arg name="inflation_size"      default="$(arg resolution)"/>
+    <!-- Possibles values are: euclidean, euclidean_optimized, manhattan, octogonal and dijkstra -->
+    <arg name="heuristic"         default="euclidean"/>
 
     <arg name="save_data"           default="false"/>
     <!-- This should be a folder -->
@@ -45,6 +47,7 @@
         <param name="algorithm"             value="$(arg algorithm_name)"/>
         <param name="cost_weight"           value="$(arg cost_weight)"/>
         <param name="max_line_of_sight_distance"   value="$(arg max_line_of_sight_distance)"/>
+        <param name="heuristic"             value="$(arg heuristic)"/>
 
         <param name="cost_scaling_factor"   value="$(arg cost_scaling_factor)"/>
         <param name="robot_radius"          value="$(arg robot_radius)"/>

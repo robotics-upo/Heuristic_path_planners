@@ -1,6 +1,7 @@
 geometry_msgs/Point start
 geometry_msgs/Point goal
 std_msgs/String algorithm
+std_msgs/String heuristic
 std_msgs/Int32 tries
 ---
 std_msgs/Int32 explored_nodes

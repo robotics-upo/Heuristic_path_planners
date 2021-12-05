@@ -310,7 +310,8 @@ For the script to finish you should press some key with in the running terminal.
 
 ## TODOs
 
-- [ ] Add bash/python scripts to generate data from a set of parameters
 - [ ] Clean grid3d.hpp class
+- [ ] Add comments to generate proper Doxygen docs
+- [ ] Add optimized heuristics
 
 See also the [issues](https://github.com/robotics-upo/Heuristic_path_planners/issues) tab.

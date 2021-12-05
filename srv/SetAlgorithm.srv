@@ -1,3 +1,4 @@
 std_msgs/String algorithm
+std_msgs/String heuristic
 ---
 std_msgs/Bool result

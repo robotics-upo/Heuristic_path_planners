@@ -43,10 +43,11 @@ public:
     HeuristicPlannerROS()
     {
 
-        std::string algorithm_name;
+        std::string algorithm_name, heuristic;
         lnh_.param("algorithm", algorithm_name, (std::string)"astar");
-
-        configureAlgorithm(algorithm_name);
+        lnh_.param("heuristic", heuristic, (std::string)"euclidean");
+        
+        configureAlgorithm(algorithm_name, heuristic);
 
         pointcloud_sub_     = lnh_.subscribe<pcl::PointCloud<pcl::PointXYZ>>("/points", 1, &HeuristicPlannerROS::pointCloudCallback, this);
         occupancy_grid_sub_ = lnh_.subscribe<nav_msgs::OccupancyGrid>("/grid", 1, &HeuristicPlannerROS::occupancyGridCallback, this);
@@ -85,14 +86,21 @@ private:
     }   
     bool setAlgorithm(heuristic_planners::SetAlgorithmRequest &_req, heuristic_planners::SetAlgorithmResponse &rep){
         
-        configureAlgorithm(_req.algorithm.data);
+        configureAlgorithm(_req.algorithm.data, _req.heuristic.data);
         rep.result.data = true;
         return true;
     }
     bool requestPathService(heuristic_planners::GetPathRequest &_req, heuristic_planners::GetPathResponse &_rep){
 
-        if(!_req.algorithm.data.empty())
-            configureAlgorithm(_req.algorithm.data);
+        if( !_req.algorithm.data.empty() ){
+            if( !_req.heuristic.data.empty() ){
+                configureAlgorithm(_req.algorithm.data, _req.heuristic.data);
+            }else{
+                configureAlgorithm(_req.algorithm.data, "");
+            }
+        }else if( !_req.heuristic.data.empty() ){
+            configureHeuristic(_req.heuristic.data);
+        }
 
         ROS_INFO("Path requested, computing path");
         //delete previous markers
@@ -215,7 +223,7 @@ private:
         }
         return true;
     }
-    void configureAlgorithm(const std::string &algorithm_name){
+    void configureAlgorithm(const std::string &algorithm_name, const std::string &_heuristic){
 
         float ws_x, ws_y, ws_z;
 
@@ -264,7 +272,8 @@ private:
         }
 
         algorithm_->setWorldSize(world_size_, resolution_);
-        algorithm_->setHeuristic(Heuristic::euclidean);
+
+        configureHeuristic(_heuristic);
 
         ROS_INFO("Using discrete world size: [%d, %d, %d]", world_size_.x, world_size_.y, world_size_.z);
         ROS_INFO("Using resolution: [%f]", resolution_);
@@ -308,6 +317,28 @@ private:
         algorithm_->setCostFactor(cost_weight);
 
         lnh_.param("overlay_markers", overlay_markers_, (bool)false);
+    }
+    void configureHeuristic(const std::string &_heuristic){
+        
+        if( _heuristic == "euclidean" ){
+            algorithm_->setHeuristic(Heuristic::euclidean);
+            ROS_INFO("Using Euclidean Heuristics");
+        }else if( _heuristic == "euclidean_optimized" ){
+            algorithm_->setHeuristic(Heuristic::euclideanOptimized);
+            ROS_INFO("Using Optimized Euclidean Heuristics");
+        }else if( _heuristic == "manhattan" ){
+            algorithm_->setHeuristic(Heuristic::manhattan);
+            ROS_INFO("Using Manhattan Heuristics");
+        }else if( _heuristic == "octogonal" ){
+            algorithm_->setHeuristic(Heuristic::octagonal);
+            ROS_INFO("Using Octogonal Heuristics");
+        }else if( _heuristic == "dijkstra" ){
+            algorithm_->setHeuristic(Heuristic::dijkstra);     
+            ROS_INFO("Using Dijkstra Heuristics");
+        }else{
+            algorithm_->setHeuristic(Heuristic::euclidean);
+            ROS_WARN("Wrong Heuristic param. Using Euclidean Heuristics by default");
+        }
     }
     std::vector<std::pair<utils::Vec3i, double>> getClosestObstaclesToPathPoints(const utils::CoordinateList &_path){
         

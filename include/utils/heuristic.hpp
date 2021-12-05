@@ -55,6 +55,15 @@ namespace Planners
         /**
          * @brief 
          * 
+         * @param _source 
+         * @param _target 
+         * @return unsigned int 
+         */
+        static unsigned int euclideanOptimized(const Vec3i &_source, const Vec3i &_target);
+
+        /**
+         * @brief 
+         * 
          * @param _factor 
          * @param _source 
          * @param _target 

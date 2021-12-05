@@ -20,6 +20,12 @@ namespace Planners
         auto delta = std::move(getDelta(_source, _target));
         return static_cast<unsigned int>(dist_scale_factor_ * sqrt(pow(delta.x, 2) + pow(delta.y, 2) + pow(delta.z, 2)));
     }
+
+    unsigned int Heuristic::euclideanOptimized(const Vec3i &_source, const Vec3i &_target)
+    {
+        auto delta = std::move(getDelta(_source, _target));
+        return static_cast<unsigned int>( 1.2 * dist_scale_factor_ * sqrt(pow(delta.x, 2) + pow(delta.y, 2) + pow(delta.z, 2)));
+    }
     unsigned int Heuristic::euclideanAttractive(const float _factor, const Vec3i &_source, const Vec3i &_target){
         auto delta = std::move(getDelta(_source, _target));
         return static_cast<unsigned int>( _factor * dist_scale_factor_ * sqrt(pow(delta.x, 2) + pow(delta.y, 2) + pow(delta.z, 2)));
