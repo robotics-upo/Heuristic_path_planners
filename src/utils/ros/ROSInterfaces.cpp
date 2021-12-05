@@ -88,7 +88,7 @@ namespace Planners
                 // std::cout << "Cost: " << data << std::endl;
                 // 100 should be costmap_2d::LETHAL_OBSTACLE but by the values that map server publishes are between 0 and 100
                 cell = indexToXY(i, _grid.info.width);
-                if (_grid.data[i] >= 100)
+                if (_grid.data[i] >= 99)
                     _algorithm.addCollision(cell);
                 _algorithm.configureCellCost( cell, _grid.data[i] );
             }

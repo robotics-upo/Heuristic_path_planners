@@ -1,4 +1,4 @@
-image: test.pgm
+image: big_lab_map_v2.pgm
 resolution: 0.050000
 origin: [0,0, 0.0, 0.0]
 negate: 0
