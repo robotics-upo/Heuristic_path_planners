@@ -81,6 +81,7 @@ text_marker.text = ""
 it, durations = [], []
 
 fig, ax1 = plt.subplots(1, sharex=True)
+
 ax1.set_ylabel("Time spent")
 fig.suptitle('Resulting data')
 ax1.set_xlim(0, int(args.iterations[0]))
@@ -107,8 +108,8 @@ for iter in range(0,int(args.iterations[0])):
         
         it.append(iter)
         durations.append(resp.time_spent.data)
-        
-        ax1.plot(it, durations,      color='r')
+        plt.scatter(it, durations)
+        # ax1.plot(it, durations,      color='r')
         fig.canvas.draw()
         fig.show()
         plt.pause(0.05)
