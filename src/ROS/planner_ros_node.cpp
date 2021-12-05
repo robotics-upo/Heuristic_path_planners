@@ -139,8 +139,6 @@ private:
 
                         _rep.cost_weight.data          = std::get<double>(path_data["cost_weight"]);
                         _rep.max_los.data              = std::get<unsigned int>(path_data["max_line_of_sight_cells"]);
-                    }else{
-                        std::cout << "Try " << i << ": " << _rep.time_spent.data << std::endl; 
                     }
                     path = std::get<CoordinateList>(path_data["path"]);
 

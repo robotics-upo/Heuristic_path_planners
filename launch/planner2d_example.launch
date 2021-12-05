@@ -14,7 +14,7 @@
     <arg name="inflation_size"      default="$(arg resolution)"/>
 
 
-    <arg name="save_data"           default="true"/>
+    <arg name="save_data"           default="false"/>
     <!-- This should be a folder -->
     <arg name="data_folder"         default="$(env HOME)"/>
     <arg name="overlay_markers"     default="false"/>
@@ -47,7 +47,7 @@
         <param name="inflate_map"           value="$(arg inflate_map)"/>
         <param name="inflation_size"        value="$(arg inflation_size)"/>
         
-        <param name="save_data"             value="$(arg save_data)"/>
+        <param name="save_data_file"     value="$(arg save_data)"/>
         <param name="data_folder"           value="$(arg data_folder)"/>
         <param name="overlay_markers"       value="$(arg overlay_markers)"/>
         <param name="algorithm"             value="$(arg algorithm_name)"/>
