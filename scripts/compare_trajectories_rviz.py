@@ -143,7 +143,7 @@ for algorithm in args.algorithm:
         text_marker.text = "Algorithm: "            + str(algorithm) + \
                          "\nCost "                  + str(args.cost_value[0]) + \
                          "\nLoS "                   + str(args.lof_value[0]) + \
-                         "\nTime spent: "           + str(resp.time_spent.data) + " ms" + \
+                         "\nTime spent: "           + str(resp.time_spent.data/1000) + " ms" + \
                          "\nExplored nodes: "       + str(resp.explored_nodes.data) + \
                          "\nLine of sight checks: " + str(resp.line_of_sight_checks.data) + \
                          "\nPath Length: "          + str(round(resp.path_length.data,3)) + " m"

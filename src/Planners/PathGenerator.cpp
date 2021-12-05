@@ -105,57 +105,57 @@ namespace Planners
         }else{
             std::cout << "Error impossible to calculate a solution" << std::endl;
         }
-
-        std::cout << "NODES OF PATH:" << path.size() << std::endl;  
-
-        auto adjacent_path = utils::geometry::getAdjacentPath(path, discrete_world_);
-
+        
         unsigned int total_cost1{0};
         unsigned int total_cost2{0};
+        
         unsigned int total_H{0};
         unsigned int total_G1{0};
         unsigned int total_G2{0};
         unsigned int total_C{0};
-        // unsigned int total_C1{0};
-        // unsigned int total_C2{0};
+
         unsigned int total_grid_cost1{0};
         unsigned int total_grid_cost2{0};
 
+#ifdef COMPUTE_STATISTICS
+        
+        auto adjacent_path = utils::geometry::getAdjacentPath(path, discrete_world_);
+        
         for(size_t i = 0; i < adjacent_path.size() - 1; ++i){
             auto node_current = discrete_world_.getNodePtr(adjacent_path[i]);
-            auto node = discrete_world_.getNodePtr(adjacent_path[i+1]);
+            auto node         = discrete_world_.getNodePtr(adjacent_path[i+1]);
             if( node == nullptr )
                 continue;
             
             total_H         += node->H;
             total_C         += node->C;
 
-            total_grid_cost1 += static_cast<unsigned int>(cost_weight_ * node_current->cost * (dist_scale_factor_/100));  // CAA*+M1
-            total_grid_cost2 += static_cast<unsigned int>( ((node->cost + node_current->cost)/2) *  cost_weight_ * (dist_scale_factor_/100)); ; //CAA*+M2         
+            total_grid_cost1 += static_cast<unsigned int>( cost_weight_ * node_current->cost * dist_scale_factor_reduced_ );  // CAA*+M1
+            total_grid_cost2 += static_cast<unsigned int>( ( ( node->cost + node_current->cost ) / 2) *  cost_weight_ * dist_scale_factor_reduced_); ; //CAA*+M2         
 
             unsigned int g_real1 = utils::geometry::distanceBetween2Nodes(adjacent_path[i], adjacent_path[i+1]); 
-            total_G1 += g_real1; 
-
             unsigned int g_real2 = utils::geometry::distanceBetween2Nodes(adjacent_path[i], adjacent_path[i+1]);  // Conmensurable
+
+            total_G1 += g_real1; 
             total_G2 += g_real2;            
         }
         
         total_cost1 = total_G1 + total_grid_cost1; 
         total_cost2 = total_G2 + total_grid_cost2; 
-
+#endif
         result_data["algorithm"]               = algorithm_name_;
         result_data["path"]                    = path;
-        result_data["time_spent"]              = _timer.getElapsedMillisecs();
+        result_data["time_spent"]              = _timer.getElapsedMicroSeconds();
         result_data["explored_nodes"]          = _explored_nodes;
         result_data["start_coords"]            = _start;
         result_data["path_length"]             = geometry::calculatePathLength(path, discrete_world_.getResolution());
 
         result_data["total_cost1"]              = total_cost1;
         result_data["total_cost2"]              = total_cost2;
-        result_data["h_cost"]                  = total_H;
+        result_data["h_cost"]                   = total_H;
         result_data["g_cost1"]                  = total_G1;
         result_data["g_cost2"]                  = total_G2;
-        result_data["c_cost"]                  = total_C;
+        result_data["c_cost"]                   = total_C;
         result_data["grid_cost1"]               = total_grid_cost1;
         result_data["grid_cost2"]               = total_grid_cost2;
 

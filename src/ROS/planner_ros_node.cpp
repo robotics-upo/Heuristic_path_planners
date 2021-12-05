@@ -119,6 +119,8 @@ private:
             utils::CoordinateList path;
             try{
                 _rep.time_spent.data           = std::get<double>(path_data["time_spent"] );
+                _rep.time_spent.data /= 1000;
+                
                 _rep.path_length.data          = std::get<double>(path_data["path_length"] );
                 _rep.explored_nodes.data       = std::get<size_t>(path_data["explored_nodes"] );
                 _rep.line_of_sight_checks.data = std::get<unsigned int>(path_data["line_of_sight_checks"] );

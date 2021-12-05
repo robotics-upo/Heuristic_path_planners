@@ -101,7 +101,7 @@ for iter in range(0,int(args.iterations[0])):
             '/planner_ros_node/request_path', GetPath)
 
         resp = get_path.call(path_request)
-        text_marker.text = "\nTime spent: " + str(resp.time_spent.data) + " ms"
+        text_marker.text = "\nTime spent: " + str(resp.time_spent.data) + " microsecs"
         total_time += resp.time_spent.data
         markerPub.publish(text_marker)
         

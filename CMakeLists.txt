@@ -3,14 +3,19 @@ project(heuristic_planners)
 
 add_compile_options(-std=c++17 -Wall -Wextra -pedantic)
 
-option(BUILD_DOC         "Build documentation   " ON)
-option(BUILD_ROS_SUPPORT "Build with ROS Support" ON)
-option(BUILD_DEBUG       "Build debug features  " OFF)
-option(BUILD_VOROCPP     "Build voro++ features  " OFF)
-option(OPTIMIZE_FLAG     "Enable Compiler Optimization for Runtime Performance" ON)
+option(BUILD_DOC            "Build documentation   " ON)
+option(BUILD_ROS_SUPPORT    "Build with ROS Support" ON)
+option(OPTIMIZE_FLAG        "Enable Compiler Optimization for Runtime Performance" ON)
+option(BUILD_DEBUG          "Build debug features  " OFF)
+option(BUILD_COMPUTE_STATS  "Build PathGenerator with statistics" OFF)
+option(BUILD_VOROCPP        "Build voro++ features  " OFF)
 
 if(OPTIMIZE_FLAG)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
+endif()
+
+if(BUILD_COMPUTE_STATS)
+  add_definitions(-DCOMPUTE_STATISTICS)
 endif()
 
 if(BUILD_DOC)
