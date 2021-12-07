@@ -15,11 +15,10 @@ namespace Planners
                 if( geometry::distanceBetween2Nodes(_lnode, _rnode) <= dd_3D_ )
                     return true;
                 
-                if( _visited_nodes == nullptr ){ //Case in which its not used
-                    _visited_nodes.reset(new CoordinateList);
-                }
+                // if( _visited_nodes == nullptr ){ //Case in which its not used
+                    // _visited_nodes.reset(new CoordinateList);
+                // }
                 int d1, d2;
-
                 Vec3i vecS, vecDiff, vec0{_lnode}, vec1{_rnode};
                 vecDiff = geometry::abs(vec1 - vec0);
 
@@ -51,8 +50,8 @@ namespace Planners
                         //Check if visitor is occupied and add visitor
                         if (_world.isOccupied(vec0))
                             return false;
-
-                        _visited_nodes->push_back(vec0);
+                        if ( _visited_nodes != nullptr )
+                            _visited_nodes->push_back(vec0);
                     }
                 }
                 //Driving axis is Y-axis
@@ -79,8 +78,8 @@ namespace Planners
                         //Check if visitor is occupied and add visitor
                         if (_world.isOccupied(vec0))
                             return false;
-
-                        _visited_nodes->push_back(vec0);
+                        if ( _visited_nodes != nullptr )
+                          _visited_nodes->push_back(vec0);
                     }
                 }
                 //Driving axis is Z-axis
@@ -106,8 +105,8 @@ namespace Planners
                         //Check if visitor is occupied and add visitor
                         if (_world.isOccupied(vec0))
                             return false;
-
-                        _visited_nodes->push_back(vec0);
+                        if ( _visited_nodes != nullptr )
+                            _visited_nodes->push_back(vec0);
                     }
                 }
 

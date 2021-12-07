@@ -40,9 +40,6 @@ namespace Planners
 
     inline void LazyThetaStarGeneratorSafetyCost::ComputeCost(Node *_s_aux, Node *_s2_aux)
     {
-        utils::CoordinateListPtr checked_nodes;
-        checked_nodes.reset(new CoordinateList);
-
         line_of_sight_checks_++;
         if (LineOfSight::bresenham3D(_s_aux->parent, _s2_aux, discrete_world_, checked_nodes)) {
             
@@ -59,6 +56,7 @@ namespace Planners
                 _s2_aux->gplush = _s2_aux->G + _s2_aux->H;
             }            
         } 
+        checked_nodes->clear();
     }
 
     inline unsigned int LazyThetaStarGeneratorSafetyCost::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs){

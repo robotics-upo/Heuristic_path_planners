@@ -7,9 +7,6 @@ namespace Planners
 
     inline void CostAwareThetaStarGenerator::ComputeCost(Node *_s_aux, Node *_s2_aux)
     {
-        utils::CoordinateListPtr checked_nodes, checked_nodes_current;
-        checked_nodes.reset(new CoordinateList);
-        checked_nodes_current.reset(new CoordinateList);
         auto distanceParent2 = geometry::distanceBetween2Nodes(_s_aux->parent, _s2_aux);
 
         line_of_sight_checks_++;
@@ -41,6 +38,7 @@ namespace Planners
                 _s2_aux->gplush = _s2_aux->H + _s2_aux->G; 
             }
         }
+        checked_nodes->clear();
     }
     inline unsigned int CostAwareThetaStarGenerator::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs){
         

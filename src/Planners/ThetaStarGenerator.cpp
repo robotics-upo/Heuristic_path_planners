@@ -4,7 +4,13 @@ namespace Planners
 {
     ThetaStarGenerator::ThetaStarGenerator(bool _use_3d):AStarGenerator(_use_3d, "thetastar") {}
     
-    ThetaStarGenerator::ThetaStarGenerator(bool _use_3d, std::string _name = "thetastar" ):AStarGenerator(_use_3d, _name) {}
+    ThetaStarGenerator::ThetaStarGenerator(bool _use_3d, std::string _name = "thetastar" ):AStarGenerator(_use_3d, _name) {
+        checked_nodes.reset(new CoordinateList);
+        checked_nodes_current.reset(new CoordinateList);
+
+        checked_nodes->reserve(5000);
+        checked_nodes_current->reserve(5000);
+    }
     
     inline void ThetaStarGenerator::UpdateVertex(Node *_s, Node *_s2, node_by_position &_index_by_pos)
     {

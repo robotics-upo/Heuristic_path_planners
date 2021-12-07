@@ -59,6 +59,9 @@ namespace Planners
          * @param _index_by_cost 
          */
         virtual void exploreNeighbours(Node* _current, const Vec3i &_target,node_by_position &_index_by_pos) override;
+
+        utils::CoordinateListPtr checked_nodes, checked_nodes_current;
+
     };
 
 }

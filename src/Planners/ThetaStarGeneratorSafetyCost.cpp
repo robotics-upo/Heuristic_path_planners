@@ -8,12 +8,8 @@ namespace Planners
     
     inline void ThetaStarGeneratorSafetyCost::ComputeCost(Node *_s_aux, Node *_s2_aux)
     {
-        utils::CoordinateListPtr checked_nodes, checked_nodes_current;
-        checked_nodes.reset(new CoordinateList);
-        checked_nodes_current.reset(new CoordinateList);
-
         line_of_sight_checks_++;
-        if (LineOfSight::bresenham3D((_s_aux->parent), _s2_aux, discrete_world_, checked_nodes))  
+        if (LineOfSight::bresenham3D(_s_aux->parent, _s2_aux, discrete_world_, checked_nodes))  
         {
             auto dist2   = geometry::distanceBetween2Nodes(_s_aux->parent, _s2_aux);
             auto edge2   = ComputeEdgeCost(checked_nodes, _s_aux->parent, _s2_aux);
@@ -51,6 +47,8 @@ namespace Planners
             _s2_aux->gplush = _s2_aux->G + _s2_aux->H;
             _s2_aux->C     =  edge1;
         }
+        checked_nodes->clear();
+        checked_nodes_current->clear();
     }
 
     inline unsigned int ThetaStarGeneratorSafetyCost::ComputeEdgeCost(const utils::CoordinateListPtr _checked_nodes, const Node* _s, const Node* _s2){ 
