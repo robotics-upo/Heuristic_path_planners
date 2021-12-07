@@ -75,6 +75,9 @@ path_request.start = Point(float(args.start_coords[0]),
 path_request.goal = Point(float(args.goal_coords[0]),  
                           float(args.goal_coords[1]),  
                           float(args.goal_coords[2]))
+path_request.tries = 1
+path_request.heuristic = ""
+
 # End of options
 
 markerPub = rospy.Publisher('test_text_marker', Marker, queue_size=1)
