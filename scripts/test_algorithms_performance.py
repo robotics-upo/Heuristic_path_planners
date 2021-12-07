@@ -60,8 +60,8 @@ path_request.start = Point(float(args.start_coords[0]), float(
 path_request.goal = Point(float(args.goal_coords[0]),  float(
     args.goal_coords[1]),  float(args.goal_coords[2]))
 set_algorithm_request.algorithm.data = str(args.algorithm[0])
-path_request.tries = 1
-path_request.heuristic = ""
+path_request.tries.data = 1
+path_request.heuristic.data = ""
 
 # End of options
 
