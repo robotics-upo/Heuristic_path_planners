@@ -16,14 +16,11 @@ namespace Planners
             for (const auto &i: direction)
             {
                 Vec3i newCoordinates(_s_aux->coordinates + i);
+                Node *successor2 = discrete_world_.getNodePtr(newCoordinates);
+                if (successor2 == nullptr || successor2->occuppied ) continue;
 
-                if ( discrete_world_.isOccupied(newCoordinates) ) continue;
-
-                if ( discrete_world_.isInClosedList(newCoordinates) )
+                if ( successor2->isInClosedList ) 
                 {
-                    Node *successor2 = discrete_world_.getNodePtr(newCoordinates);
-                    if (successor2 == nullptr) continue;
-                    
                     auto cost_term = static_cast<unsigned int>(cost_weight_ * successor2->cost * dist_scale_factor_reduced_);
                     G_new = successor2->G +  geometry::distanceBetween2Nodes(successor2, _s_aux) + cost_term; 
                     if (G_new < G_max)
@@ -37,7 +34,7 @@ namespace Planners
             }
         }
     }
-    void CostAwareLazyThetaStarGenerator::ComputeCost(Node *_s_aux, Node *_s2_aux)
+    inline void CostAwareLazyThetaStarGenerator::ComputeCost(Node *_s_aux, Node *_s2_aux)
     {
         auto distanceParent2 = geometry::distanceBetween2Nodes(_s_aux->parent, _s2_aux);
 
@@ -56,7 +53,7 @@ namespace Planners
     }
 
 
-    unsigned int CostAwareLazyThetaStarGenerator::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs){
+    inline unsigned int CostAwareLazyThetaStarGenerator::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs){
 
         unsigned int cost = _current->G;
 

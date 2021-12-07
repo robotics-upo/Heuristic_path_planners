@@ -5,7 +5,7 @@ namespace Planners
     CostAwareThetaStarGenerator::CostAwareThetaStarGenerator(bool _use_3d):ThetaStarGenerator(_use_3d, "costthetastar") {}
     CostAwareThetaStarGenerator::CostAwareThetaStarGenerator(bool _use_3d, std::string _name = "costthetastar" ):ThetaStarGenerator(_use_3d, _name) {}
 
-    void CostAwareThetaStarGenerator::ComputeCost(Node *_s_aux, Node *_s2_aux)
+    inline void CostAwareThetaStarGenerator::ComputeCost(Node *_s_aux, Node *_s2_aux)
     {
         utils::CoordinateListPtr checked_nodes, checked_nodes_current;
         checked_nodes.reset(new CoordinateList);
@@ -42,7 +42,7 @@ namespace Planners
             }
         }
     }
-    unsigned int CostAwareThetaStarGenerator::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs){
+    inline unsigned int CostAwareThetaStarGenerator::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs){
         
         unsigned int cost = _current->G;
 

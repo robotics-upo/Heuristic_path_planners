@@ -40,7 +40,7 @@ namespace Planners
          * @param s2 Pointer to node s2
          * @param openset reference to openset to erase and insert the nodes in some cases
          */
-        virtual void UpdateVertex(Node *_s, Node *_s2, node_by_position &_index_by_pos);
+        inline virtual void UpdateVertex(Node *_s, Node *_s2, node_by_position &_index_by_pos);
         
         /**
          * @brief Compute cost algorithm function
@@ -48,7 +48,7 @@ namespace Planners
          * @param s_aux Pointer to first node
          * @param s2_aux Pointer to the second node
          */
-        virtual void ComputeCost(Node *_s_aux, Node *_s2_aux);
+        inline virtual void ComputeCost(Node *_s_aux, Node *_s2_aux);
 
         /**
          * @brief 

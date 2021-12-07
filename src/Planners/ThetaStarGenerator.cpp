@@ -6,7 +6,7 @@ namespace Planners
     
     ThetaStarGenerator::ThetaStarGenerator(bool _use_3d, std::string _name = "thetastar" ):AStarGenerator(_use_3d, _name) {}
     
-    void ThetaStarGenerator::UpdateVertex(Node *_s, Node *_s2, node_by_position &_index_by_pos)
+    inline void ThetaStarGenerator::UpdateVertex(Node *_s, Node *_s2, node_by_position &_index_by_pos)
     {
         unsigned int g_old = _s2->G;
 
@@ -24,7 +24,7 @@ namespace Planners
         }
     }
 
-    void ThetaStarGenerator::ComputeCost(Node *_s_aux, Node *_s2_aux)
+    inline void ThetaStarGenerator::ComputeCost(Node *_s_aux, Node *_s2_aux)
     {
         auto distanceParent2 = geometry::distanceBetween2Nodes(_s_aux->parent, _s2_aux);
         line_of_sight_checks_++;
@@ -54,23 +54,21 @@ namespace Planners
         for (unsigned int i = 0; i < direction.size(); ++i) {
 
             Vec3i newCoordinates = _current->coordinates + direction[i];
-
-            if ( discrete_world_.isOccupied(newCoordinates) || 
-                 discrete_world_.isInClosedList(newCoordinates) ) 
-                continue;
-    
             Node *successor = discrete_world_.getNodePtr(newCoordinates);
 
-            if(successor == nullptr) continue;
-
-            if (!discrete_world_.isInOpenList(newCoordinates)) { 
+            if ( successor == nullptr || 
+                 successor->isInClosedList || 
+                 successor->occuppied ) 
+                continue;
+    
+            if (! successor->isInOpenList ) { 
 
                 successor->parent = _current;
                 successor->G = computeG(_current, successor, i, direction.size());
                 successor->H = heuristic(successor->coordinates, _target);
                 successor->gplush = successor->G + successor->H;
+                successor->isInOpenList = true;
                 _index_by_pos.insert(successor);
-                discrete_world_.setOpenValue(*successor, true);
             }
          
             UpdateVertex(_current, successor, _index_by_pos); 

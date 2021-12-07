@@ -37,7 +37,7 @@ namespace Planners{
          * @param _dirs 
          * @return unsigned int 
          */
-        virtual unsigned int computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs) override;
+        inline virtual unsigned int computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs) override;
 
     };
 

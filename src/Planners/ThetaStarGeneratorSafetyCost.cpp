@@ -6,7 +6,7 @@ namespace Planners
     
     ThetaStarGeneratorSafetyCost::ThetaStarGeneratorSafetyCost(bool _use_3d, std::string _name = "thetastarsafetycost" ):ThetaStarGenerator(_use_3d, _name) {}
     
-    void ThetaStarGeneratorSafetyCost::ComputeCost(Node *_s_aux, Node *_s2_aux)
+    inline void ThetaStarGeneratorSafetyCost::ComputeCost(Node *_s_aux, Node *_s2_aux)
     {
         utils::CoordinateListPtr checked_nodes, checked_nodes_current;
         checked_nodes.reset(new CoordinateList);
@@ -53,7 +53,7 @@ namespace Planners
         }
     }
 
-    unsigned int ThetaStarGeneratorSafetyCost::ComputeEdgeCost(const utils::CoordinateListPtr _checked_nodes, const Node* _s, const Node* _s2){ 
+    inline unsigned int ThetaStarGeneratorSafetyCost::ComputeEdgeCost(const utils::CoordinateListPtr _checked_nodes, const Node* _s, const Node* _s2){ 
         
         double dist_cost{0};
         double mean_dist_cost{0};
@@ -75,7 +75,7 @@ namespace Planners
         return static_cast<unsigned int>( mean_dist_cost * cost_weight_ * dist_scale_factor_reduced_);
     }
 
-    unsigned int ThetaStarGeneratorSafetyCost::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs){
+    inline unsigned int ThetaStarGeneratorSafetyCost::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs){
         
         unsigned int cost = 0;
 

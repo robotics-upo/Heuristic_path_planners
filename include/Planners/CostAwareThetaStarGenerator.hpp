@@ -41,7 +41,7 @@ namespace Planners
          * @param s_aux Pointer to first node
          * @param s2_aux Pointer to the second node
          */
-        virtual void ComputeCost(Node *_s_aux, Node *_s2_aux) override;
+        inline virtual void ComputeCost(Node *_s_aux, Node *_s2_aux) override;
 
         /**
          * @brief 
@@ -52,7 +52,7 @@ namespace Planners
          * @param _dirs 
          * @return unsigned int 
          */
-        virtual unsigned int computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs) override;
+        inline virtual unsigned int computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs) override;
 
     };
 

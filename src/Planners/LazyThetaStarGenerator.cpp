@@ -17,14 +17,12 @@ namespace Planners
             for (const auto &i: direction)
             {
                 Vec3i newCoordinates(_s_aux->coordinates + i);
+                Node *successor2 = discrete_world_.getNodePtr(newCoordinates);
 
-                if ( discrete_world_.isOccupied(newCoordinates) ) continue; 
+                if (successor2 == nullptr || successor2->occuppied ) continue;
 
-                if ( discrete_world_.isInClosedList(newCoordinates) ) 
+                if ( successor2->isInClosedList ) 
                 {
-                    Node *successor2 = discrete_world_.getNodePtr(newCoordinates);
-                    if (successor2 == nullptr) continue;
-
                     G_new = successor2->G + geometry::distanceBetween2Nodes(successor2, _s_aux);
                     if (G_new < G_max)
                     {
@@ -37,7 +35,7 @@ namespace Planners
             }
         }
     }
-    void LazyThetaStarGenerator::ComputeCost(Node *_s_aux, Node *_s2_aux)
+    inline void LazyThetaStarGenerator::ComputeCost(Node *_s_aux, Node *_s2_aux)
     {
         auto distanceParent2 = geometry::distanceBetween2Nodes(_s_aux->parent, _s2_aux);
 
@@ -83,8 +81,8 @@ namespace Planners
             }
             closedSet_.push_back(current);
 
-            discrete_world_.setOpenValue(*current, false);
-            discrete_world_.setClosedValue(*current, true);
+            current->isInOpenList = false;
+            current->isInClosedList = true;
 
             SetVertex(current);
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)

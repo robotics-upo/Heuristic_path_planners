@@ -5,7 +5,7 @@ namespace Planners{
 CostAwareAStarGenerator::CostAwareAStarGenerator(bool _use_3d):AStarGenerator(_use_3d, "costastar") {}
 CostAwareAStarGenerator::CostAwareAStarGenerator(bool _use_3d, std::string _name = "costastar" ):AStarGenerator(_use_3d, _name) {}
 
-unsigned int CostAwareAStarGenerator::computeG(const Node* _current, Node* _suc, unsigned int _n_i, unsigned int _dirs){
+inline unsigned int CostAwareAStarGenerator::computeG(const Node* _current, Node* _suc, unsigned int _n_i, unsigned int _dirs){
     
     unsigned int cost = _current->G;
 

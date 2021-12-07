@@ -136,7 +136,7 @@ void AStarGenerator::publishROSDebugData(const Node* _node, const T &_open_set, 
 
 }
 
-unsigned int AStarGenerator::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs){
+inline unsigned int AStarGenerator::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs){
     unsigned int cost = _current->G;
 
     if(_dirs  == 8){
@@ -157,24 +157,22 @@ void AStarGenerator::exploreNeighbours(Node* _current, const Vec3i &_target, nod
     for (unsigned int i = 0; i < direction.size(); ++i) {
             
         Vec3i newCoordinates = _current->coordinates + direction[i];
-
-        if ( discrete_world_.isOccupied(newCoordinates) || 
-             discrete_world_.isInClosedList(newCoordinates) ) 
-            continue;
- 
         Node *successor = discrete_world_.getNodePtr(newCoordinates);
 
-        if(successor == nullptr) continue;
-        
+        if ( successor == nullptr ||
+             successor->isInClosedList || 
+             successor->occuppied ) 
+            continue;
+ 
         unsigned int totalCost = computeG(_current, successor, i, direction.size());
             
-        if (!discrete_world_.isInOpenList(newCoordinates)) { 
+        if ( !successor->isInClosedList ) { 
             successor->parent = _current;
             successor->G = totalCost;
             successor->H = heuristic(successor->coordinates, _target);
             successor->gplush = successor->G + successor->H;
+            successor->isInClosedList = true;
             _index_by_pos.insert(successor);
-            discrete_world_.setOpenValue(successor->coordinates, true);
         }
         else if (totalCost < successor->G) {
             successor->parent = _current;
@@ -217,8 +215,8 @@ PathData AStarGenerator::findPath(const Vec3i &_source, const Vec3i &_target)
         
         closedSet_.push_back(current);
 
-        discrete_world_.setOpenValue(*current, false);
-        discrete_world_.setClosedValue(*current, true);
+        current->isInOpenList = false;
+        current->isInClosedList = true;
 
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)
         publishROSDebugData(current, indexByCost, closedSet_);

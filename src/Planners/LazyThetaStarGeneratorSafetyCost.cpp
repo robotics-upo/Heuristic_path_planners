@@ -15,14 +15,11 @@ namespace Planners
             for (const auto &i: direction)
             {
                 Vec3i newCoordinates(_s_aux->coordinates + i);
+                Node *successor2 = discrete_world_.getNodePtr(newCoordinates);
+                if (successor2 == nullptr || successor2->occuppied ) continue;
 
-                if ( discrete_world_.isOccupied(newCoordinates) ) continue;
-
-                if ( discrete_world_.isInClosedList(newCoordinates) )
+                if ( successor2->isInClosedList ) 
                 {
-                    Node *successor2 = discrete_world_.getNodePtr(newCoordinates);
-                    if (successor2 == nullptr) continue;
-
                     auto dist = geometry::distanceBetween2Nodes(successor2, _s_aux);
 
                     G_new  = static_cast<unsigned int>(  successor2-> G + dist +  
@@ -41,7 +38,7 @@ namespace Planners
         los_neighbour_ = false;
     }
 
-    void LazyThetaStarGeneratorSafetyCost::ComputeCost(Node *_s_aux, Node *_s2_aux)
+    inline void LazyThetaStarGeneratorSafetyCost::ComputeCost(Node *_s_aux, Node *_s2_aux)
     {
         utils::CoordinateListPtr checked_nodes;
         checked_nodes.reset(new CoordinateList);
@@ -64,7 +61,7 @@ namespace Planners
         } 
     }
 
-    unsigned int LazyThetaStarGeneratorSafetyCost::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs){
+    inline unsigned int LazyThetaStarGeneratorSafetyCost::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs){
 
         unsigned int cost = 0;
 
