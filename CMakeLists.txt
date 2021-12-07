@@ -186,8 +186,9 @@ if(BUILD_ROS_SUPPORT)
   
   catkin_install_python(PROGRAMS  scripts/test_algorithms.py
                                   scripts/test_algorithms_compare.py
-                                  scripts/compare_trajectories_rviz.py
                                   scripts/test_algorithms_performance.py
+                                  scripts/test_algorithms_pseudo_random_paths.py
+                                  scripts/compare_trajectories_rviz.py
                                   setup.py
                                   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
   )
@@ -201,11 +202,14 @@ if(BUILD_ROS_SUPPORT)
 ## Mark other files for installation (e.g. launch and bag files, etc.)
 
   install(DIRECTORY launch/ DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch)
+  install(DIRECTORY config/ DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/config)
   install(DIRECTORY rviz/ DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/rviz)
   install(DIRECTORY resources/ 
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/resources  
   PATTERN ".gridm" EXCLUDE)
+
 else()
+  
   install(DIRECTORY include/
     DESTINATION ${CMAKE_INSTALL_PREFIX}/include
     FILES_MATCHING PATTERN "*.hpp"
