@@ -24,7 +24,7 @@ parser = argparse.ArgumentParser()
 launch_list = [f for f in listdir(launch_path) if isfile(join(launch_path, f))]
 
 parser.add_argument("--launch",     help="name of the launch file",
-                    nargs='+', type=str, required=True,
+                    nargs='+', type=str, default=["planner.launch"],
                     choices=launch_list)
 parser.add_argument("--algorithm",  help="name of the algorithm",
                     nargs='+', type=str, required=True,
@@ -37,6 +37,12 @@ parser.add_argument("--iterations", help="Number of iterations to evaluate",
                     nargs=1,   default=[100])
 parser.add_argument("--cost-weight", help="cost",  
                     nargs=1,   default=[1])
+
+parser.add_argument("--tries", help="Number of tries in each call",  
+                    nargs=1,   default=[1])
+parser.add_argument("--heuristic", help="Heuristic to use",  
+                    nargs=1,   default=[""], type=str,
+                    choices=["euclidean", "euclidean_optimized", "manhattan", "octogonal", "dijkstra"])
 
 args = parser.parse_args()
 
@@ -60,9 +66,8 @@ path_request.start = Point(float(args.start_coords[0]), float(
 path_request.goal = Point(float(args.goal_coords[0]),  float(
     args.goal_coords[1]),  float(args.goal_coords[2]))
 set_algorithm_request.algorithm.data = str(args.algorithm[0])
-path_request.tries.data = 1
-path_request.heuristic.data = ""
-
+path_request.tries.data = int(args.tries[0])
+path_request.heuristic.data = args.heuristic[0]
 # End of options
 
 markerPub = rospy.Publisher('test_text_marker', Marker, queue_size=1)

@@ -69,14 +69,14 @@ plot_choices = ['explored_nodes', 'time_spent', 'line_of_sight_checks',
 ## ARGUMENT PARSING
 
 parser.add_argument("--launch",     help="name of the launch file",     
-                    nargs='+', type=str, required=True,
+                    nargs='+', type=str, default=["planner.launch"],
                     choices=launch_list)
 parser.add_argument("--algorithm",  help="name of the algorithm",  
                     nargs='*', type=str, required=True, default=["astar", "costastar", "astarsafetycost"], 
                     choices=["astar", "costastar", "astarsafetycost", "thetastar", "costhetastar", "thetastarsafetycost", "lazythetastar", "costlazythetastar", "lazythetastarsafetycost"])
 
 parser.add_argument("--map-name",     help="name of the map to use. This map should be under the 3d/2d maps folder",     
-                    nargs='+', type=str, required=True,
+                    nargs='+', type=str, default=['mbzirc_challenge3.bt'],
                     choices=maps_list)
 
 parser.add_argument("--plots",     help="List of result variables to plot",     
@@ -92,7 +92,12 @@ parser.add_argument("--cost-range", help="cost range to evaluate. (min, max, ste
                     nargs=3,   default=[1, 8, 1])
 parser.add_argument("--lof-value", help="Line of sight range to evaluate. (min, max, step). To test only one value set LOF_VALUE LOF_VALUE+1 1",  
                     nargs=3,   default=[1, 3, 1])
-
+parser.add_argument("--tries", help="Number of tries in each call",  
+                    nargs=1,   default=[1])
+parser.add_argument("--heuristic", help="Heuristic to use",  
+                    nargs=1,   default=[""], type=str,
+                    choices=["euclidean", "euclidean_optimized", "manhattan", "octogonal", "dijkstra"])
+    
 args = parser.parse_args()
 
 ### END OF ARGUMENT PARSING
@@ -116,6 +121,8 @@ print(colors.GREEN + "\nUsing the following algorithms: " +        colors.RED + 
 print(colors.GREEN + "Using the following map: " +                 colors.RED + str(args.map_name)           + colors.ENDC)
 print(colors.GREEN + "Using the following cost range: " +          colors.RED + str(args.cost_range)           + colors.ENDC)
 print(colors.GREEN + "Using the following line of sight range: " + colors.RED + str(args.lof_value)           + colors.ENDC)
+print(colors.GREEN + "Using the following heuristic: " +           colors.RED + str(args.heuristic)   + colors.ENDC)
+print(colors.GREEN + "Using the following n_tries: " +             colors.RED + str(args.tries)       + colors.ENDC)
 print(colors.GREEN + "Plotting the following result variables: " + colors.RED + str(args.plots)           + colors.ENDC)
 
 # Test Options: Goal, Start, Algorithm type and range of costs
@@ -125,8 +132,8 @@ line_of_sights = np.arange(float(args.lof_value[0]), float(args.lof_value[1]), f
 path_request = GetPathRequest()
 path_request.start = Point(float(args.start_coords[0]), float(args.start_coords[1]), float(args.start_coords[2]))
 path_request.goal  = Point(float(args.goal_coords[0]),  float(args.goal_coords[1]),  float(args.goal_coords[2]))
-path_request.tries.data = 1
-path_request.heuristic.data = ""
+path_request.tries.data = int(args.tries[0])
+path_request.heuristic.data = args.heuristic[0]
 
 ## End of options
 

@@ -37,11 +37,11 @@ parser = argparse.ArgumentParser()
 launch_list = [f for f in listdir(launch_path) if isfile(join(launch_path, f))]
 
 parser.add_argument("--launch",     help="name of the launch file",
-                    nargs='+', type=str, required=True,
+                    nargs='+', type=str, default=["planner.launch"],
                     choices=launch_list)
 parser.add_argument("--algorithm",  help="name of the algorithm",
                     nargs='+', type=str, required=True,
-                    choices=["astar", "costastar", "thetastar", "lazythetastar", "costlazythetastar"])
+                    choices=["astar", "costastar", "astarsafetycost", "thetastar", "costhetastar", "thetastarsafetycost", "lazythetastar", "costlazythetastar", "lazythetastarsafetycost"])
 parser.add_argument("--start-coords", help="start coordinates (x,y,z). Set z to 0 when testing with 2D",
                     nargs=3,   required=True)
 parser.add_argument("--goal-coords", help="goal coordinates (x,y,z). Set z to 0 when testing with 2D",
@@ -50,6 +50,12 @@ parser.add_argument("--random-margins", help="(min x, max x, min y, max y, min z
                     nargs=6, required=True)
 parser.add_argument("--iterations", help="Number of iterations to evaluate",
                     nargs=1,   default=[20])
+parser.add_argument("--tries", help="Number of tries in each call",  
+                    nargs=1,   default=[1])
+parser.add_argument("--heuristic", help="Heuristic to use",  
+                    nargs=1,   default=[""], type=str,
+                    choices=["euclidean", "euclidean_optimized", "manhattan", "octogonal", "dijkstra"])
+
 args = parser.parse_args()
 
 
@@ -75,9 +81,8 @@ path_request.start = Point(float(args.start_coords[0]),
 path_request.goal = Point(float(args.goal_coords[0]),  
                           float(args.goal_coords[1]),  
                           float(args.goal_coords[2]))
-path_request.data.tries = 1
-path_request.data.heuristic = ""
-
+path_request.tries.data = int(args.tries[0])
+path_request.heuristic.data = args.heuristic[0]
 # End of options
 
 markerPub = rospy.Publisher('test_text_marker', Marker, queue_size=1)

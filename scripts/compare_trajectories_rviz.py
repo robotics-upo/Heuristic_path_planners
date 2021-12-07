@@ -57,14 +57,14 @@ plot_choices = ['explored_nodes', 'time_spent', 'line_of_sight_checks',
 ## ARGUMENT PARSING
 
 parser.add_argument("--launch",     help="name of the launch file",     
-                    nargs='+', type=str, required=True,
+                    nargs='+', type=str, default=["planner.launch"],
                     choices=launch_list)
 parser.add_argument("--algorithm",  help="name of the algorithm",  
                     nargs='*', type=str, required=True, default=["astar", "costastar", "astarsafetycost"], 
                     choices=["astar", "costastar", "astarsafetycost", "thetastar", "costhetastar", "thetastarsafetycost", "lazythetastar", "costlazythetastar", "lazythetastarsafetycost"])
 
 parser.add_argument("--map-name",     help="name of the map to use. This map should be under the 3d/2d maps folder",     
-                    nargs='+', type=str, required=True,
+                    nargs='+', type=str,  default=['mbzirc_challenge3.bt'],
                     choices=maps_list)
 
 parser.add_argument("--start-coords", help="start coordinates (x,y,z). Set z to 0 when testing with 2D",         
@@ -76,6 +76,11 @@ parser.add_argument("--cost-value", help="cost to evaluate",
                     nargs=1,   default=[1])
 parser.add_argument("--lof-value", help="Line of sight to evaluate.",  
                     nargs=1,   default=[1])
+parser.add_argument("--tries", help="Number of tries in each call",  
+                    nargs=1,   default=[1])
+parser.add_argument("--heuristic", help="Heuristic to use",  
+                    nargs=1,   default=[""], type=str,
+                    choices=["euclidean", "euclidean_optimized", "manhattan", "octogonal", "dijkstra"]) 
 
 args = parser.parse_args()
 
@@ -98,17 +103,19 @@ rospy.init_node('planners_test_node', anonymous=True)
 print( colors.YELLOW + "\nAvailable Launch list: " + str(launch_list) + colors.ENDC)
 print( colors.YELLOW + "\nAvailable 2D Map list: " + str(maps_list)   + colors.ENDC)
 
-print(colors.GREEN + "\nUsing the following algorithms: " +        colors.RED + str(args.algorithm) + colors.ENDC)
-print(colors.GREEN + "Using the following map: " +                 colors.RED + str(args.map_name)           + colors.ENDC)
-print(colors.GREEN + "Using the following cost value: " +          colors.RED + str(args.cost_value)           + colors.ENDC)
-print(colors.GREEN + "Using the following line of sight value: " + colors.RED + str(args.lof_value)           + colors.ENDC)
+print(colors.GREEN + "\nUsing the following algorithms: " +        colors.RED + str(args.algorithm)   + colors.ENDC)
+print(colors.GREEN + "Using the following map: " +                 colors.RED + str(args.map_name)    + colors.ENDC)
+print(colors.GREEN + "Using the following cost value: " +          colors.RED + str(args.cost_value)  + colors.ENDC)
+print(colors.GREEN + "Using the following line of sight value: " + colors.RED + str(args.lof_value)   + colors.ENDC)
+print(colors.GREEN + "Using the following heuristic: " +           colors.RED + str(args.heuristic)   + colors.ENDC)
+print(colors.GREEN + "Using the following n_tries: " +             colors.RED + str(args.tries)       + colors.ENDC)
 
 
 path_request = GetPathRequest()
 path_request.start = Point(float(args.start_coords[0]), float(args.start_coords[1]), float(args.start_coords[2]))
 path_request.goal  = Point(float(args.goal_coords[0]),  float(args.goal_coords[1]),  float(args.goal_coords[2]))
-path_request.data.tries = 1
-path_request.data.heuristic = ""
+path_request.tries.data = int(args.tries[0])
+path_request.heuristic.data = args.heuristic[0]
 ## End of options
 
 markerPub = rospy.Publisher('test_text_marker', Marker, queue_size=1)
