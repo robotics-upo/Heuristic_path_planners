@@ -82,7 +82,7 @@ namespace Planners
     PathData LazyThetaStarGeneratorSafetyCost::findPath(const Vec3i &_source, const Vec3i &_target)
     {
         Node *current = nullptr;
-        std::vector<Node*> closedSet;
+        // std::vector<Node*> closedSet;
         bool solved{false};
 
         discrete_world_.getNodePtr(_source)->parent = new Node(_source);
@@ -110,7 +110,7 @@ namespace Planners
                 break;
             }
 
-            closedSet.push_back(current);
+            closedSet_.push_back(current);
 
             discrete_world_.setOpenValue(*current, false);
             discrete_world_.setClosedValue(*current, true);
@@ -121,7 +121,7 @@ namespace Planners
             los_neighbour_ = false;
 
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)
-            publishROSDebugData(current, indexByCost, closedSet);
+            publishROSDebugData(current, indexByCost, closedSet_);
 #endif
             exploreNeighbours(current, _target, indexByWorldPosition);
 
@@ -129,12 +129,13 @@ namespace Planners
         }
         main_timer.toc();
     
-        PathData result_data = createResultDataObject(current, main_timer, closedSet.size(), 
+        PathData result_data = createResultDataObject(current, main_timer, closedSet_.size(), 
                                                   solved, _source, line_of_sight_checks_);
    
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)
         explored_node_marker_.points.clear();
 #endif
+        closedSet_.clear();
 
         discrete_world_.resetWorld();
         return result_data;

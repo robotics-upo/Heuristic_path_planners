@@ -61,7 +61,7 @@ namespace Planners{
         
     protected:
 
-        void configROS();
+        void configAlgorithm();
         /**
          * @brief 
          * 
@@ -82,7 +82,8 @@ namespace Planners{
         virtual unsigned int computeG(const Node* _current, Node* _suc, unsigned int _n_i, unsigned int _dirs);
 
         unsigned int line_of_sight_checks_{0}; 
-
+        std::vector<Node*> closedSet_;
+        
 #ifdef ROS
         ros::NodeHandle lnh_{"~"};
         ros::Publisher explored_nodes_marker_pub_, occupancy_marker_pub_, 
@@ -90,6 +91,8 @@ namespace Planners{
                        best_node_marker_pub_, aux_text_marker_pub_;
         visualization_msgs::Marker explored_node_marker_, openset_markers_, 
                                    closed_set_markers_, best_node_marker_, aux_text_marker_;
+        ros::Duration duration_pub_{0.001};
+        ros::Time last_publish_tamp_;
         float resolution_;
     	pcl::PointCloud<pcl::PointXYZ>  occupancy_marker_; // Occupancy Map as PointCloud markers
 

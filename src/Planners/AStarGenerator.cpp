@@ -3,14 +3,17 @@
 namespace Planners{
     
 AStarGenerator::AStarGenerator(bool _use_3d = true, std::string _name = "astar" ): PathGenerator(_use_3d, _name){
-    configROS();
+    configAlgorithm();
 }
     
 AStarGenerator::AStarGenerator(bool _use_3d = true): PathGenerator(_use_3d, "astar")
 {
-    configROS();
+    configAlgorithm();
 }
-void AStarGenerator::configROS(){
+void AStarGenerator::configAlgorithm(){
+
+    closedSet_.reserve(50000);
+
     //If compiled with ros and visualization
 #ifdef ROS
     explored_nodes_marker_pub_ = lnh_.advertise<visualization_msgs::Marker>("explored_nodes",   1);
@@ -63,7 +66,7 @@ void AStarGenerator::configROS(){
 	aux_text_marker_.color.g = 0.0;
     aux_text_marker_.text = "";
 	aux_text_marker_.scale.z = 3.0 * resolution_;
-
+    last_publish_tamp_ = ros::Time::now();
 #endif
 
 }
@@ -91,41 +94,43 @@ template<typename T, typename U>
 void AStarGenerator::publishROSDebugData(const Node* _node, const T &_open_set, const U &_closed_set)
 {
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)
+    if( (ros::Time::now() - last_publish_tamp_ ).toSec() > duration_pub_.toSec() ){
+        last_publish_tamp_ = ros::Time::now();
+        explored_node_marker_.header.stamp = ros::Time();
+        explored_node_marker_.header.seq++;
+        openset_markers_.header.stamp = ros::Time();
+        openset_markers_.header.seq++;
+        closed_set_markers_.header.stamp = ros::Time();
+        closed_set_markers_.header.seq++;
 
-    explored_node_marker_.header.stamp = ros::Time();
-    explored_node_marker_.header.seq++;
-    openset_markers_.header.stamp = ros::Time();
-    openset_markers_.header.seq++;
-    closed_set_markers_.header.stamp = ros::Time();
-    closed_set_markers_.header.seq++;
+        openset_markers_.points.clear();
+        closed_set_markers_.points.clear();
 
-    openset_markers_.points.clear();
-    closed_set_markers_.points.clear();
+        explored_node_marker_.points.push_back(continousPoint(_node->coordinates, resolution_));
 
-    explored_node_marker_.points.push_back(continousPoint(_node->coordinates, resolution_));
+        for(const auto &it: _open_set)
+            openset_markers_.points.push_back(continousPoint(it->coordinates, resolution_));
 
-    for(const auto &it: _open_set)
-        openset_markers_.points.push_back(continousPoint(it->coordinates, resolution_));
+        for(const auto &it: _closed_set)
+            closed_set_markers_.points.push_back(continousPoint(it->coordinates, resolution_));
 
-    for(const auto &it: _closed_set)
-        closed_set_markers_.points.push_back(continousPoint(it->coordinates, resolution_));
+        best_node_marker_.pose.position = continousPoint(_node->coordinates, resolution_);
+        best_node_marker_.pose.position.z += resolution_;
 
-    best_node_marker_.pose.position = continousPoint(_node->coordinates, resolution_);
-    best_node_marker_.pose.position.z += resolution_;
+        aux_text_marker_.text = "Best node G = " + std::to_string(_node->G) + "\nBest node G+H = " + std::to_string(_node->G+_node->H) +
+                     std::string("\nCost = ") + std::to_string(static_cast<int>(cost_weight_ * _node->cost * (dist_scale_factor_/100)));
+	    aux_text_marker_.pose = best_node_marker_.pose;
+        aux_text_marker_.pose.position.z += 5 * resolution_;
 
-    aux_text_marker_.text = "Best node G = " + std::to_string(_node->G) + "\nBest node G+H = " + std::to_string(_node->G+_node->H) +
-                 std::string("\nCost = ") + std::to_string(static_cast<int>(cost_weight_ * _node->cost * (dist_scale_factor_/100)));
-	aux_text_marker_.pose = best_node_marker_.pose;
-    aux_text_marker_.pose.position.z += 5 * resolution_;
-
-    closedset_marker_pub_.publish(closed_set_markers_);
-    openset_marker_pub_.publish(openset_markers_);
-    best_node_marker_pub_.publish(best_node_marker_);
-    explored_nodes_marker_pub_.publish(explored_node_marker_);
-    aux_text_marker_pub_.publish(aux_text_marker_);
-    // usleep(1e4);
-    // std::cout << "Please a key to go to the next iteration..." << std::endl;
-    // getchar(); // Comentar para no usar tecla.
+        closedset_marker_pub_.publish(closed_set_markers_);
+        openset_marker_pub_.publish(openset_markers_);
+        best_node_marker_pub_.publish(best_node_marker_);
+        explored_nodes_marker_pub_.publish(explored_node_marker_);
+        aux_text_marker_pub_.publish(aux_text_marker_);
+        // usleep(1e4);
+        // std::cout << "Please a key to go to the next iteration..." << std::endl;
+        // getchar(); // Comentar para no usar tecla.
+    }
 
 #endif
 
@@ -185,7 +190,6 @@ PathData AStarGenerator::findPath(const Vec3i &_source, const Vec3i &_target)
 {
     Node *current = nullptr;
 
-    std::vector<Node*> closedSet;
     bool solved{false};
 
     discrete_world_.getNodePtr(_source)->parent = new Node(_source);
@@ -211,25 +215,26 @@ PathData AStarGenerator::findPath(const Vec3i &_source, const Vec3i &_target)
         
         if (current->coordinates == _target) { solved = true; break; }
         
-        closedSet.push_back(current);
+        closedSet_.push_back(current);
 
         discrete_world_.setOpenValue(*current, false);
         discrete_world_.setClosedValue(*current, true);
 
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)
-        publishROSDebugData(current, indexByCost, closedSet);
+        publishROSDebugData(current, indexByCost, closedSet_);
 #endif
 
         exploreNeighbours(current, _target, indexByWorldPosition);     
     }
     main_timer.toc();
     
-    PathData result_data = createResultDataObject(current, main_timer, closedSet.size(), 
+    PathData result_data = createResultDataObject(current, main_timer, closedSet_.size(), 
                                                  solved, _source, line_of_sight_checks_);
    
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)
     explored_node_marker_.points.clear();
 #endif
+    closedSet_.clear();
     
     discrete_world_.resetWorld();
     return result_data;
