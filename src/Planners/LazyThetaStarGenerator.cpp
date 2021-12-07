@@ -53,7 +53,6 @@ namespace Planners
     {
         Node *current = nullptr;
 
-        // std::vector<Node*> closedSet;
         bool solved{false};
 
         discrete_world_.getNodePtr(_source)->parent = new Node(_source);
@@ -104,6 +103,7 @@ namespace Planners
         explored_node_marker_.points.clear();
 #endif
         closedSet_.clear();
+        delete discrete_world_.getNodePtr(_source)->parent;
 
         discrete_world_.resetWorld();
         return result_data;

@@ -7,34 +7,38 @@ namespace Planners
     
     void LazyThetaStarGeneratorSafetyCost::SetVertex(Node *_s_aux)
     {   
-        unsigned int G_max = std::numeric_limits<unsigned int>::max(); 
-        unsigned int G_new;
-        
-        for (const auto &i: direction)
-        {
-            Vec3i newCoordinates(_s_aux->coordinates + i);
+        if( !los_neighbour_ ){
 
-            if ( discrete_world_.isOccupied(newCoordinates) ) continue;
-            
-            if ( discrete_world_.isInClosedList(newCoordinates) )
+            unsigned int G_max = std::numeric_limits<unsigned int>::max(); 
+            unsigned int G_new;
+
+            for (const auto &i: direction)
             {
-                Node *successor2 = discrete_world_.getNodePtr(newCoordinates);
-                if (successor2 == nullptr) continue;
+                Vec3i newCoordinates(_s_aux->coordinates + i);
 
-                auto dist = geometry::distanceBetween2Nodes(successor2, _s_aux);
-                
-                G_new  = static_cast<unsigned int>(  successor2-> G + dist +  
-                ( static_cast<double>(_s_aux->cost) + static_cast<double>(successor2->cost) ) / 2);
+                if ( discrete_world_.isOccupied(newCoordinates) ) continue;
 
-                if (G_new < G_max)
+                if ( discrete_world_.isInClosedList(newCoordinates) )
                 {
-                    _s_aux->parent = successor2;
-                    _s_aux->G      = G_new;
-                    _s_aux->C      = (static_cast<double>(_s_aux->cost) + static_cast<double>(successor2->cost)) / 2;
-                    _s_aux->gplush = _s_aux->G + _s_aux->H;
+                    Node *successor2 = discrete_world_.getNodePtr(newCoordinates);
+                    if (successor2 == nullptr) continue;
+
+                    auto dist = geometry::distanceBetween2Nodes(successor2, _s_aux);
+
+                    G_new  = static_cast<unsigned int>(  successor2-> G + dist +  
+                    ( static_cast<double>(_s_aux->cost) + static_cast<double>(successor2->cost) ) / 2);
+
+                    if (G_new < G_max)
+                    {
+                        _s_aux->parent = successor2;
+                        _s_aux->G      = G_new;
+                        _s_aux->C      = (static_cast<double>(_s_aux->cost) + static_cast<double>(successor2->cost)) / 2;
+                        _s_aux->gplush = _s_aux->G + _s_aux->H;
+                    }
                 }
             }
         }
+        los_neighbour_ = false;
     }
 
     void LazyThetaStarGeneratorSafetyCost::ComputeCost(Node *_s_aux, Node *_s2_aux)
@@ -71,7 +75,7 @@ namespace Planners
         }
 
         double cc = ( _current->cost + _suc->cost ) / 2;
-        auto edge_neighbour = static_cast<unsigned int>( cc *  cost_weight_ * (dist_scale_factor_/100)); 
+        auto edge_neighbour = static_cast<unsigned int>( cc *  cost_weight_ * dist_scale_factor_reduced_); 
     
         cost += ( _current->G + edge_neighbour );
 
@@ -79,66 +83,4 @@ namespace Planners
         
         return cost;
     }
-    PathData LazyThetaStarGeneratorSafetyCost::findPath(const Vec3i &_source, const Vec3i &_target)
-    {
-        Node *current = nullptr;
-        // std::vector<Node*> closedSet;
-        bool solved{false};
-
-        discrete_world_.getNodePtr(_source)->parent = new Node(_source);
-        discrete_world_.setOpenValue(_source, true);
-
-        utils::Clock main_timer;
-        main_timer.tic();
-
-        line_of_sight_checks_ = 0;
-        MagicalMultiSet openSet;
-
-        node_by_cost& indexByCost              = openSet.get<IndexByCost>();
-        node_by_position& indexByWorldPosition = openSet.get<IndexByWorldPosition>();
-
-        indexByCost.insert(discrete_world_.getNodePtr(_source));
-        while (!openSet.empty())
-        {
-            auto it = indexByCost.begin();
-            current = *it;
-            indexByCost.erase(indexByCost.begin());
-
-            if (current->coordinates == _target)
-            {
-                solved = true;
-                break;
-            }
-
-            closedSet_.push_back(current);
-
-            discrete_world_.setOpenValue(*current, false);
-            discrete_world_.setClosedValue(*current, true);
-
-            if (!los_neighbour_) 
-                SetVertex(current); // Does this function make sense in the Lazy Safety Cost algorithm?
-
-            los_neighbour_ = false;
-
-#if defined(ROS) && defined(PUB_EXPLORED_NODES)
-            publishROSDebugData(current, indexByCost, closedSet_);
-#endif
-            exploreNeighbours(current, _target, indexByWorldPosition);
-
-
-        }
-        main_timer.toc();
-    
-        PathData result_data = createResultDataObject(current, main_timer, closedSet_.size(), 
-                                                  solved, _source, line_of_sight_checks_);
-   
-#if defined(ROS) && defined(PUB_EXPLORED_NODES)
-        explored_node_marker_.points.clear();
-#endif
-        closedSet_.clear();
-
-        discrete_world_.resetWorld();
-        return result_data;
-    }
-
 }

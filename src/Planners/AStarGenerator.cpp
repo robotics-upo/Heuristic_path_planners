@@ -235,6 +235,7 @@ PathData AStarGenerator::findPath(const Vec3i &_source, const Vec3i &_target)
     explored_node_marker_.points.clear();
 #endif
     closedSet_.clear();
+    delete discrete_world_.getNodePtr(_source)->parent;
     
     discrete_world_.resetWorld();
     return result_data;

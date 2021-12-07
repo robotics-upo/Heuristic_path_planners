@@ -31,15 +31,6 @@ namespace Planners
         LazyThetaStarGeneratorSafetyCost(bool _use_3d, std::string _name );
         LazyThetaStarGeneratorSafetyCost(bool _use_3d);
 
-        /**
-         * @brief Main function of the algorithm
-         * 
-         * @param _source Start discrete coordinates
-         * @param _target Goal discrete coordinates
-         * @return PathData PathData Results stored as PathData object
-         */
-        virtual PathData findPath(const Vec3i &_source, const Vec3i &_target) override;
-
     protected:
 
         /**
@@ -68,11 +59,9 @@ namespace Planners
          */
         virtual unsigned int computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs) override;
 
-
         // Variable to ensure that the los is true between the parent of the current and one neighbour, so SetVertex function should not be executed
         bool los_neighbour_{false};
 
-                
     };
 
 }
