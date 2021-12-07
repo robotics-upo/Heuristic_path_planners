@@ -31,6 +31,15 @@ namespace Planners
         LazyThetaStarGeneratorSafetyCost(bool _use_3d, std::string _name );
         LazyThetaStarGeneratorSafetyCost(bool _use_3d);
 
+        /**
+         * @brief 
+         * 
+         * @param _source 
+         * @param _target 
+         * @return PathData 
+         */
+        virtual PathData findPath(const Vec3i &_source, const Vec3i &_target) override;
+
     protected:
 
         /**

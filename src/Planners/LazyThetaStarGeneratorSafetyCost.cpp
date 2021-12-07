@@ -78,4 +78,58 @@ namespace Planners
         
         return cost;
     }
+
+    PathData LazyThetaStarGeneratorSafetyCost::findPath(const Vec3i &_source, const Vec3i &_target)
+    {
+        utils::Clock main_timer;
+        main_timer.tic();
+
+        MagicalMultiSet openSet;
+
+        Node *current = nullptr;
+
+        bool solved{false};
+
+        discrete_world_.getNodePtr(_source)->parent = new Node(_source);
+        discrete_world_.setOpenValue(_source, true);
+
+        node_by_cost& indexByCost              = openSet.get<IndexByCost>();
+        node_by_position& indexByWorldPosition = openSet.get<IndexByWorldPosition>();
+
+        indexByCost.insert(discrete_world_.getNodePtr(_source));
+        while (!indexByCost.empty())
+        {
+            auto it = indexByCost.begin();
+            current = *it;
+            indexByCost.erase(indexByCost.begin());
+        
+            if (current->coordinates == _target)
+            {
+                solved = true;
+                break;
+            }
+            closedSet_.push_back(current);
+
+            current->isInOpenList = false;
+            current->isInClosedList = true;
+
+            SetVertex(current);
+#if defined(ROS) && defined(PUB_EXPLORED_NODES)
+            publishROSDebugData(current, indexByCost, closedSet_);
+#endif
+            exploreNeighbours(current, _target, indexByWorldPosition);
+        }
+        main_timer.toc();
+        PathData result_data = createResultDataObject(current, main_timer, closedSet_.size(), 
+                                                  solved, _source, line_of_sight_checks_);
+   
+#if defined(ROS) && defined(PUB_EXPLORED_NODES)
+        explored_node_marker_.points.clear();
+#endif
+        closedSet_.clear();
+        delete discrete_world_.getNodePtr(_source)->parent;
+
+        discrete_world_.resetWorld();
+        return result_data;
+    }
 }
