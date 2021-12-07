@@ -43,11 +43,11 @@ public:
     HeuristicPlannerROS()
     {
 
-        std::string algorithm_name, heuristic;
+        std::string algorithm_name;
         lnh_.param("algorithm", algorithm_name, (std::string)"astar");
-        lnh_.param("heuristic", heuristic, (std::string)"euclidean");
+        lnh_.param("heuristic", heuristic_, (std::string)"euclidean");
         
-        configureAlgorithm(algorithm_name, heuristic);
+        configureAlgorithm(algorithm_name, heuristic_);
 
         pointcloud_sub_     = lnh_.subscribe<pcl::PointCloud<pcl::PointXYZ>>("/points", 1, &HeuristicPlannerROS::pointCloudCallback, this);
         occupancy_grid_sub_ = lnh_.subscribe<nav_msgs::OccupancyGrid>("/grid", 1, &HeuristicPlannerROS::occupancyGridCallback, this);
@@ -96,7 +96,7 @@ private:
             if( !_req.heuristic.data.empty() ){
                 configureAlgorithm(_req.algorithm.data, _req.heuristic.data);
             }else{
-                configureAlgorithm(_req.algorithm.data, "");
+                configureAlgorithm(_req.algorithm.data, heuristic_);
             }
         }else if( !_req.heuristic.data.empty() ){
             configureHeuristic(_req.heuristic.data);
@@ -122,7 +122,10 @@ private:
         }
         std::vector<double> times;
         times.reserve(_req.tries.data);
-        for(int i = 0; i < _req.tries.data; ++i){
+        int real_tries = _req.tries.data;
+        if(real_tries == 0) real_tries = 1;
+
+        for(int i = 0; i < real_tries; ++i){
 
             auto path_data = algorithm_->findPath(discrete_start, discrete_goal);
 
@@ -454,6 +457,8 @@ private:
     //1: using occupancy
     //2: using cloud
     int input_map_{0};
+    std::string heuristic_;
+
 };
 int main(int argc, char **argv)
 {
