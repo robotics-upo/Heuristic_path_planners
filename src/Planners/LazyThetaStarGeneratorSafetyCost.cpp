@@ -87,6 +87,7 @@ namespace Planners
         MagicalMultiSet openSet;
 
         Node *current = nullptr;
+        line_of_sight_checks_ = 0;
 
         bool solved{false};
 
