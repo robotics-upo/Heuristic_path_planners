@@ -1,6 +1,6 @@
 <launch>
-    <arg name="map_name" default="random0_1"/>
-    <arg name="map_size" default="small" />
+    <arg name="map_name" default="random0_2"/>
+    <arg name="map_size" default="medium" />
     <arg name="full_map_name" default="random_maps/$(arg map_size)/$(arg map_name)" />
 
     <arg name="algorithm" default="astar" />
@@ -8,8 +8,8 @@
     <arg name="map_size_x" default="120" if="$(eval arg('map_size') == 'small' )"/>
     <arg name="map_size_y" default="120" if="$(eval arg('map_size') == 'small' )"/>
 
-    <arg name="map_size_x" default="500" if="$(eval arg('map_size') == 'medium' )"/>
-    <arg name="map_size_y" default="500" if="$(eval arg('map_size') == 'medium' )"/>
+    <arg name="map_size_x" default="500" if="$(eval arg('map_size') == 'medium' or arg('map_size') == 'sparse' )"/>
+    <arg name="map_size_y" default="500" if="$(eval arg('map_size') == 'medium' or arg('map_size') == 'sparse' )"/>
 
     <arg name="map_size_x" default="1000" if="$(eval arg('map_size') == 'large' )"/>
     <arg name="map_size_y" default="1000" if="$(eval arg('map_size') == 'large' )"/>
@@ -22,16 +22,18 @@
     <arg name="start_y" default="0.30" />
 
     <node pkg="heuristic_planners" type="plan_caller.py" name="call_path" 
-    args="--start $(arg start_x) $(arg start_y) 0.0 --goal $(arg goal_x) $(arg goal_y) 0.0 --tries 30" 
+    args="--start $(arg start_x) $(arg start_y) 0.0 --goal $(arg goal_x) $(arg goal_y) 0.0 --tries 3" 
     output="screen" />
 
     <include file="$(find heuristic_planners)/launch/planner2d_example.launch">
-        <arg name="algorithm_name" value="$(arg algorithm)" />
-        <arg name="map_name" value="$(arg full_map_name)" />
-        <arg name="world_size_x" value="$(eval 0.05 * arg('map_size_x') )" />
-        <arg name="world_size_y" value="$(eval 0.05 * arg('map_size_y') )" />
-        <arg name="inflate_map" value="false" />
-        <arg name="use_costs" value="false" />
+        <arg name="algorithm_name"        value="$(arg algorithm)" />
+        <arg name="map_name"              value="$(arg full_map_name)" />
+        <arg name="world_size_x"          value="$(eval 0.05 * arg('map_size_x') )" />
+        <arg name="world_size_y"          value="$(eval 0.05 * arg('map_size_y') )" />
+        <arg name="use_costs"             value="true"                       if="$(eval arg('map_size') == 'sparse')"/>
+        <arg name="costmap_params_file"   value="costmap_for_rand_maps"      if="$(eval arg('map_size') == 'sparse')"/>
+        <arg name="use_costs"             value="false"                  unless="$(eval arg('map_size') == 'sparse')"/>
+        <arg name="inflate_map"           value="false" />
     </include>
 
 

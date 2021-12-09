@@ -28,10 +28,12 @@
     <!-- Map server to publish 2d occupancy grid in the /map topic by default -->
     <node pkg="map_server" name="map_server" type="map_server" args="$(arg map)"/>
 
+    <arg name="costmap_params_file" default="example_costmap_params"/>
     <!-- This TF is mandatory to make costmap run properly (only work with tf, not with tf2)... -->
     <node pkg="tf" type="static_transform_publisher" name="world_broadcaster" args="0 0 0 0 0 0 world map 10" if="$(arg use_costs)"/>
     <node pkg="costmap_2d" type="costmap_2d_node"    name="costmap_2d"                                        if="$(arg use_costs)">
-        <rosparam command="load" file="$(find heuristic_planners)/config/example_costmap_params.yaml"/>
+        <rosparam command="load" file="$(find heuristic_planners)/config/$(arg costmap_params_file).yaml"/>
+
     </node>
 
     <arg name="output" default="screen"/>
