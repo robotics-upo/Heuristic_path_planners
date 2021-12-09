@@ -307,11 +307,25 @@ roscd heuristic_planners/scripts
 
 For the script to finish you should press some key with in the running terminal.
 
+### Generating 2D random maps 
 
+Example command to generate 5 random maps with obstacle density from 0.1 to 0.5 and size 120x120 pixels:
+
+```bash
+roscd heuristic_planners/script 
+for i in {1..5}; do obs=$(echo "$i/10" | bc -l); echo "$obs"; ./generate2d_random_map.py --name random0_"$i" --size 120 120 --obstacles "$obs"; done
+```
 ## TODOs
 
 - [ ] Clean grid3d.hpp class
 - [ ] Add comments to generate proper Doxygen docs
+- [ ] Fix autogeneration of docs
 - [ ] Add optimized heuristics
+- [ ] Add python interfaces 
+- [ ] Fix algorithm include hierarchy. Currently you need to ```#include``` the parents of the algorithm to use. If you want to use Theta* you need also to include the A* header
+- [ ] Integrate unit tests branch. Not sure if go ahead with Catch2 or use gtest
+- [ ] Add move base planner plugin
+- [ ] Integrate voronoi 
+- [ ] Migrate Pointers to Smart Pointers
 
 See also the [issues](https://github.com/robotics-upo/Heuristic_path_planners/issues) tab.

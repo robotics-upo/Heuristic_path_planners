@@ -1,5 +1,6 @@
 <launch>
-    <arg name="map"                 default="$(find heuristic_planners)/resources/2dmaps/robbi_2.yaml"/>
+    <arg name="map_name"            default="robbi_2"/>
+    <arg name="map"                 default="$(find heuristic_planners)/resources/2dmaps/$(arg map_name).yaml"/>
     <arg name="algorithm_name"      default="costastar"/>
     <arg name="use_costs"           default="true"/>
     <!-- This param is very important -->   
@@ -10,7 +11,7 @@
     <arg name="resolution"          default="0.05"/>
     <arg name="world_size_z"        default="$(arg resolution)"/>
 
-    <arg name="inflate_map"         default="true"/>
+    <arg name="inflate_map"         default="false"/>
     <arg name="inflation_size"      default="$(arg resolution)"/>
 
     <arg name="save_data"           default="false"/>

@@ -189,6 +189,8 @@ if(BUILD_ROS_SUPPORT)
                                   scripts/test_algorithms_performance.py
                                   scripts/test_algorithms_pseudo_random_paths.py
                                   scripts/compare_trajectories_rviz.py
+                                  scripts/plan_caller.py
+                                  scripts/generate2d_random_map.py
                                   setup.py
                                   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
   )
