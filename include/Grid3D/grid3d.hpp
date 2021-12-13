@@ -376,7 +376,10 @@ protected:
 		
 		return true;
 	}
-	
+
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-result"	
 	bool loadGrid(std::string &fileName)
 	{
 		FILE *pf;
@@ -427,6 +430,7 @@ protected:
 		
 		return true;
 	}
+#pragma GCC diagnostic pop
 	
 	void computePointCloud(void)
 	{

@@ -51,7 +51,7 @@ namespace Planners
          * @param _dist Distance between _s and _s2
          * @return unsigned int 
          */
-        inline virtual unsigned int ComputeEdgeCost(const utils::CoordinateListPtr _checked_nodes, const Node* _s, const Node* _s2);
+        virtual unsigned int ComputeEdgeCost(const utils::CoordinateListPtr _checked_nodes, const Node* _s, const Node* _s2);
 
         /**
          * @brief 
@@ -62,7 +62,7 @@ namespace Planners
          * @param _dirs 
          * @return unsigned int 
          */
-        inline virtual unsigned int computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs) override;
+        virtual unsigned int computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs) override;
 
     
     };
