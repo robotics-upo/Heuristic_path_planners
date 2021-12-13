@@ -1,0 +1,22 @@
+<launch>
+
+
+    <arg name="pcd_file"            default="testpcd"/>
+    <arg name="output_name"         default="test"/>
+    
+    <arg name="pcd_path"            default="$(find heuristic_planners)/scripts/$(arg pcd_file).pcd"/>
+    <arg name="octomap_output_file" default="$(find heuristic_planners)/resources/3dmaps/$(arg output_name).bt"/>
+
+    <node pkg="pcl_ros" type="pcd_to_pointcloud" name="pcd_to_pointcloud"
+    args="$(arg pcd_path) 0.5 _frame_id:=map" />
+
+    <node pkg="octomap_server" type="octomap_server_node" name="octomap_server_node"
+    args="cloud_in:=/cloud_pcd"/>
+    
+    <node pkg="octomap_server" type="octomap_saver" name="octomap_saver"
+    args="-f $(arg octomap_output_file)"/>
+
+    <node pkg="tf" type="static_transform_publisher" name="static_transform_publisher"
+    args="0 0 0 0 0 0 map base_link 10"/>
+
+</launch>
