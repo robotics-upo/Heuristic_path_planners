@@ -7,7 +7,7 @@ option(BUILD_DOC            "Build documentation   " ON)
 option(BUILD_ROS_SUPPORT    "Build with ROS Support" ON)
 option(OPTIMIZE_FLAG        "Enable Compiler Optimization for Runtime Performance" ON)
 option(BUILD_DEBUG          "Build debug features  " OFF)
-option(BUILD_COMPUTE_STATS  "Build PathGenerator with statistics" OFF)
+option(BUILD_COMPUTE_STATS  "Build PathGenerator with statistics" ON)
 option(BUILD_VOROCPP        "Build voro++ features  " OFF)
 
 if(OPTIMIZE_FLAG)
@@ -15,7 +15,7 @@ if(OPTIMIZE_FLAG)
 endif()
 
 if(BUILD_COMPUTE_STATS)
-  add_definitions(-DCOMPUTE_STATISTICS)
+  add_compile_definitions(COMPUTE_STATISTICS)
 endif()
 
 if(BUILD_DOC)
@@ -45,7 +45,7 @@ unset(BUILD_DOC CACHE)
 find_package(Boost)
 
 if(BUILD_ROS_SUPPORT)
-  add_definitions(-DROS)
+  add_compile_definitions(ROS)
   ## Find catkin macros and libraries
   find_package(catkin REQUIRED COMPONENTS
     std_msgs
