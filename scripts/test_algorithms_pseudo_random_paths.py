@@ -108,31 +108,34 @@ set_algorithm = rospy.ServiceProxy('/planner_ros_node/set_algorithm', SetAlgorit
 set_algorithm.call(set_algorithm_request)
 
 rospy.sleep(20)
-success_iterations = 0
-while success_iterations < int(args.iterations[0]):
-    try:
-        rand_start = generate_centered_rnd_coords(args.start_coords, args.random_margins)
-        rand_goal  = generate_centered_rnd_coords(args.goal_coords, args.random_margins)
-        path_request.start = Point(float(rand_start[0]), 
-                                   float(rand_start[1]), 
-                                   float(rand_start[2]))
+for algorithm in args.algorithm:
+    success_iterations = 0
+    path_request.algorithm.data = str(algorithm)
+    while success_iterations < int(args.iterations[0]):
+        try:
+            rand_start = generate_centered_rnd_coords(args.start_coords, args.random_margins)
+            rand_goal  = generate_centered_rnd_coords(args.goal_coords, args.random_margins)
+            path_request.start = Point(float(rand_start[0]), 
+                                       float(rand_start[1]), 
+                                       float(rand_start[2]))
 
-        path_request.goal = Point(float(rand_goal[0]),  
-                                  float(rand_goal[1]),  
-                                  float(rand_goal[2]))
+            path_request.goal = Point(float(rand_goal[0]),  
+                                      float(rand_goal[1]),  
+                                      float(rand_goal[2]))
 
-        print("Running path from " + str(rand_start) + " to " + str(rand_goal))          
-        # End of options
-        rospy.wait_for_service('/planner_ros_node/request_path')
-        get_path = rospy.ServiceProxy(
-            '/planner_ros_node/request_path', GetPath)
+            print("Running path from " + str(rand_start) + " to " + str(rand_goal))          
+            # End of options
+            rospy.wait_for_service('/planner_ros_node/request_path')
+            get_path = rospy.ServiceProxy(
+                '/planner_ros_node/request_path', GetPath)
 
-        resp = get_path.call(path_request)
-        text_marker.text = "\nTime spent: " + str(resp.time_spent.data) + " ms"
-        markerPub.publish(text_marker)
-        rospy.sleep(2)
-        success_iterations += 1
-    except rospy.ServiceException as e:
-        print("Service call failed: %s" %e)
+            resp = get_path.call(path_request)
+            text_marker.text = "\nTime spent: " + str(resp.time_spent.data) + " ms"
+            markerPub.publish(text_marker)
+            rospy.sleep(2)
+            success_iterations += 1
+        except rospy.ServiceException as e:
+            print("Service call failed: %s" %e)
+        rospy.sleep(1)
 
 launch.shutdown()
