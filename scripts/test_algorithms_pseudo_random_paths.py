@@ -41,7 +41,7 @@ parser.add_argument("--launch",     help="name of the launch file",
                     choices=launch_list)
 parser.add_argument("--algorithm",  help="name of the algorithm",
                     nargs='+', type=str, required=True,
-                    choices=["astar", "costastar", "astarsafetycost", "thetastar", "costhetastar", "thetastarsafetycost", "lazythetastar", "costlazythetastar", "lazythetastarsafetycost"])
+                    choices=["astar", "costastar", "astarsafetycost", "thetastar", "costhetastar", "thetastarsafetycost", "lazythetastar", "costlazythetastar", "costlazythetastarmodified", "lazythetastarsafetycost"])
 parser.add_argument("--start-coords", help="start coordinates (x,y,z). Set z to 0 when testing with 2D",
                     nargs=3,   required=True)
 parser.add_argument("--goal-coords", help="goal coordinates (x,y,z). Set z to 0 when testing with 2D",
@@ -108,34 +108,33 @@ set_algorithm = rospy.ServiceProxy('/planner_ros_node/set_algorithm', SetAlgorit
 set_algorithm.call(set_algorithm_request)
 
 rospy.sleep(20)
-for algorithm in args.algorithm:
-    success_iterations = 0
-    path_request.algorithm.data = str(algorithm)
-    while success_iterations < int(args.iterations[0]):
-        try:
-            rand_start = generate_centered_rnd_coords(args.start_coords, args.random_margins)
-            rand_goal  = generate_centered_rnd_coords(args.goal_coords, args.random_margins)
-            path_request.start = Point(float(rand_start[0]), 
-                                       float(rand_start[1]), 
-                                       float(rand_start[2]))
-
-            path_request.goal = Point(float(rand_goal[0]),  
-                                      float(rand_goal[1]),  
-                                      float(rand_goal[2]))
-
+success_iterations = 0
+# path_request.algorithm.data = str(algorithm)
+while success_iterations < int(args.iterations[0]):
+    try:
+        rand_start = generate_centered_rnd_coords(args.start_coords, args.random_margins)
+        rand_goal  = generate_centered_rnd_coords(args.goal_coords, args.random_margins)
+        path_request.start = Point(float(rand_start[0]), 
+                                   float(rand_start[1]), 
+                                   float(rand_start[2]))
+        path_request.goal = Point(float(rand_goal[0]),  
+                                  float(rand_goal[1]),  
+                                  float(rand_goal[2]))
+        for algorithm in args.algorithm:
+            path_request.algorithm.data = str(algorithm)
+            
             print("Running path from " + str(rand_start) + " to " + str(rand_goal))          
             # End of options
             rospy.wait_for_service('/planner_ros_node/request_path')
             get_path = rospy.ServiceProxy(
                 '/planner_ros_node/request_path', GetPath)
-
             resp = get_path.call(path_request)
             text_marker.text = "\nTime spent: " + str(resp.time_spent.data) + " ms"
             markerPub.publish(text_marker)
             rospy.sleep(2)
-            success_iterations += 1
-        except rospy.ServiceException as e:
-            print("Service call failed: %s" %e)
-        rospy.sleep(1)
+        success_iterations += 1
+    except rospy.ServiceException as e:
+        print("Service call failed: %s" %e)
+    rospy.sleep(1)
 
 launch.shutdown()

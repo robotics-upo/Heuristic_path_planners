@@ -8,6 +8,7 @@
 #include "Planners/ThetaStarGeneratorSafetyCost.hpp"
 #include "Planners/LazyThetaStarGenerator.hpp"
 #include "Planners/CostAwareLazyThetaStarGenerator.hpp"
+#include "Planners/CostAwareLazyThetaStarGeneratorModified.hpp"
 #include "Planners/LazyThetaStarGeneratorSafetyCost.hpp"
 #include "utils/ros/ROSInterfaces.hpp"
 #include "utils/SaveDataVariantToFile.hpp"
@@ -266,6 +267,9 @@ private:
         }else if( algorithm_name == "costlazythetastar"){
             ROS_INFO("Using Cost Aware LazyTheta*");
             algorithm_.reset(new CostAwareLazyThetaStarGenerator(use3d_));
+        }else if( algorithm_name == "costlazythetastarmodified"){
+            ROS_INFO("Using Cost Aware LazyTheta*");
+            algorithm_.reset(new CostAwareLazyThetaStarGeneratorModified(use3d_));
         }else if( algorithm_name == "lazythetastarsafetycost"){
             ROS_INFO("Using LazyTheta* Safety Cost");
             algorithm_.reset(new LazyThetaStarGeneratorSafetyCost(use3d_));

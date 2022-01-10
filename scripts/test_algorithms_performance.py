@@ -28,7 +28,7 @@ parser.add_argument("--launch",     help="name of the launch file",
                     choices=launch_list)
 parser.add_argument("--algorithm",  help="name of the algorithm",
                     nargs='+', type=str, required=True,
-                    choices=["astar", "costastar", "astarsafetycost", "thetastar", "costhetastar", "thetastarsafetycost", "lazythetastar", "costlazythetastar", "lazythetastarsafetycost"])
+                    choices=["astar", "costastar", "astarsafetycost", "thetastar", "costhetastar", "thetastarsafetycost", "lazythetastar", "costlazythetastar", "costlazythetastarmodified", "lazythetastarsafetycost"])
 parser.add_argument("--start-coords", help="start coordinates (x,y,z). Set z to 0 when testing with 2D",
                     nargs=3,   required=True)
 parser.add_argument("--goal-coords", help="goal coordinates (x,y,z). Set z to 0 when testing with 2D",
