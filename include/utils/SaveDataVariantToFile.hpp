@@ -2,7 +2,7 @@
 #define SAVEDATAVARIANTTOFILE_HPP
 
 /**
- * @file DataVariantToFile.hpp
+ * @file SaveDataVariantToFile.hpp
  * @author Rafael Rey (reyarcenegui@gmail.com )
  * @brief  Save std::map<std::string, custom_varian> to file
  * @version 0.1
@@ -56,7 +56,6 @@ namespace Planners
             /**
              * @brief Construct a new Data Variant Saver object
              * 
-             * @param _data_file data file path 
              * @param _fields A std::vector<std::string> of fields to look for on the input map. The default values 
              * are: algorithm, goal_coords, start_coords, time_spent, explored_nodes, path_length, line_of_sight_checks and solved
              */
@@ -73,6 +72,7 @@ namespace Planners
              * @brief Main function that reads the incoming pathdata object and save to file in append mode
              * 
              * @param _data pathdata input object 
+             * @param _file_path
              * @return true Always returns true at this version
              * @return false Never returns false right now
              */
@@ -104,6 +104,15 @@ namespace Planners
 
                 return true;
             }
+            /**
+             * @brief 
+             * 
+             * @param _path 
+             * @param _results 
+             * @param _file_path 
+             * @return true 
+             * @return false 
+             */
             bool savePathDistancesToFile(const utils::CoordinateList &_path,
                                          const std::vector<std::pair<utils::Vec3i, double>> &_results,
                                          const std::string &_file_path){
@@ -122,6 +131,14 @@ namespace Planners
 
                 return true;
             }
+            /**
+             * @brief 
+             * 
+             * @param _angles 
+             * @param _file_path 
+             * @return true 
+             * @return false 
+             */
             bool saveAnglesToFile(const std::vector<double> &_angles, 
                                   const std::string &_file_path){
 

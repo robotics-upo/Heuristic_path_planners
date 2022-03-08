@@ -40,6 +40,8 @@ namespace Planners
              * @param _rnode Second node
              * @param _world discrete world in which the nodes are stored. It is used
              * to check if the coordinates that the algorithm iterates are occupied/valids
+             * @param _visited_nodes 
+             * 
              * @return true If there exists line of sight between both nodes
              * @return false If there is no line of sight between both nodes
              */
@@ -58,7 +60,15 @@ namespace Planners
              */
             bool bresenham3DWithMaxThreshold(const Node *_lnode, const Node *_rnode, const DiscreteWorld &_world, const unsigned int _threshold);
         
-
+            /**
+             * @brief 
+             * 
+             * @param _lnode 
+             * @param _rnode 
+             * @param _world 
+             * @param _threshold 
+             * @return int 
+             */
             int nodesInLineBetweenTwoNodes(const Node *_lnode, const Node *_rnode, const DiscreteWorld &_world, const unsigned int _threshold);
         }
     }

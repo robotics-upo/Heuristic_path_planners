@@ -99,6 +99,11 @@ namespace Planners
 
                 return std::chrono::duration_cast<std::chrono::seconds>(duration).count();
             }
+            /**
+             * @brief Get the Elapsed Micro Seconds object
+             * 
+             * @return double 
+             */
             double getElapsedMicroSeconds(){
 
                 if( started_ )

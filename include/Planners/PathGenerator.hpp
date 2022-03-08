@@ -196,20 +196,33 @@ namespace Planners
                                const CoordinateList &_directions,
                                const unsigned int &_inflate_steps);
         
+        /**
+         * @brief Create a Result Data Object object
+         * 
+         * @param _last 
+         * @param _timer 
+         * @param _explored_nodes 
+         * @param _solved 
+         * @param _start 
+         * @param _sight_checks 
+         * @return PathData 
+         */
         virtual PathData createResultDataObject(const Node* _last, utils::Clock &_timer, 
                                                 const size_t _explored_nodes, bool _solved, 
                                                 const Vec3i &_start, const unsigned int _sight_checks);
-        HeuristicFunction heuristic;
-        CoordinateList direction;
 
-        utils::DiscreteWorld discrete_world_;
-        unsigned int inflate_steps_{1};
-        bool do_inflate_{true};
+                                                        
+        HeuristicFunction heuristic; /*!< TODO Comment */
+        CoordinateList direction; /*!< TODO Comment */
 
-        double cost_weight_{0};
-        unsigned int max_line_of_sight_cells_{0};
+        utils::DiscreteWorld discrete_world_; /*!< TODO Comment */
+        unsigned int inflate_steps_{1}; /*!< TODO Comment */
+        bool do_inflate_{true}; /*!< TODO Comment */
 
-        const std::string algorithm_name_{""};
+        double cost_weight_{0}; /*!< TODO Comment */
+        unsigned int max_line_of_sight_cells_{0}; /*!< TODO Comment */
+
+        const std::string algorithm_name_{""}; /*!< TODO Comment */
 
     private:
     };

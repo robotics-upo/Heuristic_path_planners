@@ -169,6 +169,11 @@ namespace Planners
                 return {this->x * _mult, this->y * _mult, this->z * _mult };
             }
 
+            /**
+             * @brief 
+             * 
+             * @return Eigen::Vector3d 
+             */
             Eigen::Vector3d toEigen() const{
                 return Eigen::Vector3d(x, y, y);
             }
@@ -218,10 +223,31 @@ namespace Planners
             bool occuppied{false};
             bool isInOpenList{false};
             bool isInClosedList{false};
-
+            /**
+             * @brief Construct a new Node object
+             * 
+             * @param coord_ 
+             * @param parent_ 
+             */
             Node(Planners::utils::Vec3i coord_, Node *parent_ = nullptr);
+            /**
+             * @brief Construct a new Node object
+             * 
+             */
             Node();
+
+            /**
+             * @brief Get the Score object
+             * 
+             * @return unsigned int 
+             */
             unsigned int getScore();
+
+            /**
+             * @brief Get the Score With Safety Cost object
+             * 
+             * @return unsigned int 
+             */
             unsigned int getScoreWithSafetyCost();
 
         };
@@ -229,6 +255,10 @@ namespace Planners
         struct IndexByCost {};
         struct IndexByWorldPosition {};
 
+        /**
+         * @brief 
+         * 
+         */
         using MagicalMultiSet = boost::multi_index_container<
           Node*, // the data type stored
           boost::multi_index::indexed_by< // list of indexes
