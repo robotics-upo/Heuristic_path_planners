@@ -13,8 +13,9 @@
 #include <iostream>
 #include <vector>
 #include <math.h>
+#ifdef ROS
 #include <Eigen/Dense>
-
+#endif
 #include "utils/utils.hpp"
 #include "utils/LineOfSight.hpp"
 #include "utils/world.hpp"
@@ -108,12 +109,21 @@ namespace Planners
 
             double angleBetweenThreePoints(const Vec3i &_v1, const Vec3i &_v2, const Vec3i &_v3);
 
+#ifdef ROS
+            /**
+             * @brief 
+             * 
+             * @param _v1 
+             * @param _v2 
+             * @param _v3 
+             * @return double 
+             */
             double angleBetweenThreePoints(const Eigen::Vector3d &_v1, const Eigen::Vector3d &_v2, const Eigen::Vector3d &_v3);
 
             double getCircunferenceRadius(const Vec3i &_v1, const Vec3i &_v2, const Vec3i &_v3);
 
             double getCircunferenceRadius(const Eigen::Vector3d &_v1, const Eigen::Vector3d &_v2, const Eigen::Vector3d &_v3);
-            
+#endif            
         }//namespace geometry
     }//namespace utils
 }

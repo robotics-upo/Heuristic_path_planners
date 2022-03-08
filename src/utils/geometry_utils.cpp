@@ -94,7 +94,7 @@ namespace Planners
             inline double moduleVector(const Vec3i &_v){
                 return sqrt( _v.x * _v.x + _v.y * _v.y + _v.z * _v.z);
             }
-            
+#ifdef ROS
             double angleBetweenThreePoints(const Vec3i &_v1, const Vec3i &_v2, const Vec3i &_v3){
                 return angleBetweenThreePoints(_v1.toEigen(), _v2.toEigen(), _v3.toEigen());
             }
@@ -163,6 +163,7 @@ namespace Planners
 
                 return R;
             }
+#endif
 
         }
     }

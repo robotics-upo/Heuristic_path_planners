@@ -17,8 +17,9 @@
 #include <variant>
 #include <math.h>
 #include <memory>
+#ifdef ROS
 #include <Eigen/Dense>
-
+#endif
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index/identity.hpp>
@@ -168,10 +169,16 @@ namespace Planners
                 return {this->x * _mult, this->y * _mult, this->z * _mult };
             }
 
+#ifdef ROS
+            /**
+             * @brief 
+             * 
+             * @return Eigen::Vector3d 
+             */
             Eigen::Vector3d toEigen() const{
                 return Eigen::Vector3d(x, y, y);
             }
-
+#endif
         };
         /**
          * @brief 

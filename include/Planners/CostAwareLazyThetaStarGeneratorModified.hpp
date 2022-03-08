@@ -39,7 +39,7 @@ namespace Planners
          * @param s_aux Pointer to first node
          * @param s2_aux Pointer to second node
          */
-        inline virtual void ComputeCost(Node *_s_aux, Node *_s2_aux) override;
+        virtual void ComputeCost(Node *_s_aux, Node *_s2_aux) override;
 
     };
 

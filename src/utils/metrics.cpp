@@ -8,7 +8,7 @@ namespace Planners
 
         namespace metrics
         {
-
+#ifdef ROS
             CurvatureData calculatePathCurvature(const CoordinateList &_data)
             {
                 std::vector<double> curvatures;
@@ -36,6 +36,7 @@ namespace Planners
                 }
                 return std::make_tuple(0.0, 0.0, 0.0, 0.0);
             }
+#endif
             AnglesData calculatePathAnglesMetrics(const CoordinateList &_data, const int _threshold_angle)
             {
                 std::vector<double> angles;

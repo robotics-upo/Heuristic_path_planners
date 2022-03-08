@@ -53,7 +53,7 @@ namespace Planners
     }
 
 
-    inline unsigned int CostAwareLazyThetaStarGenerator::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs){
+    unsigned int CostAwareLazyThetaStarGenerator::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs){
 
         unsigned int cost = _current->G;
 

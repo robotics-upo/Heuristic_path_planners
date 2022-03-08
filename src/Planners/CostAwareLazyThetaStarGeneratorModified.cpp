@@ -5,7 +5,7 @@ namespace Planners
     CostAwareLazyThetaStarGeneratorModified::CostAwareLazyThetaStarGeneratorModified(bool _use_3d):CostAwareLazyThetaStarGenerator(_use_3d, "costlazythetastarmodified") {}
     CostAwareLazyThetaStarGeneratorModified::CostAwareLazyThetaStarGeneratorModified(bool _use_3d, std::string _name = "costlazythetastarmodified" ):CostAwareLazyThetaStarGenerator(_use_3d, _name) {}
     
-    inline void CostAwareLazyThetaStarGeneratorModified::ComputeCost(Node *_s_aux, Node *_s2_aux)
+    void CostAwareLazyThetaStarGeneratorModified::ComputeCost(Node *_s_aux, Node *_s2_aux)
     {
         auto distanceParent2 = geometry::distanceBetween2Nodes(_s_aux->parent, _s2_aux);
 
