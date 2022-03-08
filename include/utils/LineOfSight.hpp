@@ -2,7 +2,8 @@
 #define BRESENHAM_HPP
 /**
  * @file LineOfSight.hpp
- * @author Rafael Rey (rreyarc@upo.es)
+ * @author Rafael Rey (reyarcenegui@gmail.com)
+* @author Jose Antonio Cobano (jacobsua@upo.es)
  * @brief Implementation of line of sight related algorithms
  * @version 0.1
  * @date 2021-06-29

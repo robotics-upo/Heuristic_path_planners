@@ -13,7 +13,7 @@ AStarGenerator::AStarGenerator(bool _use_3d = true): PathGenerator(_use_3d, "ast
 void AStarGenerator::configAlgorithm(){
 
     closedSet_.reserve(50000);
-
+    // openSet_.reserve(50000);
     //If compiled with ros and visualization
 #ifdef ROS
     explored_nodes_marker_pub_ = lnh_.advertise<visualization_msgs::Marker>("explored_nodes",   1);
@@ -158,7 +158,8 @@ void AStarGenerator::exploreNeighbours(Node* _current, const Vec3i &_target, nod
             
         Vec3i newCoordinates = _current->coordinates + direction[i];
         Node *successor = discrete_world_.getNodePtr(newCoordinates);
-
+        //Skip the neighbour if it is not valid, occupied, or already in teh
+        //closed list
         if ( successor == nullptr ||
              successor->isInClosedList || 
              successor->occuppied ) 
@@ -192,7 +193,8 @@ PathData AStarGenerator::findPath(const Vec3i &_source, const Vec3i &_target)
 
     discrete_world_.getNodePtr(_source)->parent = new Node(_source);
     discrete_world_.setOpenValue(_source, true);
-    
+    //Timer to record the execution time, not 
+    //really important
     utils::Clock main_timer;
     main_timer.tic();
 
@@ -206,7 +208,7 @@ PathData AStarGenerator::findPath(const Vec3i &_source, const Vec3i &_target)
     indexByCost.insert(discrete_world_.getNodePtr(_source));
     
     while (!indexByCost.empty()) {
-        
+        //Get the element at the start of the open set ordered by cost
         auto it = indexByCost.begin();
         current = *it;
         indexByCost.erase(indexByCost.begin());
@@ -214,7 +216,8 @@ PathData AStarGenerator::findPath(const Vec3i &_source, const Vec3i &_target)
         if (current->coordinates == _target) { solved = true; break; }
         
         closedSet_.push_back(current);
-
+        //This flags are used to avoid search in the containers, 
+        //for speed reasons.
         current->isInOpenList = false;
         current->isInClosedList = true;
 
@@ -228,7 +231,8 @@ PathData AStarGenerator::findPath(const Vec3i &_source, const Vec3i &_target)
     
     PathData result_data = createResultDataObject(current, main_timer, closedSet_.size(), 
                                                  solved, _source, line_of_sight_checks_);
-   
+   //Clear internal variables. This should be done
+   //the same way in every new algorithm implemented.
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)
     explored_node_marker_.points.clear();
 #endif

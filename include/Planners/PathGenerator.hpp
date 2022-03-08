@@ -2,9 +2,13 @@
 #define PATHGENERATOR_HPP
 /**
  * @file PathGenerator.hpp
- * @author Rafael Rey (rreyarc@upo.es)
- * @brief Generic PathGenerator class. The algorithms should inherit from this class as far as possible.
+ * @author Rafael Rey (reyarcenegui@gmail.com)
+ * @author Jose Antonio Cobano (jacobsua@upo.es)
+ * 
+ * @brief Generic PathGenerator Base Class. The algorithms should inherit from this class as far as possible.
  * It implements some generic functions used by all the algorithms
+ * It could be extended to add functionalities required by other type of algorithms, not only heuristics ones
+ * 
  * @version 0.1
  * @date 2021-06-29
  * 
@@ -44,41 +48,65 @@ namespace Planners
         /**
          * @brief Construct a new Path Generator object
          * 
-         * @param _use_3d 
-         * @param _algorithm_name 
+         * @param _use_3d: This params allows the algorithm to choose a set of 3D directions of explorations 
+         * or a set or 2D directions of explorations. The 2D case is simply 3D but without the directions with Z!=0
+         * directions2d = {
+         *  { 0, 1, 0 }, {0, -1, 0}, { 1, 0, 0 }, { -1, 0, 0 }, //4 straight elements
+         *  { 1, -1, 0 }, { -1, 1, 0 }, { -1, -1, 0 }, { 1, 1, 0 } //4 diagonal elements
+         * };
+         * directions3d = {
+         *
+         *  { 0, 1, 0 }, {0, -1, 0}, { 1, 0, 0 }, { -1, 0, 0 }, { 0, 0, 1}, { 0, 0, -1}, //6 first elements
+         *
+         *  { 1, -1, 0 }, { -1, 1, 0 }, { -1, -1, 0 }, { 1, 1, 0 },  { -1, 0, -1 }, //7-18 inclusive
+         *  { 1, 0, 1 }, { 1, 0, -1 }, {-1, 0, 1}, { 0, -1, 1 }, { 0, 1, 1 }, { 0, 1, -1 },  { 0, -1, -1 }, 
+         *
+         *  { -1, -1, 1 }, { 1, 1, 1 },  { -1, 1, 1 }, { 1, -1, 1 }, { -1, -1, -1 }, { 1, 1, -1 }, { -1, 1, -1 }, { 1, -1, -1 }, 
+         *};
+         * Note that the the ordering is not trivial, the inner loop that explorates node take advantage of this order to directly use
+         * pre-compiled distance depending if the squared norm of the vector is 1,2 or 3.
+         * This pre compiled distances appears in the header utils.hpp
+         * 
+         * 
+         * @param _algorithm_name Algorithm name to uniquely identify the type of algorithm. 
          */
         PathGenerator(bool _use_3d, std::string _algorithm_name);
 
         /**
-         * @brief Set the World Size object
+         * @brief Set the World Size object. This method call the resizeWorld method 
+         * from the internal discrete world object
          * 
-         * @param worldSize_ Discrete world size vector
+         * @param worldSize_ Discrete world size vector in units of resolution.
          * @param _resolution resolution to save inside the world object
          */
         void setWorldSize(const Vec3i &worldSize_,const double _resolution);
+
         /**
-         * @brief Get the World Size object
+         * @brief Get the World Size, it simply call the getWorldSize method from the
+         * discrete world internal object
          * 
          * @return Vec3i discrete world bounds
          */
         Vec3i getWorldSize();
         /**
-         * @brief Get the World Resolution object
-         * 
-         * @return double resolution
+         * @brief Get the World Resolution that is been used by the internal 
+         * discrete world object
+         * @return double resolution 
          */
         double getWorldResolution();
 
         /**
-         * @brief Get the Inner World object
+         * @brief Get a pointer to the inner world object 
          * 
-         * @return utils::DiscreteWorld& 
+         * @return utils::DiscreteWorld* 
          */
         utils::DiscreteWorld* getInnerWorld();
+
         /**
-         * @brief Configure the heuristic
-         * 
+         * @brief Configure the heuristic from the list of static functions in the heuristic.hpp
+         * header
          * @param heuristic_ Should be one of the static functions of the Heuristic Class
+         * for example Heuristic::Euclidean
          */
         void setHeuristic(HeuristicFunction heuristic_);
         

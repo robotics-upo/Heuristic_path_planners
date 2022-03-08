@@ -2,7 +2,8 @@
 #define UTILS_HPP
 /**
  * @file utils.hpp
- * @author Rafael Rey (rreyarc@upo.es)
+ * @author Rafael Rey (reyarcenegui@gmail.com)
+* @author Jose Antonio Cobano (jacobsua@upo.es)
  * @brief A set of utils used alongside the project 
  * @version 0.1
  * @date 2021-06-29

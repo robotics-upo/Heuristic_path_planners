@@ -2,7 +2,8 @@
 #define THETASTARSAFETY_HPP
 /**
  * @file ThetaStarGeneratorSafetyCost.hpp
- * @author Rafael Rey (rreyarc@upo.es)
+ * @author Rafael Rey (reyarcenegui@gmail.com)
+* @author Jose Antonio Cobano (jacobsua@upo.es)
  * @brief 
  * @version 0.1
  * @date 2021-09-10

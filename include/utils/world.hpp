@@ -2,7 +2,8 @@
 #define WORLD_HPP
 /**
  * @file world.hpp
- * @author Rafael Rey (rreyarc@upo.es)
+ * @author Rafael Rey (reyarcenegui@gmail.com)
+* @author Jose Antonio Cobano (jacobsua@upo.es)
  * @brief This header contains an implementation of a discrete cell-like world to use with the planning algorithms
  * @version 0.1
  * @date 2021-06-29

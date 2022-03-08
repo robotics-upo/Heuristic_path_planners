@@ -2,7 +2,8 @@
 #define GEOMETRY_UTILS_HPP
 /**
  * @file geometry_utils.hpp
- * @author Rafael Rey (rreyarc@upo.es)
+ * @author Rafael Rey (reyarcenegui@gmail.com)
+* @author Jose Antonio Cobano (jacobsua@upo.es)
  * @brief A set of geometry utilities functions
  * @version 0.1
  * @date 2021-06-29
