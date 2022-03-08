@@ -3,9 +3,9 @@ project(heuristic_planners)
 
 add_compile_options(-std=c++17 -Wall -Werror -Wextra -pedantic )
 
-option(BUILD_DOC            "Build documentation   " OFF)
-option(BUILD_ROS_SUPPORT    "Build with ROS Support" OFF)
-option(OPTIMIZE_FLAG        "Enable Compiler Optimization for Runtime Performance" OFF)
+option(BUILD_DOC            "Build documentation   " ON)
+option(BUILD_ROS_SUPPORT    "Build with ROS Support" ON)
+option(OPTIMIZE_FLAG        "Enable Compiler Optimization for Runtime Performance" ON)
 option(BUILD_DEBUG          "Build debug features  " OFF)
 option(BUILD_COMPUTE_STATS  "Build PathGenerator with statistics" ON)
 option(BUILD_VOROCPP        "Build voro++ features  " OFF)
