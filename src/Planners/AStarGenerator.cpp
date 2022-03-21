@@ -167,12 +167,12 @@ void AStarGenerator::exploreNeighbours(Node* _current, const Vec3i &_target, nod
  
         unsigned int totalCost = computeG(_current, successor, i, direction.size());
             
-        if ( !successor->isInClosedList ) { 
+        if ( !successor->isInOpenList ) { 
             successor->parent = _current;
             successor->G = totalCost;
             successor->H = heuristic(successor->coordinates, _target);
             successor->gplush = successor->G + successor->H;
-            successor->isInClosedList = true;
+            successor->isInOpenList = true;
             _index_by_pos.insert(successor);
         }
         else if (totalCost < successor->G) {
