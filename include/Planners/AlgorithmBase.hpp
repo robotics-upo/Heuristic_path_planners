@@ -1,11 +1,11 @@
-#ifndef PATHGENERATOR_HPP
-#define PATHGENERATOR_HPP
+#ifndef ALGORITHMBASE_HPP
+#define ALGORITHMBASE_HPP
 /**
- * @file PathGenerator.hpp
+ * @file AlgorithmBase.hpp
  * @author Rafael Rey (reyarcenegui@gmail.com)
  * @author Jose Antonio Cobano (jacobsua@upo.es)
  * 
- * @brief Generic PathGenerator Base Class. The algorithms should inherit from this class as far as possible.
+ * @brief Generic AlgorithmBase Base Class. The algorithms should inherit from this class as far as possible.
  * It implements some generic functions used by all the algorithms
  * It could be extended to add functionalities required by other type of algorithms, not only heuristics ones
  * 
@@ -41,12 +41,12 @@ namespace Planners
      * @brief Main base class that implements useful functions for children algorithm class 
      * and provides a guide to implement any new algorithm.
      */
-    class PathGenerator
+    class AlgorithmBase
     {
 
     public:
         /**
-         * @brief Construct a new Path Generator object
+         * @brief Construct a new AlgorithmBase object
          * 
          * @param _use_3d: This params allows the algorithm to choose a set of 3D directions of explorations 
          * or a set or 2D directions of explorations. The 2D case is simply 3D but without the directions with Z!=0
@@ -70,7 +70,7 @@ namespace Planners
          * 
          * @param _algorithm_name Algorithm name to uniquely identify the type of algorithm. 
          */
-        PathGenerator(bool _use_3d, std::string _algorithm_name);
+        AlgorithmBase(bool _use_3d, std::string _algorithm_name);
 
         /**
          * @brief Set the World Size object. This method call the resizeWorld method 

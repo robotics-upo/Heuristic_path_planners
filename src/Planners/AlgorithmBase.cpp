@@ -1,9 +1,9 @@
-#include "Planners/PathGenerator.hpp"
+#include "Planners/AlgorithmBase.hpp"
 
 namespace Planners
 {
 
-    PathGenerator::PathGenerator(bool _use_3d = true,  std::string _algorithm_name = "generic_3d_algorithm"): algorithm_name_(_algorithm_name){
+    AlgorithmBase::AlgorithmBase(bool _use_3d = true,  std::string _algorithm_name = "generic_3d_algorithm"): algorithm_name_(_algorithm_name){
         setHeuristic(&Heuristic::euclidean);
         CoordinateList directions2d, directions3d;
         directions2d = {
@@ -27,29 +27,29 @@ namespace Planners
             direction = directions2d;
         }
     }
-    void PathGenerator::setWorldSize(const Vec3i &_worldSize,const double _resolution)
+    void AlgorithmBase::setWorldSize(const Vec3i &_worldSize,const double _resolution)
     {
         discrete_world_.resizeWorld(_worldSize, _resolution);
     }
-    Vec3i PathGenerator::getWorldSize(){
+    Vec3i AlgorithmBase::getWorldSize(){
         return discrete_world_.getWorldSize();
     }
-    double PathGenerator::getWorldResolution(){
+    double AlgorithmBase::getWorldResolution(){
         return discrete_world_.getResolution();
     }
-    utils::DiscreteWorld* PathGenerator::getInnerWorld(){
+    utils::DiscreteWorld* AlgorithmBase::getInnerWorld(){
         return &discrete_world_;
     }
 
-    void PathGenerator::setHeuristic(HeuristicFunction heuristic_)
+    void AlgorithmBase::setHeuristic(HeuristicFunction heuristic_)
     {
         heuristic = std::bind(heuristic_, std::placeholders::_1, std::placeholders::_2);
     }
-    bool PathGenerator::configureCellCost(const Vec3i &coordinates_, const double &_cost){
+    bool AlgorithmBase::configureCellCost(const Vec3i &coordinates_, const double &_cost){
 
         return discrete_world_.setNodeCost(coordinates_, _cost);
     }
-    void PathGenerator::addCollision(const Vec3i &coordinates_, bool do_inflate, unsigned int steps)
+    void AlgorithmBase::addCollision(const Vec3i &coordinates_, bool do_inflate, unsigned int steps)
     {
         if (do_inflate)
         {
@@ -60,11 +60,11 @@ namespace Planners
             discrete_world_.setOccupied(coordinates_);
         }
     }
-    void PathGenerator::addCollision(const Vec3i &coordinates_)
+    void AlgorithmBase::addCollision(const Vec3i &coordinates_)
     {
         addCollision(coordinates_, do_inflate_, inflate_steps_);
     }
-    bool PathGenerator::detectCollision(const Vec3i &coordinates_)
+    bool AlgorithmBase::detectCollision(const Vec3i &coordinates_)
     {
         if (discrete_world_.isOccupied(coordinates_))
         {
@@ -72,7 +72,7 @@ namespace Planners
         }
         return false;
     }
-    void PathGenerator::inflateNodeAsCube(const Vec3i &_ref, const CoordinateList &_directions, const unsigned int &_inflate_steps)
+    void AlgorithmBase::inflateNodeAsCube(const Vec3i &_ref, const CoordinateList &_directions, const unsigned int &_inflate_steps)
     {
         for (const auto &it : _directions)
         {
@@ -84,7 +84,7 @@ namespace Planners
         }
     }
 
-    PathData PathGenerator::createResultDataObject(const Node* _last, utils::Clock &_timer, 
+    PathData AlgorithmBase::createResultDataObject(const Node* _last, utils::Clock &_timer, 
                                                     const size_t _explored_nodes, bool _solved,
                                                     const Vec3i &_start, const unsigned int _sight_checks){
                                     

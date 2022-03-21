@@ -1,11 +1,11 @@
-#include "Planners/CostAwareLazyThetaStarGenerator.hpp"
+#include "Planners/LazyThetaStarM1.hpp"
 
 namespace Planners
 {
-    CostAwareLazyThetaStarGenerator::CostAwareLazyThetaStarGenerator(bool _use_3d):LazyThetaStarGenerator(_use_3d, "costlazythetastar") {}
-    CostAwareLazyThetaStarGenerator::CostAwareLazyThetaStarGenerator(bool _use_3d, std::string _name = "costlazythetastar" ):LazyThetaStarGenerator(_use_3d, _name) {}
+    LazyThetaStarM1::LazyThetaStarM1(bool _use_3d):LazyThetaStar(_use_3d, "lazythetastarm1") {}
+    LazyThetaStarM1::LazyThetaStarM1(bool _use_3d, std::string _name = "lazythetastarm1" ):LazyThetaStar(_use_3d, _name) {}
     
-    void CostAwareLazyThetaStarGenerator::SetVertex(Node *_s_aux)
+    void LazyThetaStarM1::SetVertex(Node *_s_aux)
     {   
         line_of_sight_checks_++;
         if (!LineOfSight::bresenham3DWithMaxThreshold(_s_aux->parent, _s_aux, discrete_world_, max_line_of_sight_cells_ ))
@@ -34,7 +34,7 @@ namespace Planners
             }
         }
     }
-    inline void CostAwareLazyThetaStarGenerator::ComputeCost(Node *_s_aux, Node *_s2_aux)
+    inline void LazyThetaStarM1::ComputeCost(Node *_s_aux, Node *_s2_aux)
     {
         auto distanceParent2 = geometry::distanceBetween2Nodes(_s_aux->parent, _s2_aux);
 
@@ -53,7 +53,7 @@ namespace Planners
     }
 
 
-    unsigned int CostAwareLazyThetaStarGenerator::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs){
+    unsigned int LazyThetaStarM1::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs){
 
         unsigned int cost = _current->G;
 

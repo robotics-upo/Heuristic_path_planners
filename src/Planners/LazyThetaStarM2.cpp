@@ -1,11 +1,11 @@
-#include "Planners/LazyThetaStarGeneratorSafetyCost.hpp"
+#include "Planners/LazyThetaStarM2.hpp"
 
 namespace Planners
 {
-    LazyThetaStarGeneratorSafetyCost::LazyThetaStarGeneratorSafetyCost(bool _use_3d):ThetaStarGeneratorSafetyCost(_use_3d, "lazythetastarsafetycost") {}
-    LazyThetaStarGeneratorSafetyCost::LazyThetaStarGeneratorSafetyCost(bool _use_3d, std::string _name = "lazythetastarsafetycost" ):ThetaStarGeneratorSafetyCost(_use_3d, _name) {}
+    LazyThetaStarM2::LazyThetaStarM2(bool _use_3d):ThetaStarM2(_use_3d, "lazythetastarm2") {}
+    LazyThetaStarM2::LazyThetaStarM2(bool _use_3d, std::string _name = "lazythetastarm2" ):ThetaStarM2(_use_3d, _name) {}
     
-    void LazyThetaStarGeneratorSafetyCost::SetVertex(Node *_s_aux)
+    void LazyThetaStarM2::SetVertex(Node *_s_aux)
     {   
         if( !los_neighbour_ ){
 
@@ -38,7 +38,7 @@ namespace Planners
         los_neighbour_ = false;
     }
 
-    inline void LazyThetaStarGeneratorSafetyCost::ComputeCost(Node *_s_aux, Node *_s2_aux)
+    inline void LazyThetaStarM2::ComputeCost(Node *_s_aux, Node *_s2_aux)
     {
         line_of_sight_checks_++;
         if (LineOfSight::bresenham3D(_s_aux->parent, _s2_aux, discrete_world_, checked_nodes)) {
@@ -59,7 +59,7 @@ namespace Planners
         checked_nodes->clear();
     }
 
-    inline unsigned int LazyThetaStarGeneratorSafetyCost::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs){
+    inline unsigned int LazyThetaStarM2::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs){
 
         unsigned int cost = 0;
 
@@ -79,7 +79,7 @@ namespace Planners
         return cost;
     }
 
-    PathData LazyThetaStarGeneratorSafetyCost::findPath(const Vec3i &_source, const Vec3i &_target)
+    PathData LazyThetaStarM2::findPath(const Vec3i &_source, const Vec3i &_target)
     {
         utils::Clock main_timer;
         main_timer.tic();

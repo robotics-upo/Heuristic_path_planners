@@ -7,7 +7,7 @@ option(BUILD_DOC            "Build documentation   " ON)
 option(BUILD_ROS_SUPPORT    "Build with ROS Support" ON)
 option(OPTIMIZE_FLAG        "Enable Compiler Optimization for Runtime Performance" ON)
 option(BUILD_DEBUG          "Build debug features  " OFF)
-option(BUILD_COMPUTE_STATS  "Build PathGenerator with statistics" ON)
+option(BUILD_COMPUTE_STATS  "Build Algorithms with statistics" ON)
 option(BUILD_VOROCPP        "Build voro++ features  " OFF)
 
 if(OPTIMIZE_FLAG)
@@ -99,7 +99,7 @@ generate_messages(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
  INCLUDE_DIRS include
- LIBRARIES PathGenerator AStarGenerator CostAwareAStarGenerator AStarGeneratorSafetyCost ThetaStarGenerator CostAwareThetaStarGenerator ThetaStarGeneratorSafetyCost LazyThetaStarGenerator CostAwareLazyThetaStarGenerator LazyThetaStarGeneratorSafetyCost CostAwareLazyThetaStarGeneratorModified
+ LIBRARIES AlgorithmBase AStar AStarM1 AStarM2 ThetaStar ThetaStarM1 ThetaStarM2 LazyThetaStar LazyThetaStarM1 LazyThetaStarM1Mod LazyThetaStarM2
  # 
  CATKIN_DEPENDS std_msgs visualization_msgs geometry_msgs nav_msgs roscpp message_runtime costmap_2d
 #  DEPENDS system_lib
@@ -145,27 +145,27 @@ if(BUILD_ROS_SUPPORT)
   list(APPEND ${PROJECT_NAME}_UTILS_SOURCES src/utils/ros/ROSInterfaces.cpp)
 endif()
 
-add_library(PathGenerator                   src/Planners/PathGenerator.cpp 
+add_library(AlgorithmBase                   src/Planners/AlgorithmBase.cpp 
                                             ${${PROJECT_NAME}_UTILS_SOURCES})
 
-add_library(AStarGenerator                  src/Planners/AStarGenerator.cpp
-                                            src/Planners/PathGenerator.cpp 
+add_library(AStar                  src/Planners/AStar.cpp
+                                            src/Planners/AlgorithmBase.cpp 
                                             ${${PROJECT_NAME}_UTILS_SOURCES}
                                             )
 
-add_library(CostAwareAStarGenerator         src/Planners/CostAwareAStarGenerator.cpp ) 
-add_library(AStarGeneratorSafetyCost        src/Planners/AStarGeneratorSafetyCost.cpp ) 
-add_library(ThetaStarGenerator              src/Planners/ThetaStarGenerator.cpp )
-add_library(CostAwareThetaStarGenerator     src/Planners/CostAwareThetaStarGenerator.cpp )
-add_library(ThetaStarGeneratorSafetyCost    src/Planners/ThetaStarGeneratorSafetyCost.cpp )
-add_library(LazyThetaStarGenerator          src/Planners/LazyThetaStarGenerator.cpp )
-add_library(CostAwareLazyThetaStarGenerator src/Planners/CostAwareLazyThetaStarGenerator.cpp )
-add_library(CostAwareLazyThetaStarGeneratorModified src/Planners/CostAwareLazyThetaStarGeneratorModified.cpp )
-add_library(LazyThetaStarGeneratorSafetyCost src/Planners/LazyThetaStarGeneratorSafetyCost.cpp )
+add_library(AStarM1            src/Planners/AStarM1.cpp ) 
+add_library(AStarM2            src/Planners/AStarM2.cpp ) 
+add_library(ThetaStar          src/Planners/ThetaStar.cpp )
+add_library(ThetaStarM1        src/Planners/ThetaStarM1.cpp )
+add_library(ThetaStarM2        src/Planners/ThetaStarM2.cpp )
+add_library(LazyThetaStar      src/Planners/LazyThetaStar.cpp )
+add_library(LazyThetaStarM1    src/Planners/LazyThetaStarM1.cpp )
+add_library(LazyThetaStarM1Mod src/Planners/LazyThetaStarM1Mod.cpp )
+add_library(LazyThetaStarM2    src/Planners/LazyThetaStarM2.cpp )
 
 
 
-list(APPEND ${PROJECT_NAME}_LIBRARIES PathGenerator AStarGenerator CostAwareAStarGenerator AStarGeneratorSafetyCost ThetaStarGenerator CostAwareThetaStarGenerator ThetaStarGeneratorSafetyCost LazyThetaStarGenerator CostAwareLazyThetaStarGenerator CostAwareLazyThetaStarGeneratorModified LazyThetaStarGeneratorSafetyCost)  
+list(APPEND ${PROJECT_NAME}_LIBRARIES AlgorithmBase AStar AStarM1 AStarM2 ThetaStar ThetaStarM1 ThetaStarM2 LazyThetaStar LazyThetaStarM1 LazyThetaStarM1Mod LazyThetaStarM2)  
 target_link_libraries(${${PROJECT_NAME}_LIBRARIES} ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 add_dependencies( ${${PROJECT_NAME}_LIBRARIES} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 list(APPEND ${PROJECT_NAME}_TARGETS ${${PROJECT_NAME}_LIBRARIES})

@@ -1,21 +1,23 @@
-#ifndef ASTARGENERATORSAFETYCOST_HPP
-#define ASTARGENERATORSAFETYCOST_HPP
+#ifndef ASTARM1_HPP
+#define ASTARM1_HPP
 /**
- * @file AStarGeneratorSafetyCost.hpp
+ * @file AStarM1.hpp
  * @author Rafael Rey (reyarcenegui@gmail.com)
  * @author Jose Antonio Cobano (jacobsua@upo.es)
  * 
- * @brief This Algorithm is the same as the original A* with
- * the only difference in the ComputeG function that is re-implemented
- * It adds a edge-neighbour term to the total G value.
+ * @brief This algorithm is a variation of the A*. The only
+ * difference is that it reimplements the computeG method adding the
+ * following cost term to the resturned result:
+ * 
+ *  auto cost_term = static_cast<unsigned int>(cost_weight_ * _suc->cost * dist_scale_factor_reduced_);
  * 
  * @version 0.1
- * @date 2021-09-21
+ * @date 2021-06-29
  * 
  * @copyright Copyright (c) 2021
  * 
  */
-#include <Planners/AStarGenerator.hpp>
+#include <Planners/AStar.hpp>
 
 namespace Planners{
 
@@ -23,26 +25,26 @@ namespace Planners{
      * @brief 
      * 
      */
-    class AStarGeneratorSafetyCost : public AStarGenerator
+    class AStarM1 : public AStar
     {
         
     public:
         /**
-         * @brief Construct a new CostAwareAStarGenerator object
-         * @param _use_3d This parameter allows the user to choose 
-         * between planning on a plane (8 directions possibles) 
+         * @brief Construct a new AStarM1 object
+         * @param _use_3d This parameter allows the user to choose between 
+         * planning on a plane (8 directions possibles) 
          * or in the 3D full space (26 directions)
-         * 
          * @param _name Algorithm name stored internally
+         * 
          */
-        AStarGeneratorSafetyCost(bool _use_3d, std::string _name );
+        AStarM1(bool _use_3d, std::string _name );
 
         /**
-         * @brief Construct a new AStarGeneratorSafetyCost object
+         * @brief Construct a new Cost Aware A Star M1 object
          * 
          * @param _use_3d 
          */
-        AStarGeneratorSafetyCost(bool _use_3d);
+        AStarM1(bool _use_3d);
 
     protected:
         

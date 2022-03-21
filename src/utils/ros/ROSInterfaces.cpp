@@ -44,7 +44,7 @@ namespace Planners
                     0};
         }
 
-        bool configureWorldFromOccupancy(const nav_msgs::OccupancyGrid &_grid, PathGenerator &_algorithm, bool _set_size)
+        bool configureWorldFromOccupancy(const nav_msgs::OccupancyGrid &_grid, AlgorithmBase &_algorithm, bool _set_size)
         {
 
             if (_set_size)
@@ -69,7 +69,7 @@ namespace Planners
 
             return true;
         }
-        bool configureWorldFromOccupancyWithCosts(const nav_msgs::OccupancyGrid &_grid, PathGenerator &_algorithm, bool _set_size)
+        bool configureWorldFromOccupancyWithCosts(const nav_msgs::OccupancyGrid &_grid, AlgorithmBase &_algorithm, bool _set_size)
         {
 
             if (_set_size)
@@ -95,7 +95,7 @@ namespace Planners
 
             return true;
         }
-        bool configureWorldFromPointCloud(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &_points, PathGenerator &_algorithm, const double &_resolution)
+        bool configureWorldFromPointCloud(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &_points, AlgorithmBase &_algorithm, const double &_resolution)
         {
 
             for (auto &it : *_points)
@@ -104,7 +104,7 @@ namespace Planners
             return true;
         }
 
-        bool configureWorldCosts(Grid3d &_grid, PathGenerator &_algorithm)
+        bool configureWorldCosts(Grid3d &_grid, AlgorithmBase &_algorithm)
         {
 
             auto world_size = _algorithm.getWorldSize();

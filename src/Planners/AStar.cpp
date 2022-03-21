@@ -1,16 +1,16 @@
-#include "Planners/AStarGenerator.hpp"
+#include "Planners/AStar.hpp"
 
 namespace Planners{
     
-AStarGenerator::AStarGenerator(bool _use_3d = true, std::string _name = "astar" ): PathGenerator(_use_3d, _name){
+AStar::AStar(bool _use_3d = true, std::string _name = "astar" ): AlgorithmBase(_use_3d, _name){
     configAlgorithm();
 }
     
-AStarGenerator::AStarGenerator(bool _use_3d = true): PathGenerator(_use_3d, "astar")
+AStar::AStar(bool _use_3d = true): AlgorithmBase(_use_3d, "astar")
 {
     configAlgorithm();
 }
-void AStarGenerator::configAlgorithm(){
+void AStar::configAlgorithm(){
 
     closedSet_.reserve(50000);
     openSet_.reserve(50000);
@@ -70,7 +70,7 @@ void AStarGenerator::configAlgorithm(){
 #endif
 
 }
-void AStarGenerator::publishOccupationMarkersMap()
+void AStar::publishOccupationMarkersMap()
 {
 #ifdef ROS
 	occupancy_marker_.clear();
@@ -91,7 +91,7 @@ void AStarGenerator::publishOccupationMarkersMap()
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 template<typename T, typename U>
-void AStarGenerator::publishROSDebugData(const Node* _node, const T &_open_set, const U &_closed_set)
+void AStar::publishROSDebugData(const Node* _node, const T &_open_set, const U &_closed_set)
 {
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)
     if( (ros::Time::now() - last_publish_tamp_ ).toSec() > duration_pub_.toSec() ){
@@ -136,7 +136,7 @@ void AStarGenerator::publishROSDebugData(const Node* _node, const T &_open_set, 
 
 }
 
-inline unsigned int AStarGenerator::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs){
+inline unsigned int AStar::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs){
     unsigned int cost = _current->G;
 
     if(_dirs  == 8){
@@ -152,7 +152,7 @@ inline unsigned int AStarGenerator::computeG(const Node* _current, Node* _suc,  
 
 #pragma GCC diagnostic pop
 
-void AStarGenerator::exploreNeighbours(Node* _current, const Vec3i &_target, node_by_position &_index_by_pos){
+void AStar::exploreNeighbours(Node* _current, const Vec3i &_target, node_by_position &_index_by_pos){
     
     for (unsigned int i = 0; i < direction.size(); ++i) {
             
@@ -185,7 +185,7 @@ void AStarGenerator::exploreNeighbours(Node* _current, const Vec3i &_target, nod
         }
     }
 }
-PathData AStarGenerator::findPath(const Vec3i &_source, const Vec3i &_target)
+PathData AStar::findPath(const Vec3i &_source, const Vec3i &_target)
 {
     Node *current = nullptr;
 

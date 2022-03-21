@@ -23,7 +23,7 @@
 
 #include "utils/utils.hpp"
 #include "Grid3D/grid3d.hpp"
-#include "Planners/PathGenerator.hpp"
+#include "Planners/AlgorithmBase.hpp"
 
 #include <math.h>
 
@@ -105,7 +105,7 @@ namespace Planners
          * @return true Currently always return true
          * @return false Never returns false at this version
          */
-        bool configureWorldFromOccupancy(const nav_msgs::OccupancyGrid &_grid, PathGenerator &_algorithm, bool _set_size = false);
+        bool configureWorldFromOccupancy(const nav_msgs::OccupancyGrid &_grid, AlgorithmBase &_algorithm, bool _set_size = false);
         
         /**
          * @brief 
@@ -116,7 +116,7 @@ namespace Planners
          * @return true 
          * @return false 
          */
-        bool configureWorldFromOccupancyWithCosts(const nav_msgs::OccupancyGrid &_grid, PathGenerator &_algorithm, bool _set_size = false);
+        bool configureWorldFromOccupancyWithCosts(const nav_msgs::OccupancyGrid &_grid, AlgorithmBase &_algorithm, bool _set_size = false);
 
         /**
          * @brief Same as configureWorldFromOccupancy but to use with a pcl::PointCloud
@@ -127,7 +127,7 @@ namespace Planners
          * @return true Currently always return true
          * @return false Never returns false at this version
          */
-        bool configureWorldFromPointCloud(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &_points, PathGenerator &_algorithm, const double &_resolution);
+        bool configureWorldFromPointCloud(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &_points, AlgorithmBase &_algorithm, const double &_resolution);
 
         /**
          * @brief 
@@ -137,7 +137,7 @@ namespace Planners
          * @return true 
          * @return false 
          */
-        bool configureWorldCosts(Grid3d &_grid, PathGenerator &_algorithm);
+        bool configureWorldCosts(Grid3d &_grid, AlgorithmBase &_algorithm);
 
     }
 }

@@ -1,13 +1,13 @@
 #ifndef THETASTAR_HPP
 #define THETASTAR_HPP
 /**
- * @file ThetaStarGenerator.hpp
+ * @file ThetaStar.hpp
  * @author Rafael Rey (reyarcenegui@gmail.com)
  * @author Jose Antonio Cobano (jacobsua@upo.es)
  * 
  * @brief This class inherit from the AStar Algorithm and 
  * implements the UpdateVertex and ComputeCost functions and
- * re-implements ExploreNeighbours method fromthe AStarGenerator class.
+ * re-implements ExploreNeighbours method fromthe AStar class.
  * 
  * @version 0.1
  * @date 2021-06-29
@@ -15,7 +15,7 @@
  * @copyright Copyright (c) 2021
  * 
  */
-#include <Planners/AStarGenerator.hpp>
+#include <Planners/AStar.hpp>
 
 namespace Planners
 {
@@ -24,26 +24,26 @@ namespace Planners
      * @brief Theta* Algorithm Class
      * 
      */
-    class ThetaStarGenerator : public AStarGenerator
+    class ThetaStar : public AStar
     {
 
     public:
         
         /**
-         * @brief Construct a new Theta Star Generator object
+         * @brief Construct a new Theta Star  object
          * 
          * @param _use_3d This parameter allows the user to choose between 
          * planning on a plane (8 directions possibles) or in the 3D full space (26 directions)
          * @param _name Algorithm name stored internally
          */
-        ThetaStarGenerator(bool _use_3d, std::string _name );
+        ThetaStar(bool _use_3d, std::string _name );
 
         /**
-         * @brief Construct a new Theta Star Generator object
+         * @brief Construct a new Theta Star object
          * 
          * @param _use_3d 
          */
-        ThetaStarGenerator(bool _use_3d);
+        ThetaStar(bool _use_3d);
 
     protected:
         /**
@@ -70,7 +70,7 @@ namespace Planners
          * and calculus of the H and G values, and the corresponding parents updates.
          * 
          * @param _current A pointer to the current node, the loop will iterate over
-         * the neighbours of this node by using the directions vector in the PathGenerator
+         * the neighbours of this node by using the directions vector in the AlgorithmBase
          * class
          * 
          * @param _target A reference to the target coordinates of the GOAL.

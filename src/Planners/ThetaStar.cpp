@@ -1,10 +1,10 @@
-#include "Planners/ThetaStarGenerator.hpp"
+#include "Planners/ThetaStar.hpp"
 
 namespace Planners
 {
-    ThetaStarGenerator::ThetaStarGenerator(bool _use_3d):AStarGenerator(_use_3d, "thetastar") {}
+    ThetaStar::ThetaStar(bool _use_3d):AStar(_use_3d, "thetastar") {}
     
-    ThetaStarGenerator::ThetaStarGenerator(bool _use_3d, std::string _name = "thetastar" ):AStarGenerator(_use_3d, _name) {
+    ThetaStar::ThetaStar(bool _use_3d, std::string _name = "thetastar" ):AStar(_use_3d, _name) {
         checked_nodes.reset(new CoordinateList);
         checked_nodes_current.reset(new CoordinateList);
 
@@ -12,7 +12,7 @@ namespace Planners
         checked_nodes_current->reserve(5000);
     }
     
-    inline void ThetaStarGenerator::UpdateVertex(Node *_s, Node *_s2, node_by_position &_index_by_pos)
+    inline void ThetaStar::UpdateVertex(Node *_s, Node *_s2, node_by_position &_index_by_pos)
     {
         unsigned int g_old = _s2->G;
 
@@ -30,7 +30,7 @@ namespace Planners
         }
     }
 
-    inline void ThetaStarGenerator::ComputeCost(Node *_s_aux, Node *_s2_aux)
+    inline void ThetaStar::ComputeCost(Node *_s_aux, Node *_s2_aux)
     {
         auto distanceParent2 = geometry::distanceBetween2Nodes(_s_aux->parent, _s2_aux);
         line_of_sight_checks_++;
@@ -55,7 +55,7 @@ namespace Planners
         }
     }
 
-    void ThetaStarGenerator::exploreNeighbours(Node* _current, const Vec3i &_target,node_by_position &_index_by_pos){
+    void ThetaStar::exploreNeighbours(Node* _current, const Vec3i &_target,node_by_position &_index_by_pos){
 
         for (unsigned int i = 0; i < direction.size(); ++i) {
 

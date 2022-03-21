@@ -1,23 +1,21 @@
-#ifndef COSTAWAREASTARGENERATOR_HPP
-#define COSTAWAREASTARGENERATOR_HPP
+#ifndef ASTARM2_HPP
+#define ASTARM2_HPP
 /**
- * @file CostAwareAStarGenerator.hpp
+ * @file AStarM2.hpp
  * @author Rafael Rey (reyarcenegui@gmail.com)
  * @author Jose Antonio Cobano (jacobsua@upo.es)
  * 
- * @brief This algorithm is a variation of the A*. The only
- * difference is that it reimplements the computeG method adding the
- * following cost term to the resturned result:
- * 
- *  auto cost_term = static_cast<unsigned int>(cost_weight_ * _suc->cost * dist_scale_factor_reduced_);
+ * @brief This Algorithm is the same as the original A* with
+ * the only difference in the ComputeG function that is re-implemented
+ * It adds a edge-neighbour term to the total G value.
  * 
  * @version 0.1
- * @date 2021-06-29
+ * @date 2021-09-21
  * 
  * @copyright Copyright (c) 2021
  * 
  */
-#include <Planners/AStarGenerator.hpp>
+#include <Planners/AStar.hpp>
 
 namespace Planners{
 
@@ -25,26 +23,26 @@ namespace Planners{
      * @brief 
      * 
      */
-    class CostAwareAStarGenerator : public AStarGenerator
+    class AStarM2 : public AStar
     {
         
     public:
         /**
-         * @brief Construct a new CostAwareAStarGenerator object
-         * @param _use_3d This parameter allows the user to choose between 
-         * planning on a plane (8 directions possibles) 
+         * @brief Construct a new AStarM2 object
+         * @param _use_3d This parameter allows the user to choose 
+         * between planning on a plane (8 directions possibles) 
          * or in the 3D full space (26 directions)
-         * @param _name Algorithm name stored internally
          * 
+         * @param _name Algorithm name stored internally
          */
-        CostAwareAStarGenerator(bool _use_3d, std::string _name );
+        AStarM2(bool _use_3d, std::string _name );
 
         /**
-         * @brief Construct a new Cost Aware A Star Generator object
+         * @brief Construct a new AStarM2 object
          * 
          * @param _use_3d 
          */
-        CostAwareAStarGenerator(bool _use_3d);
+        AStarM2(bool _use_3d);
 
     protected:
         

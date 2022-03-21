@@ -1,7 +1,7 @@
-#ifndef ASTARGENERATOR_HPP
-#define ASTARGENERATOR_HPP
+#ifndef ASTAR_HPP
+#define ASTAR_HPP
 /**
- * @file AStarGenerator.hpp
+ * @file AStar.hpp
  * @author Rafael Rey (reyarcenegui@gmail.com)
  * @author Jose Antonio Cobano (jacobsua@upo.es)
  * @brief 
@@ -11,7 +11,7 @@
  * @copyright Copyright (c) 2021
  * 
  */
-#include <Planners/PathGenerator.hpp>
+#include <Planners/AlgorithmBase.hpp>
 
 
 /**
@@ -38,25 +38,25 @@ namespace Planners{
      * @brief 
      * 
      */
-    class AStarGenerator : public PathGenerator
+    class AStar : public AlgorithmBase
     {
         
     public:
         /**
-         * @brief Construct a new AStarGenerator object
+         * @brief Construct a new AStar object
          * @param _use_3d This parameter allows the user to choose between 
          * planning on a plane (8 directions possibles) or in the 3D full space (26 directions)
          * 
          * @param _name Algorithm name stored internally
          * 
          */
-        AStarGenerator(bool _use_3d, std::string _name);
+        AStar(bool _use_3d, std::string _name);
         /**
-         * @brief Construct a new AStarGenerator object
+         * @brief Construct a new AStar object
          * 
          * @param _use_3d 
          */
-        AStarGenerator(bool _use_3d);
+        AStar(bool _use_3d);
         /**
          * @brief Main function of the algorithm
          * 
@@ -116,7 +116,7 @@ namespace Planners{
          * and calculus of the H and G values, and the corresponding parents updates.
          * 
          * @param _current A pointer to the current node, the loop will iterate over
-         * the neighbours of this node by using the directions vector in the PathGenerator
+         * the neighbours of this node by using the directions vector in the AlgorithmBase
          * class
          * @param _target A reference to the target coordinates of the GOAL.
          * 

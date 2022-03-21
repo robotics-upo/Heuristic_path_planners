@@ -1,7 +1,7 @@
 #ifndef LAZYTHETASTARSAFETYCOST_HPP
 #define LAZYTHETASTARSAFETYCOST_HPP
 /**
- * @file CostAwareLazyThetaStarGenerator.hpp
+ * @file LazyThetaStarM2.hpp
  * @author Rafael Rey (reyarcenegui@gmail.com)
  * @author Jose Antonio Cobano (jacobsua@upo.es)
  * @brief 
@@ -11,7 +11,7 @@
  * @copyright Copyright (c) 2021
  * 
  */
-#include <Planners/ThetaStarGeneratorSafetyCost.hpp>
+#include <Planners/ThetaStarM2.hpp>
 
 namespace Planners
 {
@@ -19,27 +19,27 @@ namespace Planners
      * @brief Lazy Theta* Algorithm Class
      * 
      */
-    class LazyThetaStarGeneratorSafetyCost : public ThetaStarGeneratorSafetyCost
+    class LazyThetaStarM2 : public ThetaStarM2
     {
 
     public:
         
         /**
-         * @brief Construct a new Lazy Theta Star Generator object
+         * @brief Construct a new Lazy Theta Star object
          * 
          * @param _use_3d This parameter allows the user to choose between planning 
          * on a plane (8 directions possibles) or in the 3D full space (26 directions)
          * @param _name Algorithm name stored internally
          * 
          */
-        LazyThetaStarGeneratorSafetyCost(bool _use_3d, std::string _name );
+        LazyThetaStarM2(bool _use_3d, std::string _name );
 
         /**
-         * @brief Construct a new Lazy Theta Star Generator Safety Cost object
+         * @brief Construct a new Lazy Theta Star Safety Cost object
          * 
          * @param _use_3d 
          */
-        LazyThetaStarGeneratorSafetyCost(bool _use_3d);
+        LazyThetaStarM2(bool _use_3d);
 
         /**
          * @brief 

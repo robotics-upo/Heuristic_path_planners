@@ -1,11 +1,11 @@
-#include "Planners/CostAwareAStarGenerator.hpp"
+#include "Planners/AStarM1.hpp"
 
 namespace Planners{
     
-CostAwareAStarGenerator::CostAwareAStarGenerator(bool _use_3d):AStarGenerator(_use_3d, "costastar") {}
-CostAwareAStarGenerator::CostAwareAStarGenerator(bool _use_3d, std::string _name = "costastar" ):AStarGenerator(_use_3d, _name) {}
+AStarM1::AStarM1(bool _use_3d):AStar(_use_3d, "astarm1") {}
+AStarM1::AStarM1(bool _use_3d, std::string _name = "astarm1" ):AStar(_use_3d, _name) {}
 
-inline unsigned int CostAwareAStarGenerator::computeG(const Node* _current, Node* _suc, unsigned int _n_i, unsigned int _dirs){
+inline unsigned int AStarM1::computeG(const Node* _current, Node* _suc, unsigned int _n_i, unsigned int _dirs){
     
     unsigned int cost = _current->G;
 

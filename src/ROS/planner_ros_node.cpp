@@ -1,15 +1,15 @@
 #include <iostream>
 
-#include "Planners/AStarGenerator.hpp"
-#include "Planners/AStarGeneratorSafetyCost.hpp"
-#include "Planners/CostAwareAStarGenerator.hpp"
-#include "Planners/ThetaStarGenerator.hpp"
-#include "Planners/CostAwareThetaStarGenerator.hpp"
-#include "Planners/ThetaStarGeneratorSafetyCost.hpp"
-#include "Planners/LazyThetaStarGenerator.hpp"
-#include "Planners/CostAwareLazyThetaStarGenerator.hpp"
-#include "Planners/CostAwareLazyThetaStarGeneratorModified.hpp"
-#include "Planners/LazyThetaStarGeneratorSafetyCost.hpp"
+#include "Planners/AStar.hpp"
+#include "Planners/AStarM2.hpp"
+#include "Planners/AStarM1.hpp"
+#include "Planners/ThetaStar.hpp"
+#include "Planners/ThetaStarM1.hpp"
+#include "Planners/ThetaStarM2.hpp"
+#include "Planners/LazyThetaStar.hpp"
+#include "Planners/LazyThetaStarM1.hpp"
+#include "Planners/LazyThetaStarM1Mod.hpp"
+#include "Planners/LazyThetaStarM2.hpp"
 #include "utils/ros/ROSInterfaces.hpp"
 #include "utils/SaveDataVariantToFile.hpp"
 #include "utils/misc.hpp"
@@ -245,37 +245,37 @@ private:
 
         if( algorithm_name == "astar" ){
             ROS_INFO("Using A*");
-            algorithm_.reset(new AStarGenerator(use3d_));
+            algorithm_.reset(new AStar(use3d_));
         }else if( algorithm_name == "costastar" ){
             ROS_INFO("Using Cost Aware A*");
-            algorithm_.reset(new CostAwareAStarGenerator(use3d_));
+            algorithm_.reset(new AStarM1(use3d_));
         }else if( algorithm_name == "astarsafetycost" ){
             ROS_INFO("Using A* Safety Cost");
-            algorithm_.reset(new AStarGeneratorSafetyCost(use3d_));    
+            algorithm_.reset(new AStarM2(use3d_));    
         }else if ( algorithm_name == "thetastar" ){
             ROS_INFO("Using Theta*");
-            algorithm_.reset(new ThetaStarGenerator(use3d_));
+            algorithm_.reset(new ThetaStar(use3d_));
         }else if ( algorithm_name == "costhetastar" ){
             ROS_INFO("Using Cost Aware Theta* ");
-            algorithm_.reset(new CostAwareThetaStarGenerator(use3d_));
+            algorithm_.reset(new ThetaStarM1(use3d_));
         }else if ( algorithm_name == "thetastarsafetycost" ){
             ROS_INFO("Using Theta* Safety Cost");
-            algorithm_.reset(new ThetaStarGeneratorSafetyCost(use3d_));
+            algorithm_.reset(new ThetaStarM2(use3d_));
         }else if( algorithm_name == "lazythetastar" ){
             ROS_INFO("Using LazyTheta*");
-            algorithm_.reset(new LazyThetaStarGenerator(use3d_));
+            algorithm_.reset(new LazyThetaStar(use3d_));
         }else if( algorithm_name == "costlazythetastar"){
             ROS_INFO("Using Cost Aware LazyTheta*");
-            algorithm_.reset(new CostAwareLazyThetaStarGenerator(use3d_));
+            algorithm_.reset(new LazyThetaStarM1(use3d_));
         }else if( algorithm_name == "costlazythetastarmodified"){
             ROS_INFO("Using Cost Aware LazyTheta*");
-            algorithm_.reset(new CostAwareLazyThetaStarGeneratorModified(use3d_));
+            algorithm_.reset(new LazyThetaStarM1Mod(use3d_));
         }else if( algorithm_name == "lazythetastarsafetycost"){
             ROS_INFO("Using LazyTheta* Safety Cost");
-            algorithm_.reset(new LazyThetaStarGeneratorSafetyCost(use3d_));
+            algorithm_.reset(new LazyThetaStarM2(use3d_));
         }else{
             ROS_WARN("Wrong algorithm name parameter. Using ASTAR by default");
-            algorithm_.reset(new AStarGenerator(use3d_));
+            algorithm_.reset(new AStar(use3d_));
         }
 
         algorithm_->setWorldSize(world_size_, resolution_);
@@ -439,7 +439,7 @@ private:
 
     std::unique_ptr<Grid3d> m_grid3d_;
 
-    std::unique_ptr<PathGenerator> algorithm_;
+    std::unique_ptr<AlgorithmBase> algorithm_;
         
     visualization_msgs::Marker path_line_markers_, path_points_markers_;
     

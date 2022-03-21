@@ -1,7 +1,7 @@
 #ifndef LAZYTHETASTAR_HPP
 #define LAZYTHETASTAR_HPP
 /**
- * @file LazyThetaStarGenerator.hpp
+ * @file LazyThetaStar.hpp
  * @author Rafael Rey (reyarcenegui@gmail.com)
  * @author Jose Antonio Cobano (jacobsua@upo.es)
  * 
@@ -16,7 +16,7 @@
  * @copyright Copyright (c) 2021
  * 
  */
-#include <Planners/ThetaStarGenerator.hpp>
+#include <Planners/ThetaStar.hpp>
 
 namespace Planners
 {
@@ -24,27 +24,27 @@ namespace Planners
      * @brief Lazy Theta* Algorithm Class
      * 
      */
-    class LazyThetaStarGenerator : public ThetaStarGenerator
+    class LazyThetaStar : public ThetaStar
     {
 
     public:
         
         /**
-         * @brief Construct a new Lazy Theta Star Generator object
+         * @brief Construct a new Lazy Theta Star  object
          * 
          * @param _use_3d This parameter allows the user to choose between planning on a plane (
          * 8 directions possibles) or in the 3D full space (26 directions)
          * @param _name Algorithm name stored internally
          * 
          */
-        LazyThetaStarGenerator(bool _use_3d, std::string _name );
+        LazyThetaStar(bool _use_3d, std::string _name );
 
         /**
-         * @brief Construct a new Lazy Theta Star Generator object
+         * @brief Construct a new Lazy Theta Star object
          * 
          * @param _use_3d 
          */
-        LazyThetaStarGenerator(bool _use_3d);
+        LazyThetaStar(bool _use_3d);
 
         /**
          * @brief Main function of the algorithm

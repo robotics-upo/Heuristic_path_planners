@@ -60,8 +60,8 @@ parser.add_argument("--launch",     help="name of the launch file",
                     nargs='+', type=str, default=["planner.launch"],
                     choices=launch_list)
 parser.add_argument("--algorithm",  help="name of the algorithm",  
-                    nargs='*', type=str, required=True, default=["astar", "costastar", "astarsafetycost"], 
-                    choices=["astar", "costastar", "astarsafetycost", "thetastar", "costhetastar", "thetastarsafetycost", "lazythetastar", "costlazythetastar", "costlazythetastarmodified", "lazythetastarsafetycost"])
+                    nargs='*', type=str, required=True, default=["astar", "astarm1", "astarm2"], 
+                    choices=["astar", "astarm1", "astarm2", "thetastar", "thetastarm1", "thetastarm2", "lazythetastar", "lazythetastarm1", "lazythetastarm1mod", "lazythetastarm2"])
 
 parser.add_argument("--map-name",     help="name of the map to use. This map should be under the 3d/2d maps folder",     
                     nargs='+', type=str,  default=['mbzirc_challenge3.bt'],

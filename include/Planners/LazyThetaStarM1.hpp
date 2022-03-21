@@ -1,7 +1,7 @@
-#ifndef COSTAWARELAZYTHETASTAR_HPP
-#define COSTAWARELAZYTHETASTAR_HPP
+#ifndef LAZYTHETASTARM1_HPP
+#define LAZYTHETASTARM1_HPP
 /**
- * @file CostAwareLazyThetaStarGenerator.hpp
+ * @file LazyThetaStarM1.hpp
  * @author Rafael Rey (reyarcenegui@gmail.com)
  * @author Jose Antonio Cobano (jacobsua@upo.es)
  * @brief 
@@ -11,7 +11,7 @@
  * @copyright Copyright (c) 2021
  * 
  */
-#include <Planners/LazyThetaStarGenerator.hpp>
+#include <Planners/LazyThetaStar.hpp>
 
 namespace Planners
 {
@@ -19,27 +19,27 @@ namespace Planners
      * @brief Lazy Theta* Algorithm Class
      * 
      */
-    class CostAwareLazyThetaStarGenerator : public LazyThetaStarGenerator
+    class LazyThetaStarM1 : public LazyThetaStar
     {
 
     public:
         
         /**
-         * @brief Construct a new Lazy Theta Star Generator object
+         * @brief Construct a new Lazy Theta Star object
          * 
          * @param _use_3d This parameter allows the user to choose between planning on a plane 
          * (8 directions possibles) or in the 3D full space (26 directions)
          * @param _name Algorithm name stored internally
          * 
          */
-        CostAwareLazyThetaStarGenerator(bool _use_3d, std::string _name );
+        LazyThetaStarM1(bool _use_3d, std::string _name );
 
         /**
-         * @brief Construct a new Cost Aware Lazy Theta Star Generator object
+         * @brief Construct a new Cost Aware Lazy Theta Star object
          * 
          * @param _use_3d 
          */
-        CostAwareLazyThetaStarGenerator(bool _use_3d);
+        LazyThetaStarM1(bool _use_3d);
 
     protected:
 

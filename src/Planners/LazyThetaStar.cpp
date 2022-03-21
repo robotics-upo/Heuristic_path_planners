@@ -1,11 +1,11 @@
-#include "Planners/LazyThetaStarGenerator.hpp"
+#include "Planners/LazyThetaStar.hpp"
 
 namespace Planners
 {
-    LazyThetaStarGenerator::LazyThetaStarGenerator(bool _use_3d):ThetaStarGenerator(_use_3d, "lazythetastar") {}
-    LazyThetaStarGenerator::LazyThetaStarGenerator(bool _use_3d, std::string _name = "lazythetastar" ):ThetaStarGenerator(_use_3d, _name) {}
+    LazyThetaStar::LazyThetaStar(bool _use_3d):ThetaStar(_use_3d, "lazythetastar") {}
+    LazyThetaStar::LazyThetaStar(bool _use_3d, std::string _name = "lazythetastar" ):ThetaStar(_use_3d, _name) {}
    
-    void LazyThetaStarGenerator::SetVertex(Node *_s_aux)
+    void LazyThetaStar::SetVertex(Node *_s_aux)
     {
         line_of_sight_checks_++;
 
@@ -35,7 +35,7 @@ namespace Planners
             }
         }
     }
-    inline void LazyThetaStarGenerator::ComputeCost(Node *_s_aux, Node *_s2_aux)
+    inline void LazyThetaStar::ComputeCost(Node *_s_aux, Node *_s2_aux)
     {
         auto distanceParent2 = geometry::distanceBetween2Nodes(_s_aux->parent, _s2_aux);
 
@@ -47,7 +47,7 @@ namespace Planners
         }
     }
 
-    PathData LazyThetaStarGenerator::findPath(const Vec3i &_source, const Vec3i &_target)
+    PathData LazyThetaStar::findPath(const Vec3i &_source, const Vec3i &_target)
     {
         Node *current = nullptr;
 

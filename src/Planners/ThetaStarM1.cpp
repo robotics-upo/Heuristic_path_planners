@@ -1,11 +1,11 @@
-#include "Planners/CostAwareThetaStarGenerator.hpp"
+#include "Planners/ThetaStarM1.hpp"
 
 namespace Planners
 {
-    CostAwareThetaStarGenerator::CostAwareThetaStarGenerator(bool _use_3d):ThetaStarGenerator(_use_3d, "costthetastar") {}
-    CostAwareThetaStarGenerator::CostAwareThetaStarGenerator(bool _use_3d, std::string _name = "costthetastar" ):ThetaStarGenerator(_use_3d, _name) {}
+    ThetaStarM1::ThetaStarM1(bool _use_3d):ThetaStar(_use_3d, "thetastarm2") {}
+    ThetaStarM1::ThetaStarM1(bool _use_3d, std::string _name = "thetastarm1" ):ThetaStar(_use_3d, _name) {}
 
-    inline void CostAwareThetaStarGenerator::ComputeCost(Node *_s_aux, Node *_s2_aux)
+    inline void ThetaStarM1::ComputeCost(Node *_s_aux, Node *_s2_aux)
     {
         auto distanceParent2 = geometry::distanceBetween2Nodes(_s_aux->parent, _s2_aux);
 
@@ -40,7 +40,7 @@ namespace Planners
         }
         checked_nodes->clear();
     }
-    inline unsigned int CostAwareThetaStarGenerator::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs){
+    inline unsigned int ThetaStarM1::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs){
         
         unsigned int cost = _current->G;
 
