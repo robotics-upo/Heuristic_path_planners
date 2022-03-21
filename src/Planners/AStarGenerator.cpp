@@ -13,7 +13,7 @@ AStarGenerator::AStarGenerator(bool _use_3d = true): PathGenerator(_use_3d, "ast
 void AStarGenerator::configAlgorithm(){
 
     closedSet_.reserve(50000);
-    // openSet_.reserve(50000);
+    openSet_.reserve(50000);
     //If compiled with ros and visualization
 #ifdef ROS
     explored_nodes_marker_pub_ = lnh_.advertise<visualization_msgs::Marker>("explored_nodes",   1);
@@ -200,10 +200,8 @@ PathData AStarGenerator::findPath(const Vec3i &_source, const Vec3i &_target)
 
     line_of_sight_checks_ = 0;
     
-    MagicalMultiSet openSet;
-
-    node_by_cost&     indexByCost          = openSet.get<IndexByCost>();
-    node_by_position& indexByWorldPosition = openSet.get<IndexByWorldPosition>();
+    node_by_cost&     indexByCost          = openSet_.get<IndexByCost>();
+    node_by_position& indexByWorldPosition = openSet_.get<IndexByWorldPosition>();
 
     indexByCost.insert(discrete_world_.getNodePtr(_source));
     
@@ -237,6 +235,7 @@ PathData AStarGenerator::findPath(const Vec3i &_source, const Vec3i &_target)
     explored_node_marker_.points.clear();
 #endif
     closedSet_.clear();
+    openSet_.clear();
     delete discrete_world_.getNodePtr(_source)->parent;
     
     discrete_world_.resetWorld();

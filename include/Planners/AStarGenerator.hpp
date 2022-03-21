@@ -165,7 +165,7 @@ namespace Planners{
 
         unsigned int line_of_sight_checks_{0};  /*!< TODO Comment */
         std::vector<Node*> closedSet_; /*!< TODO Comment */
-        // MagicalMultiSet openSet_; /*!< TODO Comment */
+        MagicalMultiSet openSet_; /*!< TODO Comment */
         
 #ifdef ROS
         ros::NodeHandle lnh_{"~"}; /*!< TODO Comment */
