@@ -1,7 +1,7 @@
 #ifndef ASTARGENERATORSAFETYCOST_HPP
 #define ASTARGENERATORSAFETYCOST_HPP
 /**
- * @file AStarGeneratorSafety.hpp
+ * @file AStarGeneratorSafetyCost.hpp
  * @author Rafael Rey (reyarcenegui@gmail.com)
  * @author Jose Antonio Cobano (jacobsua@upo.es)
  * 
@@ -19,7 +19,10 @@
 
 namespace Planners{
 
-    
+    /**
+     * @brief 
+     * 
+     */
     class AStarGeneratorSafetyCost : public AStarGenerator
     {
         
@@ -29,8 +32,16 @@ namespace Planners{
          * @param _use_3d This parameter allows the user to choose 
          * between planning on a plane (8 directions possibles) 
          * or in the 3D full space (26 directions)
+         * 
+         * @param _name Algorithm name stored internally
          */
         AStarGeneratorSafetyCost(bool _use_3d, std::string _name );
+
+        /**
+         * @brief Construct a new AStarGeneratorSafetyCost object
+         * 
+         * @param _use_3d 
+         */
         AStarGeneratorSafetyCost(bool _use_3d);
 
     protected:

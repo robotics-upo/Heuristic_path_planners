@@ -34,25 +34,32 @@ namespace Planners
          * 
          * @param _use_3d This parameter allows the user to choose between 
          * planning on a plane (8 directions possibles) or in the 3D full space (26 directions)
+         * @param _name Algorithm name stored internally
          */
         ThetaStarGenerator(bool _use_3d, std::string _name );
+
+        /**
+         * @brief Construct a new Theta Star Generator object
+         * 
+         * @param _use_3d 
+         */
         ThetaStarGenerator(bool _use_3d);
 
     protected:
         /**
          * @brief Update Vertex function
          * 
-         * @param s Pointer to node s
-         * @param s2 Pointer to node s2
-         * @param openset reference to openset to erase and insert the nodes in some cases
+         * @param _s Pointer to node s
+         * @param _s2 Pointer to node s2
+         * @param _index_by_pos reference to openset to erase and insert the nodes in some cases
          */
         virtual void UpdateVertex(Node *_s, Node *_s2, node_by_position &_index_by_pos);
         
         /**
          * @brief Compute cost algorithm function
          * 
-         * @param s_aux Pointer to first node
-         * @param s2_aux Pointer to the second node
+         * @param _s_aux Pointer to first node
+         * @param _s2_aux Pointer to the second node
          */
         inline virtual void ComputeCost(Node *_s_aux, Node *_s2_aux);
 
@@ -75,7 +82,7 @@ namespace Planners
          */
         virtual void exploreNeighbours(Node* _current, const Vec3i &_target,node_by_position &_index_by_pos) override;
 
-        utils::CoordinateListPtr checked_nodes, checked_nodes_current;
+        utils::CoordinateListPtr checked_nodes, checked_nodes_current;  /*!< TODO Comment */
 
     };
 

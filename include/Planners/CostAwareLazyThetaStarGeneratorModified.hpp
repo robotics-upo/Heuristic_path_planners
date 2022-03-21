@@ -27,9 +27,18 @@ namespace Planners
         /**
          * @brief Construct a new Lazy Theta Star Generator object
          * 
-         * @param _use_3d This parameter allows the user to choose between planning on a plane (8 directions possibles) or in the 3D full space (26 directions)
+         * @param _use_3d This parameter allows the user to choose between planning on a plane 
+         * (8 directions possibles) or in the 3D full space (26 directions)
+         * @param _name Algorithm name stored internally
+         * 
          */
         CostAwareLazyThetaStarGeneratorModified(bool _use_3d, std::string _name );
+
+        /**
+         * @brief Construct a new Cost Aware Lazy Theta Star Generator Modified object
+         * 
+         * @param _use_3d 
+         */
         CostAwareLazyThetaStarGeneratorModified(bool _use_3d);
 
     protected:
@@ -37,8 +46,8 @@ namespace Planners
         /**
          * @brief Compute cost function of the Lazy version of the algorithm
          * 
-         * @param s_aux Pointer to first node
-         * @param s2_aux Pointer to second node
+         * @param _s_aux Pointer to first node
+         * @param _s2_aux Pointer to second node
          */
         inline virtual void ComputeCost(Node *_s_aux, Node *_s2_aux) override;
 

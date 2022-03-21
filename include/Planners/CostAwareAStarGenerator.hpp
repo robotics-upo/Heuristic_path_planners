@@ -21,7 +21,10 @@
 
 namespace Planners{
 
-    
+    /**
+     * @brief 
+     * 
+     */
     class CostAwareAStarGenerator : public AStarGenerator
     {
         
@@ -31,8 +34,16 @@ namespace Planners{
          * @param _use_3d This parameter allows the user to choose between 
          * planning on a plane (8 directions possibles) 
          * or in the 3D full space (26 directions)
+         * @param _name Algorithm name stored internally
+         * 
          */
         CostAwareAStarGenerator(bool _use_3d, std::string _name );
+
+        /**
+         * @brief Construct a new Cost Aware A Star Generator object
+         * 
+         * @param _use_3d 
+         */
         CostAwareAStarGenerator(bool _use_3d);
 
     protected:

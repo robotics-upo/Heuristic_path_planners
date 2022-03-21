@@ -34,7 +34,10 @@
 
 namespace Planners{
 
-    
+    /**
+     * @brief 
+     * 
+     */
     class AStarGenerator : public PathGenerator
     {
         
@@ -43,8 +46,16 @@ namespace Planners{
          * @brief Construct a new AStarGenerator object
          * @param _use_3d This parameter allows the user to choose between 
          * planning on a plane (8 directions possibles) or in the 3D full space (26 directions)
+         * 
+         * @param _name Algorithm name stored internally
+         * 
          */
         AStarGenerator(bool _use_3d, std::string _name);
+        /**
+         * @brief Construct a new AStarGenerator object
+         * 
+         * @param _use_3d 
+         */
         AStarGenerator(bool _use_3d);
         /**
          * @brief Main function of the algorithm
@@ -152,21 +163,21 @@ namespace Planners{
          */
         virtual unsigned int computeG(const Node* _current, Node* _suc, unsigned int _n_i, unsigned int _dirs);
 
-        unsigned int line_of_sight_checks_{0}; 
-        std::vector<Node*> closedSet_;
-        MagicalMultiSet openSet_;
+        unsigned int line_of_sight_checks_{0};  /*!< TODO Comment */
+        std::vector<Node*> closedSet_; /*!< TODO Comment */
+        // MagicalMultiSet openSet_; /*!< TODO Comment */
         
 #ifdef ROS
-        ros::NodeHandle lnh_{"~"};
-        ros::Publisher explored_nodes_marker_pub_, occupancy_marker_pub_, 
-                       openset_marker_pub_, closedset_marker_pub_,
-                       best_node_marker_pub_, aux_text_marker_pub_;
-        visualization_msgs::Marker explored_node_marker_, openset_markers_, 
-                                   closed_set_markers_, best_node_marker_, aux_text_marker_;
-        ros::Duration duration_pub_{0.001};
-        ros::Time last_publish_tamp_;
-        float resolution_;
-    	pcl::PointCloud<pcl::PointXYZ>  occupancy_marker_; // Occupancy Map as PointCloud markers
+        ros::NodeHandle lnh_{"~"}; /*!< TODO Comment */
+        ros::Publisher explored_nodes_marker_pub_, occupancy_marker_pub_,  /*!< TODO Comment */
+                       openset_marker_pub_, closedset_marker_pub_, /*!< TODO Comment */
+                       best_node_marker_pub_, aux_text_marker_pub_; /*!< TODO Comment */
+        visualization_msgs::Marker explored_node_marker_, openset_markers_,  /*!< TODO Comment */
+                                   closed_set_markers_, best_node_marker_, aux_text_marker_; /*!< TODO Comment */
+        ros::Duration duration_pub_{0.001}; /*!< TODO Comment */
+        ros::Time last_publish_tamp_; /*!< TODO Comment */
+        float resolution_; /*!< TODO Comment */
+    	pcl::PointCloud<pcl::PointXYZ>  occupancy_marker_;  /*!< TODO Comment */
 
 #endif
     };

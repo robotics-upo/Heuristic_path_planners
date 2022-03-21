@@ -270,7 +270,7 @@ namespace utils
          * @param _x discrete_coordinated
          * @param _y discrete_coordinated
          * @param _z discrete_coordinated
-         * @param value desired value
+         * @param _value desired value
          */
         void setClosedValue(const int _x, const int _y, const int _z, const bool _value){
             if (!checkValid(_x, _y, _z))
