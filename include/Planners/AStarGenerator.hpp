@@ -119,6 +119,30 @@ namespace Planners{
         /**
          * @brief This functions implements the algorithm G function. 
          * 
+         * Some efforts have been made to try to improve this function as it
+         * one of the most called methods along with exploreNeighbours. 
+         * For exmaple, we tried to avoid the if statement to reduce the number
+         * of branches by ussing boolean masks, but it didn't show any
+         * significative performance improvement, so for the seek of clarity and 
+         * maintenance it's preferable to keep the if structure by the moment.
+         * 
+         * Example of using masks:
+         * 
+         *      unsigned int totalCost = _current->G;
+         * 
+         *      bool maskdd2d = ( using_2d_ && i >= 4 ) || ( !using_2d_ && i > 6 && i < 18);
+         *      bool maskdd3d = ( !using_2d_ && i > 18 );
+         *
+         *      totalCost += dist_scale_factor_;
+         *      totalCost += maskdd2d * dd_2D_f + maskdd3d * dd_3D_f;
+         * here dd_2D_f = 0.41 (sqrt(2) - 1) and dd_3D_f = 0.3 (sqrt(3) - sqrt(2) )
+         * 
+         * The current implementation is also more efficient than
+         * directly doing 
+         * 
+         *      unsigned int totalCost = _current->G + heuristic(_current->coordinates, newCoordinates);
+         * 
+         * 
          * @param _current Pointer to the current node
          * @param _suc Pointer to the successor node
          * @param _n_i The index of the direction in the directions vector. 
@@ -130,7 +154,7 @@ namespace Planners{
 
         unsigned int line_of_sight_checks_{0}; 
         std::vector<Node*> closedSet_;
-        // MagicalMultiSet openSet_;
+        MagicalMultiSet openSet_;
         
 #ifdef ROS
         ros::NodeHandle lnh_{"~"};
