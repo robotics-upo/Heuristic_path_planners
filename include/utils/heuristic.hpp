@@ -2,7 +2,8 @@
 #define HEURISTIC_HPP
 /**
  * @file heuristic.hpp
- * @author Rafael Rey (rreyarc@upo.es)
+ * @author Rafael Rey (reyarcenegui@gmail.com)
+* @author Jose Antonio Cobano (jacobsua@upo.es)
  * @brief Heuristic functions as static members of Heuritic class
  * to easily change between heuristics inside the algorithms
  * @version 0.1

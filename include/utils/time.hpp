@@ -1,6 +1,7 @@
 /**
  * @file time.hpp
- * @author Rafael Rey (rreyarc@upo.es)
+ * @author Rafael Rey (reyarcenegui@gmail.com)
+* @author Jose Antonio Cobano (jacobsua@upo.es)
  * @brief Helper Clock Class to easily measure time durations
  * @version 0.1
  * @date 2021-06-29
@@ -98,6 +99,11 @@ namespace Planners
 
                 return std::chrono::duration_cast<std::chrono::seconds>(duration).count();
             }
+            /**
+             * @brief Get the Elapsed Micro Seconds object
+             * 
+             * @return double 
+             */
             double getElapsedMicroSeconds(){
 
                 if( started_ )

@@ -2,7 +2,8 @@
 #define WORLD_HPP
 /**
  * @file world.hpp
- * @author Rafael Rey (rreyarc@upo.es)
+ * @author Rafael Rey (reyarcenegui@gmail.com)
+* @author Jose Antonio Cobano (jacobsua@upo.es)
  * @brief This header contains an implementation of a discrete cell-like world to use with the planning algorithms
  * @version 0.1
  * @date 2021-06-29
@@ -269,7 +270,7 @@ namespace utils
          * @param _x discrete_coordinated
          * @param _y discrete_coordinated
          * @param _z discrete_coordinated
-         * @param value desired value
+         * @param _value desired value
          */
         void setClosedValue(const int _x, const int _y, const int _z, const bool _value){
             if (!checkValid(_x, _y, _z))

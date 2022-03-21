@@ -2,7 +2,8 @@
 #define LAZYTHETASTARSAFETYCOST_HPP
 /**
  * @file CostAwareLazyThetaStarGenerator.hpp
- * @author Rafael Rey (rreyarc@upo.es)
+ * @author Rafael Rey (reyarcenegui@gmail.com)
+ * @author Jose Antonio Cobano (jacobsua@upo.es)
  * @brief 
  * @version 0.1
  * @date 2021-06-29
@@ -26,9 +27,18 @@ namespace Planners
         /**
          * @brief Construct a new Lazy Theta Star Generator object
          * 
-         * @param _use_3d This parameter allows the user to choose between planning on a plane (8 directions possibles) or in the 3D full space (26 directions)
+         * @param _use_3d This parameter allows the user to choose between planning 
+         * on a plane (8 directions possibles) or in the 3D full space (26 directions)
+         * @param _name Algorithm name stored internally
+         * 
          */
         LazyThetaStarGeneratorSafetyCost(bool _use_3d, std::string _name );
+
+        /**
+         * @brief Construct a new Lazy Theta Star Generator Safety Cost object
+         * 
+         * @param _use_3d 
+         */
         LazyThetaStarGeneratorSafetyCost(bool _use_3d);
 
         /**
@@ -45,15 +55,15 @@ namespace Planners
         /**
          * @brief Compute cost function of the Lazy version of the algorithm
          * 
-         * @param s_aux Pointer to first node
-         * @param s2_aux Pointer to second node
+         * @param _s_aux Pointer to first node
+         * @param _s2_aux Pointer to second node
          */
         inline virtual void ComputeCost(Node *_s_aux, Node *_s2_aux) override;
 
         /**
          * @brief SetVertex function
          * Line of sight is checked inside this function
-         * @param s_aux 
+         * @param _s_aux 
          */
         virtual void SetVertex(Node *_s_aux);
 
@@ -69,7 +79,7 @@ namespace Planners
         inline virtual unsigned int computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs) override;
 
         // Variable to ensure that the los is true between the parent of the current and one neighbour, so SetVertex function should not be executed
-        bool los_neighbour_{false};
+        bool los_neighbour_{false}; /*!< TODO Comment */
 
     };
 

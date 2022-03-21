@@ -2,7 +2,8 @@
 #define GEOMETRY_UTILS_HPP
 /**
  * @file geometry_utils.hpp
- * @author Rafael Rey (rreyarc@upo.es)
+ * @author Rafael Rey (reyarcenegui@gmail.com)
+* @author Jose Antonio Cobano (jacobsua@upo.es)
  * @brief A set of geometry utilities functions
  * @version 0.1
  * @date 2021-06-29
@@ -40,23 +41,23 @@ namespace Planners
              * @brief Get the Adjacent Path object
              * 
              * @param _path 
-             * @param _algorithm 
+             * @param _world 
              * @return utils::CoordinateList 
              */
             utils::CoordinateList getAdjacentPath(const utils::CoordinateList &_path, const utils::DiscreteWorld &_world);
             /**
              * @brief Discrete distance multiplied by dist_scale_factor_
              * 
-             * @param n1 
-             * @param n2 
+             * @param _n1 
+             * @param _n2 
              * @return unsigned int 
              */
             unsigned int distanceBetween2Nodes(const Node &_n1, const Node &_n2);
             /**
              * @brief  Discrete distance multiplied by dist_scale_factor_
              * 
-             * @param n1 
-             * @param n2 
+             * @param _n1 
+             * @param _n2 
              * @return unsigned int 
              */
             unsigned int distanceBetween2Nodes(const Node *_n1, const Node *_n2);
@@ -72,15 +73,15 @@ namespace Planners
             /**
              * @brief Discrete distance 
              * 
-             * @param n1 
-             * @param n2 
+             * @param _n1 
+             * @param _n2 
              * @return unsigned int 
              */
             unsigned int NodesBetween2Nodes(const Node &_n1, const Node &_n2);
             /**
              * @brief  Discrete distance             * 
-             * @param n1 
-             * @param n2 
+             * @param _n1 
+             * @param _n2 
              * @return unsigned int 
              */
             unsigned int NodesBetween2Nodes(const Node *_n1, const Node *_n2);
@@ -102,11 +103,31 @@ namespace Planners
              */
             Vec3i abs(const Vec3i &_vec);
 
-
+            /**
+             * @brief 
+             * 
+             * @param _v1 
+             * @param _v2 
+             * @return int 
+             */
             int dotProduct(const Vec3i &_v1, const Vec3i &_v2);
 
+            /**
+             * @brief 
+             * 
+             * @param _v 
+             * @return double 
+             */
             double moduleVector(const Vec3i &_v);
 
+            /**
+             * @brief 
+             * 
+             * @param _v1 
+             * @param _v2 
+             * @param _v3 
+             * @return double 
+             */
             double angleBetweenThreePoints(const Vec3i &_v1, const Vec3i &_v2, const Vec3i &_v3);
 
 #ifdef ROS
@@ -120,8 +141,24 @@ namespace Planners
              */
             double angleBetweenThreePoints(const Eigen::Vector3d &_v1, const Eigen::Vector3d &_v2, const Eigen::Vector3d &_v3);
 
+            /**
+             * @brief Get the Circunference Radius object
+             * 
+             * @param _v1 
+             * @param _v2 
+             * @param _v3 
+             * @return double 
+             */
             double getCircunferenceRadius(const Vec3i &_v1, const Vec3i &_v2, const Vec3i &_v3);
 
+            /**
+             * @brief Get the Circunference Radius object
+             * 
+             * @param _v1 
+             * @param _v2 
+             * @param _v3 
+             * @return double 
+             */
             double getCircunferenceRadius(const Eigen::Vector3d &_v1, const Eigen::Vector3d &_v2, const Eigen::Vector3d &_v3);
 #endif            
         }//namespace geometry

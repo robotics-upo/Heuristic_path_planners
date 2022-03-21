@@ -2,7 +2,8 @@
 #define UTILS_HPP
 /**
  * @file utils.hpp
- * @author Rafael Rey (rreyarc@upo.es)
+ * @author Rafael Rey (reyarcenegui@gmail.com)
+* @author Jose Antonio Cobano (jacobsua@upo.es)
  * @brief A set of utils used alongside the project 
  * @version 0.1
  * @date 2021-06-29
@@ -224,10 +225,31 @@ namespace Planners
             bool occuppied{false};
             bool isInOpenList{false};
             bool isInClosedList{false};
-
+            /**
+             * @brief Construct a new Node object
+             * 
+             * @param coord_ 
+             * @param parent_ 
+             */
             Node(Planners::utils::Vec3i coord_, Node *parent_ = nullptr);
+            /**
+             * @brief Construct a new Node object
+             * 
+             */
             Node();
+
+            /**
+             * @brief Get the Score object
+             * 
+             * @return unsigned int 
+             */
             unsigned int getScore();
+
+            /**
+             * @brief Get the Score With Safety Cost object
+             * 
+             * @return unsigned int 
+             */
             unsigned int getScoreWithSafetyCost();
 
         };
@@ -235,6 +257,10 @@ namespace Planners
         struct IndexByCost {};
         struct IndexByWorldPosition {};
 
+        /**
+         * @brief 
+         * 
+         */
         using MagicalMultiSet = boost::multi_index_container<
           Node*, // the data type stored
           boost::multi_index::indexed_by< // list of indexes

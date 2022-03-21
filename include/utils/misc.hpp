@@ -9,6 +9,14 @@ namespace Planners
     {   
         //Found in 
         //https://www.codespeedy.com/hsv-to-rgb-in-cpp/
+        /**
+         * @brief 
+         * 
+         * @param _H 
+         * @param _S 
+         * @param _V 
+         * @return utils::Vec3i 
+         */
         utils::Vec3i HSVtoRGB(float _H,const float _S,const float _V)
         {
             if (_S > 100 || _S < 0 || _V > 100 || _V < 0)

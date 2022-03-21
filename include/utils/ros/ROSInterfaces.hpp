@@ -2,7 +2,8 @@
 #define ROSINTERFACES_HPP
 /**
  * @file ROSInterfaces.hpp
- * @author Rafael Rey (rreyarc@upo.es)
+ * @author Rafael Rey (reyarcenegui@gmail.com)
+* @author Jose Antonio Cobano (jacobsua@upo.es)
  * @brief This header contains a set of functions that allows to easily use ROS with the algorithms
  * but allowing separation between the main core algorithms headers and implementation and the ROS features
  * @version 0.1
