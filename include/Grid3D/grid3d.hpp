@@ -443,7 +443,7 @@ protected:
 		int i = 0;
 		m_cloud->width = m_octomap->size();
 		m_cloud->height = 1;
-		m_cloud->points.resize(m_cloud->width * m_cloud->height);
+		m_cloud->points.resize(static_cast<long>(m_cloud->width) * m_cloud->height);
 		for(octomap::OcTree::leaf_iterator it = m_octomap->begin_leafs(), end = m_octomap->end_leafs(); it != end; ++it)
 		{
 			if(it != NULL && m_octomap->isNodeOccupied(*it))
@@ -554,7 +554,7 @@ protected:
 		m_gridSliceMsg.info.origin.orientation.y = 0.0;
 		m_gridSliceMsg.info.origin.orientation.z = 0.0;
 		m_gridSliceMsg.info.origin.orientation.w = 1.0;
-		m_gridSliceMsg.data.resize(m_gridSizeX*m_gridSizeY);
+		m_gridSliceMsg.data.resize(static_cast<long>(m_gridSizeX)*m_gridSizeY);
 
 		// Extract max probability
 		int offset = (int)(z*m_oneDivRes)*m_gridSizeX*m_gridSizeY;
