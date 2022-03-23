@@ -60,14 +60,17 @@ namespace utils
                          const unsigned int &_world_z_size,
                          const double &_resolution)
         {
+            if( _resolution <= 0.005 )
+                throw std::out_of_range("Resolution too small, it should be > 0.005");
+
             world_x_size_ = _world_x_size;
             world_y_size_ = _world_y_size;
             world_z_size_ = _world_z_size;
             resolution_   = _resolution;
-            x_y_size_      = world_x_size_ * world_y_size_;
+            x_y_size_      = static_cast<long>(world_x_size_) * world_y_size_;
 
             discrete_world_vector_.clear();
-            discrete_world_vector_.resize(world_x_size_ * world_y_size_ * _world_z_size);
+            discrete_world_vector_.resize(static_cast<long>(world_x_size_) * world_y_size_ * _world_z_size);
             Node node;
             std::fill(discrete_world_vector_.begin(), discrete_world_vector_.end(), node);
             
@@ -449,7 +452,7 @@ namespace utils
 
         std::vector<Planners::utils::Node> discrete_world_vector_;
 
-        unsigned int x_y_size_;
+        long unsigned int x_y_size_;
 
         unsigned int world_x_size_, world_y_size_, world_z_size_;
         double resolution_;
