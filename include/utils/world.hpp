@@ -418,7 +418,7 @@ namespace utils
          * @param _pos discrete position 
          * @return unsigned int world index associated to the requested discrete position
          */
-        inline unsigned int getWorldIndex(const Vec3i &_pos) const{
+        inline long unsigned int getWorldIndex(const Vec3i &_pos) const{
 
             return getWorldIndex(_pos.x, _pos.y, _pos.z);
         }
@@ -430,9 +430,14 @@ namespace utils
          * @param z discrete coordinates
          * @return unsigned int world index of the vector
          */
-        inline unsigned int getWorldIndex(const int _x, const int _y, const int _z) const
+        inline long unsigned int getWorldIndex(const int _x, const int _y, const int _z) const
         {
-            return static_cast<unsigned int>( _z * x_y_size_ + _y * world_x_size_ + _x);
+            // This could be a potential issue but it will never be greater
+            // than static_cast<long>(world_x_size_) * world_y_size_ * _world_z_size
+            // which is the size of discrete_world_vector_
+            // Also, all the functions using this method always should check if the _x _y and _z values
+            // are inside the bounds
+            return static_cast<long unsigned int>( _z * x_y_size_ + _y * world_x_size_ + _x);
         }
         /**
          * @brief Get the Discrete World Position From Index object
