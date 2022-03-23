@@ -64,7 +64,7 @@ namespace utils
             world_y_size_ = _world_y_size;
             world_z_size_ = _world_z_size;
             resolution_   = _resolution;
-            x_y_size      = world_x_size_ * world_y_size_;
+            x_y_size_      = world_x_size_ * world_y_size_;
 
             discrete_world_vector_.clear();
             discrete_world_vector_.resize(world_x_size_ * world_y_size_ * _world_z_size);
@@ -344,7 +344,7 @@ namespace utils
          * @param _vec discrete coordinates
          * @return Pointer to the corresponding node* object or nullptr if requested set of coordinates are not valid
          */
-        Node* getNodePtr(const Vec3i &_vec){
+        Node* getNodePtr(const Vec3i &_vec) {
 
             if(!checkValid(_vec))
                 return nullptr;
@@ -429,7 +429,7 @@ namespace utils
          */
         inline unsigned int getWorldIndex(const int _x, const int _y, const int _z) const
         {
-            return (unsigned int)( _z * x_y_size + _y * world_x_size_ + _x);
+            return static_cast<unsigned int>( _z * x_y_size_ + _y * world_x_size_ + _x);
         }
         /**
          * @brief Get the Discrete World Position From Index object
@@ -439,8 +439,8 @@ namespace utils
          */
         inline Vec3i getDiscreteWorldPositionFromIndex(const int _index){
 
-            int z = std::floor(_index / x_y_size );
-            int ind = _index - ( z * x_y_size );
+            int z = std::floor(_index / x_y_size_ );
+            int ind = _index - ( z * x_y_size_ );
             int y = std::floor(ind / world_x_size_);
             int x = std::floor(ind % world_x_size_);
 
@@ -449,7 +449,7 @@ namespace utils
 
         std::vector<Planners::utils::Node> discrete_world_vector_;
 
-        unsigned int x_y_size;
+        unsigned int x_y_size_;
 
         unsigned int world_x_size_, world_y_size_, world_z_size_;
         double resolution_;

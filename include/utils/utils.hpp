@@ -28,8 +28,6 @@
 #include <boost/multi_index/hashed_index.hpp>
 #include <boost/multi_index/key_extractors.hpp>
 
-using namespace ::boost;
-using namespace ::boost::multi_index;
 
 namespace Planners
 {

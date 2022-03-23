@@ -70,7 +70,7 @@ namespace Planners
          * 
          * @param _algorithm_name Algorithm name to uniquely identify the type of algorithm. 
          */
-        AlgorithmBase(bool _use_3d, std::string _algorithm_name);
+        AlgorithmBase(bool _use_3d, const std::string &_algorithm_name);
 
         /**
          * @brief Set the World Size object. This method call the resizeWorld method 

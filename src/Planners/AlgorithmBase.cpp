@@ -3,7 +3,7 @@
 namespace Planners
 {
 
-    AlgorithmBase::AlgorithmBase(bool _use_3d = true,  std::string _algorithm_name = "generic_3d_algorithm"): algorithm_name_(_algorithm_name){
+    AlgorithmBase::AlgorithmBase(bool _use_3d = true, const std::string &_algorithm_name = "generic_3d_algorithm"): algorithm_name_(_algorithm_name){
         setHeuristic(&Heuristic::euclidean);
         CoordinateList directions2d, directions3d;
         directions2d = {

@@ -14,10 +14,11 @@
  */
 #include "utils/utils.hpp"
 
-using namespace Planners::utils;
 
 namespace Planners
 {
+    using namespace utils;
+
     /**
      * @brief Heuristic class, collection of static functions
      * The heuristic is computed as a discrete value because the discrete coordinates are used

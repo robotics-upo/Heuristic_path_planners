@@ -30,8 +30,6 @@
 #include <heuristic_planners/GetPath.h>
 #include <heuristic_planners/SetAlgorithm.h>
 
-using namespace Planners;
-
 /**
  * @brief Demo Class that demonstrate how to use the algorithms classes and utils 
  * with ROS 
@@ -65,7 +63,7 @@ private:
 
     void occupancyGridCallback(const nav_msgs::OccupancyGrid::ConstPtr &_grid){
         ROS_INFO("Loading OccupancyGrid map...");
-        utils::configureWorldFromOccupancyWithCosts(*_grid, *algorithm_);
+        Planners::utils::configureWorldFromOccupancyWithCosts(*_grid, *algorithm_);
         algorithm_->publishOccupationMarkersMap();
         occupancy_grid_sub_.shutdown();
         ROS_INFO("Occupancy Grid Loaded");
@@ -77,9 +75,9 @@ private:
     {
 
         ROS_INFO("Loading map...");
-        utils::configureWorldFromPointCloud(_points, *algorithm_, resolution_);
+        Planners::utils::configureWorldFromPointCloud(_points, *algorithm_, resolution_);
         algorithm_->publishOccupationMarkersMap();
-        utils::configureWorldCosts(*m_grid3d_, *algorithm_);
+        Planners::utils::configureWorldCosts(*m_grid3d_, *algorithm_);
         ROS_INFO("Published occupation marker map");
         cloud_ = *_points;
         input_map_ = 2;
@@ -109,8 +107,8 @@ private:
         publishMarker(path_points_markers_, point_markers_pub_);
 
         //Astar coordinate list is std::vector<vec3i>
-        const auto discrete_goal =  discretePoint(_req.goal, resolution_);
-        const auto discrete_start = discretePoint(_req.start, resolution_);
+        const auto discrete_goal =  Planners::utils::discretePoint(_req.goal, resolution_);
+        const auto discrete_start = Planners::utils::discretePoint(_req.start, resolution_);
 
         if( algorithm_->detectCollision(discrete_start) ){
             std::cout << discrete_start << ": Start not valid" << std::endl;
@@ -131,7 +129,7 @@ private:
             auto path_data = algorithm_->findPath(discrete_start, discrete_goal);
 
             if( std::get<bool>(path_data["solved"]) ){
-                utils::CoordinateList path;
+                Planners::utils::CoordinateList path;
                 try{
                     _rep.time_spent.data           = std::get<double>(path_data["time_spent"] );
                     _rep.time_spent.data /= 1000;
@@ -152,7 +150,7 @@ private:
                         _rep.cost_weight.data          = std::get<double>(path_data["cost_weight"]);
                         _rep.max_los.data              = std::get<unsigned int>(path_data["max_line_of_sight_cells"]);
                     }
-                    path = std::get<CoordinateList>(path_data["path"]);
+                    path = std::get<Planners::utils::CoordinateList>(path_data["path"]);
 
                 }catch(std::bad_variant_access const& ex){
                     std::cerr << "Bad variant error: " << ex.what() << std::endl;
@@ -160,13 +158,13 @@ private:
 
                 if(save_data_){
                 
-                    const auto [av_curvature, curv_sigma, curv_min, curv_max] = utils::metrics::calculatePathCurvature(path);
+                    const auto [av_curvature, curv_sigma, curv_min, curv_max] = Planners::utils::metrics::calculatePathCurvature(path);
 
-                    const auto [av_angles, angles_sigma, angles_min, angles_max, changes, angles] = utils::metrics::calculatePathAnglesMetrics(path, 2);
+                    const auto [av_angles, angles_sigma, angles_min, angles_max, changes, angles] = Planners::utils::metrics::calculatePathAnglesMetrics(path, 2);
 
-                    const auto adjacent_path    = utils::geometry::getAdjacentPath(path, *algorithm_->getInnerWorld());
+                    const auto adjacent_path    = Planners::utils::geometry::getAdjacentPath(path, *algorithm_->getInnerWorld());
                     const auto result_distances = getClosestObstaclesToPathPoints(adjacent_path);
-                    const auto [mean_dist, dist_stddev, min_dist, max_dist] = utils::metrics::calculateDistancesMetrics(result_distances );
+                    const auto [mean_dist, dist_stddev, min_dist, max_dist] = Planners::utils::metrics::calculateDistancesMetrics(result_distances );
 
                     path_data["av_curv"]        = av_curvature;
                     path_data["std_dev_curv"]   = curv_sigma;
@@ -190,7 +188,7 @@ private:
                     _rep.min_distance_to_obstacle.data   = min_dist;
                     _rep.max_distance_to_obstacle.data   = max_dist;
 
-                    utils::DataVariantSaver saver;
+                    Planners::utils::DataVariantSaver saver;
 
                     if(saver.savePathDataToFile(path_data, data_folder_ + "/planning.txt") && 
                        saver.savePathDistancesToFile(adjacent_path, result_distances, data_folder_ + "/path_metrics.txt") &&
@@ -203,9 +201,9 @@ private:
 
                 if(_req.tries.data < 2 || i == ( _req.tries.data - 1) ){
 
-                    for(const auto &it: std::get<CoordinateList>(path_data["path"])){
-                        path_line_markers_.points.push_back(continousPoint(it, resolution_));
-                        path_points_markers_.points.push_back(continousPoint(it, resolution_));
+                    for(const auto &it: std::get<Planners::utils::CoordinateList>(path_data["path"])){
+                        path_line_markers_.points.push_back(Planners::utils::continousPoint(it, resolution_));
+                        path_points_markers_.points.push_back(Planners::utils::continousPoint(it, resolution_));
                     }
 
                     publishMarker(path_line_markers_, line_markers_pub_);
@@ -245,37 +243,37 @@ private:
 
         if( algorithm_name == "astar" ){
             ROS_INFO("Using A*");
-            algorithm_.reset(new AStar(use3d_));
+            algorithm_.reset(new Planners::AStar(use3d_));
         }else if( algorithm_name == "costastar" ){
             ROS_INFO("Using Cost Aware A*");
-            algorithm_.reset(new AStarM1(use3d_));
+            algorithm_.reset(new Planners::AStarM1(use3d_));
         }else if( algorithm_name == "astarsafetycost" ){
             ROS_INFO("Using A* Safety Cost");
-            algorithm_.reset(new AStarM2(use3d_));    
+            algorithm_.reset(new Planners::AStarM2(use3d_));    
         }else if ( algorithm_name == "thetastar" ){
             ROS_INFO("Using Theta*");
-            algorithm_.reset(new ThetaStar(use3d_));
+            algorithm_.reset(new Planners::ThetaStar(use3d_));
         }else if ( algorithm_name == "costhetastar" ){
             ROS_INFO("Using Cost Aware Theta* ");
-            algorithm_.reset(new ThetaStarM1(use3d_));
+            algorithm_.reset(new Planners::ThetaStarM1(use3d_));
         }else if ( algorithm_name == "thetastarsafetycost" ){
             ROS_INFO("Using Theta* Safety Cost");
-            algorithm_.reset(new ThetaStarM2(use3d_));
+            algorithm_.reset(new Planners::ThetaStarM2(use3d_));
         }else if( algorithm_name == "lazythetastar" ){
             ROS_INFO("Using LazyTheta*");
-            algorithm_.reset(new LazyThetaStar(use3d_));
+            algorithm_.reset(new Planners::LazyThetaStar(use3d_));
         }else if( algorithm_name == "costlazythetastar"){
             ROS_INFO("Using Cost Aware LazyTheta*");
-            algorithm_.reset(new LazyThetaStarM1(use3d_));
+            algorithm_.reset(new Planners::LazyThetaStarM1(use3d_));
         }else if( algorithm_name == "costlazythetastarmodified"){
             ROS_INFO("Using Cost Aware LazyTheta*");
-            algorithm_.reset(new LazyThetaStarM1Mod(use3d_));
+            algorithm_.reset(new Planners::LazyThetaStarM1Mod(use3d_));
         }else if( algorithm_name == "lazythetastarsafetycost"){
             ROS_INFO("Using LazyTheta* Safety Cost");
-            algorithm_.reset(new LazyThetaStarM2(use3d_));
+            algorithm_.reset(new Planners::LazyThetaStarM2(use3d_));
         }else{
             ROS_WARN("Wrong algorithm name parameter. Using ASTAR by default");
-            algorithm_.reset(new AStar(use3d_));
+            algorithm_.reset(new Planners::AStar(use3d_));
         }
 
         algorithm_->setWorldSize(world_size_, resolution_);
@@ -307,14 +305,14 @@ private:
         lnh_.param("save_data_file", save_data_, (bool)true);		
         lnh_.param("data_folder", data_folder_, std::string("planing_data.txt"));		
         if(save_data_)
-            ROS_INFO("Saving path planning data results to %s", data_folder_.c_str());
+            ROS_INFO_STREAM("Saving path planning data results to " << data_folder_);
 
         //
         if( input_map_ == 1 ){
-            utils::configureWorldFromOccupancyWithCosts(occupancy_grid_, *algorithm_);
+            Planners::utils::configureWorldFromOccupancyWithCosts(occupancy_grid_, *algorithm_);
         }else if( input_map_ == 2 ){
-            utils::configureWorldFromPointCloud(boost::make_shared<pcl::PointCloud<pcl::PointXYZ>>(cloud_), *algorithm_, resolution_);
-            utils::configureWorldCosts(*m_grid3d_, *algorithm_);
+            Planners::utils::configureWorldFromPointCloud(boost::make_shared<pcl::PointCloud<pcl::PointXYZ>>(cloud_), *algorithm_, resolution_);
+            Planners::utils::configureWorldCosts(*m_grid3d_, *algorithm_);
         }
         //Algorithm specific parameters. Its important to set line of sight after configuring world size(it depends on the resolution)
         float sight_dist, cost_weight;
@@ -328,28 +326,28 @@ private:
     void configureHeuristic(const std::string &_heuristic){
         
         if( _heuristic == "euclidean" ){
-            algorithm_->setHeuristic(Heuristic::euclidean);
+            algorithm_->setHeuristic(Planners::Heuristic::euclidean);
             ROS_INFO("Using Euclidean Heuristics");
         }else if( _heuristic == "euclidean_optimized" ){
-            algorithm_->setHeuristic(Heuristic::euclideanOptimized);
+            algorithm_->setHeuristic(Planners::Heuristic::euclideanOptimized);
             ROS_INFO("Using Optimized Euclidean Heuristics");
         }else if( _heuristic == "manhattan" ){
-            algorithm_->setHeuristic(Heuristic::manhattan);
+            algorithm_->setHeuristic(Planners::Heuristic::manhattan);
             ROS_INFO("Using Manhattan Heuristics");
         }else if( _heuristic == "octogonal" ){
-            algorithm_->setHeuristic(Heuristic::octagonal);
+            algorithm_->setHeuristic(Planners::Heuristic::octagonal);
             ROS_INFO("Using Octogonal Heuristics");
         }else if( _heuristic == "dijkstra" ){
-            algorithm_->setHeuristic(Heuristic::dijkstra);     
+            algorithm_->setHeuristic(Planners::Heuristic::dijkstra);     
             ROS_INFO("Using Dijkstra Heuristics");
         }else{
-            algorithm_->setHeuristic(Heuristic::euclidean);
+            algorithm_->setHeuristic(Planners::Heuristic::euclidean);
             ROS_WARN("Wrong Heuristic param. Using Euclidean Heuristics by default");
         }
     }
-    std::vector<std::pair<utils::Vec3i, double>> getClosestObstaclesToPathPoints(const utils::CoordinateList &_path){
+    std::vector<std::pair<Planners::utils::Vec3i, double>> getClosestObstaclesToPathPoints(const Planners::utils::CoordinateList &_path){
         
-        std::vector<std::pair<utils::Vec3i, double>> result;
+        std::vector<std::pair<Planners::utils::Vec3i, double>> result;
         if ( use3d_ ){
             //TODO grid3d distances does not take into account the inflation added internally by the algorithm
 
@@ -358,7 +356,7 @@ private:
             }
 
         else{//TODO IMplement for 2d
-            result.push_back(std::make_pair<utils::Vec3i, double>(Vec3i{0,0,0}, 0.0));
+            result.push_back(std::make_pair<Planners::utils::Vec3i, double>(Planners::utils::Vec3i{0,0,0}, 0.0));
         }
         return result;
     }
@@ -423,7 +421,7 @@ private:
         if(color_id_ == _n_div)
             color_id_ = 1;
 
-        auto random_color = Misc::HSVtoRGB(hue, 100, 100);
+        auto random_color = Planners::Misc::HSVtoRGB(hue, 100, 100);
 
         _color.r = random_color.x;
         _color.g = random_color.y;
@@ -439,12 +437,12 @@ private:
 
     std::unique_ptr<Grid3d> m_grid3d_;
 
-    std::unique_ptr<AlgorithmBase> algorithm_;
+    std::unique_ptr<Planners::AlgorithmBase> algorithm_;
         
     visualization_msgs::Marker path_line_markers_, path_points_markers_;
     
     //Parameters
-    Vec3i world_size_; // Discrete
+    Planners::utils::Vec3i world_size_; // Discrete
     float resolution_;
 
     bool save_data_;

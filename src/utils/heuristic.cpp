@@ -2,7 +2,6 @@
 
 namespace Planners
 {
-    using namespace utils;
     
     Vec3i Heuristic::getDelta(const Vec3i &_source, const Vec3i &_target)
     {
