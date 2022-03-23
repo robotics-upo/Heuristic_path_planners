@@ -20,7 +20,7 @@
 #include <set>
 #include <functional>
 
-#include <math.h>
+#include <cmath>
 
 #include "utils/world.hpp"
 #include "utils/heuristic.hpp"

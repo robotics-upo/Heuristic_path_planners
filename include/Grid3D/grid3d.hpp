@@ -18,7 +18,7 @@
 #include <pcl/point_cloud.h>
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl_conversions/pcl_conversions.h>
-#include <math.h>
+#include <cmath>
 
 #include "utils/utils.hpp"
 

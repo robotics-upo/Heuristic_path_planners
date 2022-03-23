@@ -13,7 +13,7 @@
  */
 #include <iostream>
 #include <vector>
-#include <math.h>
+#include <cmath>
 #ifdef ROS
 #include <Eigen/Dense>
 #endif

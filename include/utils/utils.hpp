@@ -16,7 +16,7 @@
 #include <set>
 #include <map>
 #include <variant>
-#include <math.h>
+#include <cmath>
 #include <memory>
 #ifdef ROS
 #include <Eigen/Dense>

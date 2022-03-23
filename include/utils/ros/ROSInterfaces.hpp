@@ -25,7 +25,7 @@
 #include "Grid3D/grid3d.hpp"
 #include "Planners/AlgorithmBase.hpp"
 
-#include <math.h>
+#include <cmath>
 
 namespace Planners
 {

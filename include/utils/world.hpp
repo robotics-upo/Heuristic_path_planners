@@ -12,7 +12,7 @@
  * 
  */
 #include <vector>
-#include <math.h>
+#include <cmath>
 #include "utils/utils.hpp"
 
 namespace Planners{
