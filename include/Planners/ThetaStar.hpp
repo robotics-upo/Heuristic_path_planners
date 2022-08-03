@@ -53,7 +53,7 @@ namespace Planners
          * @param _s2 Pointer to node s2
          * @param _index_by_pos reference to openset to erase and insert the nodes in some cases
          */
-        virtual void UpdateVertex(Node *_s, Node *_s2, node_by_position &_index_by_pos);
+        virtual void UpdateVertex(Planners::utils::Node *_s, Planners::utils::Node *_s2, node_by_position &_index_by_pos);
         
         /**
          * @brief Compute cost algorithm function
@@ -61,7 +61,7 @@ namespace Planners
          * @param _s_aux Pointer to first node
          * @param _s2_aux Pointer to the second node
          */
-        inline virtual void ComputeCost(Node *_s_aux, Node *_s2_aux);
+        inline virtual void ComputeCost(Planners::utils::Node *_s_aux, Planners::utils::Node *_s2_aux);
 
         /**
          * @brief This function is the secondary inside the main loop of findPath 
@@ -80,7 +80,7 @@ namespace Planners
          * This operation of erase and re-insert is performed in order to update the position
          * of the node in the container. 
          */
-        virtual void exploreNeighbours(Node* _current, const Vec3i &_target,node_by_position &_index_by_pos) override;
+        virtual void exploreNeighbours(Planners::utils::Node* _current, const Vec3i &_target,node_by_position &_index_by_pos) override;
 
         utils::CoordinateListPtr checked_nodes, checked_nodes_current;  /*!< TODO Comment */
 

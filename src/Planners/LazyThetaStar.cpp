@@ -5,7 +5,7 @@ namespace Planners
     LazyThetaStar::LazyThetaStar(bool _use_3d):ThetaStar(_use_3d, "lazythetastar") {}
     LazyThetaStar::LazyThetaStar(bool _use_3d, std::string _name = "lazythetastar" ):ThetaStar(_use_3d, _name) {}
    
-    void LazyThetaStar::SetVertex(Node *_s_aux)
+    void LazyThetaStar::SetVertex(Planners::utils::Node *_s_aux)
     {
         line_of_sight_checks_++;
 
@@ -17,7 +17,7 @@ namespace Planners
             for (const auto &i: direction)
             {
                 Vec3i newCoordinates(_s_aux->coordinates + i);
-                Node *successor2 = discrete_world_.getNodePtr(newCoordinates);
+                Planners::utils::Node *successor2 = discrete_world_.getNodePtr(newCoordinates);
 
                 if (successor2 == nullptr || successor2->occuppied ) continue;
 
@@ -35,7 +35,7 @@ namespace Planners
             }
         }
     }
-    inline void LazyThetaStar::ComputeCost(Node *_s_aux, Node *_s2_aux)
+    inline void LazyThetaStar::ComputeCost(Planners::utils::Node *_s_aux, Planners::utils::Node *_s2_aux)
     {
         auto distanceParent2 = geometry::distanceBetween2Nodes(_s_aux->parent, _s2_aux);
 
@@ -49,11 +49,11 @@ namespace Planners
 
     PathData LazyThetaStar::findPath(const Vec3i &_source, const Vec3i &_target)
     {
-        Node *current = nullptr;
+        Planners::utils::Node *current = nullptr;
 
         bool solved{false};
 
-        discrete_world_.getNodePtr(_source)->parent = new Node(_source);
+        discrete_world_.getNodePtr(_source)->parent = new Planners::utils::Node(_source);
         discrete_world_.setOpenValue(_source, true);
 
         utils::Clock main_timer;

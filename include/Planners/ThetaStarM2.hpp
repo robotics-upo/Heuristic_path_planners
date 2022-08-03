@@ -57,7 +57,7 @@ namespace Planners
          * @param _s_aux Pointer to first node
          * @param _s2_aux Pointer to the second node
          */
-        inline virtual void ComputeCost(Node *_s_aux, Node *_s2_aux) override;
+        inline virtual void ComputeCost(Planners::utils::Node *_s_aux, Planners::utils::Node *_s2_aux) override;
 
         /**
          * @brief Compute edge distance
@@ -67,7 +67,7 @@ namespace Planners
          * @param _s2 
          * @return unsigned int 
          */
-        virtual unsigned int ComputeEdgeCost(const utils::CoordinateListPtr _checked_nodes, const Node* _s, const Node* _s2);
+        virtual unsigned int ComputeEdgeCost(const utils::CoordinateListPtr _checked_nodes, const Planners::utils::Node* _s, const Planners::utils::Node* _s2);
 
         /**
          * @brief This functions implements the algorithm G function.  The difference
@@ -84,7 +84,7 @@ namespace Planners
          * @param _dirs Number of directions used (to distinguish between 2D and 3D)
          * @return unsigned int The G Value calculated by the function
          */
-        virtual unsigned int computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs) override;
+        virtual unsigned int computeG(const Planners::utils::Node* _current, Planners::utils::Node* _suc,  unsigned int _n_i, unsigned int _dirs) override;
 
     
     };

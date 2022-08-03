@@ -12,7 +12,7 @@ namespace Planners
         checked_nodes_current->reserve(5000);
     }
     
-    inline void ThetaStar::UpdateVertex(Node *_s, Node *_s2, node_by_position &_index_by_pos)
+    inline void ThetaStar::UpdateVertex(Planners::utils::Node *_s, Planners::utils::Node *_s2, node_by_position &_index_by_pos)
     {
         unsigned int g_old = _s2->G;
 
@@ -30,7 +30,7 @@ namespace Planners
         }
     }
 
-    inline void ThetaStar::ComputeCost(Node *_s_aux, Node *_s2_aux)
+    inline void ThetaStar::ComputeCost(Planners::utils::Node *_s_aux, Planners::utils::Node *_s2_aux)
     {
         auto distanceParent2 = geometry::distanceBetween2Nodes(_s_aux->parent, _s2_aux);
         line_of_sight_checks_++;
@@ -55,12 +55,12 @@ namespace Planners
         }
     }
 
-    void ThetaStar::exploreNeighbours(Node* _current, const Vec3i &_target,node_by_position &_index_by_pos){
+    void ThetaStar::exploreNeighbours(Planners::utils::Node* _current, const Vec3i &_target,node_by_position &_index_by_pos){
 
         for (unsigned int i = 0; i < direction.size(); ++i) {
 
             Vec3i newCoordinates = _current->coordinates + direction[i];
-            Node *successor = discrete_world_.getNodePtr(newCoordinates);
+            Planners::utils::Node *successor = discrete_world_.getNodePtr(newCoordinates);
 
             if ( successor == nullptr || 
                  successor->isInClosedList || 

@@ -12,6 +12,8 @@
  * 
  */
 #include <Planners/AlgorithmBase.hpp>
+#include <chrono>
+#include <sensor_msgs/msg/detail/point_cloud2__struct.hpp>
 
 
 /**
@@ -24,11 +26,13 @@
  * 
  */
 #ifdef ROS
-#include <ros/ros.h>
-#include <visualization_msgs/Marker.h>
+// #include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
+#include <visualization_msgs/msg/marker.hpp>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
-#include <pcl_ros/point_cloud.h>
+#include <pcl_conversions/pcl_conversions.h>
+// #include <pcl_ros/point_cloud.h>
 #include "utils/ros/ROSInterfaces.hpp"
 #endif
 
@@ -38,7 +42,7 @@ namespace Planners{
      * @brief 
      * 
      */
-    class AStar : public AlgorithmBase
+    class AStar : public AlgorithmBase, rclcpp::Node
     {
         
     public:
@@ -95,7 +99,7 @@ namespace Planners{
          * (They are currently member functions of the class).
          */
         template<typename T, typename U>
-        void publishROSDebugData(const Node* _node, const T &_open_set, const U &_closed_set);
+        void publishROSDebugData(const Planners::utils::Node* _node, const T &_open_set, const U &_closed_set);
         
     protected:
 
@@ -125,7 +129,7 @@ namespace Planners{
          * This operation of erase and re-insert is performed in order to update the position
          * of the node in the container. 
          */
-        virtual void exploreNeighbours(Node* _current, const Vec3i &_target,node_by_position &_index_by_pos);
+        virtual void exploreNeighbours(Planners::utils::Node* _current, const Vec3i &_target,node_by_position &_index_by_pos);
 
         /**
          * @brief This functions implements the algorithm G function. 
@@ -161,23 +165,29 @@ namespace Planners{
          * @param _dirs Number of directions used (to distinguish between 2D and 3D)
          * @return unsigned int The G Value calculated by the function
          */
-        virtual unsigned int computeG(const Node* _current, Node* _suc, unsigned int _n_i, unsigned int _dirs);
+        virtual unsigned int computeG(const Planners::utils::Node* _current, Planners::utils::Node* _suc, unsigned int _n_i, unsigned int _dirs);
 
         unsigned int line_of_sight_checks_{0};  /*!< TODO Comment */
-        std::vector<Node*> closedSet_; /*!< TODO Comment */
+        std::vector<Planners::utils::Node*> closedSet_; /*!< TODO Comment */
         MagicalMultiSet openSet_; /*!< TODO Comment */
         
 #ifdef ROS
-        ros::NodeHandle lnh_{"~"}; /*!< TODO Comment */
-        ros::Publisher explored_nodes_marker_pub_, occupancy_marker_pub_,  /*!< TODO Comment */
-                       openset_marker_pub_, closedset_marker_pub_, /*!< TODO Comment */
-                       best_node_marker_pub_, aux_text_marker_pub_; /*!< TODO Comment */
-        visualization_msgs::Marker explored_node_marker_, openset_markers_,  /*!< TODO Comment */
-                                   closed_set_markers_, best_node_marker_, aux_text_marker_; /*!< TODO Comment */
-        ros::Duration duration_pub_{0.001}; /*!< TODO Comment */
-        ros::Time last_publish_tamp_; /*!< TODO Comment */
-        float resolution_; /*!< TODO Comment */
-    	pcl::PointCloud<pcl::PointXYZ>  occupancy_marker_;  /*!< TODO Comment */
+
+        rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr explored_nodes_marker_pub_,
+                                                                openset_marker_pub_,
+                                                                closedset_marker_pub_,
+                                                                best_node_marker_pub_,
+                                                                aux_text_marker_pub_;
+        // rclcpp::Publisher<pcl::PointCloud<pcl::PointXYZ>>::SharedPtr occupancy_marker_pub_;
+        rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr occupancy_marker_pub_;
+
+        visualization_msgs::msg::Marker explored_node_marker_, openset_markers_,  
+                                   closed_set_markers_, best_node_marker_, aux_text_marker_; 
+
+        rclcpp::Duration duration_pub_rate_nanoseconds_{std::chrono::milliseconds(10)};
+        rclcpp::Time last_publish_tamp_;
+        float resolution_;
+    	  pcl::PointCloud<pcl::PointXYZ>  occupancy_marker_;
 
 #endif
     };

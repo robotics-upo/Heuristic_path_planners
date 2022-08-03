@@ -63,14 +63,14 @@ namespace Planners
          * @param _s_aux Pointer to first node
          * @param _s2_aux Pointer to second node
          */
-        virtual void ComputeCost(Node *_s_aux, Node *_s2_aux) override;
+        virtual void ComputeCost(Planners::utils::Node *_s_aux, Planners::utils::Node *_s2_aux) override;
 
         /**
          * @brief SetVertex function
          * Line of sight is checked inside this function
          * @param _s_aux 
          */
-        virtual void SetVertex(Node *_s_aux);
+        virtual void SetVertex(Planners::utils::Node *_s_aux);
                 
     };
 

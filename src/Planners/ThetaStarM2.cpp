@@ -6,7 +6,7 @@ namespace Planners
     
     ThetaStarM2::ThetaStarM2(bool _use_3d, std::string _name = "thetastarm2" ):ThetaStar(_use_3d, _name) {}
     
-    inline void ThetaStarM2::ComputeCost(Node *_s_aux, Node *_s2_aux)
+    inline void ThetaStarM2::ComputeCost(Planners::utils::Node *_s_aux, Planners::utils::Node *_s2_aux)
     {
         line_of_sight_checks_++;
         if (LineOfSight::bresenham3D(_s_aux->parent, _s2_aux, discrete_world_, checked_nodes))  
@@ -51,7 +51,7 @@ namespace Planners
         checked_nodes_current->clear();
     }
 
-    inline unsigned int ThetaStarM2::ComputeEdgeCost(const utils::CoordinateListPtr _checked_nodes, const Node* _s, const Node* _s2){ 
+    inline unsigned int ThetaStarM2::ComputeEdgeCost(const utils::CoordinateListPtr _checked_nodes, const Planners::utils::Node* _s, const Planners::utils::Node* _s2){ 
         
         double dist_cost{0};
         double mean_dist_cost{0};
@@ -73,7 +73,7 @@ namespace Planners
         return static_cast<unsigned int>( mean_dist_cost * cost_weight_ * dist_scale_factor_reduced_);
     }
 
-    inline unsigned int ThetaStarM2::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs){
+    inline unsigned int ThetaStarM2::computeG(const Planners::utils::Node* _current, Planners::utils::Node* _suc,  unsigned int _n_i, unsigned int _dirs){
         
         unsigned int cost = 0;
 

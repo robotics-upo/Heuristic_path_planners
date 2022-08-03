@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<package format="2">
+<package format="3">
   <name>heuristic_planners</name>
   <version>0.4.3</version>
   <description>The heuristic planners package </description>
@@ -7,60 +7,33 @@
   <maintainer email="reyarcenegui@gmail.com">RafaelRey</maintainer>
 
   <license>TODO</license>
-
-  <buildtool_depend>catkin</buildtool_depend>
-  <build_depend>geometry_msgs</build_depend>
-  <build_depend>visualization_msgs</build_depend>
-  <build_depend>std_msgs</build_depend>
-  <build_depend>nav_msgs</build_depend>
-  <build_depend>pcl_ros</build_depend>
-  <build_depend>pcl_conversions</build_depend>
-  <build_depend>roscpp</build_depend>
-  <build_depend>octomap_ros</build_depend>
-  <build_depend>octomap_server</build_depend>
-  <build_depend>costmap_2d</build_depend>
-  <build_depend>message_generation</build_depend>
-  <build_depend>doxygen</build_depend>
-  <build_depend>libssl-dev</build_depend>
-  <build_depend>boost</build_depend>
-  <build_depend>eigen</build_depend>
   
-  <build_export_depend>std_msgs</build_export_depend>
-  <build_export_depend>visualization_msgs</build_export_depend>
-  <build_export_depend>geometry_msgs</build_export_depend>
-  <build_export_depend>roscpp</build_export_depend>
-  <build_export_depend>nav_msgs</build_export_depend>
-  <build_export_depend>pcl_ros</build_export_depend>
-  <build_export_depend>pcl_conversions</build_export_depend>
-  <build_export_depend>octomap_ros</build_export_depend>
-  <build_export_depend>octomap_server</build_export_depend>
-  <build_export_depend>costmap_2d</build_export_depend>
-  <build_export_depend>doxygen</build_export_depend>
-  <build_export_depend>libssl-dev</build_export_depend>
-  <build_export_depend>boost</build_export_depend>
-  <build_export_depend>eigen</build_export_depend>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>geometry_msgs</depend>
+  <depend>visualization_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>pcl_ros</depend>
+  <depend>pcl_conversions</depend>
+  <depend>roscpp</depend>
+  <depend>octomap_ros</depend>
+  <depend>octomap_server</depend>
+  <depend>costmap_2d</depend>
+  <depend>message_generation</depend>
+  <depend>doxygen</depend>
+  <depend>libssl-dev</depend>
+  <depend>boost</depend>
+  <depend>eigen</depend>
 
-  <exec_depend>geometry_msgs</exec_depend>
-  <exec_depend>visualization_msgs</exec_depend>
-  <exec_depend>roscpp</exec_depend>
-  <exec_depend>nav_msgs</exec_depend>
-  <exec_depend>std_msgs</exec_depend>
-  <exec_depend>pcl_ros</exec_depend>
-  <exec_depend>pcl_conversions</exec_depend>
-  <exec_depend>octomap_ros</exec_depend>
-  <exec_depend>octomap_server</exec_depend>
-  <exec_depend>costmap_2d</exec_depend>
-  <exec_depend>message_runtime</exec_depend>
-  <exec_depend>map_server</exec_depend>
-  <exec_depend>doxygen</exec_depend>
-  <exec_depend>libssl-dev</exec_depend>
-  <exec_depend>boost</exec_depend>
-  <exec_depend>eigen</exec_depend>
+  <build_depend>rosidl_default_generators</build_depend>
+  <build_depend>builtin_interfaces</build_depend>
+  <exec_depend>rosidl_default_runtime</exec_depend>
+  <exec_depend>builtin_interfaces</exec_depend>
 
+  <member_of_group>rosidl_interface_packages</member_of_group>
 
-  <!-- The export tag contains other, unspecified, tags -->
   <export>
-    <!-- Other tools can request additional information be placed here -->
-
+    <build_type>ament_cmake</build_type>
   </export>
+
 </package>

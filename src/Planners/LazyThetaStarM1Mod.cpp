@@ -5,7 +5,7 @@ namespace Planners
     LazyThetaStarM1Mod::LazyThetaStarM1Mod(bool _use_3d):LazyThetaStarM1(_use_3d, "lazythetastarm1mod") {}
     LazyThetaStarM1Mod::LazyThetaStarM1Mod(bool _use_3d, std::string _name = "lazythetastarm1mod" ):LazyThetaStarM1(_use_3d, _name) {}
     
-    void LazyThetaStarM1Mod::ComputeCost(Node *_s_aux, Node *_s2_aux)
+    void LazyThetaStarM1Mod::ComputeCost(Planners::utils::Node *_s_aux, Planners::utils::Node *_s2_aux)
     {
         auto distanceParent2 = geometry::distanceBetween2Nodes(_s_aux->parent, _s2_aux);
 

@@ -12,14 +12,14 @@
  * @copyright Copyright (c) 2021
  * 
  */
-#include <ros/ros.h>
-#include <geometry_msgs/Point.h>
-#include <geometry_msgs/Pose.h>
-#include <nav_msgs/OccupancyGrid.h>
-#include <costmap_2d/cost_values.h>
+#include <rclcpp/rclcpp.hpp>
+#include <geometry_msgs/msg/point.hpp>
+#include <geometry_msgs/msg/pose.hpp>
+#include <nav_msgs/msg/occupancy_grid.hpp>
+#include <nav2_costmap_2d/cost_values.hpp>
 
-#include <pcl_ros/point_cloud.h>
-#include <pcl_ros/transforms.h>
+#include <pcl_conversions/pcl_conversions.h>
+#include <pcl_ros/transforms.hpp>
 
 #include "utils/utils.hpp"
 #include "Grid3D/grid3d.hpp"
@@ -56,7 +56,7 @@ namespace Planners
          * @param _res resolution
          * @return Vec3i 
          */
-        Vec3i discretePoint(const geometry_msgs::Point &_msg, const double &_res);
+        Vec3i discretePoint(const geometry_msgs::msg::Point &_msg, const double &_res);
 
         /**
          * @brief Discretize a geomtry_msgs::Pose object
@@ -65,7 +65,7 @@ namespace Planners
          * @param _res resolution
          * @return Vec3i 
          */
-        Vec3i discretePose(const geometry_msgs::Pose &_msg, const double &_res);
+        Vec3i discretePose(const geometry_msgs::msg::Pose &_msg, const double &_res);
         /**
          * @brief get a geometry_msgs::Point from a discrete position and resolution
          * 
@@ -73,7 +73,7 @@ namespace Planners
          * @param _res resolution
          * @return geometry_msgs::Point 
          */
-        geometry_msgs::Point continousPoint(const Vec3i &_vec, const double &_res);
+        geometry_msgs::msg::Point continousPoint(const Vec3i &_vec, const double &_res);
 
         /**
          * @brief 
@@ -105,7 +105,7 @@ namespace Planners
          * @return true Currently always return true
          * @return false Never returns false at this version
          */
-        bool configureWorldFromOccupancy(const nav_msgs::OccupancyGrid &_grid, AlgorithmBase &_algorithm, bool _set_size = false);
+        bool configureWorldFromOccupancy(const nav_msgs::msg::OccupancyGrid &_grid, AlgorithmBase &_algorithm, bool _set_size = false);
         
         /**
          * @brief 
@@ -116,7 +116,7 @@ namespace Planners
          * @return true 
          * @return false 
          */
-        bool configureWorldFromOccupancyWithCosts(const nav_msgs::OccupancyGrid &_grid, AlgorithmBase &_algorithm, bool _set_size = false);
+        bool configureWorldFromOccupancyWithCosts(const nav_msgs::msg::OccupancyGrid &_grid, AlgorithmBase &_algorithm, bool _set_size = false);
 
         /**
          * @brief Same as configureWorldFromOccupancy but to use with a pcl::PointCloud
