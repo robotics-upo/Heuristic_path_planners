@@ -327,7 +327,7 @@ private:
         }
         algorithm_->setInflationConfig(inflate_, inflation_steps_);
 
-        m_grid3d_.reset(new Grid3d); //TODO Costs not implement yet
+        m_grid3d_ = std::make_unique<Grid3d>(this); //TODO Costs not implement yet
 
         double cost_scaling_factor, robot_radius;
         this->declare_parameter<double>("cost_scaling_factor", 0.8);

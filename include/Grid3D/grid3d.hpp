@@ -43,8 +43,9 @@
 // #include "voro++-0.4.6/src/voro++.hh"
 // #endif
 
-class Grid3d: public rclcpp::Node {
+class Grid3d {
 private:
+  rclcpp::Node* node_ptr_;
 	
 	// Ros parameters
 	// ros::NodeHandle m_nh;
@@ -87,32 +88,33 @@ private:
 	bool use_costmap_function;
 	
 public:
-	Grid3d():rclcpp::Node("grid3d"), m_cloud(new pcl::PointCloud<pcl::PointXYZI>)
+	Grid3d(rclcpp::Node* node_ptr):node_ptr_(node_ptr), m_cloud(new pcl::PointCloud<pcl::PointXYZI>)
 	{
+    
 
-    this->declare_parameter<std::string>("name", "grid3d");
-    this->declare_parameter<std::string>("global_frame_id", "map");
-    this->declare_parameter<std::string>("map_path", "map.ot");
-    this->declare_parameter<bool>("publish_point_cloud", true);
-    this->declare_parameter<double>("publish_point_cloud_rate", 0.2);
-    this->declare_parameter<double>("publish_grid_slice", 1.0);
-    this->declare_parameter<double>("publish_grid_slice_rate", 0.2);
-    this->declare_parameter<double>("sensor_dev", 0.2);
-    this->declare_parameter<double>("cost_scaling_factor", 0.8);
-    this->declare_parameter<double>("robot_radius", 0.4);
-    this->declare_parameter<bool>("use_costmap_function", true);
+    node_ptr_->declare_parameter<std::string>("name", "grid3d");
+    node_ptr_->declare_parameter<std::string>("global_frame_id", "map");
+    node_ptr_->declare_parameter<std::string>("map_path", "map.ot");
+    node_ptr_->declare_parameter<bool>("publish_point_cloud", true);
+    node_ptr_->declare_parameter<double>("publish_point_cloud_rate", 0.2);
+    node_ptr_->declare_parameter<double>("publish_grid_slice", 1.0);
+    node_ptr_->declare_parameter<double>("publish_grid_slice_rate", 0.2);
+    node_ptr_->declare_parameter<double>("sensor_dev", 0.2);
+    // node_ptr_->declare_parameter<double>("cost_scaling_factor", 0.8);
+    // node_ptr_->declare_parameter<double>("robot_radius", 0.4);
+    node_ptr_->declare_parameter<bool>("use_costmap_function", true);
 
-    this->get_parameter("name", m_nodeName);
-    this->get_parameter("global_frame_id", m_globalFrameId);
-    this->get_parameter("map_path", m_mapPath);
-    this->get_parameter("publish_point_cloud", m_publishPc);
-    this->get_parameter("publish_point_cloud_rate", m_publishPointCloudRate);
-    this->get_parameter("publish_grid_slice", m_gridSlice);
-    this->get_parameter("publish_grid_slice_rate", m_publishGridSliceRate);
-    this->get_parameter("sensor_dev", m_sensorDev);
-    this->get_parameter("cost_scaling_factor", cost_scaling_factor);
-    this->get_parameter("robot_radius", robot_radius);
-    this->get_parameter("use_costmap_function", use_costmap_function);
+    node_ptr_->get_parameter("name", m_nodeName);
+    node_ptr_->get_parameter("global_frame_id", m_globalFrameId);
+    node_ptr_->get_parameter("map_path", m_mapPath);
+    node_ptr_->get_parameter("publish_point_cloud", m_publishPc);
+    node_ptr_->get_parameter("publish_point_cloud_rate", m_publishPointCloudRate);
+    node_ptr_->get_parameter("publish_grid_slice", m_gridSlice);
+    node_ptr_->get_parameter("publish_grid_slice_rate", m_publishGridSliceRate);
+    node_ptr_->get_parameter("sensor_dev", m_sensorDev);
+    node_ptr_->get_parameter("cost_scaling_factor", cost_scaling_factor);
+    node_ptr_->get_parameter("robot_radius", robot_radius);
+    node_ptr_->get_parameter("use_costmap_function", use_costmap_function);
 
 		// Load octomap 
 		m_octomap = NULL;
@@ -145,13 +147,13 @@ public:
 			if(m_gridSlice >= 0 && m_gridSlice <= m_maxZ)
 			{
 				buildGridSliceMsg(m_gridSlice);
-        		m_gridSlicePub = this->create_publisher<nav_msgs::msg::OccupancyGrid>(m_nodeName+"/grid_slice", 1);
+        		m_gridSlicePub = node_ptr_->create_publisher<nav_msgs::msg::OccupancyGrid>(m_nodeName+"/grid_slice", 1);
 
-        		// gridTimer = this->create_wall_timer(
-            	// std::chrono::seconds(1.0f/m_publishGridSliceRate), [this]() { this->publishGridSlice();});
+        		// gridTimer = node_ptr_->create_wall_timer(
+            	// std::chrono::seconds(1.0f/m_publishGridSliceRate), [this]() { node_ptr_->publishGridSlice();});
             	// FIXME:
-        		gridTimer = this->create_wall_timer(
-            	std::chrono::seconds(1), [this]() { this->publishGridSlice();});
+        		gridTimer = node_ptr_->create_wall_timer(
+            	std::chrono::seconds(1), [this]() {this->publishGridSlice();});
 
 			}
 			
@@ -159,20 +161,20 @@ public:
 			if(m_publishPc)
 			{
 				// m_pcPub  = m_nh.advertise<sensor_msgs::msg::PointCloud2>(m_nodeName+"/map_point_cloud", 1, true);
-        		m_pcPub = this -> create_publisher<sensor_msgs::msg::PointCloud2>(m_nodeName+"/map_point_cloud", 1);
+        		m_pcPub = node_ptr_-> create_publisher<sensor_msgs::msg::PointCloud2>(m_nodeName+"/map_point_cloud", 1);
         		
-				// mapTimer = this->create_wall_timer(
-        		//     std::chrono::millisecondsseconds(1.0/m_publishPointCloudRate), [this]() { this-> publishMapPointCloud();});
+				// mapTimer = node_ptr_->create_wall_timer(
+        		//     std::chrono::millisecondsseconds(1.0/m_publishPointCloudRate), [this]() { node_ptr_-> publishMapPointCloud();});
         		//     FIXME:
-        		// mapTimer = this->create_wall_timer(
-            	// std::chrono::seconds(1), [this]() { this-> publishMapPointCloud();});	
+        		// mapTimer = node_ptr_->create_wall_timer(
+            	// std::chrono::seconds(1), [this]() { node_ptr_-> publishMapPointCloud();});	
 				//COMPILE			
-				// mapTimer = this->create_wall_timer(
+				// mapTimer = node_ptr_->create_wall_timer(
             	// std::chrono::milliseconds(500), std::bind(&Grid3d::publishMapPointCloud, this));
 				
-				mapTimer = this->create_wall_timer(std::chrono::duration<double>(1.0f/1),std::bind(&Grid3d::publishMapPointCloud, this));
+				mapTimer = node_ptr_->create_wall_timer(std::chrono::duration<double>(1.0f/1),std::bind(&Grid3d::publishMapPointCloud, this));
 			}
-      		percent_computed_pub_ = this->create_publisher<std_msgs::msg::Float32>(m_nodeName+"/percent_computed", 10);
+      		percent_computed_pub_ = node_ptr_->create_publisher<std_msgs::msg::Float32>(m_nodeName+"/percent_computed", 10);
 
 		}
 	}
@@ -222,13 +224,13 @@ public:
   
 	void publishMapPointCloud(void)
 	{
-		m_pcMsg.header.stamp = this->now();
+		m_pcMsg.header.stamp = node_ptr_->now();
 		m_pcPub->publish(m_pcMsg);
 	}
 	
 	void publishGridSlice(void)
 	{
-		m_gridSliceMsg.header.stamp = this->now();
+		m_gridSliceMsg.header.stamp = node_ptr_->now();
 		m_gridSlicePub->publish(m_gridSliceMsg);
 	}
 	
@@ -342,11 +344,11 @@ protected:
 		m_maxZ = (float)(maxZ-minZ);
 		m_resolution = (float)res;
 		m_oneDivRes = 1.0/m_resolution;
-		RCLCPP_INFO(this->get_logger(),"Map size");
-		RCLCPP_INFO(this->get_logger(),"\tx: %.2f to %.2f", minX, maxX);
-		RCLCPP_INFO(this->get_logger(),"\ty: %.2f to %.2f", minY, maxY);
-		RCLCPP_INFO(this->get_logger(),"\tz: %.2f to %.2f", minZ, maxZ);
-		RCLCPP_INFO(this->get_logger(),"\tRes: %.2f", m_resolution);
+		RCLCPP_INFO(node_ptr_->get_logger(),"Map size");
+		RCLCPP_INFO(node_ptr_->get_logger(),"\tx: %.2f to %.2f", minX, maxX);
+		RCLCPP_INFO(node_ptr_->get_logger(),"\ty: %.2f to %.2f", minY, maxY);
+		RCLCPP_INFO(node_ptr_->get_logger(),"\tz: %.2f to %.2f", minZ, maxZ);
+		RCLCPP_INFO(node_ptr_->get_logger(),"\tRes: %.2f", m_resolution);
 		// ROS_INFO("Map size:\n");
 		// ROS_INFO("\tx: %.2f to %.2f", minX, maxX);
 		// ROS_INFO("\ty: %.2f to %.2f", minZ, maxZ);
@@ -448,25 +450,25 @@ protected:
 		
 		std::ifstream input_sha;
 		auto sha_value = sha3_512((const char*)m_grid, m_gridSize);
-		RCLCPP_INFO(this->get_logger(),"[Grid3D] Calculated SHA512 value: %s", sha_value.c_str());
+		RCLCPP_INFO(node_ptr_->get_logger(),"[Grid3D] Calculated SHA512 value: %s", sha_value.c_str());
 		// ROS_INFO("[Grid3D] Calculated SHA512 value: %s", sha_value.c_str());
 
 		input_sha.open(fileName+"sha");
 		std::string readed_sha;
 		if(input_sha.is_open()){
 			getline(input_sha, readed_sha);
-			RCLCPP_INFO(this->get_logger(),"[Grid3D] Readed SHA512 from file: %s", readed_sha.c_str());
+			RCLCPP_INFO(node_ptr_->get_logger(),"[Grid3D] Readed SHA512 from file: %s", readed_sha.c_str());
 			// ROS_INFO("[Grid3D] Readed SHA512 from file: %s", readed_sha.c_str());
 			input_sha.close();
 		}else{
 			// ROS_ERROR("[Grid3D] Couldn't read SHA512 data of gridm file, recomputing grid");
-			RCLCPP_INFO(this->get_logger(),"[Grid3D] Couldn't read SHA512 data of gridm file, recomputing grid");
+			RCLCPP_INFO(node_ptr_->get_logger(),"[Grid3D] Couldn't read SHA512 data of gridm file, recomputing grid");
 			return false;
 		}
 		//Check that both are the same
 		if(readed_sha.compare(sha_value) != 0){
 			// ROS_ERROR("[Grid3D] Found different SHA values between for gridm!");
-			RCLCPP_INFO(this->get_logger(),"[Grid3D] Found different SHA values between for gridm!");
+			RCLCPP_INFO(node_ptr_->get_logger(),"[Grid3D] Found different SHA values between for gridm!");
 			return false;
 		}
 		
@@ -583,11 +585,11 @@ protected:
 		
 		// Setup grid msg
 		m_gridSliceMsg.header.frame_id = m_globalFrameId;
-		m_gridSliceMsg.header.stamp = this->now();
+		m_gridSliceMsg.header.stamp = node_ptr_->now();
 
     // TODO: add seq
 		// m_gridSliceMsg.header.seq = _seq++;
-		m_gridSliceMsg.info.map_load_time = this->now();
+		m_gridSliceMsg.info.map_load_time = node_ptr_->now();
 		m_gridSliceMsg.info.resolution = m_resolution;
 		m_gridSliceMsg.info.width = m_gridSizeX;
 		m_gridSliceMsg.info.height = m_gridSizeY;
