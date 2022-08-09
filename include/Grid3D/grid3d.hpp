@@ -121,6 +121,7 @@ public:
 		m_octomap = NULL;
 		m_grid = NULL;
 
+    RCLCPP_WARN(node_ptr_->get_logger(), "Loading octomap from %s", m_mapPath.c_str());
 		if(loadOctomap(m_mapPath))
 		{
 			// Compute the point-cloud associated to the ocotmap
@@ -319,6 +320,13 @@ protected:
 		}	
 		else
 			return false;
+		/*
+		// Load octomap
+		octomap::AbstractOcTree *tree = octomap::AbstractOcTree::read(path);
+		if(!tree)
+			return false;*/
+		m_octomap = dynamic_cast<octomap::OcTree*>(tree);
+		std::cout << "Octomap loaded" << std::endl;
 
 		if(m_octomap == NULL)
 		{

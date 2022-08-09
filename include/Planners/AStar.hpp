@@ -42,7 +42,7 @@ namespace Planners{
      * @brief 
      * 
      */
-    class AStar : public AlgorithmBase, rclcpp::Node
+    class AStar : public AlgorithmBase
     {
         
     public:
@@ -172,6 +172,8 @@ namespace Planners{
         MagicalMultiSet openSet_; /*!< TODO Comment */
         
 #ifdef ROS
+
+        static std::shared_ptr<rclcpp::Node> ros_node_ptr_;
 
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr explored_nodes_marker_pub_,
                                                                 openset_marker_pub_,

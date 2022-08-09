@@ -49,15 +49,30 @@ public:
     {
 
         std::string algorithm_name;
-        // lnh_.param("algorithm", algorithm_name, (std::string)"astar");
-        // lnh_.param("heuristic", heuristic_, (std::string)"euclidean");
         
         this->declare_parameter<std::string>("algorithm_name", "astar");
         this->declare_parameter<std::string>("heuristic_name", "euclidean");
+
+        this->declare_parameter<float>("world_size_x", 100.0);
+        this->declare_parameter<float>("world_size_y", 100.0);
+        this->declare_parameter<float>("world_size_z", 0.0);
+        this->declare_parameter<float>("resolution", 0.2);
+        this->declare_parameter<bool>("inflate_map", true);
+        this->declare_parameter<bool>("use3d", (bool)true);
+        this->declare_parameter<double>("cost_scaling_factor", 0.8);
+        this->declare_parameter<double>("robot_radius", 0.4);
+        this->declare_parameter<std::string>("frame_id", std::string("map"));
+        this->declare_parameter<bool>("save_data_file", (bool)true);
+        this->declare_parameter<std::string>("data_folder", std::string("planing_data.txt"));
+        this->declare_parameter<float>("max_line_of_sight_distance", (float)1000.0);
+        this->declare_parameter<float>("cost_weight", (float)0.0);
+        this->declare_parameter<bool>("overlay_markers", (bool)false);
+        this->declare_parameter<double>("inflation_size", 0.5);
+        
         this->get_parameter("algorithm_name", algorithm_name);
         this->get_parameter("heuristic_name", heuristic_);
 
-        
+        m_grid3d_ = std::make_unique<Grid3d>(this); //TODO Costs not implement yet
         configureAlgorithm(algorithm_name, heuristic_);
 
 
@@ -257,13 +272,6 @@ private:
 
         float ws_x, ws_y, ws_z;
 
-        this->declare_parameter<float>("world_size_x", 100.0);
-        this->declare_parameter<float>("world_size_y", 100.0);
-        this->declare_parameter<float>("world_size_z", 0.0);
-        this->declare_parameter<float>("resolution", 0.2);
-        this->declare_parameter<bool>("inflate_map", true);
-        this->declare_parameter<bool>("use3d", (bool)true);
-
         this->get_parameter("world_size_x", ws_x);
         this->get_parameter("world_size_y", ws_y);
         this->get_parameter("world_size_z", ws_z);
@@ -320,35 +328,27 @@ private:
 
         if(inflate_){
             double inflation_size;
-            this->declare_parameter<double>("inflation_size", 0.5);
             this->get_parameter("inflation_size", inflation_size);
             inflation_steps_ = std::round(inflation_size / resolution_);
             RCLCPP_INFO(this->get_logger(),"Inflation size %.2f, using inflation step %d", inflation_size, inflation_steps_);
         }
         algorithm_->setInflationConfig(inflate_, inflation_steps_);
 
-        m_grid3d_ = std::make_unique<Grid3d>(this); //TODO Costs not implement yet
 
         double cost_scaling_factor, robot_radius;
-        this->declare_parameter<double>("cost_scaling_factor", 0.8);
-        this->get_parameter("cost_scaling_factor", cost_scaling_factor);
 
-        this->declare_parameter<double>("robot_radius", 0.4);
+        this->get_parameter("cost_scaling_factor", cost_scaling_factor);
         this->get_parameter("robot_radius", robot_radius);
         
         m_grid3d_->setCostParams(cost_scaling_factor, robot_radius);
         
         std::string frame_id;
         // lnh_.param("frame_id", frame_id, std::string("map"));		
-        this->declare_parameter<std::string>("frame_id", std::string("map"));
         this->get_parameter("frame_id", frame_id);
 
         configMarkers(algorithm_name, frame_id, resolution_);
 
-        this->declare_parameter<bool>("save_data_file", (bool)true);
         this->get_parameter("save_data_file", save_data_);
-
-        this->declare_parameter<std::string>("data_folder", std::string("planing_data.txt"));
         this->get_parameter("data_folder", data_folder_);
 
         if(save_data_)
@@ -364,17 +364,12 @@ private:
         //Algorithm specific parameters. Its important to set line of sight after configuring world size(it depends on the resolution)
         float sight_dist, cost_weight;
                                                                              //
-        this->declare_parameter<float>("max_line_of_sight_distance", (float)1000.0);
         this->get_parameter("max_line_of_sight_distance", sight_dist);
-
-                                                                             
-        this->declare_parameter<float>("cost_weight", (float)0.0);
         this->get_parameter("cost_weight", cost_weight);
 
         algorithm_->setMaxLineOfSight(sight_dist);
         algorithm_->setCostFactor(cost_weight);
 
-        this->declare_parameter<bool>("overlay_markers", (bool)false);
         this->get_parameter("overlay_markers", overlay_markers_);
 
     }

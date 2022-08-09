@@ -4,14 +4,15 @@
 
 namespace Planners
 {
+  std::shared_ptr<rclcpp::Node> AStar::ros_node_ptr_ = nullptr;
 
-    AStar::AStar(bool _use_3d = true, std::string _name = "astar") : AlgorithmBase(_use_3d, _name),
-                                                                     rclcpp::Node(_name)
+    AStar::AStar(bool _use_3d = true, std::string _name = "astar") : AlgorithmBase(_use_3d, _name)
+                                                                     
     {
         configAlgorithm();
     }
 
-    AStar::AStar(bool _use_3d = true) : AlgorithmBase(_use_3d, "astar"), rclcpp::Node("astar")
+    AStar::AStar(bool _use_3d = true) : AlgorithmBase(_use_3d, "astar")
     {
         configAlgorithm();
     }
@@ -22,24 +23,27 @@ namespace Planners
         openSet_.reserve(50000);
         // If compiled with ros and visualization
 #ifdef ROS
-        explored_nodes_marker_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("explored_nodes", 1);
-        openset_marker_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("openset_nodes", 1);
-        closedset_marker_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("closed_set_nodes", 1);
-        best_node_marker_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("best_node_marker", 1);
-        aux_text_marker_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("aux_text_marker", 1);
-        occupancy_marker_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("occupancy_markers", 1);
+      if (ros_node_ptr_ == nullptr){
+        ros_node_ptr_ = std::make_shared<rclcpp::Node>("Algorithm_node");
+        explored_nodes_marker_pub_ = ros_node_ptr_->create_publisher<visualization_msgs::msg::Marker>("explored_nodes", 1);
+        openset_marker_pub_ = ros_node_ptr_->create_publisher<visualization_msgs::msg::Marker>("openset_nodes", 1);
+        closedset_marker_pub_ = ros_node_ptr_->create_publisher<visualization_msgs::msg::Marker>("closed_set_nodes", 1);
+        best_node_marker_pub_ = ros_node_ptr_->create_publisher<visualization_msgs::msg::Marker>("best_node_marker", 1);
+        aux_text_marker_pub_ = ros_node_ptr_->create_publisher<visualization_msgs::msg::Marker>("aux_text_marker", 1);
+        occupancy_marker_pub_ = ros_node_ptr_->create_publisher<sensor_msgs::msg::PointCloud2>("occupancy_markers", 1);
 
+        ros_node_ptr_->declare_parameter<std::string>("frame_id", "map");
+        ros_node_ptr_->declare_parameter<float>("resolution", 0.2);
+    }
         std::string frame_id;
-        this->declare_parameter<std::string>("frame_id", "map");
-        this->declare_parameter<float>("resolution", 0.2);
 
-        this->get_parameter("frame_id",frame_id);
-        this->get_parameter("resolution",resolution_);
+        ros_node_ptr_->get_parameter("frame_id",frame_id);
+        ros_node_ptr_->get_parameter("resolution",resolution_);
 
         occupancy_marker_.header.frame_id = frame_id; // "world";
 
         explored_node_marker_.header.frame_id = frame_id; //"world";
-        explored_node_marker_.header.stamp = this->now();
+        explored_node_marker_.header.stamp = ros_node_ptr_->now();
         explored_node_marker_.ns = "debug";
         explored_node_marker_.id = 66;
         explored_node_marker_.type = visualization_msgs::msg::Marker::CUBE_LIST;
@@ -76,7 +80,7 @@ namespace Planners
         aux_text_marker_.color.g = 0.0;
         aux_text_marker_.text = "";
         aux_text_marker_.scale.z = 3.0 * resolution_;
-        last_publish_tamp_ = this->now();
+        last_publish_tamp_ = ros_node_ptr_->now();
 #endif
     }
     void AStar::publishOccupationMarkersMap()
