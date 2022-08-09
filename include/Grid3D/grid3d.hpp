@@ -50,6 +50,7 @@ private:
 	// Ros parameters
 	// ros::NodeHandle m_nh;
 	bool m_publishPc;
+  
 	std::string m_mapPath, m_nodeName;
 	std::string m_globalFrameId;
 	float m_sensorDev, m_gridSlice;
@@ -318,16 +319,7 @@ protected:
 		}	
 		else
 			return false;
-		
-		/*
-		// Load octomap
-		octomap::AbstractOcTree *tree = octomap::AbstractOcTree::read(path);
-		if(!tree)
-			return false;*/
-		m_octomap = dynamic_cast<octomap::OcTree*>(tree);
-		std::cout << "Octomap loaded" << std::endl;
 
-		// Check loading and alloc momery for the grid
 		if(m_octomap == NULL)
 		{
 			std::cout << "Error: NULL octomap!!" << std::endl;
@@ -349,6 +341,7 @@ protected:
 		RCLCPP_INFO(node_ptr_->get_logger(),"\ty: %.2f to %.2f", minY, maxY);
 		RCLCPP_INFO(node_ptr_->get_logger(),"\tz: %.2f to %.2f", minZ, maxZ);
 		RCLCPP_INFO(node_ptr_->get_logger(),"\tRes: %.2f", m_resolution);
+
 		// ROS_INFO("Map size:\n");
 		// ROS_INFO("\tx: %.2f to %.2f", minX, maxX);
 		// ROS_INFO("\ty: %.2f to %.2f", minZ, maxZ);

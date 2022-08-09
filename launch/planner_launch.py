@@ -40,6 +40,7 @@ def generate_launch_description():
             namespace=LaunchConfiguration('namespace'),
             remappings=[ ('points','/grid3d/map_point_cloud') ],
             parameters=[{'map_path': LaunchConfiguration('map'),
+                        'algorithm_name': LaunchConfiguration('algorithm_name'),
                         'world_size_x': LaunchConfiguration('world_size_x'),
                         'world_size_y': LaunchConfiguration('world_size_y'),
                         'world_size_z': LaunchConfiguration('world_size_z'),
