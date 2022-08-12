@@ -1,43 +1,20 @@
+#include <rclcpp/rclcpp.hpp>
 #include <LocalPlanner.hpp>
 
 using namespace PathPlanners;
 
-// //ROS1
-// int main(int argc, char **argv)
-// {
-
-// 	string node_name = "local_planner_node";
-// 	ros::init(argc, argv, node_name);
-
-//     tf2_ros::Buffer tfBuffer;
-//     tf2_ros::TransformListener tfListener(tfBuffer);
-    
-//     LocalPlanner lcPlanner(&tfBuffer);
-//     dynamic_reconfigure::Server<theta_star_2d::LocalPlannerConfig> server;
-//   	dynamic_reconfigure::Server<theta_star_2d::LocalPlannerConfig>::CallbackType f;
-
-//   	f = boost::bind(&LocalPlanner::dynRecCb,&lcPlanner,  _1, _2);
-//   	server.setCallback(f);
-
-// 	ros::Rate loop_rate(30);
-//     while(ros::ok()){
-        
-//         ros::spinOnce();
-        
-//         lcPlanner.plan();
-        
-//         loop_rate.sleep();
-//     }
-//     return 0;
-// }
-// //ROS1
 
 int main(int argc, char **argv)
 {
-// 	string node_name = "local_planner_node";
-// 	ros::init(argc, argv, node_name);
     rclcpp::init(argc, argv);
 
+    auto node = std::make_shared<LocalPlanner>();
+
+    rclcpp::spin(node);
+    rclcpp::shutdown();
+    return 0;
+
+/*
 //     tf2_ros::Buffer tfBuffer;
 //     tf2_ros::TransformListener tfListener(tfBuffer);
     std::unique_ptr<tf2_ros::Buffer> tfBuffer_;
@@ -63,7 +40,7 @@ int main(int argc, char **argv)
         lcPlanner.plan();
         
         loop_rate.sleep();
-    }
+    } */
     return 0;
 }
 

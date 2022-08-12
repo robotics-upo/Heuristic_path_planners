@@ -8,9 +8,9 @@ José Antonio Cobano
 namespace PathPlanners
 { 
     
-LocalPlanner::LocalPlanner(tf2_ros::Buffer *tfBuffer_)
+LocalPlanner::LocalPlanner(): rclcpp::Node("local_planner")
 {
-    nh.reset(new ros::NodeHandle("~"));
+    // nh.reset(new ros::NodeHandle("~"));
     // nh->param("mode3d", use3d, (bool)false); //JAC: It is not needed.
 
     // JAC: Parameters from planner_ros_node. Decide these parameters. They are set in the launch file.
@@ -41,7 +41,8 @@ LocalPlanner::LocalPlanner(tf2_ros::Buffer *tfBuffer_)
     configureAlgorithm(algorithm_name, heuristic_);
     
     tf_list_ptr.reset(new tf::TransformListener(ros::Duration(5)));
-    tfBuffer = tfBuffer_;
+    // tfBuffer = tfBuffer_;
+    tfBuffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
 
     configTopics();
     // configTheta(); // JAC: This is configured in configureAlgorithm

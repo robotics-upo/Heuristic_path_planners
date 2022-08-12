@@ -26,13 +26,10 @@
 // #include "tf2_ros/buffer.h"
 // #include <tf2_ros/message_filter.h>
 
-// #include <std_msgs/Int32.h>
-#include <std_msgs/msg/int32.h>
-// #include <std_msgs/Bool.h>
-#include <std_msgs/msg/bool.h>
+#include <std_msgs/msg/int32.hpp>
+#include <std_msgs/msg/bool.hpp>
 
-// #include <std_srvs/Trigger.h>
-#include <std_srvs/srv/trigger.h>
+#include <std_srvs/srv/trigger.hpp>
 
 #include <geometry_msgs/msg/pose_stamped.hpp>
 
@@ -69,12 +66,14 @@
 
 #include <nav_msgs/msg/occupancy_grid.hpp>
 
-#include <heuristic_planners/srv/get_path.hpp>
 #include <heuristic_planners/srv/set_algorithm.hpp>
+#include <heuristic_planners/srv/get_path.hpp>
 
 // ROS1
 // #include <visualization_msgs/Marker.h>
-// #include <trajectory_msgs/MultiDOFJointTrajectory.h>
+#include <trajectory_msgs/msg/multi_dof_joint_trajectory.hpp>
+#include <trajectory_msgs/msg/multi_dof_joint_trajectory_point.hpp>
+
 
 // #include <dynamic_reconfigure/server.h>
 // #include <theta_star_2d/LocalPlannerConfig.h>
@@ -87,15 +86,18 @@
 // #include <upo_actions/Navigate3DAction.h>
 
 // #include <std_srvs/Empty.h>
-#include <std_srvs/srv/empty.h>
+#include <std_srvs/srv/empty.hpp>
+
 
 // #include <std_msgs/Float32.h>
 #include <std_msgs/msg/float32.h>
 #include <std_msgs/msg/string.h>
+#include <std_msgs/msg/u_int8.hpp>
 
 // #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/msg/point_cloud2.hpp>
 // #include <octomap_msgs/Octomap.h>
+#include "octomap_msgs/msg/octomap.hpp"
 #include <octomap/octomap.h>
 #include <octomap/OcTree.h>
 // #include <pcl_ros/point_cloud.hpp>
@@ -112,47 +114,31 @@ namespace PathPlanners
 class LocalPlanner : public rclcpp::Node {
 
 public:
-    LocalPlanner()
-      :rclcpp::Node("local_planner_ros")
-      {
-    typedef actionlib::SimpleActionServer<upo_actions::ExecutePathAction> ExecutePathServer;
-    typedef actionlib::SimpleActionClient<upo_actions::NavigateAction> NavigateClient;
-    typedef actionlib::SimpleActionClient<upo_actions::Navigate3DAction> Navigate3DClient;
+    LocalPlanner();
 
-    /*
-        Default constructor    
-    */
-    LocalPlanner(tf2_ros::Buffer *tfBuffer_);
-
-    ROS2
-    tfBuffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
-    LocalPlanner(std::make_unique<tf2_ros::Buffer> *tfBuffer_)
-    LocalPlanner(std::make_unique<tf2_ros::Buffer>(this->get_clock()));
-
-    /*
-    
-    */
     void plan();
 
-    Calbacks and publication functions
-    void localCostMapCb(const nav_msgs::OccupancyGrid::ConstPtr &lcp);
-    void localCostMapCb(const nav_msgs::msg::OccupancyGrid::SharePtr lcp);
-
+    //Calbacks and publication functions
+    void localCostMapCb(const nav_msgs::msg::OccupancyGrid::ConstRawPtr &lcp);
+    void localCostMapCb(const nav_msgs::msg::OccupancyGrid::SharedPtr lcp);
+    
     //Global Input trajectory
-    void globalTrjCb(const trajectory_msgs::MultiDOFJointTrajectory::ConstPtr &traj);
+    void globalTrjCb(const trajectory_msgs::msg::MultiDOFJointTrajectory::ConstRawPtr &traj);
 
     //Used to know when to stop calculating local trajectories
-    void goalReachedCb(const std_msgs::Bool::ConstPtr &data);
+    void goalReachedCb(const std_msgs::msg::Bool::ConstRawPtr &data);
 
-    void dynRecCb(theta_star_2d::LocalPlannerConfig &config, uint32_t level);
-    bool stopPlanningSrvCb(std_srvs::TriggerRequest &req, std_srvs::TriggerResponse &rep);
-    bool pausePlanningSrvCb(std_srvs::TriggerRequest &req, std_srvs::TriggerResponse &rep);
+    // void dynRecCb(theta_star_2d::LocalPlannerConfig &config, uint32_t level);
 
-    bool arrivedToGoalSrvCb(std_srvs::EmptyRequest &req, std_srvs::EmptyResponse &resp);
+    // TODO REVIEW THIS PART 
+    bool stopPlanningSrvCb(std_srvs::srv::Trigger::Request &req, std_srvs::srv::Trigger::Response &rep);
+    bool pausePlanningSrvCb(std_srvs::srv::Trigger::Request &req, std_srvs::srv::Trigger::Response &rep);
+
+    bool arrivedToGoalSrvCb(std_srvs::srv::Empty::Request &req, std_srvs::srv::Empty::Response &resp);
     void executePathGoalServerCB();
     void executePathPreemptCB();
-    void dist2GoalCb(const std_msgs::Float32ConstPtr &dist);
-      }
+    void dist2GoalCb(const std_msgs::msg::Float32::ConstRawPtr &dist);
+
 private:
     void resetFlags();
     void clearMarkers();
@@ -165,7 +151,7 @@ private:
 
     void publishExecutePathFeedback();
 
-    geometry_msgs::TransformStamped getTfMapToRobot();
+    geometry_msgs::msg::TransformStamped getTfMapToRobot();
 
     // void configParams2D(); //JAC: IT IS NOT NEEDED
     // void publishTrajMarker2D(); //JAC: IT IS NOT NEEDED
@@ -181,16 +167,16 @@ private:
     void calculatePath3D();
 
     //Auxiliar functions
-    void showTime(string message, struct timeb st, struct timeb ft);
-    bool pointInside(geometry_msgs::Vector3 p);
-    geometry_msgs::Point makePoint(const geometry_msgs::Vector3 &vec);
+    void showTime(std::string message, struct timeb st, struct timeb ft);
+    bool pointInside(geometry_msgs::msg::Vector3 p);
+    geometry_msgs::msg::Point makePoint(const geometry_msgs::msg::Vector3 &vec);
 
     //Add the occupied borders around received costmap
     void inflateCostMap();
     //Set to 0 the positions near the local goal in the border
     void freeLocalGoal();
     // void collisionMapCallBack(const octomap_msgs::OctomapConstPtr &msg); //JAC: IT IS NOT NEEDED
-    void pointsSub(const PointCloud::ConstPtr &points);
+    void pointsSub(const sensor_msgs::msg::PointCloud2::RawPtr &msg);
     void configMarkers(std::string ns, std::string frame);
 
     inline double euclideanDistance(double x0, double y0, double x, double y)
@@ -204,17 +190,15 @@ private:
     //Variables
     // ros::NodeHandlePtr nh;
     // ros::ServiceClient costmap_clean_srv;
-    rclcpp::ServiceClient clean_srv;
+    rclcpp::Service<std_srvs::srv::Trigger> costmap_clean_srv;
 
     // ros::Subscriber local_map_sub;
-    // rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr local_map_sub_;
-    rclcpp::Subscription local_map_sub_;
+    rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr local_map_sub_;
+    // rclcpp::Subscription local_map_sub_;
 
     // ros::Publisher visMarkersPublisher, trajPub, costmap_inflated_pub_;
-    // rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr visMarkersPublisher, trajPub, costmap_inflated_pub_;
-    rclcpp::Publisher visMarkersPublisher, trajPub, costmap_inflated_pub_;
-
-    std::unique_ptr<tf::TransformListener> tf_list;
+    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr visMarkersPublisher, trajPub, costmap_inflated_pub_;
+    // rclcpp::Publisher visMarkersPublisher, trajPub, costmap_inflated_pub_;
 
     //Flags publishers
 
@@ -245,37 +229,38 @@ private:
     bool debug;
     float seconds, milliseconds;
 
-    string robot_base_frame, world_frame,traj_dest_frame;
-    nav_msgs::OccupancyGrid localCostMap, localCostMapInflated;
-    trajectory_msgs::MultiDOFJointTrajectory globalTrajectory, localTrajectory;
+    std::string robot_base_frame, world_frame,traj_dest_frame;
+    nav_msgs::msg::OccupancyGrid localCostMap, localCostMapInflated;
+    trajectory_msgs::msg::MultiDOFJointTrajectory globalTrajectory, localTrajectory;
     //Markers
-    visualization_msgs::Marker lineMarker, waypointsMarker;
+    visualization_msgs::msg::Marker lineMarker, waypointsMarker;
 
-    geometry_msgs::Vector3 local_costmap_center, localGoal, robotPose;
-    ThetaStar2D theta2D;
+    geometry_msgs::msg::Vector3 local_costmap_center, localGoal, robotPose;
+    // ThetaStar2D theta2D;
     tf2_ros::Buffer *tfBuffer;
 
-    std_msgs::Bool is_running;
+    std_msgs::msg::Bool is_running;
 
     //action server stufff
-    std::unique_ptr<ExecutePathServer> execute_path_srv_ptr;
+    //MFC: CHECK ALL THIS ACTION STUFF
+    /* std::unique_ptr<ExecutePathServer> execute_path_srv_ptr;
 
     upo_actions::ExecutePathFeedback exec_path_fb;
-    std_msgs::Float32 planningRate;
-    std_msgs::UInt8 waypointGoingTo;
-    std_msgs::String planningStatus;
+    std_msgs::msg::Float32 planningRate;
+    std_msgs::msg::UInt8 waypointGoingTo;
+    std_msgs::msg::String planningStatus;
 
     upo_actions::ExecutePathResult action_result;
 
-    ros::Time start_time;
-    std_msgs::Float32 d2goal;
+    rclcpp::Time start_time;
+    std_msgs::msg::Float32 d2goal;
     //action client to navigate
     std::unique_ptr<NavigateClient> navigation_client_2d_ptr;
     upo_actions::NavigateGoal nav_goal;
 
     std::unique_ptr<Navigate3DClient> navigation3DClient;
     upo_actions::Navigate3DGoal goal3D;
-    std::unique_ptr<actionlib::SimpleClientGoalState> state;
+    std::unique_ptr<actionlib::SimpleClientGoalState> state; */
     
 
     //!
@@ -304,16 +289,17 @@ private:
     bool data_source;
 
     double arrivedThresh;
-    octomap_msgs::OctomapConstPtr map;
-    ThetaStar3D theta3D;
+    octomap_msgs::msg::Octomap::ConstRawPtr map_;
+    // FIXME :: WHAT IS THIS
+    // ThetaStar3D theta3D;
 
     bool use3d;
     bool mapReceived;
 
-    trajectory_msgs::MultiDOFJointTrajectoryPoint currentGoal;
-    std::vector<trajectory_msgs::MultiDOFJointTrajectoryPoint> goals_vector,goals_vector_bl_frame;
+    trajectory_msgs::msg::MultiDOFJointTrajectoryPoint currentGoal;
+    std::vector<trajectory_msgs::msg::MultiDOFJointTrajectoryPoint> goals_vector,goals_vector_bl_frame;
     int last;
-    std::unique_ptr<tf::TransformListener> tf_list_ptr;
+    // std::unique_ptr<tf2_ros::TransformListener> tf_list_ptr;
     double timeout;
 
     //ADDING DUE TO ROS2
