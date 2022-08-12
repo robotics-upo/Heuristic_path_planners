@@ -72,9 +72,8 @@ public:
         this->get_parameter("algorithm_name", algorithm_name);
         this->get_parameter("heuristic_name", heuristic_);
 
-        m_grid3d_ = std::make_unique<Grid3d>(this); //TODO Costs not implement yet
+        m_grid3d_ = std::make_unique<Grid3d>(this); //TODO Costs not implement yet 
         configureAlgorithm(algorithm_name, heuristic_);
-
 
         point_markers_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("path_points_markers", 1);
         line_markers_pub_  = this->create_publisher<visualization_msgs::msg::Marker>("path_line_markers", 1);

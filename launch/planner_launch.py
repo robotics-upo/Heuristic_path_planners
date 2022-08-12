@@ -19,7 +19,7 @@ def generate_launch_description():
         DeclareLaunchArgument('map_name', default_value='mbzirc_challenge3'),
         #DeclareLaunchArgument('map_name', default_value='$(find heuristic_planners)/resources/3dmaps/$(arg map_name).bt'),
         DeclareLaunchArgument('map', default_value=map_default),
-        DeclareLaunchArgument('algorithm_name', default_value='costlazythetastar'),
+        DeclareLaunchArgument('algorithm_name', default_value='astar'),
         DeclareLaunchArgument('world_size_x', default_value='60.0'),
         DeclareLaunchArgument('world_size_y', default_value='60.0'),
         DeclareLaunchArgument('world_size_z', default_value='20.0'),
@@ -29,7 +29,7 @@ def generate_launch_description():
         DeclareLaunchArgument('heuristic', default_value='euclidean'),
         DeclareLaunchArgument('save_data', default_value='false'),
         DeclareLaunchArgument('data_folder', default_value=EnvironmentVariable('HOME')),
-        DeclareLaunchArgument('overlay_markers', default_value='false'),
+        DeclareLaunchArgument('overlay_markers', default_value='true'),
         DeclareLaunchArgument('cost_weight', default_value='4.0'),
         DeclareLaunchArgument('max_line_of_sight_distance', default_value='2.0'),
         DeclareLaunchArgument('cost_scaling_factor', default_value='2.0'),
@@ -59,12 +59,12 @@ def generate_launch_description():
                         }],
             output='screen',
             emulate_tty=True
+        ),
+        Node(
+            package='rviz2',
+            namespace='',
+            executable='rviz2',
+            name='rviz2'
         )
-        #Node(
-        #    package='rviz2',
-        #    namespace='',
-        #    executable='rviz2',
-        #    name='rviz2'
-        #)
     ])
     
