@@ -12,6 +12,7 @@
   <depend>geometry_msgs</depend>
   <depend>visualization_msgs</depend>
   <depend>std_msgs</depend>
+  <depend>std_srvs</depend>
   <depend>nav_msgs</depend>
   <depend>pcl_ros</depend>
   <depend>pcl_conversions</depend>
@@ -24,6 +25,11 @@
   <depend>libssl-dev</depend>
   <depend>boost</depend>
   <depend>eigen</depend>
+  <depend>trajectory_msgs</depend>
+  <depend>tf2</depend>
+  <depend>tf2_ros</depend>
+  <depend>tf2_geometry_msgs</depend>
+
 
   <build_depend>rosidl_default_generators</build_depend>
   <build_depend>builtin_interfaces</build_depend>
