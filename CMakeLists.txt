@@ -184,11 +184,11 @@ rosidl_target_interfaces(planner_ros_node
       ${PROJECT_NAME} "rosidl_typesupport_cpp")
 target_link_libraries(planner_ros_node ${${PROJECT_NAME}_LIBRARIES} -lstdc++fs Eigen3::Eigen -lcrypto -lssl)
 
-add_executable(local_planner_node src/ROS/local_planner_node.cpp src/Planners/LocalPlanner.cpp include/Planners/LocalPlanner.hpp)
-ament_target_dependencies(local_planner_node ${PROJECT_DEPENDENCIES})
-rosidl_target_interfaces(local_planner_node
-      ${PROJECT_NAME} "rosidl_typesupport_cpp")
-target_link_libraries(local_planner_node ${${PROJECT_NAME}_LIBRARIES} -lstdc++fs Eigen3::Eigen -lcrypto -lssl)
+#add_executable(local_planner_node src/ROS/local_planner_node.cpp src/Planners/LocalPlanner.cpp include/Planners/LocalPlanner.hpp)
+#ament_target_dependencies(local_planner_node ${PROJECT_DEPENDENCIES})
+#rosidl_target_interfaces(local_planner_node
+#      ${PROJECT_NAME} "rosidl_typesupport_cpp")
+#target_link_libraries(local_planner_node ${${PROJECT_NAME}_LIBRARIES} -lstdc++fs Eigen3::Eigen -lcrypto -lssl)
 
 #rosidl_target_interfaces(local_planner_node
 #      ${PROJECT_NAME} "rosidl_typesupport_cpp")
@@ -196,7 +196,7 @@ target_link_libraries(local_planner_node ${${PROJECT_NAME}_LIBRARIES} -lstdc++fs
 
 install(TARGETS
   planner_ros_node
-  local_planner_node
+  #local_planner_node
   DESTINATION lib/${PROJECT_NAME})
 
 #############
