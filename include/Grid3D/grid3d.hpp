@@ -55,9 +55,11 @@ private:
 	int m_gridSize, m_gridSizeX, m_gridSizeY, m_gridSizeZ;
 	int m_gridStepY, m_gridStepZ;
 	
-	// 3D point clound representation of the map
-	pcl::PointCloud<pcl::PointXYZI>::Ptr m_cloud;
-	pcl::KdTreeFLANN<pcl::PointXYZI> m_kdtree;
+	// 3D point cloud representation of the map
+	// pcl::PointCloud<pcl::PointXYZI>::Ptr m_cloud;
+	pcl::PointCloud<pcl::PointXYZ>::Ptr m_cloud;
+	// pcl::KdTreeFLANN<pcl::PointXYZI> m_kdtree;
+	pcl::KdTreeFLANN<pcl::PointXYZ> m_kdtree;
 	
 	// Visualization of the map as pointcloud
 	sensor_msgs::PointCloud2 m_pcMsg;
@@ -74,13 +76,14 @@ private:
 	bool use_costmap_function;
 	
 public:
-	Grid3d(): m_cloud(new pcl::PointCloud<pcl::PointXYZI>)
+	// Grid3d(): m_cloud(new pcl::PointCloud<pcl::PointXYZI>)
+	Grid3d(): m_cloud(new pcl::PointCloud<pcl::PointXYZ>)
 	{
-		// Load paraeters
+		// Load parameters
 		double value;
 		ros::NodeHandle lnh("~");
 		lnh.param("name", m_nodeName, std::string("grid3d"));
-		if(!lnh.getParam("global_frame_id", m_globalFrameId))
+		if(!lnh.getParam("global_frame_id", m_globalFrameId)) // JAC: Local planner --> base_link or occupancy map?
 			m_globalFrameId = "map";	
 		if(!lnh.getParam("map_path", m_mapPath))
 			m_mapPath = "map.ot";
@@ -99,7 +102,7 @@ public:
 
 		lnh.param("cost_scaling_factor", cost_scaling_factor, 0.8); //0.8		
 		lnh.param("robot_radius", robot_radius, 0.4);		//0.4
-		lnh.param("use_costmap_function", use_costmap_function, (bool)true);		
+		lnh.param("use_costmap_function", use_costmap_function, (bool)true);	
 
 		// Load octomap 
 		m_octomap = NULL;
@@ -144,6 +147,13 @@ public:
 			}
 			percent_computed_pub_ = m_nh.advertise<std_msgs::Float32>(m_nodeName+"/percent_computed", 1, false);
 		}
+		// else
+		// {
+		// 	// JAC: Currently this is for the local planner
+		// 	// std::cout << "\tNO Octomap" << std::endl; // JAC
+		// 	computeLocalGrid(m_cloud);
+			
+		// }
 	}
 
 	~Grid3d(void)
@@ -167,14 +177,16 @@ public:
 			buildGridSliceMsg(m_gridSlice);
 		}
 	}
-	float computeCloudWeight(std::vector<pcl::PointXYZI> &points)
+	// float computeCloudWeight(std::vector<pcl::PointXYZI> &points)
+	float computeCloudWeight(std::vector<pcl::PointXYZ> &points)
 	{
 		float weight = 0.;
 		int n = 0;
 
 		for(long unsigned int i=0; i<points.size(); i++)
 		{
-			const pcl::PointXYZI& p = points[i];
+			// const pcl::PointXYZI& p = points[i];
+			const pcl::PointXYZ& p = points[i];
 			if(p.x >= 0.0 && p.y >= 0.0 && p.z >= 0.0 && p.x < m_maxX && p.y < m_maxY && p.z < m_maxZ)
 			{
 				int index = point2grid(p.x, p.y, p.z);
@@ -219,7 +231,8 @@ public:
 	
 	std::pair<Planners::utils::Vec3i, double>  getClosestObstacle(const Planners::utils::Vec3i& _coords){
 
-		pcl::PointXYZI searchPoint;
+		// pcl::PointXYZI searchPoint;
+		pcl::PointXYZ searchPoint;
 
 		searchPoint.x = _coords.x * m_resolution;
 		searchPoint.y = _coords.y * m_resolution;
@@ -266,7 +279,7 @@ protected:
 			delete m_octomap;
 		if(m_grid != NULL)
 			delete []m_grid;
-		
+
 		// Load octomap
 		octomap::AbstractOcTree *tree;
 		if(path.length() > 3 && (path.compare(path.length()-3, 3, ".bt") == 0))
@@ -306,14 +319,30 @@ protected:
 		m_octomap->getMetricMin(minX, minY, minZ);
 		m_octomap->getMetricMax(maxX, maxY, maxZ);
 		res = m_octomap->getResolution();
+
+		// maxX = 36.4;
+        // minX = -31.80;
+        // maxY = 26.60;
+        // minY = -21.60;
+        // maxZ = 20.0;
+        // minZ = -0.20;
+		// res = 0.2;
+		
 		m_maxX = (float)(maxX-minX);
 		m_maxY = (float)(maxY-minY);
 		m_maxZ = (float)(maxZ-minZ);
 		m_resolution = (float)res;
 		m_oneDivRes = 1.0/m_resolution;
+
+		// JAC: Delete
+		// std::cout << "oneDivRes: " << m_oneDivRes  << std::endl;
+		// std::cout << "maxX: " << m_maxX  << std::endl;
+		// std::cout << "maxY: " << m_maxY  << std::endl;
+		// std::cout << "maxZ: " << m_maxZ  << std::endl;
+
 		ROS_INFO("Map size:\n");
 		ROS_INFO("\tx: %.2f to %.2f", minX, maxX);
-		ROS_INFO("\ty: %.2f to %.2f", minZ, maxZ);
+		ROS_INFO("\ty: %.2f to %.2f", minY, maxY);
 		ROS_INFO("\tz: %.2f to %.2f", minZ, maxZ);
 		ROS_INFO("\tRes: %.2f" , m_resolution );
 		
@@ -485,7 +514,8 @@ protected:
 		float dist;
 		float gaussConst1 = 1./(m_sensorDev*sqrt(2*M_PI));
 		float gaussConst2 = 1./(2*m_sensorDev*m_sensorDev);
-		pcl::PointXYZI searchPoint;
+		// pcl::PointXYZI searchPoint;
+		pcl::PointXYZ searchPoint;
 		std::vector<int> pointIdxNKNSearch(1);
 		std::vector<float> pointNKNSquaredDistance(1);
 		double count=0;

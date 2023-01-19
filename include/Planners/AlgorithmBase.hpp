@@ -73,13 +73,29 @@ namespace Planners
         AlgorithmBase(bool _use_3d, const std::string &_algorithm_name);
 
         /**
-         * @brief Set the World Size object. This method call the resizeWorld method 
+         * @brief Set the World Size object. This method call the  method 
          * from the internal discrete world object
          * 
          * @param worldSize_ Discrete world size vector in units of resolution.
          * @param _resolution resolution to save inside the world object
          */
         void setWorldSize(const Vec3i &worldSize_,const double _resolution);
+        
+        /**
+         * @brief Set the Local World Size object. This method call the  method 
+         * from the internal discrete world object
+         * JAC
+         * @param worldSize_ Discrete local world size vector in units of resolution.
+         * @param _resolution resolution to save inside the world object
+         */
+        void setLocalWorldSize(const Vec3i &_worldSize,const double _resolution);
+
+        /**
+         * @brief Clean the World Size object. This method call the method 
+         * from the internal discrete world object
+         * JAC
+         */
+        void cleanLocalWorld();
 
         /**
          * @brief Get the World Size, it simply call the getWorldSize method from the
@@ -183,6 +199,8 @@ namespace Planners
          */
         virtual void publishOccupationMarkersMap() = 0;
 
+        virtual void publishLocalOccupationMarkersMap() = 0;
+
     protected:
 
         /**
@@ -216,6 +234,7 @@ namespace Planners
         CoordinateList direction; /*!< TODO Comment */
 
         utils::DiscreteWorld discrete_world_; /*!< TODO Comment */
+        // utils::DiscreteWorld discrete_local_world_; /*!< TODO Comment */
         unsigned int inflate_steps_{1}; /*!< TODO Comment */
         bool do_inflate_{true}; /*!< TODO Comment */
 

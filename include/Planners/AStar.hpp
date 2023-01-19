@@ -73,12 +73,19 @@ namespace Planners{
         PathData findPath(const Vec3i &_source, const Vec3i &_target) override;
         
         /**
-         * @brief Published occupation markers map to visualize the loaded map in RVIZ
+         * @brief Published occupation marker map to visualize the loaded map in RVIZ
          * if the package is compiled without the ROS definition in the CMakeLists, this function will
          * be empty. It can help the user to verify if the inflation parameters produced the desired result.
          */
         void publishOccupationMarkersMap() override;
         
+        /**
+         * @brief Published occupation marker map to visualize the loaded LOCAL map in RVIZ
+         * if the package is compiled without the ROS definition in the CMakeLists, this function will
+         * be empty. It can help the user to verify if the inflation parameters produced the desired result.
+         */
+        void publishLocalOccupationMarkersMap() override;
+
         /**
          * @brief For this function to be compiled you should
          * enable in CMakeLists all the ROS Related options (ROS and PUB_EXPLORED_NODES macros)
@@ -169,7 +176,7 @@ namespace Planners{
         
 #ifdef ROS
         ros::NodeHandle lnh_{"~"}; /*!< TODO Comment */
-        ros::Publisher explored_nodes_marker_pub_, occupancy_marker_pub_,  /*!< TODO Comment */
+        ros::Publisher explored_nodes_marker_pub_, occupancy_marker_pub_, local_occupancy_marker_pub_,  /*!< TODO Comment */
                        openset_marker_pub_, closedset_marker_pub_, /*!< TODO Comment */
                        best_node_marker_pub_, aux_text_marker_pub_; /*!< TODO Comment */
         visualization_msgs::Marker explored_node_marker_, openset_markers_,  /*!< TODO Comment */
@@ -177,7 +184,7 @@ namespace Planners{
         ros::Duration duration_pub_{0.001}; /*!< TODO Comment */
         ros::Time last_publish_tamp_; /*!< TODO Comment */
         float resolution_; /*!< TODO Comment */
-    	pcl::PointCloud<pcl::PointXYZ>  occupancy_marker_;  /*!< TODO Comment */
+    	pcl::PointCloud<pcl::PointXYZ>  occupancy_marker_, local_occupancy_marker_;  /*!< TODO Comment */
 
 #endif
     };

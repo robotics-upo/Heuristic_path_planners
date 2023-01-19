@@ -30,9 +30,10 @@
 #include <heuristic_planners/GetPath.h>
 #include <heuristic_planners/SetAlgorithm.h>
 
+
 /**
  * @brief Demo Class that demonstrate how to use the algorithms classes and utils 
- * with ROS 
+ * with ROS _points
  * 
  */
 class HeuristicPlannerROS
@@ -48,8 +49,8 @@ public:
         
         configureAlgorithm(algorithm_name, heuristic_);
 
-        pointcloud_sub_     = lnh_.subscribe<pcl::PointCloud<pcl::PointXYZ>>("/points", 1, &HeuristicPlannerROS::pointCloudCallback, this);
-        occupancy_grid_sub_ = lnh_.subscribe<nav_msgs::OccupancyGrid>("/grid", 1, &HeuristicPlannerROS::occupancyGridCallback, this);
+        pointcloud_sub_       = lnh_.subscribe<pcl::PointCloud<pcl::PointXYZ>>("/points", 1, &HeuristicPlannerROS::pointCloudCallback, this);
+        occupancy_grid_sub_   = lnh_.subscribe<nav_msgs::OccupancyGrid>("/grid", 1, &HeuristicPlannerROS::occupancyGridCallback, this);
 
         request_path_server_   = lnh_.advertiseService("request_path",  &HeuristicPlannerROS::requestPathService, this);
         change_planner_server_ = lnh_.advertiseService("set_algorithm", &HeuristicPlannerROS::setAlgorithm, this);
@@ -307,13 +308,17 @@ private:
         if(save_data_)
             ROS_INFO_STREAM("Saving path planning data results to " << data_folder_);
 
-        //
+        // JAC: Aqui no entra porque input_map_ es 0. El configureWorldFromPointCloud se configura en el callback pointCloudCallback donde se da el valor input_map_ =2
         if( input_map_ == 1 ){
             Planners::utils::configureWorldFromOccupancyWithCosts(occupancy_grid_, *algorithm_);
+            ROS_INFO("INPUT_MAP 1");
         }else if( input_map_ == 2 ){
+            ROS_INFO("INPUT_MAP 2");
             Planners::utils::configureWorldFromPointCloud(boost::make_shared<pcl::PointCloud<pcl::PointXYZ>>(cloud_), *algorithm_, resolution_);
             Planners::utils::configureWorldCosts(*m_grid3d_, *algorithm_);
         }
+        // ROS_INFO("INPUT_MAP= %d", input_map_);
+
         //Algorithm specific parameters. Its important to set line of sight after configuring world size(it depends on the resolution)
         float sight_dist, cost_weight;
         lnh_.param("max_line_of_sight_distance", sight_dist, (float)1000.0); // In meters
@@ -431,7 +436,7 @@ private:
 
     ros::NodeHandle lnh_{"~"};
     ros::ServiceServer request_path_server_, change_planner_server_;
-    ros::Subscriber pointcloud_sub_, occupancy_grid_sub_;
+    ros::Subscriber pointcloud_sub_, occupancy_grid_sub_, local_pointcloud_sub_;
     //TODO Fix point markers
     ros::Publisher line_markers_pub_, point_markers_pub_;
 

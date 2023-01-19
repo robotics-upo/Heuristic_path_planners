@@ -22,11 +22,19 @@ void AStar::configAlgorithm(){
     best_node_marker_pub_      = lnh_.advertise<visualization_msgs::Marker>("best_node_marker", 1);
     aux_text_marker_pub_       = lnh_.advertise<visualization_msgs::Marker>("aux_text_marker",  1);
 	occupancy_marker_pub_ = lnh_.advertise<pcl::PointCloud<pcl::PointXYZ>>("occupancy_markers", 1, true);
+    local_occupancy_marker_pub_ = lnh_.advertise<pcl::PointCloud<pcl::PointXYZ>>("local_occupancy_markers", 1, true); //JAC
 
     std::string frame_id;
     lnh_.param("frame_id", frame_id, std::string("map"));	
     lnh_.param("resolution", resolution_, (float)0.2);
 	occupancy_marker_.header.frame_id = frame_id; // "world";
+
+    //JAC
+    std::string frame_id_local;
+    // lnh_.param("frame_id_local", frame_id_local, std::string("base_link"));	
+    lnh_.param("frame_id_local", frame_id_local, std::string("occupancy_map"));	
+    lnh_.param("resolution", resolution_, (float)0.2);
+	local_occupancy_marker_.header.frame_id = frame_id_local; // "base_link";
 
     explored_node_marker_.header.frame_id = frame_id; //"world";
 	explored_node_marker_.header.stamp = ros::Time();
@@ -73,7 +81,7 @@ void AStar::configAlgorithm(){
 void AStar::publishOccupationMarkersMap()
 {
 #ifdef ROS
-	occupancy_marker_.clear();
+	occupancy_marker_.clear();    
     for(const auto &it: discrete_world_.getElements()){
         if(!it.occuppied) continue;
         pcl::PointXYZ point;
@@ -83,8 +91,24 @@ void AStar::publishOccupationMarkersMap()
 		point.z = it.coordinates.z * resolution_;
 		occupancy_marker_.push_back(point);
     }
-
 	occupancy_marker_pub_.publish(occupancy_marker_);
+#endif
+}
+
+void AStar::publishLocalOccupationMarkersMap()
+{
+#ifdef ROS
+	local_occupancy_marker_.clear();    
+    for(const auto &it: discrete_world_.getElements()){
+        if(!it.occuppied) continue;
+        pcl::PointXYZ point;
+
+		point.x = it.coordinates.x * resolution_;
+		point.y = it.coordinates.y * resolution_;
+		point.z = it.coordinates.z * resolution_;
+		local_occupancy_marker_.push_back(point);
+    }
+	local_occupancy_marker_pub_.publish(local_occupancy_marker_);
 #endif
 }
 
