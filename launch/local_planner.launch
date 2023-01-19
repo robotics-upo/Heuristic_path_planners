@@ -1,0 +1,84 @@
+<launch>
+    <!-- use_sim_time=true makes that PointCloud map is not shown in Rviz -->
+    <!-- use_sim_time=true should be true to use the bag correctly -->
+    <param name="use_sim_time" value="true"/>  
+    <!-- Map name is the filename wihtouth the .bt extensionof the 3D Map -->
+    <!-- <arg name="map_name"            default="mbzirc_challenge3"/> -->
+    <!-- <arg name="map_name"            default="wall"/> -->
+    <!-- <arg name="map_name"            default="laberynth"/> -->
+    <!-- <arg name="map"                 default="$(find heuristic_planners)/resources/3dmaps/$(arg map_name).bt"/> -->
+
+    <arg name="algorithm_name"      default="costlazythetastar"/>
+
+    <!-- Size of the Local Map  -->
+    <arg name="local_world_size_x"        default="5"/>
+    <arg name="local_world_size_y"        default="5"/>
+    <arg name="local_world_size_z"        default="2"/>
+    <arg name="resolution"          default="0.05"/>
+
+    <arg name="inflate_map"         default="true"/>
+    <arg name="inflation_size"      default="$(arg resolution)"/>
+    <!-- Possibles values are: euclidean, euclidean_optimized, manhattan, octogonal and dijkstra -->
+    <arg name="heuristic"         default="euclidean"/>
+
+    <arg name="save_data"           default="false"/>
+    <!-- This should be a folder -->
+    <arg name="data_folder"         default="$(env HOME)"/>
+
+    <arg name="overlay_markers"     default="false"/>
+    
+    <arg name="cost_weight" default="4.0"/>
+    <arg name="max_line_of_sight_distance" default="2.0"/>
+
+    <!-- GRIDM Generators Parameters -->
+    <arg name="cost_scaling_factor" default="2.0"/>  
+    <arg name="robot_radius"        default="0.4"/> 
+
+    <!-- Frames -->
+    <!-- <include file="$(find heuristic_planners)/launch/frames.launch" /> -->
+    
+    <arg name="base_frame_id" default="base_link"/>
+    <arg name="odom_frame_id" default="odom"/>
+    <arg name="global_frame_id" default="map"/>
+    
+    <arg name="output" default="screen"/>
+    <node pkg="heuristic_planners" type="local_planner_ros_node" name="local_planner_ros_node" output="$(arg output)">
+        <remap from="points" to="/velodyne_points"/>
+        <!-- <param name="in_cloud" value="/os1_cloud_node/points_non_dense" /> -->
+        <param name="base_frame_id" value="$(arg base_frame_id)" />
+        <param name="odom_frame_id" value="$(arg odom_frame_id)" />
+        <param name="global_frame_id" value="$(arg global_frame_id)" />
+        <!-- Comment map_path in local_planner? -->
+        <!-- <param name="map_path"              value="$(arg map)"/> -->
+        <param name="local_world_size_x"          value="$(arg local_world_size_x)"/>
+        <param name="local_world_size_y"          value="$(arg local_world_size_y)"/>
+        <param name="local_world_size_z"          value="$(arg local_world_size_z)"/>
+        <param name="resolution"            value="$(arg resolution)"/>
+        <param name="inflate_map"           value="$(arg inflate_map)"/>
+        <param name="inflation_size"        value="$(arg inflation_size)"/>
+        
+        <param name="save_data_file"        value="$(arg save_data)"/>
+        <param name="overlay_markers"       value="$(arg overlay_markers)"/>
+        <param name="data_folder"           value="$(arg data_folder)"/>
+        <param name="algorithm"             value="$(arg algorithm_name)"/>
+        <param name="cost_weight"           value="$(arg cost_weight)"/>
+        <param name="max_line_of_sight_distance"   value="$(arg max_line_of_sight_distance)"/>
+        <param name="heuristic"             value="$(arg heuristic)"/>
+
+        <param name="cost_scaling_factor"   value="$(arg cost_scaling_factor)"/>
+        <param name="robot_radius"          value="$(arg robot_radius)"/>
+    </node>
+
+    <!-- x y z yaw pitch roll frame_id child_frame_id period_in_ms -->
+    <node pkg="tf" type="static_transform_publisher" name="world_broadcaster" args="0 0 0 0 0 0 map world 100" />
+    <!-- occupancy_map is to show the occupancy markers in Rviz  -->
+    <!-- TODO: I have to put the arguments world_size_x world_size_y world_size_z -->
+    <!-- <node pkg="tf" type="static_transform_publisher" name="occupancy_world_broadcaster" args="5 5 2 0 0 0 occupancy_map base_link 100" /> -->
+    <node pkg="tf" type="static_transform_publisher" name="occupancy_world_broadcaster" args="$(arg local_world_size_x) $(arg local_world_size_y) $(arg local_world_size_z) 0 0 0 occupancy_map base_link 100" />
+
+    <node pkg="rviz" name="rviz" type="rviz" args="-d $(find heuristic_planners)/rviz/local_planner.rviz"/>
+
+    <!-- <node pkg="rqt_service_caller" type="rqt_service_caller" name="rqt_service_caller"/> -->
+
+
+</launch>

@@ -1,0 +1,39 @@
+<launch>
+
+  <arg name="pi" value="3.141592654"/>
+  <arg name="pi/2" value="1.5707963267948966"/>
+  <arg name="pi/4" value="0.785"/>
+  <arg name="3pi/4" value="2.355"/>
+  
+  <node pkg="tf2_ros" type="static_transform_publisher" name="os1_sensor_broadcaster" args="0.1 0 0.40 0 0 0 base_link os1_sensor"/>
+  <node pkg="tf2_ros" type="static_transform_publisher" name="raposa_marker_broadcaster" args="0 0 0.2 0 0 0 base_link raposa_marker"/>
+  <node pkg="tf2_ros" type="static_transform_publisher" name="front_cam_broadcaster" args="0.12 -0.05 -0.05 0.1 0 0 os1_sensor front_cam_link"/>
+  <node pkg="tf2_ros" type="static_transform_publisher" name="rear_cam_broadcaster" args="-0.12 0.05 -0.05 $(arg pi) 0 0  os1_sensor rear_cam_link"/>
+  <node pkg="tf2_ros" type="static_transform_publisher" name="front_cam_optical_broadcaster" args="0 0 0 -$(arg pi/2) 0 -$(arg pi/2) front_cam_link usb_cam_front"/>
+  <node pkg="tf2_ros" type="static_transform_publisher" name="rear_cam_optical_broadcaster" args="0 0 0 -$(arg pi/2) 0 -$(arg pi/2) rear_cam_link usb_cam_back"/>
+  <node pkg="tf2_ros" type="static_transform_publisher" name="thermal_cam_broadcaster" args="0.1 -0.1 -0.18 4.71 0 4.71 os1_sensor thermal_cam_link"/>
+
+  <node pkg="tf2_ros" type="static_transform_publisher" name="front_pico_cam_broadcaster" args="0.1 0.05 -0.05 -1.57 0.05 -1.62 os1_sensor front_pico_flexx_optical_frame"/>
+  <node pkg="tf2_ros" type="static_transform_publisher" name="left_pico_cam_broadcaster" args="0 0.1 0.0 3.14 0.1 1.9 os1_sensor left_pico_flexx_optical_frame"/> 
+  <node pkg="tf2_ros" type="static_transform_publisher" name="right_pico_cam_broadcaster" args="0 -0.1 -0.01 3.14 3.14 -1.2 os1_sensor right_pico_flexx_optical_frame"/>
+  <node pkg="tf2_ros" type="static_transform_publisher" name="back_pico_cam_broadcaster" args="-0.1 -0.05 -0.06 1.57 0.02 -1.57  os1_sensor back_pico_flexx_optical_frame"/>
+  <node pkg="tf2_ros" type="static_transform_publisher" name="back_astra_cam_broadcaster" args="-0.1 -0.05 -0.03 3.14 0 0  os1_sensor back_astra_link"/>
+  <node name="tf_lidar_imu" pkg="tf" type="static_transform_publisher" args="0.006253 -0.011775 0.007645 0.0 0.0 0.0 1.0 os1_sensor os1_imu 10"/>
+  <node name="tf_lidar" pkg="tf" type="static_transform_publisher" args="0 0.0 0.03618 3.14 0.0 0.0 os1_sensor os1_lidar 10"/>
+
+  <node name="tf_radar_front" pkg="tf" type="static_transform_publisher" args="0.09 0.04 -0.08 0 0 0 os1_sensor ti_mmwave_pcl_front_radar 10"/>
+  <node pkg="tf" type="static_transform_publisher" name="inner_front_radar_tf" args="0 0 0 0 0 0 ti_mmwave_pcl_front_radar ti_mmwave_front_radar 30"/>
+
+  <node name="tf_radar_rear" pkg="tf" type="static_transform_publisher" args="-0.33 0.05 -0.2 $(arg pi) 0 0 os1_sensor ti_mmwave_pcl_rear_radar 10"/>
+  <node pkg="tf" type="static_transform_publisher" name="inner_rear_radar_tf" args="0 0 0 0 0 0 ti_mmwave_pcl_rear_radar ti_mmwave_rear_radar 30"/>
+
+  <node name="tf_radar_right" pkg="tf" type="static_transform_publisher" args="0 -0.05 -0.05 -$(arg pi/2) 0 0 os1_sensor ti_mmwave_pcl_right_radar 10"/>
+  <node pkg="tf" type="static_transform_publisher" name="inner_right_radar_tf" args="0 0 0 0 0 0 ti_mmwave_pcl_right_radar ti_mmwave_right_radar 30"/>
+
+  <node name="tf_radar_left" pkg="tf" type="static_transform_publisher" args="0 0.05 -0.05 $(arg pi/2) 0 0 os1_sensor ti_mmwave_pcl_left_radar 10"/>
+  <node pkg="tf" type="static_transform_publisher" name="inner_left_radar_tf" args="0 0 0 0 0 0 ti_mmwave_pcl_left_radar ti_mmwave_left_radar 30"/>
+
+
+   <node pkg="tf2_ros" type="static_transform_publisher" name="mcl3d_frame_offset" args="-3.25 -12.5 0 0 0 0 map map_mcl3d"/> 
+</launch>
+
