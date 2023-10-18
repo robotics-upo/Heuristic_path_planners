@@ -13,6 +13,8 @@
 #include <octomap/OcTree.h>
 #include <nav_msgs/OccupancyGrid.h>
 #include <std_msgs/Float32.h>
+#include <std_msgs/Int32MultiArray.h>
+#include <IfcGrid/GetSemanticGrid.h>
 #include <stdio.h> 
 // PCL
 #include <pcl/point_cloud.h>
@@ -63,7 +65,12 @@ private:
 	sensor_msgs::PointCloud2 m_pcMsg;
 	ros::Publisher m_pcPub, percent_computed_pub_;
 	ros::Timer mapTimer;
+
+	// Semantic Grid
 			
+	std_msgs::Int32MultiArray semantic_grid;
+	std::vector<int> semanticGrid;
+
 	// Visualization of a grid slice as 2D grid map msg
 	nav_msgs::OccupancyGrid m_gridSliceMsg;
 	ros::Publisher m_gridSlicePub;
@@ -105,6 +112,9 @@ public:
 		m_octomap = NULL;
 		m_grid = NULL;
 
+		if(loadSemanticGrid()){
+			std::cout<< "Grid Loaded";
+		}
 		if(loadOctomap(m_mapPath))
 		{
 			// Compute the point-cloud associated to the ocotmap
@@ -245,6 +255,39 @@ public:
 	}
 
 protected:
+
+bool loadSemanticGrid() {
+    ros::NodeHandle n;
+
+    // Define a ROS service client
+    ros::ServiceClient client = n.serviceClient<IfcGrid::GetSemanticGrid>("get_semantic_grid");
+
+    IfcGrid::GetSemanticGrid srv;
+
+    // Wait for the service to become available
+    if (!client.waitForExistence(ros::Duration(40.0))) {
+        ROS_ERROR("Service get_semantic_grid unavailable");
+        return false;
+    }
+
+    // Call the service
+    if (client.call(srv)) {
+        // Process the response
+        // The shape and semantic grid are available in srv.response.shape and srv.response.semantic_grid
+        std::vector<short int> shape = srv.response.shape;
+        std::vector<int> int_shape(shape.begin(), shape.end());
+
+        semanticGrid = srv.response.semantic_grid;
+
+        return !semanticGrid.empty();
+    } else {
+        ROS_ERROR("Failed to call service get_semantic_grid");
+        return false;
+    }
+}
+
+
+
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
