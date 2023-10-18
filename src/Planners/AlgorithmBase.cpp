@@ -49,6 +49,10 @@ namespace Planners
 
         return discrete_world_.setNodeCost(coordinates_, _cost);
     }
+    bool AlgorithmBase::configureCellSemantic(const Vec3i &coordinates_, const int &_cost){
+
+        return discrete_world_.setNodeCost(coordinates_, _cost);
+    }
     void AlgorithmBase::addCollision(const Vec3i &coordinates_, bool do_inflate, unsigned int steps)
     {
         if (do_inflate)
