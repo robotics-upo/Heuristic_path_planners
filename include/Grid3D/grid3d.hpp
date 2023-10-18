@@ -226,6 +226,16 @@ public:
 		
 		return m_grid[index].prob;
 	}
+
+	float getCellSemantic(const float &_x, const float &_y, const float &_z){
+		
+		if( !isIntoMap(_x, _y, _z) )
+			return 0;
+
+		int index = point2grid(_x, _y, _z);
+		
+		return semanticGrid[index];
+	}
 	
 	std::pair<Planners::utils::Vec3i, double>  getClosestObstacle(const Planners::utils::Vec3i& _coords){
 
