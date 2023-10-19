@@ -113,15 +113,6 @@ namespace utils
 
         return true;
         }
-
-        bool setNodeSemantic(const Vec3i &_vec, const int _cost){
-
-            if(!checkValid(_vec))
-                return false;
-            
-            discrete_world_vector_[getWorldIndex(_vec)].cost = _cost;
-
-        return true;
         /**
          * @brief Set to its default state the flags, cost values, and parent values inside 
          * each world's node

@@ -110,31 +110,7 @@ namespace Planners
             auto world_size = _algorithm.getWorldSize();
             auto resolution = _algorithm.getWorldResolution();
 
-            for (int i = 0; i < world_size.x; i++)                                                                                                                                                         
-            {
-                for (int j = 0; j < world_size.y; j++)
-                {
-                    for (int k = 0; k < world_size.z; k++)
-                    {
-                        //JAC: Precision
-                        // auto cost = _grid.getCellCost(i * resolution, j * resolution, k * resolution);
-                        float cost = _grid.getCellSemantic(i * resolution, j * resolution, k * resolution);
-                        // std::cout << "Cost: " << cost << std::endl;   
-                        _algorithm.configureCellCost({i, j, k}, cost);
-                    }
-                }
-            }
-
-            return true;
-        }
-
-        bool configureWorldSemantic(Grid3d &_grid, AlgorithmBase &_algorithm, std::vector<int> &_semanticGrid)
-        {
-
-            auto world_size = _algorithm.getWorldSize();
-            auto resolution = _algorithm.getWorldResolution();
-
-            for (int i = 0; i < world_size.x; i++)                                                                                                                                                         
+            for (int i = 0; i < world_size.x; i++)
             {
                 for (int j = 0; j < world_size.y; j++)
                 {
@@ -151,7 +127,6 @@ namespace Planners
 
             return true;
         }
-
 
     } //ns utils
 } //ns planners

@@ -135,7 +135,7 @@ namespace Planners
          * @return false 
          */
         bool configureCellCost(const Vec3i &coordinates_, const double &_cost);
-        bool configureCellSemantic(const Vec3i &coordinates_, const int &_cost);
+
         /**
          * @brief Check if a set of discrete coordinates are marked as occupied
          * 
