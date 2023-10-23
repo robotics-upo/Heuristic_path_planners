@@ -234,7 +234,7 @@ public:
 
 		int index = point2grid(_x, _y, _z);
 		
-		return semanticGrid[index];
+		return m_grid[index].semantic;
 	}
 	
 	std::pair<Planners::utils::Vec3i, double>  getClosestObstacle(const Planners::utils::Vec3i& _coords){
@@ -573,6 +573,8 @@ bool loadSemanticGrid() {
 							// ROS_INFO("[%f, %f, %f] Dist: %f Probability: %f", searchPoint.x, searchPoint.y, searchPoint.z, dist, prob);
 							//JAC: Include the computation of prob considering the distance to the nearest voronoi edge.
 							m_grid[index].prob = prob;
+
+							//En sí esto no va aquí, pero no entiendo muy bien donde meterlo
 							m_grid[index].semantic = semanticGrid[index];
 						}
 					}
