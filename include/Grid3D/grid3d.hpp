@@ -573,6 +573,7 @@ bool loadSemanticGrid() {
 							// ROS_INFO("[%f, %f, %f] Dist: %f Probability: %f", searchPoint.x, searchPoint.y, searchPoint.z, dist, prob);
 							//JAC: Include the computation of prob considering the distance to the nearest voronoi edge.
 							m_grid[index].prob = prob;
+							m_grid[index].semantic = semanticGrid[index];
 						}
 					}
 					else
