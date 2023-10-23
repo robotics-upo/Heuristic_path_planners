@@ -60,6 +60,7 @@ namespace Planners
 	    {
 	    	float dist{0};
 	    	float prob{0};
+            int semantic{0};
 	    };
         /**
          * @brief 

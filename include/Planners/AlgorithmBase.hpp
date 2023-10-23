@@ -80,7 +80,6 @@ namespace Planners
          * @param _resolution resolution to save inside the world object
          */
         void setWorldSize(const Vec3i &worldSize_,const double _resolution);
-
         /**
          * @brief Get the World Size, it simply call the getWorldSize method from the
          * discrete world internal object
