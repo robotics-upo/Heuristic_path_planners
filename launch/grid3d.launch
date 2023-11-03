@@ -1,5 +1,5 @@
 <launch>
-    <node name="semantic_grid" pkg="IfcGrid" type="grid3d_class.py">
+    <node name="semantic_grid" pkg="heuristic_planners" type="grid3d_class.py">
         <param name="world_size_x" value="220" />
         <param name="world_size_y" value="220" />
         <param name="world_size_z" value="20" />
