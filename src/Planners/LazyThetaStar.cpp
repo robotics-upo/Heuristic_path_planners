@@ -90,6 +90,8 @@ namespace Planners
 #endif
 
             exploreNeighbours(current, _target, indexByWorldPosition);
+            // EXPLORING NEIGHBOURS CONSIDERING THE EDF GRADIENT
+            // exploreNeighbours_Gradient(current, _target, indexByWorldPosition);
 
         }
         main_timer.toc();

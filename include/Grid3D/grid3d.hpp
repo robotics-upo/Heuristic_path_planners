@@ -313,7 +313,7 @@ protected:
 		m_oneDivRes = 1.0/m_resolution;
 		ROS_INFO("Map size:\n");
 		ROS_INFO("\tx: %.2f to %.2f", minX, maxX);
-		ROS_INFO("\ty: %.2f to %.2f", minZ, maxZ);
+		ROS_INFO("\ty: %.2f to %.2f", minY, maxY);
 		ROS_INFO("\tz: %.2f to %.2f", minZ, maxZ);
 		ROS_INFO("\tRes: %.2f" , m_resolution );
 		
@@ -437,13 +437,15 @@ protected:
 		// Get map parameters
 		double minX, minY, minZ;
 		m_octomap->getMetricMin(minX, minY, minZ);
-		
+				
 		// Load the octomap in PCL for easy nearest neighborhood computation
 		// The point-cloud is shifted to have (0,0,0) as min values
 		int i = 0;
 		m_cloud->width = m_octomap->size();
+		// std::cout << "dim1: " << m_cloud->width << std::endl;
 		m_cloud->height = 1;
 		m_cloud->points.resize(static_cast<long>(m_cloud->width) * m_cloud->height);
+		std::cout << "dim1: " << m_cloud->width << std::endl;
 		for(octomap::OcTree::leaf_iterator it = m_octomap->begin_leafs(), end = m_octomap->end_leafs(); it != end; ++it)
 		{
 			if(it != NULL && m_octomap->isNodeOccupied(*it))
@@ -457,6 +459,7 @@ protected:
 		}
 		m_cloud->width = i;
 		m_cloud->points.resize(i);
+		// std::cout << "dim2: " << m_cloud->width << std::endl;
 		
 		// Create the point cloud msg for publication
 		pcl::toROSMsg(*m_cloud, m_pcMsg);
@@ -483,8 +486,8 @@ protected:
 		// Compute the distance to the closest point of the grid
 		int index;
 		float dist;
-		float gaussConst1 = 1./(m_sensorDev*sqrt(2*M_PI));
-		float gaussConst2 = 1./(2*m_sensorDev*m_sensorDev);
+		// float gaussConst1 = 1./(m_sensorDev*sqrt(2*M_PI));
+		// float gaussConst2 = 1./(2*m_sensorDev*m_sensorDev);
 		pcl::PointXYZI searchPoint;
 		std::vector<int> pointIdxNKNSearch(1);
 		std::vector<float> pointNKNSquaredDistance(1);
@@ -508,19 +511,35 @@ protected:
 						percent_msg.data = percent;
 						// percent_computed_pub_.publish(percent_msg);
 					}
-					
 					if(m_kdtree.nearestKSearch(searchPoint, 1, pointIdxNKNSearch, pointNKNSquaredDistance) > 0)
 					{
-						dist = pointNKNSquaredDistance[0];
-						m_grid[index].dist = dist;
-						if(!use_costmap_function){
-							m_grid[index].prob = gaussConst1*exp(-dist*dist*gaussConst2);
-						}else{
-							double prob =  100*exp(-cost_scaling_factor*std::fabs((dist - robot_radius)));
-							// ROS_INFO("[%f, %f, %f] Dist: %f Probability: %f", searchPoint.x, searchPoint.y, searchPoint.z, dist, prob);
-							//JAC: Include the computation of prob considering the distance to the nearest voronoi edge.
-							m_grid[index].prob = prob;
+						// JAC: Always square distance has been considered!!!!!!
+						// dist = pointNKNSquaredDistance[0];
+						dist = sqrt(pointNKNSquaredDistance[0]);
+						
+						// std::cout << "dist: " << dist << std::endl;
+						if (dist < 200){
+							m_grid[index].dist = dist;
+							if(!use_costmap_function){
+								// m_grid[index].prob = gaussConst1*exp(-dist*dist*gaussConst2);
+								m_grid[index].prob = dist;
+							}else{
+								// double prob =  100*exp(-cost_scaling_factor*std::fabs((dist - robot_radius)));
+								// ROS_INFO("[%f, %f, %f] Dist: %f Probability: %f", searchPoint.x, searchPoint.y, searchPoint.z, dist, prob);
+								//JAC: Include the computation of prob considering the distance to the nearest voronoi edge.
+								// m_grid[index].prob = prob;
+								// m_grid[index].prob = 100-dist;
+								m_grid[index].prob = dist;
+							}
 						}
+						else{
+							// std::cout << "dist: " << dist << std::endl;
+							// m_grid[index].dist = -1.0;
+							m_grid[index].dist = 90.0;
+							m_grid[index].prob =  0.0;
+						}
+						
+						
 					}
 					else
 					{

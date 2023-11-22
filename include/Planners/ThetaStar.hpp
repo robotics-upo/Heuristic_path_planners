@@ -82,7 +82,18 @@ namespace Planners
          */
         virtual void exploreNeighbours(Node* _current, const Vec3i &_target,node_by_position &_index_by_pos) override;
 
+        virtual void exploreNeighbours_Gradient(Node* _current, const Vec3i &_target,node_by_position &_index_by_pos);
+
+        virtual int chooseNeighbours(float angh, float angv);
+        // virtual Vec3i chooseNeighbours(float angh, float angv);
+
+        // virtual Vec3i nodesToExplore(int _node);
+        // virtual void nodesToExplore(int _node, Vec3i &list_nodes_to_explore);
+        // virtual void nodesToExplore(int _node, CoordinateList &list_nodes_to_explore);
+
         utils::CoordinateListPtr checked_nodes, checked_nodes_current;  /*!< TODO Comment */
+        // float mod[26];
+        float angles_h[26], angles_v[26];
 
     };
 

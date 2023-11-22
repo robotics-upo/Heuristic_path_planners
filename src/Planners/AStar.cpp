@@ -136,6 +136,49 @@ void AStar::publishROSDebugData(const Node* _node, const T &_open_set, const U &
 
 }
 
+// JAC: Computation of the attractin vector
+inline Vec3i AStar::getVectorPull(const Vec3i &_source, const Vec3i &_target){
+    return {_target.x - _source.x, _target.y - _source.y, _target.z - _source.z};
+}
+
+// JAC: Create a file --> computeGradient
+inline float AStar::computeGradient(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs){
+    unsigned int cost;
+
+    float rest,grad;
+    // float div;
+
+    if(_dirs  == 8){
+        cost = (_n_i < 4 ? dist_scale_factor_ : dd_2D_); //This is more efficient
+        grad=(_current->cost - _suc->cost)/cost;
+    }else{
+        cost = (_n_i < 6 ? dist_scale_factor_ : (_n_i < 18 ? dd_2D_ : dd_3D_)); //This is more efficient
+        rest=_current->cost-_suc->cost;
+
+        // // Casi lo mismo que multiplicar 500*grad????
+        // if (cost == 100)
+        //     div=0.2; // res
+        // else if (cost == 141)
+        //     div=0.2828; //sqrt(2)*res
+        // else if (cost == 173)
+        //     div = 0.3464; //sqrt(3)*res
+
+        // std::cout << "cost: " << cost << std::endl;
+        // std::cout << "div: " << div << std::endl;
+        // std::cout << "current cost: " << _current->cost << std::endl;
+        // std::cout << "suc cost: " << _suc->cost << std::endl;
+        // std::cout << "rest: " << rest << std::endl;
+        // std::cout << "G: " << _current->G << std::endl;
+
+        // grad=static_cast<float>((100/0.2)*(rest/cost)); // res=0,2
+        grad=static_cast<float>((500)*(rest/cost)); // res=0,2
+        // grad=static_cast<float>(rest/div);
+        // std::cout << "gradient: " << grad << std::endl;
+    }
+        
+    return grad;
+}
+
 inline unsigned int AStar::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs){
     unsigned int cost = _current->G;
 
@@ -158,7 +201,7 @@ void AStar::exploreNeighbours(Node* _current, const Vec3i &_target, node_by_posi
             
         Vec3i newCoordinates = _current->coordinates + direction[i];
         Node *successor = discrete_world_.getNodePtr(newCoordinates);
-        //Skip the neighbour if it is not valid, occupied, or already in teh
+        //Skip the neighbour if it is not valid, occupied, or already in the
         //closed list
         if ( successor == nullptr ||
              successor->isInClosedList || 
@@ -185,6 +228,7 @@ void AStar::exploreNeighbours(Node* _current, const Vec3i &_target, node_by_posi
         }
     }
 }
+
 PathData AStar::findPath(const Vec3i &_source, const Vec3i &_target)
 {
     Node *current = nullptr;
