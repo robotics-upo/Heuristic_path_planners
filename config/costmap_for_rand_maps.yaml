@@ -18,7 +18,7 @@ costmap:
       cost_scaling_factor: 2
       enabled: true
       inflate_unknown: false
-      inflation_radius: 3.0
+      _radius: 3.0
 
    static_layer:
       unknown_cost_value: -1

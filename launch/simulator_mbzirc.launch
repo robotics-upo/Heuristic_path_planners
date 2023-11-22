@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+
+<launch>
+  
+  <!-- <node pkg="tf" type="static_transform_publisher" name="map_world" args="32 32 0 -3.1416 0 0 map world 100" /> -->
+  <node pkg="tf" type="static_transform_publisher" name="map_world" args="0 0 0 0 0 0 map world 100" />
+
+  <!-- Map name is the filename wihtouth the .bt extensionof the 3D Map -->
+    <!-- <arg name="map_name"            default="mbzirc_challenge3"/> -->
+    <arg name="map_name"            default="abu_dhabi_002_blender"/>
+    <arg name="map"                 default="$(find heuristic_planners)/resources/3dmaps/$(arg map_name).bt"/>
+
+    <arg name="algorithm_name"      default="costlazythetastar"/>
+
+    <arg name="world_size_x"        default="200"/>
+    <arg name="world_size_y"        default="200"/>
+    <!-- maze.bt with world_size_z=5 -->
+    <!-- <arg name="world_size_z"        default="5"/> -->
+    <!-- <arg name="world_size_z"        default="2"/> manufacturing -->
+    <arg name="world_size_z"        default="30"/> 
+    <arg name="resolution"          default="0.2"/>
+
+    <arg name="inflate_map"         default="true"/>
+    <arg name="inflation_size"      default="$(arg resolution)"/>
+    <!-- Possibles values are: euclidean, euclidean_optimized, manhattan, octogonal and dijkstra -->
+    <arg name="heuristic"         default="euclidean"/>
+
+    <arg name="save_data"           default="true"/>
+    <!-- This should be a folder -->
+    <arg name="data_folder"         default="$(env HOME)"/>
+
+    <arg name="overlay_markers"     default="false"/>
+    
+    <arg name="cost_weight" default="500.0"/>
+    <arg name="max_line_of_sight_distance" default="1.0"/>
+
+    <!-- GRIDM Generators Parameters -->
+    <arg name="cost_scaling_factor" default="0.5"/>  
+    <arg name="robot_radius"        default="0.4"/> 
+    
+    <arg name="output" default="screen"/>
+    <node pkg="heuristic_planners" type="planner_ros_node" name="planner_ros_node" output="$(arg output)">
+        <remap from="points" to="/grid3d/map_point_cloud"/>
+        <param name="map_path"              value="$(arg map)"/>
+        <param name="world_size_x"          value="$(arg world_size_x)"/>
+        <param name="world_size_y"          value="$(arg world_size_y)"/>
+        <param name="world_size_z"          value="$(arg world_size_z)"/>
+        <param name="resolution"            value="$(arg resolution)"/>
+        <param name="inflate_map"           value="$(arg inflate_map)"/>
+        <param name="inflation_size"        value="$(arg inflation_size)"/>
+        
+        <param name="save_data_file"        value="$(arg save_data)"/>
+        <param name="overlay_markers"       value="$(arg overlay_markers)"/>
+        <param name="data_folder"           value="$(arg data_folder)"/>
+        <param name="algorithm"             value="$(arg algorithm_name)"/>
+        <param name="cost_weight"           value="$(arg cost_weight)"/>
+        <param name="max_line_of_sight_distance"   value="$(arg max_line_of_sight_distance)"/>
+        <param name="heuristic"             value="$(arg heuristic)"/>
+
+        <param name="cost_scaling_factor"   value="$(arg cost_scaling_factor)"/>
+        <param name="robot_radius"          value="$(arg robot_radius)"/>
+    </node>
+  
+  <!-- Start rviz visualization with preset config -->
+  <node pkg="rviz" type="rviz" name="rviz" args="-d $(find hector_quadrotor_demo)/rviz_cfg/outdoor_flight_mbzirc.rviz"/>
+
+  <!-- <node pkg="rviz" name="rviz" type="rviz" args="-d $(find heuristic_planners)/rviz/planners.rviz"/> -->
+
+  <!-- Start Gazebo with wg world running in (max) realtime -->
+  <include file="$(find hector_gazebo_worlds)/launch/mesh_mbzirc.launch"/>
+   
+  <!-- Spawn simulated quadrotor uav -->
+  <include file="$(find hector_quadrotor_gazebo)/launch/spawn_quadrotor_mbzirc.launch" >
+    <arg name="model" value="$(find hector_quadrotor_description)/urdf/quadrotor_hokuyo_utm30lx.gazebo.xacro"/> 
+  </include>
+   
+</launch>

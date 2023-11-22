@@ -9,7 +9,7 @@
  * difference is that it reimplements the computeG method adding the
  * following cost term to the resturned result:
  * 
- *  auto cost_term = static_cast<unsigned int>(cost_weight_ * _suc->cost * dist_scale_factor_reduced_);
+ *  auto cost_term = static_cast<unsigned int>(cost_weight_ * _suc * dist_scale_factor_reduced_);
  * 
  * @version 0.1
  * @date 2021-06-29

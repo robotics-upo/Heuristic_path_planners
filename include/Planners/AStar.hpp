@@ -127,6 +127,13 @@ namespace Planners{
          */
         virtual void exploreNeighbours(Node* _current, const Vec3i &_target,node_by_position &_index_by_pos);
 
+        // virtual void exploreNeighbours_Gradient(Node* _current, const Vec3i &_target,node_by_position &_index_by_pos);
+
+        // virtual int chooseNeighbours(float angh, float angv);
+        // // virtual Vec3i chooseNeighbours(float angh, float angv);
+
+        // virtual void nodesToExplore(int node);
+
         /**
          * @brief This functions implements the algorithm G function. 
          * 
@@ -162,6 +169,10 @@ namespace Planners{
          * @return unsigned int The G Value calculated by the function
          */
         virtual unsigned int computeG(const Node* _current, Node* _suc, unsigned int _n_i, unsigned int _dirs);
+
+        virtual float computeGradient(const Node* _current, Node* _suc, unsigned int _n_i, unsigned int _dirs);
+
+        virtual Vec3i getVectorPull(const Vec3i &_source, const Vec3i &_target);
 
         unsigned int line_of_sight_checks_{0};  /*!< TODO Comment */
         std::vector<Node*> closedSet_; /*!< TODO Comment */

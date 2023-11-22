@@ -3,10 +3,14 @@
 #include "Planners/AStar.hpp"
 #include "Planners/AStarM2.hpp"
 #include "Planners/AStarM1.hpp"
+#include "Planners/AStar_Gradient.hpp"
+#include "Planners/AStar_EDF.hpp"
 #include "Planners/ThetaStar.hpp"
 #include "Planners/ThetaStarM1.hpp"
 #include "Planners/ThetaStarM2.hpp"
 #include "Planners/LazyThetaStar.hpp"
+#include "Planners/LazyThetaStar_Gradient.hpp"
+#include "Planners/LazyThetaStar_EDF.hpp"
 #include "Planners/LazyThetaStarM1.hpp"
 #include "Planners/LazyThetaStarM1Mod.hpp"
 #include "Planners/LazyThetaStarM2.hpp"
@@ -247,6 +251,12 @@ private:
         }else if( algorithm_name == "costastar" ){
             ROS_INFO("Using Cost Aware A*");
             algorithm_.reset(new Planners::AStarM1(use3d_));
+        }else if( algorithm_name == "astar_gradient" ){
+            ROS_INFO("Using A* Gradient");
+            algorithm_.reset(new Planners::AStarGradient(use3d_));
+        }else if( algorithm_name == "astar_edf" ){
+            ROS_INFO("Using A* EDF");
+            algorithm_.reset(new Planners::AStarEDF(use3d_));
         }else if( algorithm_name == "astarsafetycost" ){
             ROS_INFO("Using A* Safety Cost");
             algorithm_.reset(new Planners::AStarM2(use3d_));    
@@ -271,6 +281,12 @@ private:
         }else if( algorithm_name == "lazythetastarsafetycost"){
             ROS_INFO("Using LazyTheta* Safety Cost");
             algorithm_.reset(new Planners::LazyThetaStarM2(use3d_));
+        }else if( algorithm_name == "lazythetastargradient"){
+            ROS_INFO("Using LazyTheta* Gradient");
+            algorithm_.reset(new Planners::LazyThetaStarGradient(use3d_));
+        }else if( algorithm_name == "lazythetastaredf"){
+            ROS_INFO("Using LazyTheta* EDF");
+            algorithm_.reset(new Planners::LazyThetaStarEDF(use3d_));
         }else{
             ROS_WARN("Wrong algorithm name parameter. Using ASTAR by default");
             algorithm_.reset(new Planners::AStar(use3d_));

@@ -18,6 +18,7 @@
 #include <variant>
 #include <cmath>
 #include <memory>
+
 #ifdef ROS
 #include <Eigen/Dense>
 #endif
@@ -180,6 +181,13 @@ namespace Planners
             }
 #endif
         };
+
+        class Vec3f
+        {
+            public:
+            float x, y, z;    
+        };
+
         /**
          * @brief 
          * 

@@ -8,6 +8,17 @@ namespace Planners
         return {abs(_source.x - _target.x), abs(_source.y - _target.y), abs(_source.z - _target.z)};
     }
 
+    Vec3i Heuristic::getVectorPull(const Vec3i &_source, const Vec3i &_target)
+    {
+        return {_target.x - _source.x, _target.y - _source.y, _target.z - _source.z};
+    }
+
+    unsigned int Heuristic::goal_pull(const Vec3i &_source, const Vec3i &_target)
+    {
+        auto delta = std::move(getDelta(_source, _target));
+        return static_cast<unsigned int>(dist_scale_factor_ * sqrt(pow(delta.x, 2) + pow(delta.y, 2) + pow(delta.z, 2)));
+    }
+
     unsigned int Heuristic::manhattan(const Vec3i &_source, const Vec3i &_target)
     {
         auto delta = std::move(getDelta(_source, _target));

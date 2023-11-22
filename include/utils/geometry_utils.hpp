@@ -130,6 +130,15 @@ namespace Planners
              */
             double angleBetweenThreePoints(const Vec3i &_v1, const Vec3i &_v2, const Vec3i &_v3);
 
+            /**
+             * @brief Returns the neighbour nodes chosen from the gradient: two options 9-17 nodes
+             * 
+             * @param _angh
+             * @param _angv
+             * @return double 
+             */
+            int chooseNeighbours(float _angh, float _angv);
+
 #ifdef ROS
             /**
              * @brief 
