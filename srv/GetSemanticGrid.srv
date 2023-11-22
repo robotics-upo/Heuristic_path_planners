@@ -1,0 +1,4 @@
+bool call
+---
+int16[] shape
+int32[] semantic_grid

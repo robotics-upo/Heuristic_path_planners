@@ -61,6 +61,7 @@ namespace Planners
 	    {
 	    	float dist{0};
 	    	float prob{0};
+            int semantic{0};
 	    };
         /**
          * @brief 
@@ -221,12 +222,13 @@ namespace Planners
 
             Planners::utils::Vec3i coordinates;
 
-            unsigned int G{0}, H{0}, C{0};
+            unsigned int G{0}, H{0}, C{0}, S{0};
             
             unsigned int gplush{0};
             unsigned int world_index{0};
             
             double cost{0};
+            int semantic{0};
 
             bool occuppied{false};
             bool isInOpenList{false};
