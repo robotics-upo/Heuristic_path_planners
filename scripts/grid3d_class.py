@@ -12,6 +12,7 @@ import rospkg
 from std_msgs.msg import Int32MultiArray, MultiArrayDimension, MultiArrayLayout
 from IfcGrid.srv import *
 
+
 class grid3d():
     def __init__(self):
 
@@ -34,8 +35,8 @@ class grid3d():
         self.resolution = rospy.get_param('~resolution', 0.2)
         self.x_y_size = self.world_size_x * self.world_size_y
 
-        self.semantic_grid = np.zeros((int(self.world_size_x / self.resolution), int(self.world_size_y / self.resolution), int(self.world_size_z / self.resolution)), dtype=int)
-        self.occ_grid = self.semantic_grid
+        self.semantic_grid = np.zeros((int(self.world_size_x / self.resolution), int(self.world_size_y / self.resolution), int(self.world_size_z / self.resolution)), dtype=np.int8)
+        
 
         rospy.loginfo("Termina carga de parametros")
 
@@ -77,14 +78,9 @@ class grid3d():
 
             
             # Bucles for para recorrer el espacio entre mínimos y máximos en cada coordenada
-            for x in range(min_x_local, max_x_local + 1):
-                for y in range(min_y_local, max_y_local + 1):
-                    for z in range(min_z_local, max_z_local + 1):
-                        if(self.semantic_grid[int(x), int(y), int(z)] == 0):
-                            self.semantic_grid[x, y, z] = 1
-                            self.occ_grid[x, y, z] = 1
-                        #rospy.loginfo("Pared rellenada")
-
+            self.semantic_grid[min_x_local:max_x_local+1, min_y_local:max_y_local+1, min_z_local:max_z_local+1] = 1
+                         
+            
         for door in self.doors:
             matrix = ifcopenshell.util.placement.get_local_placement(door.ObjectPlacement)
             shape = ifcopenshell.geom.create_shape(self.settings, door)
@@ -111,11 +107,8 @@ class grid3d():
             min_y_local = int(np.min(points[:, 1]))
             min_z_local = int(np.min(points[:, 2]))
 
-            for x in range(min_x_local, max_x_local + 1):
-                for y in range(min_y_local, max_y_local + 1):
-                    for z in range(min_z_local, max_z_local + 1):
-                        self.semantic_grid[x, y, z] = 2
-                        self.occ_grid[x, y, z] = 1
+            self.semantic_grid[min_x_local:max_x_local+1, min_y_local:max_y_local+1, min_z_local:max_z_local+1] = 2
+                        
                         
     
         for column in self.columns:
@@ -145,11 +138,7 @@ class grid3d():
             min_y_local = int(np.min(points[:, 1]))
             min_z_local = int(np.min(points[:, 2]))
 
-            for x in range(min_x_local, max_x_local + 1):
-                for y in range(min_y_local, max_y_local + 1):
-                    for z in range(min_z_local, max_z_local + 1):
-                        self.semantic_grid[x, y, z] = 3
-                        self.occ_grid[x, y, z] = 1
+            self.semantic_grid[min_x_local:max_x_local+1, min_y_local:max_y_local+1, min_z_local:max_z_local+1] = 3
 
         for furnishing in self.model.by_type("IfcFurnishingElement"):
             matrix = ifcopenshell.util.placement.get_local_placement(furnishing.ObjectPlacement)
@@ -159,7 +148,6 @@ class grid3d():
             
             # Calcular el centro de la puerta
             centro = matrix[:,3][:3]
-            
             rotation_matrix  = matrix[:3, :3]
 
             points = np.dot(points, rotation_matrix)
@@ -178,11 +166,7 @@ class grid3d():
             min_y_local = int(np.min(points[:, 1]))
             min_z_local = int(np.min(points[:, 2]))
 
-            for x in range(min_x_local, max_x_local + 1):
-                for y in range(min_y_local, max_y_local + 1):
-                    for z in range(min_z_local, max_z_local + 1):
-                        self.semantic_grid[x, y, z] = 4
-                        self.occ_grid[x, y, z] = 1
+            self.semantic_grid[min_x_local:max_x_local+1, min_y_local:max_y_local+1, min_z_local:max_z_local+1] = 4
                         
     
         for stair in self.model.by_type("IfcStairFlight"):
@@ -212,11 +196,8 @@ class grid3d():
             min_y_local = int(np.min(points[:, 1]))
             min_z_local = int(np.min(points[:, 2]))
 
-            for x in range(min_x_local, max_x_local + 1):
-                for y in range(min_y_local, max_y_local + 1):
-                    for z in range(min_z_local, max_z_local + 1):
-                            self.semantic_grid[x, y, z] = 5
-                            self.occ_grid[x, y, z] = 1
+            self.semantic_grid[min_x_local:max_x_local+1, min_y_local:max_y_local+1, min_z_local:max_z_local+1] = 5
+                            
 
         for plate in self.model.by_type("IfcPlate"):
             matrix = ifcopenshell.util.placement.get_local_placement(plate.ObjectPlacement)
@@ -245,11 +226,8 @@ class grid3d():
             min_y_local = int(np.min(points[:, 1]))
             min_z_local = int(np.min(points[:, 2]))
 
-            for x in range(min_x_local, max_x_local + 1):
-                for y in range(min_y_local, max_y_local + 1):
-                    for z in range(min_z_local, max_z_local + 1):
-                        self.semantic_grid[x, y, z] = 6
-                        self.occ_grid[x, y, z] = 1
+            self.semantic_grid[min_x_local:max_x_local+1, min_y_local:max_y_local+1, min_z_local:max_z_local+1] = 6
+                        
 
         for lamp in self.model.by_type("IfcFlowTerminal"):
             matrix = ifcopenshell.util.placement.get_local_placement(lamp.ObjectPlacement)
@@ -278,11 +256,8 @@ class grid3d():
             min_y_local = int(np.min(points[:, 1]))
             min_z_local = int(np.min(points[:, 2]))
 
-            for x in range(min_x_local, max_x_local + 1):
-                for y in range(min_y_local, max_y_local + 1):
-                    for z in range(min_z_local, max_z_local + 1):
-                        self.semantic_grid[x, y, z] = 7
-                        self.occ_grid[x, y, z] = 1
+            self.semantic_grid[min_x_local:max_x_local+1, min_y_local:max_y_local+1, min_z_local:max_z_local+1] = 7
+                        
 
         for glass in ifcopenshell.util.selector.filter_elements(self.model, "IfcElement, material=Glass"):
             matrix = ifcopenshell.util.placement.get_local_placement(glass.ObjectPlacement)
@@ -311,11 +286,8 @@ class grid3d():
             min_y_local = int(np.min(points[:, 1]))
             min_z_local = int(np.min(points[:, 2]))
 
-            for x in range(min_x_local, max_x_local + 1):
-                for y in range(min_y_local, max_y_local + 1):
-                    for z in range(min_z_local, max_z_local + 1):
-                            self.semantic_grid[x, y, z] = 8
-                            self.occ_grid[x, y, z] = 1
+            self.semantic_grid[min_x_local:max_x_local+1, min_y_local:max_y_local+1, min_z_local:max_z_local+1] = 8
+                            
     rospy.loginfo("Termina de rellenar las matrices")
 
     # def showgrid(self):

@@ -111,7 +111,24 @@ namespace utils
             
             discrete_world_vector_[getWorldIndex(_vec)].cost = _cost;
 
-        return true;
+            return true;
+        }
+        /**
+         * @brief Set the Node Cost object 
+         * 
+         * @param _vec coordinates of the node
+         * @param _cost cost value assigned to it
+         * @return true if node is valid
+         * @return false if requested coordinates correspond to invalid node (outside the world)
+         */
+        bool setNodeSemantic(const Vec3i &_vec, const int _cost){
+
+            if(!checkValid(_vec))
+                return false;
+
+            discrete_world_vector_[getWorldIndex(_vec)].semantic = _cost;
+
+            return true;
         }
         /**
          * @brief Set to its default state the flags, cost values, and parent values inside 
@@ -122,7 +139,7 @@ namespace utils
             for(auto &it: discrete_world_vector_){
                 it.isInClosedList = false;
                 it.isInOpenList = false;
-                it.H = it.G = it.C = 0;
+                it.H = it.G = it.C = it.S = 0;
                 it.parent = nullptr;
             }
         }

@@ -82,6 +82,8 @@ private:
         Planners::utils::configureWorldFromPointCloud(_points, *algorithm_, resolution_);
         algorithm_->publishOccupationMarkersMap();
         Planners::utils::configureWorldCosts(*m_grid3d_, *algorithm_);
+        ROS_INFO("Loaded World Cost...");
+        Planners::utils::configureWorldSemantic(*m_grid3d_, *algorithm_);
         ROS_INFO("Published occupation marker map");
         cloud_ = *_points;
         input_map_ = 2;

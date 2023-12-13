@@ -113,7 +113,7 @@ public:
 		m_grid = NULL;
 
 		if(loadSemanticGrid()){
-			std::cout<< "Grid Loaded";
+			std::cout<< "Grid Loaded" << std::endl;
 		}
 		if(loadOctomap(m_mapPath))
 		{
@@ -227,7 +227,8 @@ public:
 		return m_grid[index].prob;
 	}
 
-	float getCellSemantic(const float &_x, const float &_y, const float &_z){
+	// float getCellSemantic(const float &_x, const float &_y, const float &_z){
+	int getCellSemantic(const float &_x, const float &_y, const float &_z){
 		
 		if( !isIntoMap(_x, _y, _z) )
 			return 0;
@@ -274,6 +275,8 @@ bool loadSemanticGrid() {
 
     IfcGrid::GetSemanticGrid srv;
 
+	std::cout << "LOAD SEMANTIC " << std::endl;
+
     // Wait for the service to become available
     if (!client.waitForExistence(ros::Duration(40.0))) {
         ROS_ERROR("Service get_semantic_grid unavailable");
@@ -288,6 +291,96 @@ bool loadSemanticGrid() {
         std::vector<int> int_shape(shape.begin(), shape.end());
 
         semanticGrid = srv.response.semantic_grid;
+		std::cout << "SIZE SEMANTIC " << srv.response.semantic_grid.size() << std::endl;
+
+		for (unsigned int i = 0; i < semanticGrid.size(); ++i) {
+			if (semanticGrid[i] == 0) {
+            	// std::cout << "UNO " << std::endl;
+        	}
+			else if (semanticGrid[i] == 1) {
+            	// encontrado = true;
+            	// std::cout << "UNO " << std::endl;
+        	}
+			else if (semanticGrid[i] == 2) {
+            	// encontrado = true;
+            	// std::cout << "DOS " << std::endl;
+        	}
+			else if (semanticGrid[i] == 3) {
+            	// encontrado = true;
+            	// std::cout << "TRES " << std::endl;
+        	}
+			else if (semanticGrid[i] == 4) {
+            	// encontrado = true;
+            	// std::cout << "CUATRO " << std::endl;
+        	}
+			else if (semanticGrid[i] == 5) {
+            	// encontrado = true;
+            	// std::cout << "CINCO " << std::endl;
+        	}
+			else if (semanticGrid[i] == 6) {
+            	// encontrado = true;
+            	// std::cout << "SEIS " << std::endl;
+        	}
+			else if (semanticGrid[i] == 7) {
+            	// encontrado = true;
+            	// std::cout << "SIETE " << std::endl;
+        	}
+			else if (semanticGrid[i] == 8) {
+            	// encontrado = true;
+            	// std::cout << "OCHO " << std::endl;
+        	}
+			else {
+            	// encontrado = true;
+            	std::cout << "NADA de NADA " << srv.response.semantic_grid[i] << std::endl;
+        	}
+		}
+
+		// for (unsigned int i = 0; i < srv.response.semantic_grid.size(); ++i) {
+		// 	// if (srv.response.semantic_grid[i] != 0 || srv.response.semantic_grid[i] != 1) {
+		// 	// 	std::cout << "NO CERO Y UNO " << srv.response.semantic_grid[i] << std::endl;
+		// 	// }
+
+        // 	if (srv.response.semantic_grid[i] == 0) {
+        //     	// encontrado = true;
+        //     	// std::cout << "CERO " << std::endl;
+        // 	}
+		// 	else if (srv.response.semantic_grid[i] == 1) {
+        //     	// encontrado = true;
+        //     	// std::cout << "UNO " << std::endl;
+        // 	}
+		// 	else if (srv.response.semantic_grid[i] == 2) {
+        //     	// encontrado = true;
+        //     	// std::cout << "DOS " << std::endl;
+        // 	}
+		// 	else if (srv.response.semantic_grid[i] == 3) {
+        //     	// encontrado = true;
+        //     	// std::cout << "TRES " << std::endl;
+        // 	}
+		// 	else if (srv.response.semantic_grid[i] == 4) {
+        //     	// encontrado = true;
+        //     	// std::cout << "CUATRO " << std::endl;
+        // 	}
+		// 	else if (srv.response.semantic_grid[i] == 5) {
+        //     	// encontrado = true;
+        //     	// std::cout << "CINCO " << std::endl;
+        // 	}
+		// 	else if (srv.response.semantic_grid[i] == 6) {
+        //     	// encontrado = true;
+        //     	// std::cout << "SEIS " << std::endl;
+        // 	}
+		// 	else if (srv.response.semantic_grid[i] == 7) {
+        //     	// encontrado = true;
+        //     	// std::cout << "SIETE " << std::endl;
+        // 	}
+		// 	else if (srv.response.semantic_grid[i] == 8) {
+        //     	// encontrado = true;
+        //     	// std::cout << "OCHO " << std::endl;
+        // 	}
+		// 	else {
+        //     	// encontrado = true;
+        //     	std::cout << "NADA de NADA " << srv.response.semantic_grid[i] << std::endl;
+        // 	}
+    	// }
 
         return !semanticGrid.empty();
     } else {
@@ -571,7 +664,7 @@ bool loadSemanticGrid() {
 						dist = sqrt(pointNKNSquaredDistance[0]);
 						
 						// std::cout << "dist: " << dist << std::endl;
-						if (dist < 200){
+						if (dist < 300){
 							m_grid[index].dist = dist;
 							if(!use_costmap_function){
 								// m_grid[index].prob = gaussConst1*exp(-dist*dist*gaussConst2);
@@ -583,21 +676,22 @@ bool loadSemanticGrid() {
 								// m_grid[index].prob = prob;
 								// m_grid[index].prob = 100-dist;
 								m_grid[index].prob = dist;
-                m_grid[index].semantic = semanticGrid[index];
+                				m_grid[index].semantic = semanticGrid[index];
 							}
 						}
 						else{
 							// std::cout << "dist: " << dist << std::endl;
 							// m_grid[index].dist = -1.0;
-							m_grid[index].dist = 90.0;
+							m_grid[index].dist = 500.0;
 							m_grid[index].prob =  0.0;
-
+							m_grid[index].semantic = 0;
 						}
 					}
 					else
 					{
 						m_grid[index].dist = -1.0;
 						m_grid[index].prob =  0.0;
+						m_grid[index].semantic = 0;
 					}
 
 				}

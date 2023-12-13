@@ -128,5 +128,33 @@ namespace Planners
             return true;
         }
 
+        // bool configureWorldSemantic(Grid3d &_grid, AlgorithmBase &_algorithm, std::vector<int> &_semanticGrid)
+        bool configureWorldSemantic(Grid3d &_grid, AlgorithmBase &_algorithm)
+        {
+
+            auto world_size = _algorithm.getWorldSize();
+            auto resolution = _algorithm.getWorldResolution();
+
+            std::cout << "Semantic Layer " << std::endl; 
+
+            for (int i = 0; i < world_size.x; i++)                                                                                                                                                         
+            for (int i = 0; i < world_size.x; i++)
+            {
+                for (int j = 0; j < world_size.y; j++)
+                {
+                    for (int k = 0; k < world_size.z; k++)
+                    {
+                        //JAC: Precision
+                        // auto cost = _grid.getCellCost(i * resolution, j * resolution, k * resolution);
+                        int cost = _grid.getCellSemantic(i * resolution, j * resolution, k * resolution);
+                        if (cost > 8)
+                            std::cout << "Cost: " << cost << std::endl;   
+                        _algorithm.configureCellSemantic({i, j, k}, cost);
+                    }
+                }
+            }
+            return true;
+        }
+
     } //ns utils
 } //ns planners

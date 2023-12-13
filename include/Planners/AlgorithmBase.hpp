@@ -136,6 +136,16 @@ namespace Planners
         bool configureCellCost(const Vec3i &coordinates_, const double &_cost);
 
         /**
+         * @brief Function to use in the future to configure the semantic cost of each node
+         * 
+         * @param coordinates_ Discrete coordinates
+         * @param _cost semantic cost value 
+         * @return true 
+         * @return false 
+         */
+        bool configureCellSemantic(const Vec3i &coordinates_, const int &_cost);
+
+        /**
          * @brief Check if a set of discrete coordinates are marked as occupied
          * 
          * @param coordinates_ Discrete vector of coordinates

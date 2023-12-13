@@ -24,7 +24,8 @@ inline unsigned int AStarEDF::computeG(const Node* _current, Node* _suc, unsigne
     // auto cost_term = static_cast<unsigned int>(cost_weight_ * ((_current->cost + _suc->cost)/2) * dist_scale_factor_reduced_); //+grad_suc
     auto cost_term = static_cast<unsigned int>(cost_weight_ * (1/(((static_cast<double>(_current->cost) + static_cast<double>(_suc->cost))/2) * dist_scale_factor_reduced_))); 
     // std::cout << "cost_term " << cost_term << std::endl;
-    // std::cout << "cost before " << cost << std::endl;
+    // std::cout << "cost " << _suc->cost << std::endl;
+    std::cout << "semantic " << _suc->semantic << std::endl;
     cost += cost_term;
     // std::cout << "cost after " << cost << std::endl;
     _suc->C = cost_term;
