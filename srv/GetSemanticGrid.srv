@@ -1,4 +1,7 @@
-bool call
+float32 m_maxX
+float32 m_maxY
+float32 m_maxZ
+float32 m_resolution
 ---
-int16[] shape
+int32[] shape
 int32[] semantic_grid

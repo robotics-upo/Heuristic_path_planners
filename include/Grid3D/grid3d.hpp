@@ -14,7 +14,7 @@
 #include <nav_msgs/OccupancyGrid.h>
 #include <std_msgs/Float32.h>
 #include <std_msgs/Int32MultiArray.h>
-#include <IfcGrid/GetSemanticGrid.h>
+#include <heuristic_planners/GetSemanticGrid.h>
 #include <stdio.h> 
 // PCL
 #include <pcl/point_cloud.h>
@@ -112,9 +112,7 @@ public:
 		m_octomap = NULL;
 		m_grid = NULL;
 
-		if(loadSemanticGrid()){
-			std::cout<< "Grid Loaded" << std::endl;
-		}
+		
 		if(loadOctomap(m_mapPath))
 		{
 			// Compute the point-cloud associated to the ocotmap
@@ -130,6 +128,9 @@ public:
 			{						
 				// Compute the gridMap using kdtree search over the point-cloud
 				std::cout << "Computing 3D occupancy grid. This will take some time..." << std::endl;
+				if(loadSemanticGrid()){
+				std::cout<< "Semantic Grid Loaded" << std::endl;
+				}
 				computeGrid();
 				std::cout << "\tdone!" << std::endl;
 				
@@ -145,6 +146,8 @@ public:
 				m_gridSlicePub = m_nh.advertise<nav_msgs::OccupancyGrid>(m_nodeName+"/grid_slice", 1, true);
 				gridTimer      = m_nh.createTimer(ros::Duration(1.0/m_publishGridSliceRate), &Grid3d::publishGridSliceTimer, this);	
 			}
+
+			
 			
 			// Setup point-cloud publisher
 			if(m_publishPc)
@@ -154,6 +157,7 @@ public:
 			}
 			percent_computed_pub_ = m_nh.advertise<std_msgs::Float32>(m_nodeName+"/percent_computed", 1, false);
 		}
+
 	}
 
 	~Grid3d(void)
@@ -271,9 +275,9 @@ bool loadSemanticGrid() {
     ros::NodeHandle n;
 
     // Define a ROS service client
-    ros::ServiceClient client = n.serviceClient<IfcGrid::GetSemanticGrid>("get_semantic_grid");
+    ros::ServiceClient client = n.serviceClient<heuristic_planners::GetSemanticGrid>("get_semantic_grid");
 
-    IfcGrid::GetSemanticGrid srv;
+    heuristic_planners::GetSemanticGrid srv;
 
 	std::cout << "LOAD SEMANTIC " << std::endl;
 
@@ -283,15 +287,25 @@ bool loadSemanticGrid() {
         return false;
     }
 
+	srv.request.m_maxX = m_maxX;
+	srv.request.m_maxY = m_maxY;
+	srv.request.m_maxZ = m_maxZ;
+	srv.request.m_resolution = m_resolution;
+
     // Call the service
     if (client.call(srv)) {
         // Process the response
         // The shape and semantic grid are available in srv.response.shape and srv.response.semantic_grid
-        std::vector<short int> shape = srv.response.shape;
+        std::vector<int> shape = srv.response.shape;
         std::vector<int> int_shape(shape.begin(), shape.end());
 
         semanticGrid = srv.response.semantic_grid;
-		std::cout << "SIZE SEMANTIC " << srv.response.semantic_grid.size() << std::endl;
+		
+		std::cout << "-------------SERVICE OUTPUT-----------" << std::endl;
+
+		std::cout << "SIZE SEMANTIC X" << int_shape[0] << std::endl;
+		std::cout << "SIZE SEMANTIC Y" << int_shape[1] << std::endl;
+		std::cout << "SIZE SEMANTIC Z" << int_shape[2] << std::endl;
 
 		for (unsigned int i = 0; i < semanticGrid.size(); ++i) {
 			if (semanticGrid[i] == 0) {
@@ -640,6 +654,13 @@ bool loadSemanticGrid() {
 		double count=0;
 		double percent;
 		double size=m_gridSizeX*m_gridSizeY*m_gridSizeZ;
+
+		std::cout << "--------------------M_GRID OUTPUT-------------------" << std::endl;
+
+		std::cout << "Size X: " << m_gridSizeX << std::endl;
+		std::cout << "Size Y: " << m_gridSizeY << std::endl;
+		std::cout << "Size Z: " << m_gridSizeZ << std::endl;
+
 		for(int iz=0; iz<m_gridSizeZ; iz++)
 		{
 			for(int iy=0; iy<m_gridSizeY; iy++)
@@ -676,7 +697,6 @@ bool loadSemanticGrid() {
 								// m_grid[index].prob = prob;
 								// m_grid[index].prob = 100-dist;
 								m_grid[index].prob = dist;
-                				m_grid[index].semantic = semanticGrid[index];
 							}
 						}
 						else{
@@ -684,16 +704,23 @@ bool loadSemanticGrid() {
 							// m_grid[index].dist = -1.0;
 							m_grid[index].dist = 500.0;
 							m_grid[index].prob =  0.0;
-							m_grid[index].semantic = 0;
 						}
 					}
 					else
 					{
 						m_grid[index].dist = -1.0;
 						m_grid[index].prob =  0.0;
-						m_grid[index].semantic = 0;
 					}
 
+					m_grid[index].semantic = semanticGrid[index];
+						
+		
+					if(m_grid[index].semantic > 9)
+					{
+						std::cout << "ERROR: " << m_grid[index].semantic << std::endl;
+					}
+					
+					
 				}
 			}
 		}

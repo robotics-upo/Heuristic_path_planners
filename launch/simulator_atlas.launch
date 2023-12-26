@@ -28,13 +28,13 @@
 
     <arg name="algorithm_name"      default="costlazythetastar"/>
 
-    <arg name="world_size_x"        default="220"/>
-    <arg name="world_size_y"        default="220"/>
+    <arg name="world_size_x"        default="212"/>
+    <arg name="world_size_y"        default="170"/>
     <!-- maze.bt with world_size_z=5 -->
     <!-- <arg name="world_size_z"        default="5"/> -->
     <!-- <arg name="world_size_z"        default="2"/> manufacturing -->
-    <arg name="world_size_z"        default="20"/>  <!-- 6 -->
-    <arg name="resolution"          default="0.2"/>
+    <arg name="world_size_z"        default="9"/>  <!-- 6 -->
+    <arg name="resolution"          default="0.1"/>
 
     <arg name="inflate_map"         default="true"/>
     <arg name="inflation_size"      default="$(arg resolution)"/>
