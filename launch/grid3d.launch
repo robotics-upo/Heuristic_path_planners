@@ -3,6 +3,6 @@
         <param name="world_size_x" value="212" />
         <param name="world_size_y" value="170" />
         <param name="world_size_z" value="9" />
-        <param name="resolution" value="0.2" />
+        <param name="resolution" value="0.1" />
     </node>
 </launch>

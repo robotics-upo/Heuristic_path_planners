@@ -21,7 +21,7 @@
     <!-- <arg name="map_name"            default="manufacturing"/> -->
     <!-- ATLAS -->
     <!-- <arg name="map_name"            default="Atlas_8_300"/> -->
-    <arg name="map_name"            default="Atlas_8_floor_1kk"/>
+    <arg name="map_name"            default="Atlas_8_300"/>
     <!-- <arg name="map_name"            default="nube_de_puntos2"/> -->
     <!-- <arg name="map_name"            default="nube_de_puntos_con_etiquetas"/> -->
     <arg name="map"                 default="$(find heuristic_planners)/resources/3dmaps/$(arg map_name).bt"/>
@@ -34,7 +34,7 @@
     <!-- <arg name="world_size_z"        default="5"/> -->
     <!-- <arg name="world_size_z"        default="2"/> manufacturing -->
     <arg name="world_size_z"        default="9"/>  <!-- 6 -->
-    <arg name="resolution"          default="0.1"/>
+    <arg name="resolution"          default="0.2"/>
 
     <arg name="inflate_map"         default="true"/>
     <arg name="inflation_size"      default="$(arg resolution)"/>

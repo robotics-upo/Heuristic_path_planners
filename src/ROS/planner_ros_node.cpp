@@ -34,6 +34,7 @@
 #include <heuristic_planners/GetPath.h>
 #include <heuristic_planners/SetAlgorithm.h>
 
+
 /**
  * @brief Demo Class that demonstrate how to use the algorithms classes and utils 
  * with ROS 

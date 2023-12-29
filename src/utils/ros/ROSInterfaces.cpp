@@ -135,9 +135,7 @@ namespace Planners
             auto world_size = _algorithm.getWorldSize();
             auto resolution = _algorithm.getWorldResolution();
 
-            std::cout << "Semantic Layer " << std::endl; 
-
-            for (int i = 0; i < world_size.x; i++)                                                                                                                                                         
+            std::cout << "Semantic Layer " << std::endl;                                                                                                                                                         
             for (int i = 0; i < world_size.x; i++)
             {
                 for (int j = 0; j < world_size.y; j++)

@@ -14,7 +14,6 @@
 #include <nav_msgs/OccupancyGrid.h>
 #include <std_msgs/Float32.h>
 #include <std_msgs/Int32MultiArray.h>
-#include <heuristic_planners/GetSemanticGrid.h>
 #include <stdio.h> 
 // PCL
 #include <pcl/point_cloud.h>
@@ -29,6 +28,7 @@
 #include <iomanip> //for std::setw, std::hex, and std::setfill
 #include <openssl/evp.h> //for all other OpenSSL function calls
 #include <openssl/sha.h> //for SHA512_DIGEST_LENGTH
+#include <heuristic_planners/GetSemanticGrid.h>
 // #include "utils/ros/ROSInterfaces.hpp"
 
 // #ifdef BUILD_VORONOI
