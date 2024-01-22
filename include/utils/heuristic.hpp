@@ -36,7 +36,26 @@ namespace Planners
          */
         static Vec3i getDelta(const Vec3i &_source, const Vec3i &_target);
 
+        /**
+         * @brief Returns the absolute of unit vector of each neighbor and the tardet
+         * 
+         * @param _source 
+         * @param _target 
+         * @return Vec3i 
+         */
+        static Vec3i getVectorPull(const Vec3i &_source, const Vec3i &_target);
+
     public:
+
+         /**
+         * @brief Gaol pull to weight the heuristic in the selection of exploration neighbors.
+         * 
+         * @param _source 
+         * @param _target 
+         * @return unsigned int 
+         */
+        static unsigned int goal_pull(const Vec3i &_source, const Vec3i &_target);
+
         /**
          * @brief Manhattan heuristic
          * 

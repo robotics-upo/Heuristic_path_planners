@@ -3,10 +3,14 @@
 #include "Planners/AStar.hpp"
 #include "Planners/AStarM2.hpp"
 #include "Planners/AStarM1.hpp"
+#include "Planners/AStar_Gradient.hpp"
+#include "Planners/AStar_EDF.hpp"
 #include "Planners/ThetaStar.hpp"
 #include "Planners/ThetaStarM1.hpp"
 #include "Planners/ThetaStarM2.hpp"
 #include "Planners/LazyThetaStar.hpp"
+#include "Planners/LazyThetaStar_Gradient.hpp"
+#include "Planners/LazyThetaStar_EDF.hpp"
 #include "Planners/LazyThetaStarM1.hpp"
 #include "Planners/LazyThetaStarM1Mod.hpp"
 #include "Planners/LazyThetaStarM2.hpp"
@@ -18,120 +22,78 @@
 
 #include "Grid3D/grid3d.hpp"
 
-#include "rclcpp/rclcpp.hpp"
+#include <ros/ros.h>
 
-#include <pcl/conversions.h>
-#include <pcl/impl/point_types.hpp>
-#include <pcl/point_cloud.h>
-#include <pcl_conversions/pcl_conversions.h>
-#include <rclcpp/logging.hpp>
-#include <visualization_msgs/msg/detail/marker__struct.hpp>
-#include <visualization_msgs/msg/marker.hpp>
+#include <visualization_msgs/Marker.h>
 
-// #include <pcl_ros/point_cloud.h>
-#include <pcl_ros/transforms.hpp>
+#include <pcl_ros/point_cloud.h>
+#include <pcl_ros/transforms.h>
 
-#include <nav_msgs/msg/occupancy_grid.hpp>
+#include <nav_msgs/OccupancyGrid.h>
 
-#include <heuristic_planners/srv/get_path.hpp>
-#include <heuristic_planners/srv/set_algorithm.hpp>
+#include <heuristic_planners/GetPath.h>
+#include <heuristic_planners/SetAlgorithm.h>
 
 /**
  * @brief Demo Class that demonstrate how to use the algorithms classes and utils 
  * with ROS 
  * 
  */
-class HeuristicPlannerROS : public rclcpp::Node {
+class HeuristicPlannerROS
+{
 
 public:
     HeuristicPlannerROS()
-      :rclcpp::Node("heuristic_planner_ros")
     {
 
         std::string algorithm_name;
+        lnh_.param("algorithm", algorithm_name, (std::string)"astar");
+        lnh_.param("heuristic", heuristic_, (std::string)"euclidean");
         
-        this->declare_parameter<std::string>("algorithm_name", "astar");
-        this->declare_parameter<std::string>("heuristic_name", "euclidean");
-
-        this->declare_parameter<float>("world_size_x", 100.0);
-        this->declare_parameter<float>("world_size_y", 100.0);
-        this->declare_parameter<float>("world_size_z", 0.0);
-        this->declare_parameter<float>("resolution", 0.2);
-        this->declare_parameter<bool>("inflate_map", true);
-        this->declare_parameter<bool>("use3d", (bool)true);
-        this->declare_parameter<double>("cost_scaling_factor", 0.8);
-        this->declare_parameter<double>("robot_radius", 0.4);
-        this->declare_parameter<std::string>("frame_id", std::string("map"));
-        this->declare_parameter<bool>("save_data_file", (bool)true);
-        this->declare_parameter<std::string>("data_folder", std::string("planing_data.txt"));
-        this->declare_parameter<float>("max_line_of_sight_distance", (float)1000.0);
-        this->declare_parameter<float>("cost_weight", (float)0.0);
-        this->declare_parameter<bool>("overlay_markers", (bool)false);
-        this->declare_parameter<double>("inflation_size", 0.5);
-        
-        this->get_parameter("algorithm_name", algorithm_name);
-        this->get_parameter("heuristic_name", heuristic_);
-
-        m_grid3d_ = std::make_unique<Grid3d>(this); //TODO Costs not implement yet 
         configureAlgorithm(algorithm_name, heuristic_);
 
-        point_markers_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("path_points_markers", 1);
-        line_markers_pub_  = this->create_publisher<visualization_msgs::msg::Marker>("path_line_markers", 1);
+        pointcloud_sub_     = lnh_.subscribe<pcl::PointCloud<pcl::PointXYZ>>("/points", 1, &HeuristicPlannerROS::pointCloudCallback, this);
+        occupancy_grid_sub_ = lnh_.subscribe<nav_msgs::OccupancyGrid>("/grid", 1, &HeuristicPlannerROS::occupancyGridCallback, this);
 
-        request_path_server_ = this->create_service<heuristic_planners::srv::GetPath>("request_path",std::bind(
-                                                                      &HeuristicPlannerROS::requestPathService, this,
-                                                                      std::placeholders::_1, // Corresponds to the 'request'  input
-                                                                      std::placeholders::_2  // Corresponds to the 'response' input
-                                                                      ));
+        request_path_server_   = lnh_.advertiseService("request_path",  &HeuristicPlannerROS::requestPathService, this);
+        change_planner_server_ = lnh_.advertiseService("set_algorithm", &HeuristicPlannerROS::setAlgorithm, this);
 
-        change_planner_server_ = this->create_service<heuristic_planners::srv::SetAlgorithm>("set_algorithm",std::bind(
-                                                                      &HeuristicPlannerROS::setAlgorithm, this,
-                                                                      std::placeholders::_1, // Corresponds to the 'request'  input
-                                                                      std::placeholders::_2  // Corresponds to the 'response' input
-                                                                      ));
+        line_markers_pub_  = lnh_.advertise<visualization_msgs::Marker>("path_line_markers", 1);
+        point_markers_pub_ = lnh_.advertise<visualization_msgs::Marker>("path_points_markers", 1);
 
-
-        pointcloud_sub_ = this->create_subscription<sensor_msgs::msg::PointCloud2>("/points", 1, std::bind(&HeuristicPlannerROS::pointCloudCallback, this, std::placeholders::_1));
-        occupancy_grid_sub_ = this->create_subscription<nav_msgs::msg::OccupancyGrid>("/grid", 1, std::bind(&HeuristicPlannerROS::occupancyGridCallback, this, std::placeholders::_1));
     }
 
 private:
 
-    void occupancyGridCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr _grid){
-        RCLCPP_INFO(this->get_logger(),"Loading OccupancyGrid map...");
+    void occupancyGridCallback(const nav_msgs::OccupancyGrid::ConstPtr &_grid){
+        ROS_INFO("Loading OccupancyGrid map...");
         Planners::utils::configureWorldFromOccupancyWithCosts(*_grid, *algorithm_);
         algorithm_->publishOccupationMarkersMap();
-        occupancy_grid_sub_.reset();
-        RCLCPP_INFO(this->get_logger(),"Occupancy Grid Loaded");
+        occupancy_grid_sub_.shutdown();
+        ROS_INFO("Occupancy Grid Loaded");
         occupancy_grid_ = *_grid;
         input_map_ = 1;
     }
 
-    // void pointCloudCallback(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &_points)
-    void pointCloudCallback(const sensor_msgs::msg::PointCloud2::SharedPtr points)
+    void pointCloudCallback(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &_points)
     {
-        boost::shared_ptr<pcl::PointCloud<pcl::PointXYZ>> _points_ptr = boost::make_shared<pcl::PointCloud<pcl::PointXYZ>>();
-        pcl::fromROSMsg(*(points.get()), *(_points_ptr.get()));
 
-        RCLCPP_INFO(this->get_logger(),"Loading map...");
-        Planners::utils::configureWorldFromPointCloud(_points_ptr, *algorithm_, resolution_);
+        ROS_INFO("Loading map...");
+        Planners::utils::configureWorldFromPointCloud(_points, *algorithm_, resolution_);
         algorithm_->publishOccupationMarkersMap();
         Planners::utils::configureWorldCosts(*m_grid3d_, *algorithm_);
-        RCLCPP_INFO(this->get_logger(),"Published occupation marker map");
-        cloud_ = *_points_ptr;
+        ROS_INFO("Published occupation marker map");
+        cloud_ = *_points;
         input_map_ = 2;
-        pointcloud_sub_.reset();
+        pointcloud_sub_.shutdown();
     }   
-    bool setAlgorithm(const std::shared_ptr<heuristic_planners::srv::SetAlgorithm::Request> _req, 
-        std::shared_ptr<heuristic_planners::srv::SetAlgorithm::Response> rep){
+    bool setAlgorithm(heuristic_planners::SetAlgorithmRequest &_req, heuristic_planners::SetAlgorithmResponse &rep){
         
-        configureAlgorithm(_req->algorithm.data, _req->heuristic.data);
-        rep->result.data = true;
+        configureAlgorithm(_req.algorithm.data, _req.heuristic.data);
+        rep.result.data = true;
         return true;
     }
-    bool requestPathService(const std::shared_ptr<heuristic_planners::srv::GetPath::Request> req, std::shared_ptr<heuristic_planners::srv::GetPath::Response> rep){
-      auto _req = *(req.get());
-      auto _rep = *(rep.get());
+    bool requestPathService(heuristic_planners::GetPathRequest &_req, heuristic_planners::GetPathResponse &_rep){
 
         if( !_req.algorithm.data.empty() ){
             if( !_req.heuristic.data.empty() ){
@@ -143,7 +105,7 @@ private:
             configureHeuristic(_req.heuristic.data);
         }
 
-        RCLCPP_INFO(this->get_logger(),"Path requested, computing path");
+        ROS_INFO("Path requested, computing path");
         //delete previous markers
         publishMarker(path_line_markers_, line_markers_pub_);
         publishMarker(path_points_markers_, point_markers_pub_);
@@ -235,9 +197,9 @@ private:
                     if(saver.savePathDataToFile(path_data, data_folder_ + "/planning.txt") && 
                        saver.savePathDistancesToFile(adjacent_path, result_distances, data_folder_ + "/path_metrics.txt") &&
                        saver.saveAnglesToFile(angles, data_folder_ + "/angles.txt") ){
-                        RCLCPP_INFO(this->get_logger(),"Path data metrics saved");
+                        ROS_INFO("Path data metrics saved");
                     }else{
-                        RCLCPP_ERROR(this->get_logger(),"Couldn't save path data metrics. Path and results does not have same size");
+                        ROS_ERROR("Couldn't save path data metrics. Path and results does not have same size");
                     }
                 }
 
@@ -254,10 +216,10 @@ private:
                     path_line_markers_.points.clear();
                     path_points_markers_.points.clear();
 
-                    RCLCPP_INFO(this->get_logger(),"Path calculated succesfully");
+                    ROS_INFO("Path calculated succesfully");
                 }
             }else{
-                RCLCPP_INFO(this->get_logger(),"Could not calculate path between request points");
+                ROS_INFO("Could not calculate path between request points");
             }
         }  
         if(_req.tries.data > 2){
@@ -271,50 +233,62 @@ private:
 
         float ws_x, ws_y, ws_z;
 
-        this->get_parameter("world_size_x", ws_x);
-        this->get_parameter("world_size_y", ws_y);
-        this->get_parameter("world_size_z", ws_z);
-        this->get_parameter("resolution", resolution_);
-        this->get_parameter("inflate_map", inflate_);
-        this->get_parameter("use3d", use3d_);
+        lnh_.param("world_size_x", ws_x, (float)100.0); // In meters
+        lnh_.param("world_size_y", ws_y, (float)100.0); // In meters
+        lnh_.param("world_size_z", ws_z, (float)100.0); // In meters
+        lnh_.param("resolution", resolution_, (float)0.2);
+        lnh_.param("inflate_map", inflate_, (bool)true);
 
         world_size_.x = std::floor(ws_x / resolution_);
         world_size_.y = std::floor(ws_y / resolution_);
         world_size_.z = std::floor(ws_z / resolution_);
-
+        
+        lnh_.param("use3d", use3d_, (bool)true);
 
         if( algorithm_name == "astar" ){
-            RCLCPP_INFO(this->get_logger(),"Using A*");
+            ROS_INFO("Using A*");
             algorithm_.reset(new Planners::AStar(use3d_));
         }else if( algorithm_name == "costastar" ){
-            RCLCPP_INFO(this->get_logger(),"Using Cost Aware A*");
+            ROS_INFO("Using Cost Aware A*");
             algorithm_.reset(new Planners::AStarM1(use3d_));
+        }else if( algorithm_name == "astar_gradient" ){
+            ROS_INFO("Using A* Gradient");
+            algorithm_.reset(new Planners::AStarGradient(use3d_));
+        }else if( algorithm_name == "astar_edf" ){
+            ROS_INFO("Using A* EDF");
+            algorithm_.reset(new Planners::AStarEDF(use3d_));
         }else if( algorithm_name == "astarsafetycost" ){
-            RCLCPP_INFO(this->get_logger(),"Using A* Safety Cost");
+            ROS_INFO("Using A* Safety Cost");
             algorithm_.reset(new Planners::AStarM2(use3d_));    
         }else if ( algorithm_name == "thetastar" ){
-            RCLCPP_INFO(this->get_logger(),"Using Theta*");
+            ROS_INFO("Using Theta*");
             algorithm_.reset(new Planners::ThetaStar(use3d_));
         }else if ( algorithm_name == "costhetastar" ){
-            RCLCPP_INFO(this->get_logger(),"Using Cost Aware Theta* ");
+            ROS_INFO("Using Cost Aware Theta* ");
             algorithm_.reset(new Planners::ThetaStarM1(use3d_));
         }else if ( algorithm_name == "thetastarsafetycost" ){
-            RCLCPP_INFO(this->get_logger(),"Using Theta* Safety Cost");
+            ROS_INFO("Using Theta* Safety Cost");
             algorithm_.reset(new Planners::ThetaStarM2(use3d_));
         }else if( algorithm_name == "lazythetastar" ){
-            RCLCPP_INFO(this->get_logger(),"Using LazyTheta*");
+            ROS_INFO("Using LazyTheta*");
             algorithm_.reset(new Planners::LazyThetaStar(use3d_));
         }else if( algorithm_name == "costlazythetastar"){
-            RCLCPP_INFO(this->get_logger(),"Using Cost Aware LazyTheta*");
+            ROS_INFO("Using Cost Aware LazyTheta*");
             algorithm_.reset(new Planners::LazyThetaStarM1(use3d_));
         }else if( algorithm_name == "costlazythetastarmodified"){
-            RCLCPP_INFO(this->get_logger(),"Using Cost Aware LazyTheta*");
+            ROS_INFO("Using Cost Aware LazyTheta*");
             algorithm_.reset(new Planners::LazyThetaStarM1Mod(use3d_));
         }else if( algorithm_name == "lazythetastarsafetycost"){
-            RCLCPP_INFO(this->get_logger(),"Using LazyTheta* Safety Cost");
+            ROS_INFO("Using LazyTheta* Safety Cost");
             algorithm_.reset(new Planners::LazyThetaStarM2(use3d_));
+        }else if( algorithm_name == "lazythetastargradient"){
+            ROS_INFO("Using LazyTheta* Gradient");
+            algorithm_.reset(new Planners::LazyThetaStarGradient(use3d_));
+        }else if( algorithm_name == "lazythetastaredf"){
+            ROS_INFO("Using LazyTheta* EDF");
+            algorithm_.reset(new Planners::LazyThetaStarEDF(use3d_));
         }else{
-            RCLCPP_WARN(this->get_logger(),"Wrong algorithm name parameter. Using ASTAR by default");
+            ROS_WARN("Wrong algorithm name parameter. Using ASTAR by default");
             algorithm_.reset(new Planners::AStar(use3d_));
         }
 
@@ -322,36 +296,32 @@ private:
 
         configureHeuristic(_heuristic);
 
-        RCLCPP_INFO(this->get_logger(),"Using discrete world size: [%d, %d, %d]", world_size_.x, world_size_.y, world_size_.z);
-        RCLCPP_INFO(this->get_logger(),"Using resolution: [%f]", resolution_);
+        ROS_INFO("Using discrete world size: [%d, %d, %d]", world_size_.x, world_size_.y, world_size_.z);
+        ROS_INFO("Using resolution: [%f]", resolution_);
 
         if(inflate_){
             double inflation_size;
-            this->get_parameter("inflation_size", inflation_size);
+            lnh_.param("inflation_size", inflation_size, 0.5);
             inflation_steps_ = std::round(inflation_size / resolution_);
-            RCLCPP_INFO(this->get_logger(),"Inflation size %.2f, using inflation step %d", inflation_size, inflation_steps_);
+            ROS_INFO("Inflation size %.2f, using inflation step %d", inflation_size, inflation_steps_);
         }
         algorithm_->setInflationConfig(inflate_, inflation_steps_);
 
-
+        m_grid3d_.reset(new Grid3d); //TODO Costs not implement yet
         double cost_scaling_factor, robot_radius;
-
-        this->get_parameter("cost_scaling_factor", cost_scaling_factor);
-        this->get_parameter("robot_radius", robot_radius);
+        lnh_.param("cost_scaling_factor", cost_scaling_factor, 0.8);		
+		lnh_.param("robot_radius", robot_radius, 0.4);		
         
         m_grid3d_->setCostParams(cost_scaling_factor, robot_radius);
         
         std::string frame_id;
-        // lnh_.param("frame_id", frame_id, std::string("map"));		
-        this->get_parameter("frame_id", frame_id);
-
+        lnh_.param("frame_id", frame_id, std::string("map"));		
         configMarkers(algorithm_name, frame_id, resolution_);
 
-        this->get_parameter("save_data_file", save_data_);
-        this->get_parameter("data_folder", data_folder_);
-
+        lnh_.param("save_data_file", save_data_, (bool)true);		
+        lnh_.param("data_folder", data_folder_, std::string("planing_data.txt"));		
         if(save_data_)
-            RCLCPP_INFO_STREAM(this->get_logger(),"Saving path planning data results to " << data_folder_);
+            ROS_INFO_STREAM("Saving path planning data results to " << data_folder_);
 
         //
         if( input_map_ == 1 ){
@@ -362,36 +332,33 @@ private:
         }
         //Algorithm specific parameters. Its important to set line of sight after configuring world size(it depends on the resolution)
         float sight_dist, cost_weight;
-                                                                             //
-        this->get_parameter("max_line_of_sight_distance", sight_dist);
-        this->get_parameter("cost_weight", cost_weight);
-
+        lnh_.param("max_line_of_sight_distance", sight_dist, (float)1000.0); // In meters
+        lnh_.param("cost_weight", cost_weight, (float)0.0);
         algorithm_->setMaxLineOfSight(sight_dist);
         algorithm_->setCostFactor(cost_weight);
 
-        this->get_parameter("overlay_markers", overlay_markers_);
-
+        lnh_.param("overlay_markers", overlay_markers_, (bool)false);
     }
     void configureHeuristic(const std::string &_heuristic){
         
         if( _heuristic == "euclidean" ){
             algorithm_->setHeuristic(Planners::Heuristic::euclidean);
-            RCLCPP_INFO(this->get_logger(),"Using Euclidean Heuristics");
+            ROS_INFO("Using Euclidean Heuristics");
         }else if( _heuristic == "euclidean_optimized" ){
             algorithm_->setHeuristic(Planners::Heuristic::euclideanOptimized);
-            RCLCPP_INFO(this->get_logger(),"Using Optimized Euclidean Heuristics");
+            ROS_INFO("Using Optimized Euclidean Heuristics");
         }else if( _heuristic == "manhattan" ){
             algorithm_->setHeuristic(Planners::Heuristic::manhattan);
-            RCLCPP_INFO(this->get_logger(),"Using Manhattan Heuristics");
+            ROS_INFO("Using Manhattan Heuristics");
         }else if( _heuristic == "octogonal" ){
             algorithm_->setHeuristic(Planners::Heuristic::octagonal);
-            RCLCPP_INFO(this->get_logger(),"Using Octogonal Heuristics");
+            ROS_INFO("Using Octogonal Heuristics");
         }else if( _heuristic == "dijkstra" ){
             algorithm_->setHeuristic(Planners::Heuristic::dijkstra);     
-            RCLCPP_INFO(this->get_logger(),"Using Dijkstra Heuristics");
+            ROS_INFO("Using Dijkstra Heuristics");
         }else{
             algorithm_->setHeuristic(Planners::Heuristic::euclidean);
-            RCLCPP_WARN(this->get_logger(),"Wrong Heuristic param. Using Euclidean Heuristics by default");
+            ROS_WARN("Wrong Heuristic param. Using Euclidean Heuristics by default");
         }
     }
     std::vector<std::pair<Planners::utils::Vec3i, double>> getClosestObstaclesToPathPoints(const Planners::utils::CoordinateList &_path){
@@ -413,11 +380,11 @@ private:
 
         path_line_markers_.ns = _ns;
         path_line_markers_.header.frame_id = _frame;
-        path_line_markers_.header.stamp = this->now();
+        path_line_markers_.header.stamp = ros::Time::now();
         path_line_markers_.id = rand();
-        path_line_markers_.lifetime = rclcpp::Duration::from_seconds(500);
-        path_line_markers_.type = visualization_msgs::msg::Marker::LINE_STRIP;
-        path_line_markers_.action = visualization_msgs::msg::Marker::ADD;
+        path_line_markers_.lifetime = ros::Duration(500);
+        path_line_markers_.type = visualization_msgs::Marker::LINE_STRIP;
+        path_line_markers_.action = visualization_msgs::Marker::ADD;
         path_line_markers_.pose.orientation.w = 1;
 
         path_line_markers_.color.r = 0.0;
@@ -429,11 +396,11 @@ private:
 
         path_points_markers_.ns = _ns;
         path_points_markers_.header.frame_id = _frame;
-        path_points_markers_.header.stamp = this->now();
+        path_points_markers_.header.stamp = ros::Time::now();
         path_points_markers_.id = rand();
-        path_points_markers_.lifetime = rclcpp::Duration::from_seconds(500);
-        path_points_markers_.type = visualization_msgs::msg::Marker::POINTS;
-        path_points_markers_.action = visualization_msgs::msg::Marker::ADD;
+        path_points_markers_.lifetime = ros::Duration(500);
+        path_points_markers_.type = visualization_msgs::Marker::POINTS;
+        path_points_markers_.action = visualization_msgs::Marker::ADD;
         path_points_markers_.pose.orientation.w = 1;
         path_points_markers_.color.r = 0.0;
         path_points_markers_.color.g = 1.0;
@@ -444,26 +411,25 @@ private:
         path_points_markers_.scale.z = _scale;
 
     }
-    template <typename T>
-    void publishMarker(visualization_msgs::msg::Marker &_marker, const T &_pub ){
+    void publishMarker(visualization_msgs::Marker &_marker, const ros::Publisher &_pub){
         
         //Clear previous marker
         if( !overlay_markers_ ){
-            _marker.action = visualization_msgs::msg::Marker::DELETEALL;
-            _pub->publish(_marker);
+            _marker.action = visualization_msgs::Marker::DELETEALL;
+            _pub.publish(_marker);
         }else{
             path_points_markers_.id           = rand();
-            path_points_markers_.header.stamp = this->now();
+            path_points_markers_.header.stamp = ros::Time::now();
             setRandomColor(path_points_markers_.color);
 
             path_line_markers_.id             = rand();
-            path_line_markers_.header.stamp   = this->now();
+            path_line_markers_.header.stamp   = ros::Time::now();
             setRandomColor(path_line_markers_.color);
         }
-        _marker.action = visualization_msgs::msg::Marker::ADD;
-        _pub->publish(_marker);
+        _marker.action = visualization_msgs::Marker::ADD;
+        _pub.publish(_marker);
     }
-    void setRandomColor(std_msgs::msg::ColorRGBA &_color, unsigned int _n_div = 20){
+    void setRandomColor(std_msgs::ColorRGBA &_color, unsigned int _n_div = 20){
         //Using golden angle approximation
         const double golden_angle = 180 * (3 - sqrt(5));
         double hue = color_id_ * golden_angle + 60;
@@ -479,28 +445,20 @@ private:
     }
 
 
-    // ros::NodeHandle lnh_{"~"};
-    // ros::ServiceServer request_path_server_, change_planner_server_;
-
-    // ros::Subscriber pointcloud_sub_, occupancy_grid_sub_;
-
-    rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr pointcloud_sub_;
-    rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr occupancy_grid_sub_;
-
-    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr line_markers_pub_, point_markers_pub_;
-
-    rclcpp::Service<heuristic_planners::srv::GetPath>::SharedPtr request_path_server_;
-    rclcpp::Service<heuristic_planners::srv::SetAlgorithm>::SharedPtr change_planner_server_;
+    ros::NodeHandle lnh_{"~"};
+    ros::ServiceServer request_path_server_, change_planner_server_;
+    ros::Subscriber pointcloud_sub_, occupancy_grid_sub_;
+    //TODO Fix point markers
+    ros::Publisher line_markers_pub_, point_markers_pub_;
 
     std::unique_ptr<Grid3d> m_grid3d_;
 
     std::unique_ptr<Planners::AlgorithmBase> algorithm_;
         
-    visualization_msgs::msg::Marker path_line_markers_, path_points_markers_;
+    visualization_msgs::Marker path_line_markers_, path_points_markers_;
     
     //Parameters
     Planners::utils::Vec3i world_size_; // Discrete
-    //float resolution_ = 0.2;
     float resolution_;
 
     bool save_data_;
@@ -511,11 +469,8 @@ private:
     std::string data_folder_;
     bool overlay_markers_{0};
     unsigned int color_id_{0};
-    nav_msgs::msg::OccupancyGrid occupancy_grid_;
-    // TODO?: Change type of message --> sensor_msgs::msg::PointCloud2
+    nav_msgs::OccupancyGrid occupancy_grid_;
     pcl::PointCloud<pcl::PointXYZ> cloud_;
-    //sensor_msgs::msg::PointCloud2 cloud_; //JAC
-
     //0: no map yet
     //1: using occupancy
     //2: using cloud
@@ -525,14 +480,10 @@ private:
 };
 int main(int argc, char **argv)
 {
-    // ros::init(argc, argv, "heuristic_planner_ros_node");
-    rclcpp::init(argc, argv);
+    ros::init(argc, argv, "heuristic_planner_ros_node");
 
-    auto node = std::make_shared<HeuristicPlannerROS>();
-    rclcpp::spin(node);
-
-    // HeuristicPlannerROS heuristic_planner_ros;
-    // ros::spin();
+    HeuristicPlannerROS heuristic_planner_ros;
+    ros::spin();
 
 return 0;
 }

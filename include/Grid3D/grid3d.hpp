@@ -1,4 +1,4 @@
-#ifndef __GRID3D_HPP__
+ #ifndef __GRID3D_HPP__
 #define __GRID3D_HPP__
 
 /**
@@ -7,25 +7,15 @@
  * @author Francisco J. Perez Grau and Fernando Caballero
  */
 
-// #include <ros/ros.h>
-#include <chrono>
-#include <pcl-1.10/pcl/impl/point_types.hpp>
-#include <pcl-1.10/pcl/kdtree/kdtree_flann.h>
-#include <pcl-1.10/pcl/point_cloud.h>
-#include <rclcpp/publisher.hpp>
-#include <rclcpp/rclcpp.hpp>
+#include <sys/time.h>
+#include <ros/ros.h>
 #include <octomap/octomap.h>
 #include <octomap/OcTree.h>
-#include <nav_msgs/msg/occupancy_grid.hpp>
-#include <rclcpp/timer.hpp>
-#include <sensor_msgs/msg/point_cloud2.hpp>
-#include <std_msgs/msg/float32.hpp>
+#include <nav_msgs/OccupancyGrid.h>
+#include <std_msgs/Float32.h>
 #include <stdio.h> 
-
 // PCL
-#include <sys/time.h>
-// #include <pcl_ros/point_cloud.hpp>
-#include <pcl/common/common.h>
+#include <pcl/point_cloud.h>
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl_conversions/pcl_conversions.h>
 #include <cmath>
@@ -43,14 +33,13 @@
 // #include "voro++-0.4.6/src/voro++.hh"
 // #endif
 
-class Grid3d {
+class Grid3d
+{
 private:
-  rclcpp::Node* node_ptr_;
 	
 	// Ros parameters
-	// ros::NodeHandle m_nh;
+	ros::NodeHandle m_nh;
 	bool m_publishPc;
-  
 	std::string m_mapPath, m_nodeName;
 	std::string m_globalFrameId;
 	float m_sensorDev, m_gridSlice;
@@ -67,61 +56,55 @@ private:
 	int m_gridStepY, m_gridStepZ;
 	
 	// 3D point clound representation of the map
-  	boost::shared_ptr<pcl::PointCloud<pcl::PointXYZI>> m_cloud;
+	pcl::PointCloud<pcl::PointXYZI>::Ptr m_cloud;
 	pcl::KdTreeFLANN<pcl::PointXYZI> m_kdtree;
 	
 	// Visualization of the map as pointcloud
-	sensor_msgs::msg::PointCloud2 m_pcMsg;
-  	rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr m_pcPub;
-  	rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr percent_computed_pub_;
-  	rclcpp::Publisher<nav_msgs::msg::OccupancyGrid>::SharedPtr m_gridSlicePub;
-
-	// ros::Timer mapTimer;
-  	rclcpp::TimerBase::SharedPtr mapTimer;
+	sensor_msgs::PointCloud2 m_pcMsg;
+	ros::Publisher m_pcPub, percent_computed_pub_;
+	ros::Timer mapTimer;
 			
 	// Visualization of a grid slice as 2D grid map msg
-	nav_msgs::msg::OccupancyGrid m_gridSliceMsg;
-	// ros::Timer gridTimer;
-  	rclcpp::TimerBase::SharedPtr gridTimer;
+	nav_msgs::OccupancyGrid m_gridSliceMsg;
+	ros::Publisher m_gridSlicePub;
+	ros::Timer gridTimer;
 
 	//Parameters added to allow a new exp function to test different gridmaps
 	double cost_scaling_factor, robot_radius;
 	bool use_costmap_function;
 	
 public:
-	Grid3d(rclcpp::Node* node_ptr):node_ptr_(node_ptr), m_cloud(new pcl::PointCloud<pcl::PointXYZI>)
+	Grid3d(): m_cloud(new pcl::PointCloud<pcl::PointXYZI>)
 	{
-    
+		// Load paraeters
+		double value;
+		ros::NodeHandle lnh("~");
+		lnh.param("name", m_nodeName, std::string("grid3d"));
+		if(!lnh.getParam("global_frame_id", m_globalFrameId))
+			m_globalFrameId = "map";	
+		if(!lnh.getParam("map_path", m_mapPath))
+			m_mapPath = "map.ot";
+		if(!lnh.getParam("publish_point_cloud", m_publishPc))
+			m_publishPc = true;
+		if(!lnh.getParam("publish_point_cloud_rate", m_publishPointCloudRate))
+			m_publishPointCloudRate = 0.2;	
+		if(!lnh.getParam("publish_grid_slice", value))
+			value = 1.0;
+		if(!lnh.getParam("publish_grid_slice_rate", m_publishGridSliceRate))
+			m_publishGridSliceRate = 0.2;
+		m_gridSlice = (float)value;
+		if(!lnh.getParam("sensor_dev", value))
+			value = 0.2;
+		m_sensorDev = (float)value;
 
-    node_ptr_->declare_parameter<std::string>("name", "grid3d");
-    node_ptr_->declare_parameter<std::string>("global_frame_id", "map");
-    node_ptr_->declare_parameter<std::string>("map_path", "map.ot");
-    node_ptr_->declare_parameter<bool>("publish_point_cloud", true);
-    node_ptr_->declare_parameter<double>("publish_point_cloud_rate", 0.2);
-    node_ptr_->declare_parameter<double>("publish_grid_slice", 1.0);
-    node_ptr_->declare_parameter<double>("publish_grid_slice_rate", 0.2);
-    node_ptr_->declare_parameter<double>("sensor_dev", 0.2);
-    // node_ptr_->declare_parameter<double>("cost_scaling_factor", 0.8);
-    // node_ptr_->declare_parameter<double>("robot_radius", 0.4);
-    node_ptr_->declare_parameter<bool>("use_costmap_function", true);
-
-    node_ptr_->get_parameter("name", m_nodeName);
-    node_ptr_->get_parameter("global_frame_id", m_globalFrameId);
-    node_ptr_->get_parameter("map_path", m_mapPath);
-    node_ptr_->get_parameter("publish_point_cloud", m_publishPc);
-    node_ptr_->get_parameter("publish_point_cloud_rate", m_publishPointCloudRate);
-    node_ptr_->get_parameter("publish_grid_slice", m_gridSlice);
-    node_ptr_->get_parameter("publish_grid_slice_rate", m_publishGridSliceRate);
-    node_ptr_->get_parameter("sensor_dev", m_sensorDev);
-    node_ptr_->get_parameter("cost_scaling_factor", cost_scaling_factor);
-    node_ptr_->get_parameter("robot_radius", robot_radius);
-    node_ptr_->get_parameter("use_costmap_function", use_costmap_function);
+		lnh.param("cost_scaling_factor", cost_scaling_factor, 0.8); //0.8		
+		lnh.param("robot_radius", robot_radius, 0.4);		//0.4
+		lnh.param("use_costmap_function", use_costmap_function, (bool)true);		
 
 		// Load octomap 
 		m_octomap = NULL;
 		m_grid = NULL;
 
-    RCLCPP_WARN(node_ptr_->get_logger(), "Loading octomap from %s", m_mapPath.c_str());
 		if(loadOctomap(m_mapPath))
 		{
 			// Compute the point-cloud associated to the ocotmap
@@ -149,35 +132,17 @@ public:
 			if(m_gridSlice >= 0 && m_gridSlice <= m_maxZ)
 			{
 				buildGridSliceMsg(m_gridSlice);
-        		m_gridSlicePub = node_ptr_->create_publisher<nav_msgs::msg::OccupancyGrid>(m_nodeName+"/grid_slice", 1);
-
-        		// gridTimer = node_ptr_->create_wall_timer(
-            	// std::chrono::seconds(1.0f/m_publishGridSliceRate), [this]() { node_ptr_->publishGridSlice();});
-            	// FIXME:
-        		gridTimer = node_ptr_->create_wall_timer(
-            	std::chrono::seconds(1), [this]() {this->publishGridSlice();});
-
+				m_gridSlicePub = m_nh.advertise<nav_msgs::OccupancyGrid>(m_nodeName+"/grid_slice", 1, true);
+				gridTimer      = m_nh.createTimer(ros::Duration(1.0/m_publishGridSliceRate), &Grid3d::publishGridSliceTimer, this);	
 			}
 			
 			// Setup point-cloud publisher
 			if(m_publishPc)
 			{
-				// m_pcPub  = m_nh.advertise<sensor_msgs::msg::PointCloud2>(m_nodeName+"/map_point_cloud", 1, true);
-        		m_pcPub = node_ptr_-> create_publisher<sensor_msgs::msg::PointCloud2>(m_nodeName+"/map_point_cloud", 1);
-        		
-				// mapTimer = node_ptr_->create_wall_timer(
-        		//     std::chrono::millisecondsseconds(1.0/m_publishPointCloudRate), [this]() { node_ptr_-> publishMapPointCloud();});
-        		//     FIXME:
-        		// mapTimer = node_ptr_->create_wall_timer(
-            	// std::chrono::seconds(1), [this]() { node_ptr_-> publishMapPointCloud();});	
-				//COMPILE			
-				// mapTimer = node_ptr_->create_wall_timer(
-            	// std::chrono::milliseconds(500), std::bind(&Grid3d::publishMapPointCloud, this));
-				
-				mapTimer = node_ptr_->create_wall_timer(std::chrono::duration<double>(1.0f/1),std::bind(&Grid3d::publishMapPointCloud, this));
+				m_pcPub  = m_nh.advertise<sensor_msgs::PointCloud2>(m_nodeName+"/map_point_cloud", 1, true);
+				mapTimer = m_nh.createTimer(ros::Duration(1.0/m_publishPointCloudRate), &Grid3d::publishMapPointCloudTimer, this);
 			}
-      		percent_computed_pub_ = node_ptr_->create_publisher<std_msgs::msg::Float32>(m_nodeName+"/percent_computed", 10);
-
+			percent_computed_pub_ = m_nh.advertise<std_msgs::Float32>(m_nodeName+"/percent_computed", 1, false);
 		}
 	}
 
@@ -226,14 +191,14 @@ public:
   
 	void publishMapPointCloud(void)
 	{
-		m_pcMsg.header.stamp = node_ptr_->now();
-		m_pcPub->publish(m_pcMsg);
+		m_pcMsg.header.stamp = ros::Time::now();
+		m_pcPub.publish(m_pcMsg);
 	}
 	
 	void publishGridSlice(void)
 	{
-		m_gridSliceMsg.header.stamp = node_ptr_->now();
-		m_gridSlicePub->publish(m_gridSliceMsg);
+		m_gridSliceMsg.header.stamp = ros::Time::now();
+		m_gridSlicePub.publish(m_gridSliceMsg);
 	}
 	
 	bool isIntoMap(float x, float y, float z)
@@ -283,14 +248,15 @@ protected:
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
-	// void publishMapPointCloudTimer(const ros::TimerEvent& event)
-	// {
-	// 	publishMapPointCloud();
-	// }
-	// void publishGridSliceTimer(const ros::TimerEvent& event)
-	// {
-	// 	publishGridSlice();
-	// }
+	void publishMapPointCloudTimer(const ros::TimerEvent& event)
+	{
+		publishMapPointCloud();
+	}
+	
+	void publishGridSliceTimer(const ros::TimerEvent& event)
+	{
+		publishGridSlice();
+	}
 #pragma GCC diagnostic pop
 
 	bool loadOctomap(std::string &path)
@@ -300,7 +266,7 @@ protected:
 			delete m_octomap;
 		if(m_grid != NULL)
 			delete []m_grid;
-
+		
 		// Load octomap
 		octomap::AbstractOcTree *tree;
 		if(path.length() > 3 && (path.compare(path.length()-3, 3, ".bt") == 0))
@@ -314,12 +280,12 @@ protected:
 		else if(path.length() > 3 && (path.compare(path.length()-3, 3, ".ot") == 0))
 		{
 			tree = octomap::AbstractOcTree::read(path);
-			if(!tree){
+			if(!tree)
 				return false;
-			}
 		}	
 		else
 			return false;
+		
 		/*
 		// Load octomap
 		octomap::AbstractOcTree *tree = octomap::AbstractOcTree::read(path);
@@ -328,6 +294,7 @@ protected:
 		m_octomap = dynamic_cast<octomap::OcTree*>(tree);
 		std::cout << "Octomap loaded" << std::endl;
 
+		// Check loading and alloc momery for the grid
 		if(m_octomap == NULL)
 		{
 			std::cout << "Error: NULL octomap!!" << std::endl;
@@ -344,19 +311,11 @@ protected:
 		m_maxZ = (float)(maxZ-minZ);
 		m_resolution = (float)res;
 		m_oneDivRes = 1.0/m_resolution;
-		RCLCPP_INFO(node_ptr_->get_logger(),"Map size");
-		RCLCPP_INFO(node_ptr_->get_logger(),"\tx: %.2f to %.2f", minX, maxX);
-		RCLCPP_INFO(node_ptr_->get_logger(),"\ty: %.2f to %.2f", minY, maxY);
-		RCLCPP_INFO(node_ptr_->get_logger(),"\tz: %.2f to %.2f", minZ, maxZ);
-		RCLCPP_INFO(node_ptr_->get_logger(),"\tRes: %.2f", m_resolution);
-
-		// ROS_INFO("Map size:\n");
-		// ROS_INFO("\tx: %.2f to %.2f", minX, maxX);
-		// ROS_INFO("\ty: %.2f to %.2f", minZ, maxZ);
-		// ROS_INFO("\tz: %.2f to %.2f", minZ, maxZ);
-		// ROS_INFO("\tRes: %.2f" , m_resolution );
-
-		
+		ROS_INFO("Map size:\n");
+		ROS_INFO("\tx: %.2f to %.2f", minX, maxX);
+		ROS_INFO("\ty: %.2f to %.2f", minY, maxY);
+		ROS_INFO("\tz: %.2f to %.2f", minZ, maxZ);
+		ROS_INFO("\tRes: %.2f" , m_resolution );
 		
 		return true;
 	}
@@ -451,25 +410,21 @@ protected:
 		
 		std::ifstream input_sha;
 		auto sha_value = sha3_512((const char*)m_grid, m_gridSize);
-		RCLCPP_INFO(node_ptr_->get_logger(),"[Grid3D] Calculated SHA512 value: %s", sha_value.c_str());
-		// ROS_INFO("[Grid3D] Calculated SHA512 value: %s", sha_value.c_str());
+		ROS_INFO("[Grid3D] Calculated SHA512 value: %s", sha_value.c_str());
 
 		input_sha.open(fileName+"sha");
 		std::string readed_sha;
 		if(input_sha.is_open()){
 			getline(input_sha, readed_sha);
-			RCLCPP_INFO(node_ptr_->get_logger(),"[Grid3D] Readed SHA512 from file: %s", readed_sha.c_str());
-			// ROS_INFO("[Grid3D] Readed SHA512 from file: %s", readed_sha.c_str());
+			ROS_INFO("[Grid3D] Readed SHA512 from file: %s", readed_sha.c_str());
 			input_sha.close();
 		}else{
-			// ROS_ERROR("[Grid3D] Couldn't read SHA512 data of gridm file, recomputing grid");
-			RCLCPP_INFO(node_ptr_->get_logger(),"[Grid3D] Couldn't read SHA512 data of gridm file, recomputing grid");
+			ROS_ERROR("[Grid3D] Couldn't read SHA512 data of gridm file, recomputing grid");
 			return false;
 		}
 		//Check that both are the same
 		if(readed_sha.compare(sha_value) != 0){
-			// ROS_ERROR("[Grid3D] Found different SHA values between for gridm!");
-			RCLCPP_INFO(node_ptr_->get_logger(),"[Grid3D] Found different SHA values between for gridm!");
+			ROS_ERROR("[Grid3D] Found different SHA values between for gridm!");
 			return false;
 		}
 		
@@ -482,13 +437,15 @@ protected:
 		// Get map parameters
 		double minX, minY, minZ;
 		m_octomap->getMetricMin(minX, minY, minZ);
-		
+				
 		// Load the octomap in PCL for easy nearest neighborhood computation
 		// The point-cloud is shifted to have (0,0,0) as min values
 		int i = 0;
 		m_cloud->width = m_octomap->size();
+		// std::cout << "dim1: " << m_cloud->width << std::endl;
 		m_cloud->height = 1;
 		m_cloud->points.resize(static_cast<long>(m_cloud->width) * m_cloud->height);
+		std::cout << "dim1: " << m_cloud->width << std::endl;
 		for(octomap::OcTree::leaf_iterator it = m_octomap->begin_leafs(), end = m_octomap->end_leafs(); it != end; ++it)
 		{
 			if(it != NULL && m_octomap->isNodeOccupied(*it))
@@ -502,6 +459,7 @@ protected:
 		}
 		m_cloud->width = i;
 		m_cloud->points.resize(i);
+		// std::cout << "dim2: " << m_cloud->width << std::endl;
 		
 		// Create the point cloud msg for publication
 		pcl::toROSMsg(*m_cloud, m_pcMsg);
@@ -511,7 +469,7 @@ protected:
 	void computeGrid(void)
 	{
 		//Publish percent variable
-		std_msgs::msg::Float32 percent_msg;
+		std_msgs::Float32 percent_msg;
 		percent_msg.data = 0;
 		// Alloc the 3D grid
 		m_gridSizeX = (int)(m_maxX*m_oneDivRes);
@@ -528,8 +486,8 @@ protected:
 		// Compute the distance to the closest point of the grid
 		int index;
 		float dist;
-		float gaussConst1 = 1./(m_sensorDev*sqrt(2*M_PI));
-		float gaussConst2 = 1./(2*m_sensorDev*m_sensorDev);
+		// float gaussConst1 = 1./(m_sensorDev*sqrt(2*M_PI));
+		// float gaussConst2 = 1./(2*m_sensorDev*m_sensorDev);
 		pcl::PointXYZI searchPoint;
 		std::vector<int> pointIdxNKNSearch(1);
 		std::vector<float> pointNKNSquaredDistance(1);
@@ -548,24 +506,40 @@ protected:
 					index = ix + iy*m_gridStepY + iz*m_gridStepZ;
 					++count;
 					percent = count/size *100.0;
-					// ROS_INFO_THROTTLE(0.5,"Progress: %lf %%", percent);	
+					ROS_INFO_THROTTLE(0.5,"Progress: %lf %%", percent);	
 					if(percent > percent_msg.data + 0.5){
 						percent_msg.data = percent;
 						// percent_computed_pub_.publish(percent_msg);
 					}
-					
 					if(m_kdtree.nearestKSearch(searchPoint, 1, pointIdxNKNSearch, pointNKNSquaredDistance) > 0)
 					{
-						dist = pointNKNSquaredDistance[0];
-						m_grid[index].dist = dist;
-						if(!use_costmap_function){
-							m_grid[index].prob = gaussConst1*exp(-dist*dist*gaussConst2);
-						}else{
-							double prob =  100*exp(-cost_scaling_factor*std::fabs((dist - robot_radius)));
-							// ROS_INFO("[%f, %f, %f] Dist: %f Probability: %f", searchPoint.x, searchPoint.y, searchPoint.z, dist, prob);
-							//JAC: Include the computation of prob considering the distance to the nearest voronoi edge.
-							m_grid[index].prob = prob;
+						// JAC: Always square distance has been considered!!!!!!
+						// dist = pointNKNSquaredDistance[0];
+						dist = sqrt(pointNKNSquaredDistance[0]);
+						
+						// std::cout << "dist: " << dist << std::endl;
+						if (dist < 200){
+							m_grid[index].dist = dist;
+							if(!use_costmap_function){
+								// m_grid[index].prob = gaussConst1*exp(-dist*dist*gaussConst2);
+								m_grid[index].prob = dist;
+							}else{
+								// double prob =  100*exp(-cost_scaling_factor*std::fabs((dist - robot_radius)));
+								// ROS_INFO("[%f, %f, %f] Dist: %f Probability: %f", searchPoint.x, searchPoint.y, searchPoint.z, dist, prob);
+								//JAC: Include the computation of prob considering the distance to the nearest voronoi edge.
+								// m_grid[index].prob = prob;
+								// m_grid[index].prob = 100-dist;
+								m_grid[index].prob = dist;
+							}
 						}
+						else{
+							// std::cout << "dist: " << dist << std::endl;
+							// m_grid[index].dist = -1.0;
+							m_grid[index].dist = 90.0;
+							m_grid[index].prob =  0.0;
+						}
+						
+						
 					}
 					else
 					{
@@ -577,20 +551,18 @@ protected:
 			}
 		}
 		percent_msg.data = 100;
-		// percent_computed_pub_->publish(percent_msg);
+		// percent_computed_pub_.publish(percent_msg);
 	}
 	
 	void buildGridSliceMsg(float z)
 	{
-		// static int _seq = 0;
+		static int seq = 0;
 		
 		// Setup grid msg
 		m_gridSliceMsg.header.frame_id = m_globalFrameId;
-		m_gridSliceMsg.header.stamp = node_ptr_->now();
-
-    // TODO: add seq
-		// m_gridSliceMsg.header.seq = _seq++;
-		m_gridSliceMsg.info.map_load_time = node_ptr_->now();
+		m_gridSliceMsg.header.stamp = ros::Time::now();
+		m_gridSliceMsg.header.seq = seq++;
+		m_gridSliceMsg.info.map_load_time = ros::Time::now();
 		m_gridSliceMsg.info.resolution = m_resolution;
 		m_gridSliceMsg.info.width = m_gridSizeX;
 		m_gridSliceMsg.info.height = m_gridSizeY;

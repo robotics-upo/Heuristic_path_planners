@@ -12,23 +12,23 @@ namespace Planners
                     static_cast<int>(std::round(_point.y / _res)),
                     static_cast<int>(std::round(_point.z / _res))};
         }
-        Vec3i discretePoint(const geometry_msgs::msg::Point &_msg, const double &_res)
+        Vec3i discretePoint(const geometry_msgs::Point &_msg, const double &_res)
         {
 
             return {static_cast<int>(std::round(_msg.x / _res)),
                     static_cast<int>(std::round(_msg.y / _res)),
                     static_cast<int>(std::round(_msg.z / _res))};
         }
-        Vec3i discretePose(const geometry_msgs::msg::Pose &_msg, const double &_res)
+        Vec3i discretePose(const geometry_msgs::Pose &_msg, const double &_res)
         {
 
             return {static_cast<int>(std::round(_msg.position.x / _res)),
                     static_cast<int>(std::round(_msg.position.y / _res)),
                     static_cast<int>(std::round(_msg.position.z / _res))};
         }
-        geometry_msgs::msg::Point continousPoint(const Vec3i &_vec, const double &_res)
+        geometry_msgs::Point continousPoint(const Vec3i &_vec, const double &_res)
         {
-            geometry_msgs::msg::Point ret;
+            geometry_msgs::Point ret;
 
             ret.x = _vec.x * _res;
             ret.y = _vec.y * _res;
@@ -44,7 +44,7 @@ namespace Planners
                     0};
         }
 
-        bool configureWorldFromOccupancy(const nav_msgs::msg::OccupancyGrid &_grid, AlgorithmBase &_algorithm, bool _set_size)
+        bool configureWorldFromOccupancy(const nav_msgs::OccupancyGrid &_grid, AlgorithmBase &_algorithm, bool _set_size)
         {
 
             if (_set_size)
@@ -69,7 +69,7 @@ namespace Planners
 
             return true;
         }
-        bool configureWorldFromOccupancyWithCosts(const nav_msgs::msg::OccupancyGrid &_grid, AlgorithmBase &_algorithm, bool _set_size)
+        bool configureWorldFromOccupancyWithCosts(const nav_msgs::OccupancyGrid &_grid, AlgorithmBase &_algorithm, bool _set_size)
         {
 
             if (_set_size)
