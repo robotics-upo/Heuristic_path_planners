@@ -3,5 +3,8 @@ float32 m_maxY
 float32 m_maxZ
 float32 m_resolution
 ---
-int32[] shape
-int32[] semantic_grid
+int16[] shape
+int32[] semantic_grid_x
+int32[] semantic_grid_y
+int32[] semantic_grid_z
+int32[] semantic_grid_v

@@ -179,6 +179,7 @@ inline float AStar::computeGradient(const Node* _current, Node* _suc,  unsigned 
     return grad;
 }
 
+// ORIGINAL
 inline unsigned int AStar::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs){
     unsigned int cost = _current->G;
 
@@ -192,6 +193,7 @@ inline unsigned int AStar::computeG(const Node* _current, Node* _suc,  unsigned 
     
     return cost;
 }
+
 
 #pragma GCC diagnostic pop
 

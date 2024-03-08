@@ -3,15 +3,16 @@
 <launch>
    
   <!-- Start Gazebo with wg world running in (max) realtime -->
-  <!-- <include file="$(find hector_gazebo_worlds)/launch/mesh.launch"/> -->
+  <include file="$(find hector_gazebo_worlds)/launch/mesh.launch"/>
    
   <!-- Spawn simulated quadrotor uav -->
-  <!-- <include file="$(find hector_quadrotor_gazebo)/launch/spawn_quadrotor.launch" >
+  <include file="$(find hector_quadrotor_gazebo)/launch/spawn_quadrotor.launch" >
     <arg name="model" value="$(find hector_quadrotor_description)/urdf/quadrotor_hokuyo_utm30lx.gazebo.xacro"/> 
-  </include> -->
+  </include>
 
   <!-- <node pkg="tf" type="static_transform_publisher" name="map_world" args="32 32 0 -3.1416 0 0 map world 100" /> -->
   <!-- <node pkg="tf" type="static_transform_publisher" name="map_world" args="181.5 -10.0 0 0 0 0 map world 100" /> -->
+  <!-- <node pkg="tf" type="static_transform_publisher" name="map_world" args="191.4 0 1 0 0 0 map world 100" /> -->
   <node pkg="tf" type="static_transform_publisher" name="map_world" args="0 0 0 0 0 0 map world 100" />
 
   <!-- Map name is the filename wihtouth the .bt extensionof the 3D Map -->
@@ -21,19 +22,23 @@
     <!-- <arg name="map_name"            default="manufacturing"/> -->
     <!-- ATLAS -->
     <!-- <arg name="map_name"            default="Atlas_8_300"/> -->
-    <arg name="map_name"            default="Atlas_8_300"/>
+    <arg name="map_name"            default="Atlas_8_puertas_02"/>
     <!-- <arg name="map_name"            default="nube_de_puntos2"/> -->
     <!-- <arg name="map_name"            default="nube_de_puntos_con_etiquetas"/> -->
     <arg name="map"                 default="$(find heuristic_planners)/resources/3dmaps/$(arg map_name).bt"/>
 
-    <arg name="algorithm_name"      default="costlazythetastar"/>
+    <arg name="algorithm_name"      default="lazythetastar_semantic_cost"/>
+    <!-- <arg name="algorithm_name"      default="costlazythetastar"/> -->
 
-    <arg name="world_size_x"        default="212"/>
-    <arg name="world_size_y"        default="170"/>
+    <!-- 212 -->
+    <arg name="world_size_x"        default="211.8"/>
+    <!-- 170 -->
+    <arg name="world_size_y"        default="169.2"/>
     <!-- maze.bt with world_size_z=5 -->
     <!-- <arg name="world_size_z"        default="5"/> -->
     <!-- <arg name="world_size_z"        default="2"/> manufacturing -->
-    <arg name="world_size_z"        default="9"/>  <!-- 6 -->
+    <!-- 9 -->
+    <arg name="world_size_z"        default="7.2"/>  <!-- 6 -->
     <arg name="resolution"          default="0.2"/>
 
     <arg name="inflate_map"         default="true"/>
@@ -45,7 +50,7 @@
     <!-- This should be a folder -->
     <arg name="data_folder"         default="$(env HOME)"/>
 
-    <arg name="overlay_markers"     default="false"/>
+    <arg name="overlay_markers"     default="true"/>
     
     <arg name="cost_weight" default="500.0"/>
     <arg name="max_line_of_sight_distance" default="1.0"/>

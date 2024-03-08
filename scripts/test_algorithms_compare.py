@@ -75,7 +75,7 @@ parser.add_argument("--algorithm",  help="name of the algorithm",
                     # nargs='*', type=str, required=True, default=["astar", "astarm1", "astarm2"], 
                     # choices=["astar", "astarm1", "astarm2", "thetastar", "thetastarm1", "thetastarm2", "lazythetastar", "lazythetastarm1", "lazythetastarm1mod", "lazythetastarm2"])
                     nargs='*', type=str, required=True, default=["astar", "costastar", "astarsafetycost"], 
-                    choices=["astar", "costastar", "astarsafetycost", "thetastar", "costhetastar", "thetastarsafetycost", "lazythetastar", "costlazythetastar", "costlazythetastarmodified", "lazythetastarsafetycost", "lazythetastaredf"])
+                    choices=["astar", "costastar", "astarsafetycost", "thetastar", "costhetastar", "thetastarsafetycost", "lazythetastar", "costlazythetastar", "costlazythetastarmodified", "lazythetastarsafetycost", "lazythetastaredf", "lazythetastar_semantic", "lazythetastar_semantic_cost"])
 
 parser.add_argument("--map-name",     help="name of the map to use. This map should be under the 3d/2d maps folder",     
                     nargs='+', type=str, default=['maze.bt'],

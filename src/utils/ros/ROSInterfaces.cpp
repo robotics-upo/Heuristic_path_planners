@@ -128,14 +128,13 @@ namespace Planners
             return true;
         }
 
-        // bool configureWorldSemantic(Grid3d &_grid, AlgorithmBase &_algorithm, std::vector<int> &_semanticGrid)
         bool configureWorldSemantic(Grid3d &_grid, AlgorithmBase &_algorithm)
         {
-
+            int count=0;
             auto world_size = _algorithm.getWorldSize();
-            auto resolution = _algorithm.getWorldResolution();
-
-            std::cout << "Semantic Layer " << std::endl;                                                                                                                                                         
+            auto resolution = _algorithm.getWorldResolution();  // 
+            std::cout << "World SIZE: " << world_size << std::endl;    // 1059,846,46
+            // std::cout << "Semantic Layer " << std::endl;                                                                                                                                                         
             for (int i = 0; i < world_size.x; i++)
             {
                 for (int j = 0; j < world_size.y; j++)
@@ -145,12 +144,72 @@ namespace Planners
                         //JAC: Precision
                         // auto cost = _grid.getCellCost(i * resolution, j * resolution, k * resolution);
                         int cost = _grid.getCellSemantic(i * resolution, j * resolution, k * resolution);
-                        if (cost > 8)
-                            std::cout << "Cost: " << cost << std::endl;   
+                        // if (cost > 8)
+                        //     std::cout << "Cost: " << cost << std::endl;
                         _algorithm.configureCellSemantic({i, j, k}, cost);
+
+                        // FROM HERE, IT IS TO INFLATE THE SEMANTIC LAYER
+                        // THIS SHOULD BE WELL, BUT IT HAS TO BE CHECKED AFTER VERIFING THAT SEMANTIC LAYER IS RIGHT
+                        if (cost > 0)
+                        {
+                            count=count+1;
+                            // std::cout << "Cost: " << cost << std::endl;   
+                            _algorithm.inflateCellSemantic({i, j, k}, cost);
+                            // usleep(1e4);
+                            // std::cout << "Please a key to go to the next iteration..." << std::endl;
+                            // getchar(); // Comentar para no usar tecla.
+                        }    
+
                     }
                 }
             }
+            std::cout << "Count: " << count << std::endl;
+
+            // for (int i = 0; i < world_size.x; i++)
+            // {
+            //     for (int j = 0; j < world_size.y; j++)
+            //     {
+            //         for (int k = 0; k < world_size.z; k++)
+            //         {
+            //             // TO INFLATE THE SEMANTIC LAYER
+            //             // int cost = _grid.getCellSemantic(i * resolution, j * resolution, k * resolution);
+            //             int cost = _algorithm.getCellSemantic({i, j, k});
+            //             if (cost > 0)
+            //             {
+            //                 std::cout << "Cost: " << cost << std::endl;
+            //                 _algorithm.inflateCellSemantic({i, j, k}, cost);
+            //                 usleep(1e4);
+            //                 std::cout << "Please a key to go to the next iteration..." << std::endl;
+            //                 getchar(); // Comentar para no usar tecla.
+            //             }
+                            
+
+            //         }
+            //     }
+            // }
+
+            // // INFLATE
+            // for (int i = 0; i < world_size.x; i++)
+            // {
+            //     for (int j = 0; j < world_size.y; j++)
+            //     {
+            //         for (int k = 0; k < world_size.z; k++)
+            //         {
+            //             // _algorithm.addCollision({i, j, k}, resolution);
+            //             // Habría que pasarlo con discretePoint --> i,j,k pasarlo a un geometry_msgs y pasarlo 
+
+            //             Vec3i pos;
+
+            //             pos.x = i;
+            //             pos.y = j;
+            //             pos.z = k;
+            //             _algorithm.addCollision(pos);
+            //             // Vec3i discretePoint(const geometry_msgs::Point &_msg, const double &_res);
+            //             // _algorithm.addCollision(discretePoint(&pos, resolution));
+            //         }
+            //     }
+            // }
+
             return true;
         }
 

@@ -3,6 +3,7 @@
 import ifcopenshell
 import ifcopenshell.util.placement
 import ifcopenshell.util.selector
+import ifcopenshell.util.shape
 import ifcopenshell.geom
 import sys
 import matplotlib.pyplot as plt
@@ -29,12 +30,21 @@ class grid3d():
         self.walls = self.model.by_type('IfcWall')
         self.doors = self.model.by_type('IfcDoor')
         self.columns = self.model.by_type('IfcColumn')
+        self.furniture = self.model.by_type("IfcFurnishingElement")
+        self.stairs = self.model.by_type("IfcStairFlight")
+        self.plates = self.model.by_type("IfcPlate")
+        self.lamps = self.model.by_type("IfcFlowTerminal")
+        self.slabs = self.model.by_type("IfcSlab")
+        self.windows = self.model.by_type("IfcWindow")
+        self.glasses = ifcopenshell.util.selector.filter_elements(self.model, "IfcElement, material=Glass")
+
+        self.semantic_objects = [self.walls, self.doors, self.columns, self.furniture, self.stairs, self.plates, self.lamps, self.glasses]
 
         rospy.loginfo("Termina carga de IFC")
         self.world_size_x = rospy.get_param('~world_size_x', 220)
         self.world_size_y = rospy.get_param('~world_size_y', 220)
         self.world_size_z = rospy.get_param('~world_size_z', 20)
-        self.resolution = rospy.get_param('~resolution', 1)
+        self.resolution = rospy.get_param('~resolution', 0.2)
         self.x_y_size = self.world_size_x * self.world_size_y
 
         self.semantic_grid_x = []
@@ -43,260 +53,46 @@ class grid3d():
         self.semantic_grid_v = []
 
         rospy.loginfo("Termina carga de parametros")
-        
-        for wall in self.walls:
-            
-            matrix = ifcopenshell.util.placement.get_local_placement(wall.ObjectPlacement)
-            shape = ifcopenshell.geom.create_shape(self.settings, wall)
-
-            
-            points = np.array(shape.geometry.verts).reshape(-1, 3)
-            if(len(points) > 8):
-                points = self.calcular_extremos(points)
-            
-            
-            
-            points = points / self.resolution
-
-            # Calcular valores máximos
-            max_x_local = int(np.max(points[:, 0]))
-            max_y_local = int(np.max(points[:, 1]))
-            max_z_local = int(np.max(points[:, 2]))
-
-            # Calcular valores minimos
-            min_x_local = int(np.min(points[:, 0]))
-            min_y_local = int(np.min(points[:, 1]))
-            min_z_local = int(np.min(points[:, 2]))
-
-            
-            # Bucles for para recorrer el espacio entre mínimos y máximos en cada coordenada
-            for x in range(min_x_local, max_x_local + 1):
-                for y in range(min_y_local, max_y_local + 1):
-                    for z in range(min_z_local, max_z_local + 1):
-                            self.semantic_grid_x.append(int(x))
-                            self.semantic_grid_y.append(int(y))
-                            self.semantic_grid_z.append(int(z))
-                            self.semantic_grid_v.append(int(1))
-                         
-            
-        for door in self.doors:
-            matrix = ifcopenshell.util.placement.get_local_placement(door.ObjectPlacement)
-            shape = ifcopenshell.geom.create_shape(self.settings, door)
-
-            points = np.array(shape.geometry.verts).reshape(-1, 3)
+        for elements in self.semantic_objects:
+            index = self.semantic_objects.index(elements)
+            for e in elements:
                 
-            # Sumar el centro a las coordenadas de los puntos
-            points = points / self.resolution
-            
+                shape = ifcopenshell.geom.create_shape(self.settings, e)
+                verts = ifcopenshell.util.shape.get_vertices(shape.geometry)
+                faces = ifcopenshell.util.shape.get_faces(shape.geometry)
 
-         # Calcular valores máximos
-            max_x_local = int(np.max(points[:, 0]))
-            max_y_local = int(np.max(points[:, 1]))
-            max_z_local = int(np.max(points[:, 2]))
+                
+                verts = verts / self.resolution
+                verts = verts.astype(int)
+                
+                for face in faces:
 
-            # Calcular valores minimos
-            min_x_local = int(np.min(points[:, 0]))
-            min_y_local = int(np.min(points[:, 1]))
-            min_z_local = int(np.min(points[:, 2]))
+                    v1 = verts[face[0]]
+                    v2 = verts[face[1]]
+                    v3 = verts[face[2]]
 
-            for x in range(min_x_local, max_x_local + 1):
-                for y in range(min_y_local, max_y_local + 1):
-                    for z in range(min_z_local, max_z_local + 1):
-                        self.semantic_grid_x.append(int(x))
-                        self.semantic_grid_y.append(int(y))
-                        self.semantic_grid_z.append(int(z))
-                        self.semantic_grid_v.append(int(2))
-                        
-                        
-    
-        for column in self.columns:
-            matrix = ifcopenshell.util.placement.get_local_placement(column.ObjectPlacement)
-            shape = ifcopenshell.geom.create_shape(self.settings, column)
+                    # Update maximum values
+                    max_x = max(v1[0], v2[0], v3[0])
+                    max_y = max(v1[1], v2[1], v3[1])
+                    max_z = max(v1[2], v2[2], v3[2])
 
-            points = np.array(shape.geometry.verts).reshape(-1, 3)
-            
-            # Calcular el centro de la puerta
-            
-            # Sumar el centro a las coordenadas de los puntos
-            points = points / self.resolution
-            
-            # Calcular valores máximos
-            max_x_local = int(np.max(points[:, 0]))
-            max_y_local = int(np.max(points[:, 1]))
-            max_z_local = int(np.max(points[:, 2]))
+                    # Update minimum values
+                    min_x = min(v1[0], v2[0], v3[0])
+                    min_y = min(v1[1], v2[1], v3[1])
+                    min_z = min(v1[2], v2[2], v3[2])
 
-            # Calcular valores minimos
-            min_x_local = int(np.min(points[:, 0]))
-            min_y_local = int(np.min(points[:, 1]))
-            min_z_local = int(np.min(points[:, 2]))
+                    for x in range(min_x, max_x + 1):
+                        for y in range(min_y, max_y + 1):
+                            for z in range(min_z, max_z + 1):
+                                # print(f'{x},{y},{z},1')
+                                self.semantic_grid_x.append(int(x))
+                                self.semantic_grid_y.append(int(y))
+                                self.semantic_grid_z.append(int(z))
+                                self.semantic_grid_v.append(int(index + 1))
 
-            for x in range(min_x_local, max_x_local + 1):
-                for y in range(min_y_local, max_y_local + 1):
-                    for z in range(min_z_local, max_z_local + 1):
-                        self.semantic_grid_x.append(int(x))
-                        self.semantic_grid_y.append(int(y))
-                        self.semantic_grid_z.append(int(z))
-                        self.semantic_grid_v.append(int(3))
-                        
 
-        for furnishing in self.model.by_type("IfcFurnishingElement"):
-            matrix = ifcopenshell.util.placement.get_local_placement(furnishing.ObjectPlacement)
-            shape = ifcopenshell.geom.create_shape(self.settings, furnishing)
-
-            points = np.array(shape.geometry.verts).reshape(-1, 3)
-            
-            # Calcular el centro de la puerta
-            # Sumar el centro a las coordenadas de los puntos
-            points = points / self.resolution
-            
-        
-
-            # Calcular valores máximos
-            max_x_local = int(np.max(points[:, 0]))
-            max_y_local = int(np.max(points[:, 1]))
-            max_z_local = int(np.max(points[:, 2]))
-
-            # Calcular valores minimos
-            min_x_local = int(np.min(points[:, 0]))
-            min_y_local = int(np.min(points[:, 1]))
-            min_z_local = int(np.min(points[:, 2]))
-
-            for x in range(min_x_local, max_x_local + 1):
-                for y in range(min_y_local, max_y_local + 1):
-                    for z in range(min_z_local, max_z_local + 1):
-                        self.semantic_grid_x.append(int(x))
-                        self.semantic_grid_y.append(int(y))
-                        self.semantic_grid_z.append(int(z))
-                        self.semantic_grid_v.append(int(4))
-                        
-                        
-    
-        for stair in self.model.by_type("IfcStairFlight"):
-            matrix = ifcopenshell.util.placement.get_local_placement(stair.ObjectPlacement)
-            shape = ifcopenshell.geom.create_shape(self.settings, stair)
-
-            points = np.array(shape.geometry.verts).reshape(-1, 3)
-            
-            # Calcular el centro de la puerta
-            
-            # Sumar el centro a las coordenadas de los puntos
-            points = points / self.resolution
-            
-            # Calcular valores máximos
-            max_x_local = int(np.max(points[:, 0]))
-            max_y_local = int(np.max(points[:, 1]))
-            max_z_local = int(np.max(points[:, 2]))
-
-            # Calcular valores minimos
-            min_x_local = int(np.min(points[:, 0]))
-            min_y_local = int(np.min(points[:, 1]))
-            min_z_local = int(np.min(points[:, 2]))
-
-            for x in range(min_x_local, max_x_local + 1):
-                for y in range(min_y_local, max_y_local + 1):
-                    for z in range(min_z_local, max_z_local + 1):
-                        self.semantic_grid_x.append(int(x))
-                        self.semantic_grid_y.append(int(y))
-                        self.semantic_grid_z.append(int(z))
-                        self.semantic_grid_v.append(int(5))
-                        
-                            
-
-        for plate in self.model.by_type("IfcPlate"):
-            matrix = ifcopenshell.util.placement.get_local_placement(plate.ObjectPlacement)
-            shape = ifcopenshell.geom.create_shape(self.settings, plate)
-
-            points = np.array(shape.geometry.verts).reshape(-1, 3)
-            
-            # Calcular el centro de la puerta
-            
-            # Sumar el centro a las coordenadas de los puntos
-            points = points / self.resolution
-            
-        
-
-            # Calcular valores máximos
-            max_x_local = int(np.max(points[:, 0]))
-            max_y_local = int(np.max(points[:, 1]))
-            max_z_local = int(np.max(points[:, 2]))
-
-            # Calcular valores minimos
-            min_x_local = int(np.min(points[:, 0]))
-            min_y_local = int(np.min(points[:, 1]))
-            min_z_local = int(np.min(points[:, 2]))
-
-            for x in range(min_x_local, max_x_local + 1):
-                for y in range(min_y_local, max_y_local + 1):
-                    for z in range(min_z_local, max_z_local + 1):
-                        self.semantic_grid_x.append(int(x))
-                        self.semantic_grid_y.append(int(y))
-                        self.semantic_grid_z.append(int(z))
-                        self.semantic_grid_v.append(int(6))
-                        
-                        
-
-        for lamp in self.model.by_type("IfcFlowTerminal"):
-            shape = ifcopenshell.geom.create_shape(self.settings, lamp)
-
-            points = np.array(shape.geometry.verts).reshape(-1, 3)
-            
-            # Calcular el centro de la puerta
-            
-            # Sumar el centro a las coordenadas de los puntos
-            points = points / self.resolution
-            
-        
-
-            # Calcular valores máximos
-            max_x_local = int(np.max(points[:, 0]))
-            max_y_local = int(np.max(points[:, 1]))
-            max_z_local = int(np.max(points[:, 2]))
-
-            # Calcular valores minimos
-            min_x_local = int(np.min(points[:, 0]))
-            min_y_local = int(np.min(points[:, 1]))
-            min_z_local = int(np.min(points[:, 2]))
-
-            for x in range(min_x_local, max_x_local + 1):
-                for y in range(min_y_local, max_y_local + 1):
-                    for z in range(min_z_local, max_z_local + 1):
-                        self.semantic_grid_x.append(int(x))
-                        self.semantic_grid_y.append(int(y))
-                        self.semantic_grid_z.append(int(z))
-                        self.semantic_grid_v.append(int(7))
-
-                        
-
-        for glass in ifcopenshell.util.selector.filter_elements(self.model, "IfcElement, material=Glass"):
-            matrix = ifcopenshell.util.placement.get_local_placement(glass.ObjectPlacement)
-            shape = ifcopenshell.geom.create_shape(self.settings, glass)
-
-            points = np.array(shape.geometry.verts).reshape(-1, 3)
-            
-            # Calcular el centro de la puerta
-            
-            # Sumar el centro a las coordenadas de los puntos
-            points = points / self.resolution
-            
-        
-
-            # Calcular valores máximos
-            max_x_local = int(np.max(points[:, 0]))
-            max_y_local = int(np.max(points[:, 1]))
-            max_z_local = int(np.max(points[:, 2]))
-
-            # Calcular valores minimos
-            min_x_local = int(np.min(points[:, 0]))
-            min_y_local = int(np.min(points[:, 1]))
-            min_z_local = int(np.min(points[:, 2]))
-
-            for x in range(min_x_local, max_x_local + 1):
-                for y in range(min_y_local, max_y_local + 1):
-                    for z in range(min_z_local, max_z_local + 1):
-                        self.semantic_grid_x.append(int(x))
-                        self.semantic_grid_y.append(int(y))
-                        self.semantic_grid_z.append(int(z))
-                        self.semantic_grid_v.append(int(8))
+                
+                
 
         # Obtén el valor mínimo de cada array
         min_x = np.min(self.semantic_grid_x)
@@ -376,33 +172,7 @@ class grid3d():
                     combinaciones.append([x, y, z])
 
         return np.array(combinaciones)
-    def calcular_puntos_medios(self, points, n=1):
-        new_points = list(points)
-        for _ in range(n):
-            temp_points = list(new_points)
-            for i in range(len(points)):
-                p1 = temp_points[i]
-                p2 = temp_points[(i + 1) % len(points)]  # El último punto se conecta con el primero
-                medio = (p1 + p2) / 2.0
-                # Verificar si el punto medio ya está en la lista antes de agregarlo
-                if not any(np.array_equal(medio, p) for p in new_points):
-                    new_points.append(medio)
-        return np.array(new_points)
-    def calcular_centro(self, vertices):
-        vertices = np.array(vertices).reshape(-1, 3)
-        centro = np.mean(vertices, axis=0)
-        return centro
-    def getWorldIndex(self, x, y, z):
-
-        return z * self.x_y_size + y * self.world_size_x + x 
-    def getDiscreteWorldPositionFromIndex(self, index):
-
-        z = index / self.x_y_size
-        ind = index - (z * self.x_y_size)
-        y = ind / self.world_size_x
-        x = ind % self.world_size_x
-
-        return (x, y, z)
+    
     def create_layout(self):
         layout = MultiArrayLayout()
 
@@ -430,9 +200,6 @@ class grid3d():
         layout.data_offset = 0  # This is usually 0
 
         return layout
-    
-    
-
     
 if __name__ == '__main__':
     try:

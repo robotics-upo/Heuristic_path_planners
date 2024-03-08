@@ -2,7 +2,7 @@
 
 namespace Planners
 {
-    ThetaStarM1::ThetaStarM1(bool _use_3d):ThetaStar(_use_3d, "thetastarm2") {}
+    ThetaStarM1::ThetaStarM1(bool _use_3d):ThetaStar(_use_3d, "thetastarm1") {}
     ThetaStarM1::ThetaStarM1(bool _use_3d, std::string _name = "thetastarm1" ):ThetaStar(_use_3d, _name) {}
 
     inline void ThetaStarM1::ComputeCost(Node *_s_aux, Node *_s2_aux)

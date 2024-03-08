@@ -69,11 +69,16 @@ namespace utils
             resolution_   = _resolution;
             x_y_size_      = static_cast<long>(world_x_size_) * world_y_size_;
 
+            std::cout << "world_size_x: " << world_x_size_ << std::endl;
+            std::cout << "world_size_y: " << world_y_size_ << std::endl;
+            std::cout << "world_size_z: " << world_z_size_ << std::endl;
+
             discrete_world_vector_.clear();
             discrete_world_vector_.resize(static_cast<long>(world_x_size_) * world_y_size_ * _world_z_size);
             Node node;
             std::fill(discrete_world_vector_.begin(), discrete_world_vector_.end(), node);
             
+            std::cout << "discrete_world_vector: " << discrete_world_vector_.size() << std::endl;
             for(long unsigned int i = 0; i < discrete_world_vector_.size(); ++i){
                 discrete_world_vector_[i].coordinates =  getDiscreteWorldPositionFromIndex(i);
                 discrete_world_vector_[i].world_index = i;
@@ -114,7 +119,7 @@ namespace utils
             return true;
         }
         /**
-         * @brief Set the Node Cost object 
+         * @brief Set the Node Semantic Cost object 
          * 
          * @param _vec coordinates of the node
          * @param _cost cost value assigned to it
@@ -122,6 +127,7 @@ namespace utils
          * @return false if requested coordinates correspond to invalid node (outside the world)
          */
         bool setNodeSemantic(const Vec3i &_vec, const int _cost){
+            // IF COMMENT THIS IF, THE COST ALWAYS WILL BE UPDATED BUT THE NODE IS BROKEN
 
             if(!checkValid(_vec))
                 return false;
@@ -130,6 +136,24 @@ namespace utils
 
             return true;
         }
+        /**
+         * @brief Get the Node Semantic Cost object 
+         * 
+         * @param _vec coordinates of the node
+         * @param _cost cost value assigned to it
+         * @return true if node is valid
+         * @return false if requested coordinates correspond to invalid node (outside the world)
+         */
+        unsigned int getNodeSemantic(const Vec3i &_vec){
+
+            if(!checkValid(_vec))
+                return false;          
+
+            // std::cout << "Semantic Cost: " << discrete_world_vector_[getWorldIndex(_vec)].semantic << std::endl;
+
+            return discrete_world_vector_[getWorldIndex(_vec)].semantic;
+        }
+
         /**
          * @brief Set to its default state the flags, cost values, and parent values inside 
          * each world's node
@@ -191,6 +215,60 @@ namespace utils
          * @param _y discrete coordinates
          * @param _z discrete coordinates
          */
+
+        /**
+         * @brief Function to check the semantic value of the node
+         * 
+         * @param _x discrete coordinate
+         * @param _y discrete coordinate
+         * @param _z discrete coordinate
+         * @return true if node valid and not occupied
+         * @return false if node is outside the workspace of is marked as occupied
+         */
+        int isOccupied_Semantic(const int _x, const int _y, const int _z) const
+        {
+            // if (!checkValid(_x, _y, _z))
+            //     return true;
+
+            // if (discrete_world_vector_[getWorldIndex(_x, _y, _z)].occuppied)
+            // {
+            //     return true;
+            // }
+
+            // return false;
+            
+            // int cost_semantic;
+            // cost_semantic = discrete_world_vector_[getWorldIndex(_x, _y, _z)].semantic;
+            return discrete_world_vector_[getWorldIndex(_x, _y, _z)].semantic;
+        }
+        /**
+         * @brief Overloaded isOccupied function for Vec3i objects
+         * 
+         * @param _coord discrete coordinates vector
+         * @return true if node valid and not occupied 
+         * @return false if node is outside the workspace of is marked as occupied 
+         */
+        int isOccupied_Semantic(const Vec3i &_coord) const{
+            return isOccupied_Semantic(_coord.x, _coord.y, _coord.z);
+        }
+        /**
+         * @brief Overloaded isOccupied function for Node objects
+         * 
+         * @param _node node object
+         * @return true if node valid and not occupied 
+         * @return false if node is outside the workspace of is marked as occupied 
+         */
+        int isOccupied_Semantic(const Node &_node) const{
+            return isOccupied_Semantic(_node.coordinates.x, _node.coordinates.y, _node.coordinates.z);
+        }
+        /**
+         * @brief Set the world's node associated
+         * to these coordinates as occupied. 
+         * @param _x discrete coordinates
+         * @param _y discrete coordinates
+         * @param _z discrete coordinates
+         */
+
         void setOccupied(const int _x, const int _y, const int _z)
         {
 

@@ -139,7 +139,6 @@ namespace Planners
          */
         bool configureWorldCosts(Grid3d &_grid, AlgorithmBase &_algorithm);
         bool configureWorldSemantic(Grid3d &_grid, AlgorithmBase &_algorithm);
-        // bool configureWorldSemantic(Grid3d &_grid, AlgorithmBase &_algorithm, std::vector<int> &_semanticGrid);
 
     }
 }

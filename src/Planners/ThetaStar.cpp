@@ -66,7 +66,17 @@ namespace Planners
             if ( successor == nullptr || 
                  successor->isInClosedList || 
                  successor->occuppied ) 
-                continue;
+                 {
+                    // THIS CAN BE REMOVED BECAUSE WHEN NODE IS OCCUPIED IT SEEMS TO HAVE 0 AS SEMANTIC VALUE
+                    // if (successor->semantic > 0)
+                    // {
+                    //     std::cout << "neighbour: " << i << std::endl;
+                    //     std::cout << "semantic: " << successor->semantic << std::endl;
+                    // }
+                    
+                    continue;
+                 }
+                // continue;
     
             if (! successor->isInOpenList ) { 
 
@@ -187,9 +197,7 @@ namespace Planners
         attraction_unit_current[0].z = attraction_current[0].z/module_current;
         // std::cout << "current X: " << attraction_unit_current[0].x << std::endl;
         // std::cout << "current Y: " << attraction_unit_current[0].y << std::endl;
-        // std::cout << "current Z: " << attraction_unit_current[0].z << std::endl;
-
-        // Computation of each gradient (26 neighbours)       
+        // std::cout << "current Z: " << attraction_unit_current[0].z <isOccupied
         for (unsigned int i = 0; i < direction.size(); ++i) {
 
             Vec3i newCoordinates_grad = _current->coordinates + direction[i];

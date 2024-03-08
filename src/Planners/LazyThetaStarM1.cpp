@@ -61,6 +61,8 @@ namespace Planners
 
             // auto cost_term = static_cast<unsigned int>(cost_weight_ * (( static_cast<double>(_s_aux->parent->cost) + static_cast<double>(_s2_aux->cost) ) /2) * dist_scale_factor_reduced_) * distanceParent2_nodes; // IROS Paper 
             // COST CONSIDERING EDF INCREASING AS DISTANCE INCREASE
+            // Nodo (x,y,z) -> position in frame of the Service
+
             auto cost_term = static_cast<unsigned int>(cost_weight_ * (1/(((static_cast<double>(_s_aux->parent->cost) + static_cast<double>(_s2_aux->cost))/2) * dist_scale_factor_reduced_))) * distanceParent2_nodes; 
             // auto cost_term = static_cast<unsigned int>(cost_weight_ * _s2_aux->cost * dist_scale_factor_reduced_) * distanceParent2_nodes;
             // auto cost_term = static_cast<unsigned int>(cost_weight_ * _s2_aux->cost * dist_scale_factor_reduced_) * distanceParent2;
@@ -74,17 +76,6 @@ namespace Planners
             }
         }
 
-        // ROS_INFO("Using resolution: [%lf]", _s2_aux->cost);
-
-        // Before else was not so the cost_term and the rest were computed although there were not line of sight or the distance were greater than max_los
-        // CHANGED 30-Mar-2023
-        // auto cost_term = static_cast<unsigned int>(cost_weight_ * _s2_aux->cost * dist_scale_factor_reduced_) * distanceParent2_nodes;
-        // if ( ( _s_aux->parent->G + distanceParent2 + cost_term ) < _s2_aux->G )
-        // {
-        //     _s2_aux->parent = _s_aux->parent;
-        //     _s2_aux->G      = _s2_aux->parent->G + geometry::distanceBetween2Nodes(_s2_aux->parent, _s2_aux) +  cost_term;
-        //     _s2_aux->C      = cost_term;       
-        // }
     }
 
 

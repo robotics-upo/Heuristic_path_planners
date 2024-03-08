@@ -1,14 +1,20 @@
 #include <iostream>
 
 #include "Planners/AStar.hpp"
+#include "Planners/AStarSemantic.hpp"
+#include "Planners/AStarSemanticCost.hpp"
 #include "Planners/AStarM2.hpp"
 #include "Planners/AStarM1.hpp"
 #include "Planners/AStar_Gradient.hpp"
 #include "Planners/AStar_EDF.hpp"
 #include "Planners/ThetaStar.hpp"
+#include "Planners/ThetaStarSemantic.hpp"
+#include "Planners/ThetaStarSemanticCost.hpp"
 #include "Planners/ThetaStarM1.hpp"
 #include "Planners/ThetaStarM2.hpp"
 #include "Planners/LazyThetaStar.hpp"
+#include "Planners/LazyThetaStarSemantic.hpp"
+#include "Planners/LazyThetaStarSemanticCost.hpp"
 #include "Planners/LazyThetaStar_Gradient.hpp"
 #include "Planners/LazyThetaStar_EDF.hpp"
 #include "Planners/LazyThetaStarM1.hpp"
@@ -80,6 +86,7 @@ private:
     {
 
         ROS_INFO("Loading map...");
+        std::cout << "SIZE OF POINT CLOUD: " << _points->width << std::endl;
         Planners::utils::configureWorldFromPointCloud(_points, *algorithm_, resolution_);
         algorithm_->publishOccupationMarkersMap();
         Planners::utils::configureWorldCosts(*m_grid3d_, *algorithm_);
@@ -254,6 +261,12 @@ private:
         }else if( algorithm_name == "costastar" ){
             ROS_INFO("Using Cost Aware A*");
             algorithm_.reset(new Planners::AStarM1(use3d_));
+        }else if( algorithm_name == "astar_semantic" ){
+            ROS_INFO("Using Semantic A*");
+            algorithm_.reset(new Planners::AStarSemantic(use3d_));
+        }else if( algorithm_name == "astar_semantic_cost" ){
+            ROS_INFO("Using Semantic Cost A*");
+            algorithm_.reset(new Planners::AStarSemanticCost(use3d_));
         }else if( algorithm_name == "astar_gradient" ){
             ROS_INFO("Using A* Gradient");
             algorithm_.reset(new Planners::AStarGradient(use3d_));
@@ -269,6 +282,12 @@ private:
         }else if ( algorithm_name == "costhetastar" ){
             ROS_INFO("Using Cost Aware Theta* ");
             algorithm_.reset(new Planners::ThetaStarM1(use3d_));
+        }else if ( algorithm_name == "thetastar_semantic" ){
+            ROS_INFO("Using Semantic Theta* ");
+            algorithm_.reset(new Planners::ThetaStarSemantic(use3d_));
+        }else if ( algorithm_name == "thetastar_semantic_cost" ){
+            ROS_INFO("Using Semantic Cost Theta* ");
+            algorithm_.reset(new Planners::ThetaStarSemanticCost(use3d_));
         }else if ( algorithm_name == "thetastarsafetycost" ){
             ROS_INFO("Using Theta* Safety Cost");
             algorithm_.reset(new Planners::ThetaStarM2(use3d_));
@@ -278,6 +297,12 @@ private:
         }else if( algorithm_name == "costlazythetastar"){
             ROS_INFO("Using Cost Aware LazyTheta*");
             algorithm_.reset(new Planners::LazyThetaStarM1(use3d_));
+        }else if( algorithm_name == "lazythetastar_semantic"){
+            ROS_INFO("Using Semantic LazyTheta*");
+            algorithm_.reset(new Planners::LazyThetaStarSemantic(use3d_));
+        }else if( algorithm_name == "lazythetastar_semantic_cost"){
+            ROS_INFO("Using Semantic Cost LazyTheta*");
+            algorithm_.reset(new Planners::LazyThetaStarSemanticCost(use3d_));
         }else if( algorithm_name == "costlazythetastarmodified"){
             ROS_INFO("Using Cost Aware LazyTheta*");
             algorithm_.reset(new Planners::LazyThetaStarM1Mod(use3d_));
@@ -306,6 +331,7 @@ private:
             double inflation_size;
             lnh_.param("inflation_size", inflation_size, 0.5);
             inflation_steps_ = std::round(inflation_size / resolution_);
+            // inflation_steps_ = 4;
             ROS_INFO("Inflation size %.2f, using inflation step %d", inflation_size, inflation_steps_);
         }
         algorithm_->setInflationConfig(inflate_, inflation_steps_);
@@ -332,6 +358,7 @@ private:
         }else if( input_map_ == 2 ){
             Planners::utils::configureWorldFromPointCloud(boost::make_shared<pcl::PointCloud<pcl::PointXYZ>>(cloud_), *algorithm_, resolution_);
             Planners::utils::configureWorldCosts(*m_grid3d_, *algorithm_);
+            Planners::utils::configureWorldSemantic(*m_grid3d_, *algorithm_); // To configure the semantic cost from the grid
         }
         //Algorithm specific parameters. Its important to set line of sight after configuring world size(it depends on the resolution)
         float sight_dist, cost_weight;
