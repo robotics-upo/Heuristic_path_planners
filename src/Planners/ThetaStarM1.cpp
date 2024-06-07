@@ -40,7 +40,7 @@ namespace Planners
         }
         checked_nodes->clear();
     }
-    inline unsigned int ThetaStarM1::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs){
+    inline unsigned int ThetaStarM1::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs, HIOSDFNet& sdf_net){
         
         unsigned int cost = _current->G;
 

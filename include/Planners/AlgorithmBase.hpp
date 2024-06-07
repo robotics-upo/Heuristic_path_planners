@@ -28,6 +28,7 @@
 #include "utils/time.hpp"
 #include "utils/geometry_utils.hpp"
 #include "utils/LineOfSight.hpp"
+#include "utils/FCNet.hpp"
 
 namespace Planners
 {
@@ -154,7 +155,7 @@ namespace Planners
          * @param _target Goal discrete coordinates
          * @return PathData Results stored as PathData object
          */
-        virtual PathData findPath(const Vec3i &_source, const Vec3i &_target) = 0;
+        virtual PathData findPath(const Vec3i &_source, const Vec3i &_target, HIOSDFNet& sdf_net) = 0;
 
         /**
          * @brief Configure the simple inflation implementation

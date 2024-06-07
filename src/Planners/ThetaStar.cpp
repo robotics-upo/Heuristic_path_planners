@@ -55,7 +55,7 @@ namespace Planners
         }
     }
 
-    void ThetaStar::exploreNeighbours(Node* _current, const Vec3i &_target,node_by_position &_index_by_pos){
+    void ThetaStar::exploreNeighbours(Node* _current, const Vec3i &_target,node_by_position &_index_by_pos, HIOSDFNet& sdf_net){
 
         for (unsigned int i = 0; i < direction.size(); ++i) {
 
@@ -70,7 +70,7 @@ namespace Planners
             if (! successor->isInOpenList ) { 
 
                 successor->parent = _current;
-                successor->G = computeG(_current, successor, i, direction.size());
+                successor->G = computeG(_current, successor, i, direction.size(), sdf_net);
                 successor->H = heuristic(successor->coordinates, _target);
                 successor->gplush = successor->G + successor->H;
                 successor->isInOpenList = true;

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10.2)
 project(heuristic_planners)
 
-add_compile_options(-std=c++17 -Wall -Werror -Wextra -pedantic )
+add_compile_options(-std=gnu++17 -Wall )
 
 option(BUILD_DOC            "Build documentation   " ON)
 option(BUILD_ROS_SUPPORT    "Build with ROS Support" ON)
@@ -27,6 +27,7 @@ if(BUILD_DOC)
       # set input and output files
       set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile)
       set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+      
 
       # request to configure the file
       configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
@@ -55,15 +56,21 @@ if(BUILD_ROS_SUPPORT)
     nav_msgs
     visualization_msgs
     message_generation
+    rospy
     roscpp
     pcl_conversions
     pcl_ros
     octomap_ros
     costmap_2d
+    sensor_msgs
   )
   #Eigen is used to calculate metrics parameters
   find_package (Eigen3 REQUIRED NO_MODULE)
   find_package(OpenSSL REQUIRED)
+  ####### TORCH DIR SHOULD BE SET TO LIBTORCH FOLDER ########
+  set(Torch_DIR "/home/ros/libtorch/share/cmake/Torch")
+  find_package(Torch REQUIRED)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
   if(BUILD_DEBUG)
     add_definitions(-DPUB_EXPLORED_NODES)
   endif()
@@ -79,6 +86,7 @@ add_service_files(
   FILES
   GetPath.srv
   SetAlgorithm.srv
+  ShareWeights.srv
 )
 
 ## Generate added messages and services with any dependencies listed here
@@ -101,7 +109,7 @@ catkin_package(
  INCLUDE_DIRS include
  LIBRARIES AlgorithmBase AStar AStarM1 AStarM2 ThetaStar ThetaStarM1 ThetaStarM2 LazyThetaStar LazyThetaStarM1 LazyThetaStarM1Mod LazyThetaStarM2
  # 
- CATKIN_DEPENDS std_msgs visualization_msgs geometry_msgs nav_msgs roscpp message_runtime costmap_2d
+ CATKIN_DEPENDS std_msgs visualization_msgs geometry_msgs nav_msgs rospy roscpp message_runtime costmap_2d sensor_msgs pcl_ros pcl_conversions
 #  DEPENDS system_lib
 )
 endif()
@@ -112,6 +120,7 @@ endif()
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+  ${TORCH_INCLUDE_DIRS}
   ${CMAKE_CURRENT_SOURCE_DIR}/include/voro++-0.4.6
 )
 if( BUILD_VOROCPP )
@@ -139,7 +148,8 @@ list(APPEND ${PROJECT_NAME}_UTILS_SOURCES src/utils/geometry_utils.cpp
                                           src/utils/heuristic.cpp
                                           src/utils/LineOfSight.cpp
                                           src/utils/utils.cpp       
-                                          src/utils/metrics.cpp       
+                                          src/utils/metrics.cpp
+                                          src/utils/FCNet.cpp       
                                           )
 if(BUILD_ROS_SUPPORT)
   list(APPEND ${PROJECT_NAME}_UTILS_SOURCES src/utils/ros/ROSInterfaces.cpp)
@@ -166,14 +176,15 @@ add_library(LazyThetaStarM2    src/Planners/LazyThetaStarM2.cpp )
 
 
 list(APPEND ${PROJECT_NAME}_LIBRARIES AlgorithmBase AStar AStarM1 AStarM2 ThetaStar ThetaStarM1 ThetaStarM2 LazyThetaStar LazyThetaStarM1 LazyThetaStarM1Mod LazyThetaStarM2)  
-target_link_libraries(${${PROJECT_NAME}_LIBRARIES} ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(${${PROJECT_NAME}_LIBRARIES} ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${TORCH_LIBRARIES})
 add_dependencies( ${${PROJECT_NAME}_LIBRARIES} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 list(APPEND ${PROJECT_NAME}_TARGETS ${${PROJECT_NAME}_LIBRARIES})
 
 if(BUILD_ROS_SUPPORT)
   add_executable(planner_ros_node src/ROS/planner_ros_node.cpp )
+  ##set_property(TARGET planner_ros_node PROPERTY CXX_STANDARD 17)
   add_dependencies(planner_ros_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_LIBRARIES})
-  target_link_libraries(planner_ros_node ${catkin_LIBRARIES} ${${PROJECT_NAME}_LIBRARIES} -lstdc++fs Eigen3::Eigen -lcrypto -lssl)
+  target_link_libraries(planner_ros_node ${catkin_LIBRARIES} ${TORCH_LIBRARIES} ${${PROJECT_NAME}_LIBRARIES} -lstdc++fs Eigen3::Eigen -lcrypto -lssl)
   list(APPEND ${PROJECT_NAME}_TARGETS planner_ros_node)
 #############
   ## Install ##

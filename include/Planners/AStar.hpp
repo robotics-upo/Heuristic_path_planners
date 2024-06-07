@@ -30,6 +30,7 @@
 #include <pcl/point_types.h>
 #include <pcl_ros/point_cloud.h>
 #include "utils/ros/ROSInterfaces.hpp"
+#include "utils/FCNet.hpp"
 #endif
 
 namespace Planners{
@@ -70,7 +71,7 @@ namespace Planners{
          * DataVariant = std::variant<std::string, Vec3i, CoordinateList, double, size_t, int, bool, unsigned int>;
          * TODO: Replace map here by unordered_map. Not much important, but it does not make sense to use a map.
          */
-        PathData findPath(const Vec3i &_source, const Vec3i &_target) override;
+        PathData findPath(const Vec3i &_source, const Vec3i &_target, HIOSDFNet& sdf_net) override;
         
         /**
          * @brief Published occupation markers map to visualize the loaded map in RVIZ
@@ -125,7 +126,7 @@ namespace Planners{
          * This operation of erase and re-insert is performed in order to update the position
          * of the node in the container. 
          */
-        virtual void exploreNeighbours(Node* _current, const Vec3i &_target,node_by_position &_index_by_pos);
+        virtual void exploreNeighbours(Node* _current, const Vec3i &_target,node_by_position &_index_by_pos, HIOSDFNet& sdf_net);
 
         /**
          * @brief This functions implements the algorithm G function. 
@@ -161,7 +162,7 @@ namespace Planners{
          * @param _dirs Number of directions used (to distinguish between 2D and 3D)
          * @return unsigned int The G Value calculated by the function
          */
-        virtual unsigned int computeG(const Node* _current, Node* _suc, unsigned int _n_i, unsigned int _dirs);
+        virtual unsigned int computeG(const Node* _current, Node* _suc, unsigned int _n_i, unsigned int _dirs, HIOSDFNet& sdf_net);
 
         unsigned int line_of_sight_checks_{0};  /*!< TODO Comment */
         std::vector<Node*> closedSet_; /*!< TODO Comment */

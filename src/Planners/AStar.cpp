@@ -136,7 +136,7 @@ void AStar::publishROSDebugData(const Node* _node, const T &_open_set, const U &
 
 }
 
-inline unsigned int AStar::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs){
+inline unsigned int AStar::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs, HIOSDFNet& sdf_net){
     unsigned int cost = _current->G;
 
     if(_dirs  == 8){
@@ -152,7 +152,7 @@ inline unsigned int AStar::computeG(const Node* _current, Node* _suc,  unsigned 
 
 #pragma GCC diagnostic pop
 
-void AStar::exploreNeighbours(Node* _current, const Vec3i &_target, node_by_position &_index_by_pos){
+void AStar::exploreNeighbours(Node* _current, const Vec3i &_target, node_by_position &_index_by_pos, HIOSDFNet& sdf_net){
     
     for (unsigned int i = 0; i < direction.size(); ++i) {
             
@@ -164,8 +164,7 @@ void AStar::exploreNeighbours(Node* _current, const Vec3i &_target, node_by_posi
              successor->isInClosedList || 
              successor->occuppied ) 
             continue;
- 
-        unsigned int totalCost = computeG(_current, successor, i, direction.size());
+        unsigned int totalCost = computeG(_current, successor, i, direction.size(), sdf_net);
             
         if ( !successor->isInOpenList ) { 
             successor->parent = _current;
@@ -185,7 +184,7 @@ void AStar::exploreNeighbours(Node* _current, const Vec3i &_target, node_by_posi
         }
     }
 }
-PathData AStar::findPath(const Vec3i &_source, const Vec3i &_target)
+PathData AStar::findPath(const Vec3i &_source, const Vec3i &_target, HIOSDFNet& sdf_net)
 {
     Node *current = nullptr;
 
@@ -222,8 +221,7 @@ PathData AStar::findPath(const Vec3i &_source, const Vec3i &_target)
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)
         publishROSDebugData(current, indexByCost, closedSet_);
 #endif
-
-        exploreNeighbours(current, _target, indexByWorldPosition);     
+        exploreNeighbours(current, _target, indexByWorldPosition, sdf_net);     
     }
     main_timer.toc();
     

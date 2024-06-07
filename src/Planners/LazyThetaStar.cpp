@@ -47,7 +47,7 @@ namespace Planners
         }
     }
 
-    PathData LazyThetaStar::findPath(const Vec3i &_source, const Vec3i &_target)
+    PathData LazyThetaStar::findPath(const Vec3i &_source, const Vec3i &_target, HIOSDFNet& sdf_net)
     {
         Node *current = nullptr;
 
@@ -89,7 +89,7 @@ namespace Planners
             publishROSDebugData(current, indexByCost, closedSet_);
 #endif
 
-            exploreNeighbours(current, _target, indexByWorldPosition);
+            exploreNeighbours(current, _target, indexByWorldPosition, sdf_net);
 
         }
         main_timer.toc();

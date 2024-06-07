@@ -59,7 +59,7 @@ namespace Planners
         checked_nodes->clear();
     }
 
-    inline unsigned int LazyThetaStarM2::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs){
+    inline unsigned int LazyThetaStarM2::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs, HIOSDFNet& sdf_net){
 
         unsigned int cost = 0;
 
@@ -79,7 +79,7 @@ namespace Planners
         return cost;
     }
 
-    PathData LazyThetaStarM2::findPath(const Vec3i &_source, const Vec3i &_target)
+    PathData LazyThetaStarM2::findPath(const Vec3i &_source, const Vec3i &_target, HIOSDFNet& sdf_net)
     {
         utils::Clock main_timer;
         main_timer.tic();
@@ -118,7 +118,7 @@ namespace Planners
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)
             publishROSDebugData(current, indexByCost, closedSet_);
 #endif
-            exploreNeighbours(current, _target, indexByWorldPosition);
+            exploreNeighbours(current, _target, indexByWorldPosition, sdf_net);
         }
         main_timer.toc();
         PathData result_data = createResultDataObject(current, main_timer, closedSet_.size(), 

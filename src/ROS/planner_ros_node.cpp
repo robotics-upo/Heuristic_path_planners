@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 
 #include "Planners/AStar.hpp"
 #include "Planners/AStarM2.hpp"
@@ -15,20 +16,25 @@
 #include "utils/misc.hpp"
 #include "utils/geometry_utils.hpp"
 #include "utils/metrics.hpp"
+#include "utils/FCNet.hpp"
 
 #include "Grid3D/grid3d.hpp"
 
+#include <torch/torch.h>
 #include <ros/ros.h>
 
 #include <visualization_msgs/Marker.h>
 
 #include <pcl_ros/point_cloud.h>
 #include <pcl_ros/transforms.h>
+#include <sensor_msgs/PointCloud2.h>
 
 #include <nav_msgs/OccupancyGrid.h>
 
 #include <heuristic_planners/GetPath.h>
 #include <heuristic_planners/SetAlgorithm.h>
+#include <heuristic_planners/ShareWeights.h>
+
 
 /**
  * @brief Demo Class that demonstrate how to use the algorithms classes and utils 
@@ -39,20 +45,24 @@ class HeuristicPlannerROS
 {
 
 public:
-    HeuristicPlannerROS()
-    {
+    HeuristicPlannerROS(){
 
         std::string algorithm_name;
         lnh_.param("algorithm", algorithm_name, (std::string)"astar");
         lnh_.param("heuristic", heuristic_, (std::string)"euclidean");
         
         configureAlgorithm(algorithm_name, heuristic_);
+        weights_client_  = lnh_.serviceClient<heuristic_planners::ShareWeights>("/weights");
+
+        ROS_INFO("INITIALIZING SUBSCRIBERS");
 
         pointcloud_sub_     = lnh_.subscribe<pcl::PointCloud<pcl::PointXYZ>>("/points", 1, &HeuristicPlannerROS::pointCloudCallback, this);
         occupancy_grid_sub_ = lnh_.subscribe<nav_msgs::OccupancyGrid>("/grid", 1, &HeuristicPlannerROS::occupancyGridCallback, this);
+        // sdf_sub_            = lnh_.subscribe<sensor_msgs::PointCloud2>("/data_slice", 1, &HeuristicPlannerROS::dataSliceCallback, this);
 
         request_path_server_   = lnh_.advertiseService("request_path",  &HeuristicPlannerROS::requestPathService, this);
         change_planner_server_ = lnh_.advertiseService("set_algorithm", &HeuristicPlannerROS::setAlgorithm, this);
+
 
         line_markers_pub_  = lnh_.advertise<visualization_msgs::Marker>("path_line_markers", 1);
         point_markers_pub_ = lnh_.advertise<visualization_msgs::Marker>("path_points_markers", 1);
@@ -60,11 +70,14 @@ public:
     }
 
 private:
+    // Neural network and weights-retrieving service
+    HIOSDFNet sdf_net_;
+    ros::ServiceClient weights_client_;
 
     void occupancyGridCallback(const nav_msgs::OccupancyGrid::ConstPtr &_grid){
-        ROS_INFO("Loading OccupancyGrid map...");
+        ROS_INFO("Loading OccupancyGrid map... [MESSAGE /GRID RECEIVED]");
         Planners::utils::configureWorldFromOccupancyWithCosts(*_grid, *algorithm_);
-        algorithm_->publishOccupationMarkersMap();
+        algorithm_->publishOccupationMarkersMap(); 
         occupancy_grid_sub_.shutdown();
         ROS_INFO("Occupancy Grid Loaded");
         occupancy_grid_ = *_grid;
@@ -74,7 +87,7 @@ private:
     void pointCloudCallback(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &_points)
     {
 
-        ROS_INFO("Loading map...");
+        ROS_INFO("Loading map... [MESSAGE /POINTS RECEIVED]");
         Planners::utils::configureWorldFromPointCloud(_points, *algorithm_, resolution_);
         algorithm_->publishOccupationMarkersMap();
         Planners::utils::configureWorldCosts(*m_grid3d_, *algorithm_);
@@ -83,6 +96,21 @@ private:
         input_map_ = 2;
         pointcloud_sub_.shutdown();
     }   
+
+    void dataSliceCallback(const sensor_msgs::PointCloud2::ConstPtr& msg)
+    {   
+        ROS_INFO("Data Slice Processing...");
+        pcl::PointCloud<pcl::PointXYZI> cloud;
+        pcl::fromROSMsg(*msg, cloud);
+
+        // Iterate over the points in the point cloud and print them
+        for (const auto& point : cloud.points) {
+        ROS_INFO("Point: x=%f, y=%f, z=%f, sdf=%f", point.x, point.y, point.z, point.intensity);
+        ROS_INFO("Data Slice DONE");
+        }
+        sdf_sub_.shutdown();
+
+    }
     bool setAlgorithm(heuristic_planners::SetAlgorithmRequest &_req, heuristic_planners::SetAlgorithmResponse &rep){
         
         configureAlgorithm(_req.algorithm.data, _req.heuristic.data);
@@ -102,6 +130,39 @@ private:
         }
 
         ROS_INFO("Path requested, computing path");
+
+        // Update network weights
+        heuristic_planners::ShareWeights srv_resp;
+        ROS_INFO("Contacting the service");
+        if (weights_client_.waitForExistence(ros::Duration(5.0))) {
+            if(weights_client_.call(srv_resp))
+            {
+                std::vector<uint8_t> resp_weights = srv_resp.response.weights;
+                try {
+                    // torch::Tensor model_tensor = torch::empty(resp_weights.size(), torch::kUInt8);
+                    // std::memcpy(model_tensor.data_ptr(), resp_weights.data(), resp_weights.size());
+                    // //torch::load(sdf_net_, model_tensor);
+                    torch::Tensor model_tensor = torch::from_blob(resp_weights.data(), {static_cast<int64_t>(resp_weights.size())}, torch::kUInt8).to(torch::kFloat32);
+                    // Ensure the tensor is contiguous
+                    model_tensor = model_tensor.contiguous();
+                    sdf_net_.load_weights_from_tensor(model_tensor);
+                    // Ensure the model is in evaluation mode
+                    sdf_net_.eval();
+                    ROS_INFO("Model weights received and loaded successfully.");
+                    // return true;
+                } catch (const c10::Error& e) {
+                    ROS_ERROR("Error loading the model weights: %s", e.what());
+                    // return false;
+                }
+            }
+            else{
+                ROS_ERROR("Couldn't call the service");
+            }
+        }
+        else{
+            ROS_ERROR("Weight loading service does not exist");
+        }
+
         //delete previous markers
         publishMarker(path_line_markers_, line_markers_pub_);
         publishMarker(path_points_markers_, point_markers_pub_);
@@ -125,8 +186,7 @@ private:
         if(real_tries == 0) real_tries = 1;
 
         for(int i = 0; i < real_tries; ++i){
-
-            auto path_data = algorithm_->findPath(discrete_start, discrete_goal);
+            auto path_data = algorithm_->findPath(discrete_start, discrete_goal, sdf_net_);
 
             if( std::get<bool>(path_data["solved"]) ){
                 Planners::utils::CoordinateList path;
@@ -431,7 +491,7 @@ private:
 
     ros::NodeHandle lnh_{"~"};
     ros::ServiceServer request_path_server_, change_planner_server_;
-    ros::Subscriber pointcloud_sub_, occupancy_grid_sub_;
+    ros::Subscriber pointcloud_sub_, occupancy_grid_sub_, sdf_sub_;
     //TODO Fix point markers
     ros::Publisher line_markers_pub_, point_markers_pub_;
 
@@ -462,10 +522,11 @@ private:
     std::string heuristic_;
 
 };
+
 int main(int argc, char **argv)
 {
+    ROS_INFO("STARTING PLANNER ROS NODE");
     ros::init(argc, argv, "heuristic_planner_ros_node");
-
     HeuristicPlannerROS heuristic_planner_ros;
     ros::spin();
 

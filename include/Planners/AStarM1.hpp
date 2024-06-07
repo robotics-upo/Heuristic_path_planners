@@ -58,7 +58,7 @@ namespace Planners{
          * @param _dirs Number of directions used (to distinguish between 2D and 3D)
          * @return unsigned int The G Value calculated by the function
          */
-        inline virtual unsigned int computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs) override;
+        inline virtual unsigned int computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs, HIOSDFNet& sdf_net) override;
 
     };
 
