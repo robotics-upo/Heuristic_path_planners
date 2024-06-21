@@ -73,7 +73,7 @@ namespace Planners
         return static_cast<unsigned int>( mean_dist_cost * cost_weight_ * dist_scale_factor_reduced_);
     }
 
-    inline unsigned int ThetaStarM2::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs, HIOSDFNet& sdf_net){
+    inline unsigned int ThetaStarM2::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs, torch::jit::script::Module& loaded_sdf){
         
         unsigned int cost = 0;
 

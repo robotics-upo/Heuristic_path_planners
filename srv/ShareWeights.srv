@@ -1,5 +1,5 @@
 # Request
 ---
 # Response
-uint8[] weights
+float32[] weights
 

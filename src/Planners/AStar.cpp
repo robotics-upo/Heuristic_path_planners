@@ -136,7 +136,7 @@ void AStar::publishROSDebugData(const Node* _node, const T &_open_set, const U &
 
 }
 
-inline unsigned int AStar::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs, HIOSDFNet& sdf_net){
+inline unsigned int AStar::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs, torch::jit::script::Module& loaded_sdf){
     unsigned int cost = _current->G;
 
     if(_dirs  == 8){
@@ -152,7 +152,7 @@ inline unsigned int AStar::computeG(const Node* _current, Node* _suc,  unsigned 
 
 #pragma GCC diagnostic pop
 
-void AStar::exploreNeighbours(Node* _current, const Vec3i &_target, node_by_position &_index_by_pos, HIOSDFNet& sdf_net){
+void AStar::exploreNeighbours(Node* _current, const Vec3i &_target, node_by_position &_index_by_pos, torch::jit::script::Module& loaded_sdf){
     
     for (unsigned int i = 0; i < direction.size(); ++i) {
             
@@ -164,7 +164,7 @@ void AStar::exploreNeighbours(Node* _current, const Vec3i &_target, node_by_posi
              successor->isInClosedList || 
              successor->occuppied ) 
             continue;
-        unsigned int totalCost = computeG(_current, successor, i, direction.size(), sdf_net);
+        unsigned int totalCost = computeG(_current, successor, i, direction.size(), loaded_sdf);
             
         if ( !successor->isInOpenList ) { 
             successor->parent = _current;
@@ -184,7 +184,7 @@ void AStar::exploreNeighbours(Node* _current, const Vec3i &_target, node_by_posi
         }
     }
 }
-PathData AStar::findPath(const Vec3i &_source, const Vec3i &_target, HIOSDFNet& sdf_net)
+PathData AStar::findPath(const Vec3i &_source, const Vec3i &_target, torch::jit::script::Module& loaded_sdf)
 {
     Node *current = nullptr;
 
@@ -221,7 +221,7 @@ PathData AStar::findPath(const Vec3i &_source, const Vec3i &_target, HIOSDFNet& 
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)
         publishROSDebugData(current, indexByCost, closedSet_);
 #endif
-        exploreNeighbours(current, _target, indexByWorldPosition, sdf_net);     
+        exploreNeighbours(current, _target, indexByWorldPosition, loaded_sdf);     
     }
     main_timer.toc();
     

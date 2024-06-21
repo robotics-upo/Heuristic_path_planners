@@ -47,7 +47,7 @@ namespace Planners
         }
     }
 
-    PathData LazyThetaStar::findPath(const Vec3i &_source, const Vec3i &_target, HIOSDFNet& sdf_net)
+    PathData LazyThetaStar::findPath(const Vec3i &_source, const Vec3i &_target, torch::jit::script::Module& loaded_sdf)
     {
         Node *current = nullptr;
 
@@ -89,7 +89,7 @@ namespace Planners
             publishROSDebugData(current, indexByCost, closedSet_);
 #endif
 
-            exploreNeighbours(current, _target, indexByWorldPosition, sdf_net);
+            exploreNeighbours(current, _target, indexByWorldPosition, loaded_sdf);
 
         }
         main_timer.toc();

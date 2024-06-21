@@ -30,6 +30,8 @@
 #include "utils/LineOfSight.hpp"
 #include "utils/FCNet.hpp"
 
+#include <torch/script.h>
+
 namespace Planners
 {
     using namespace utils;
@@ -155,7 +157,7 @@ namespace Planners
          * @param _target Goal discrete coordinates
          * @return PathData Results stored as PathData object
          */
-        virtual PathData findPath(const Vec3i &_source, const Vec3i &_target, HIOSDFNet& sdf_net) = 0;
+        virtual PathData findPath(const Vec3i &_source, const Vec3i &_target, torch::jit::script::Module& loaded_sdf) = 0;
 
         /**
          * @brief Configure the simple inflation implementation

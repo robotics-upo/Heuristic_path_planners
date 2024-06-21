@@ -48,7 +48,7 @@ namespace Planners
          * @param _target 
          * @return PathData 
          */
-        virtual PathData findPath(const Vec3i &_source, const Vec3i &_target, HIOSDFNet& sdf_net) override;
+        virtual PathData findPath(const Vec3i &_source, const Vec3i &_target, torch::jit::script::Module& loaded_sdf) override;
 
     protected:
 
@@ -76,7 +76,7 @@ namespace Planners
          * @param _dirs 
          * @return unsigned int 
          */
-        inline virtual unsigned int computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs, HIOSDFNet& sdf_net) override;
+        inline virtual unsigned int computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs, torch::jit::script::Module& loaded_sdf) override;
 
         // Variable to ensure that the los is true between the parent of the current and one neighbour, so SetVertex function should not be executed
         bool los_neighbour_{false}; /*!< TODO Comment */

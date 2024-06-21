@@ -55,7 +55,7 @@ namespace Planners
         }
     }
 
-    void ThetaStar::exploreNeighbours(Node* _current, const Vec3i &_target,node_by_position &_index_by_pos, HIOSDFNet& sdf_net){
+    void ThetaStar::exploreNeighbours(Node* _current, const Vec3i &_target,node_by_position &_index_by_pos, torch::jit::script::Module& loaded_sdf){
 
         for (unsigned int i = 0; i < direction.size(); ++i) {
 
@@ -70,7 +70,7 @@ namespace Planners
             if (! successor->isInOpenList ) { 
 
                 successor->parent = _current;
-                successor->G = computeG(_current, successor, i, direction.size(), sdf_net);
+                successor->G = computeG(_current, successor, i, direction.size(), loaded_sdf);
                 successor->H = heuristic(successor->coordinates, _target);
                 successor->gplush = successor->G + successor->H;
                 successor->isInOpenList = true;

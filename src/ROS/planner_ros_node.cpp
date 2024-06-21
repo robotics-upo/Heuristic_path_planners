@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <memory>
 
 #include "Planners/AStar.hpp"
 #include "Planners/AStarM2.hpp"
@@ -21,6 +22,7 @@
 #include "Grid3D/grid3d.hpp"
 
 #include <torch/torch.h>
+#include <torch/script.h>
 #include <ros/ros.h>
 
 #include <visualization_msgs/Marker.h>
@@ -71,7 +73,9 @@ public:
 
 private:
     // Neural network and weights-retrieving service
-    HIOSDFNet sdf_net_;
+    std::shared_ptr<HIOSDFNet> sdf_net_ = std::make_shared<HIOSDFNet>();
+    torch::jit::script::Module loaded_sdf;
+    // HIOSDFNet sdf_net_;
     ros::ServiceClient weights_client_;
 
     void occupancyGridCallback(const nav_msgs::OccupancyGrid::ConstPtr &_grid){
@@ -137,19 +141,63 @@ private:
         if (weights_client_.waitForExistence(ros::Duration(5.0))) {
             if(weights_client_.call(srv_resp))
             {
-                std::vector<uint8_t> resp_weights = srv_resp.response.weights;
+                std::vector<float> resp_weights = srv_resp.response.weights;
                 try {
-                    // torch::Tensor model_tensor = torch::empty(resp_weights.size(), torch::kUInt8);
-                    // std::memcpy(model_tensor.data_ptr(), resp_weights.data(), resp_weights.size());
-                    // //torch::load(sdf_net_, model_tensor);
-                    torch::Tensor model_tensor = torch::from_blob(resp_weights.data(), {static_cast<int64_t>(resp_weights.size())}, torch::kUInt8).to(torch::kFloat32);
-                    // Ensure the tensor is contiguous
-                    model_tensor = model_tensor.contiguous();
-                    sdf_net_.load_weights_from_tensor(model_tensor);
-                    // Ensure the model is in evaluation mode
-                    sdf_net_.eval();
-                    ROS_INFO("Model weights received and loaded successfully.");
-                    // return true;
+                    // Try with saved net
+                    // Deserialize the ScriptModule from a file using torch::jit::load().
+                    try {
+                        // Load the model
+                        loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/model.pt", c10::kCPU);
+                    } catch (const c10::Error& e) {
+                        std::cerr << "Error loading the model\n";
+                        return false;
+                    }
+
+                    std::cout << "Model loaded successfully\n";
+
+                    // ---------------------------------- WEIGHT COPY (DEPRECATED METHOD)-----------------------------
+                    // torch::Tensor model_tensor = torch::from_blob(resp_weights.data(), {static_cast<int64_t>(resp_weights.size())}).to(torch::kFloat32);
+                    // sdf_net_->save_params_by_layer("/home/ros/exchange/weight_data/original_weights.txt");
+
+                    // ROS_INFO("Printing Net Structure");
+                    // sdf_net_->save_net_structure("/home/ros/exchange/weight_data/C_Net_Structure.txt", "");
+
+                    // sdf_net_->load_weights_from_tensor(model_tensor);
+                    // // Ensure the model is in evaluation mode
+                    // sdf_net_->eval();
+                    // ROS_INFO("Model weights received and loaded successfully.");
+
+                    // torch::Tensor input_tensor = torch::tensor({{196.0, 38.0, 2.0}}, torch::kFloat32);
+                    // sdf_net_->forwardSave("/home/ros/exchange/weight_data/forwardSave_C.txt", input_tensor);
+                    // input_tensor = torch::tensor({{197.0, 38.0, 2.0}}, torch::kFloat32);
+                    // sdf_net_->forwardSave("/home/ros/exchange/weight_data/forwardSave_C.txt", input_tensor);
+                    // input_tensor = torch::tensor({{198.0, 38.0, 2.0}}, torch::kFloat32);
+                    // sdf_net_->forwardSave("/home/ros/exchange/weight_data/forwardSave_C.txt", input_tensor);
+                    // input_tensor = torch::tensor({{196.0, 39.0, 2.0}}, torch::kFloat32);
+                    // sdf_net_->forwardSave("/home/ros/exchange/weight_data/forwardSave_C.txt", input_tensor);
+                    // input_tensor = torch::tensor({{197.0, 39.0, 2.0}}, torch::kFloat32);
+                    // sdf_net_->forwardSave("/home/ros/exchange/weight_data/forwardSave_C.txt", input_tensor);
+                    // input_tensor = torch::tensor({{198.0, 39.0, 2.0}}, torch::kFloat32);
+                    // sdf_net_->forwardSave("/home/ros/exchange/weight_data/forwardSave_C.txt", input_tensor);
+                    
+                    // //-----Save weights to a file for comparison
+                    // sdf_net_->saveWeightsToFileNew("/home/ros/exchange/weight_data/received_weights.txt", model_tensor);
+                    // sdf_net_->save_params_by_layer("/home/ros/exchange/weight_data/loaded_weights.txt");
+                    //-------------------------------------------------------------------------------------------------
+
+                    // // Create a tensor to pass to the model
+                    // input_tensor = torch::tensor({{196.0, 38.0, 2.0}}, torch::kFloat32);
+                    // std::vector<torch::jit::IValue> inputs;
+                    // inputs.push_back(input_tensor);
+
+                    // // Execute the model and turn its output into a tensor
+                    // at::Tensor output = loaded_sdf.forward(inputs).toTensor();
+
+                    // std::cout << "Model output: " << output << "\n";
+
+
+
+
                 } catch (const c10::Error& e) {
                     ROS_ERROR("Error loading the model weights: %s", e.what());
                     // return false;
@@ -186,7 +234,9 @@ private:
         if(real_tries == 0) real_tries = 1;
 
         for(int i = 0; i < real_tries; ++i){
-            auto path_data = algorithm_->findPath(discrete_start, discrete_goal, sdf_net_);
+            //auto path_data = algorithm_->findPath(discrete_start, discrete_goal, *sdf_net_);
+            auto path_data = algorithm_->findPath(discrete_start, discrete_goal, loaded_sdf);
+            
 
             if( std::get<bool>(path_data["solved"]) ){
                 Planners::utils::CoordinateList path;

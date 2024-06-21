@@ -53,7 +53,7 @@ namespace Planners
     }
 
 
-    unsigned int LazyThetaStarM1::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs, HIOSDFNet& sdf_net){
+    unsigned int LazyThetaStarM1::computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs, torch::jit::script::Module& loaded_sdf){
 
         unsigned int cost = _current->G;
 

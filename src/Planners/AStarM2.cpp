@@ -6,7 +6,7 @@ AStarM2::AStarM2(bool _use_3d):AStar(_use_3d, "astarm2") {}
 AStarM2::AStarM2(bool _use_3d, std::string _name = "astarm2" ):AStar(_use_3d, _name) {}
 
 
-inline unsigned int AStarM2::computeG(const Node* _current, Node* _suc, unsigned int _n_i, unsigned int _dirs, HIOSDFNet& sdf_net){
+inline unsigned int AStarM2::computeG(const Node* _current, Node* _suc, unsigned int _n_i, unsigned int _dirs, torch::jit::script::Module& loaded_sdf){
     
     unsigned int cost = 0;
 

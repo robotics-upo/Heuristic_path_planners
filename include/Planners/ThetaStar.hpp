@@ -80,7 +80,7 @@ namespace Planners
          * This operation of erase and re-insert is performed in order to update the position
          * of the node in the container. 
          */
-        virtual void exploreNeighbours(Node* _current, const Vec3i &_target,node_by_position &_index_by_pos, HIOSDFNet& sdf_net) override;
+        virtual void exploreNeighbours(Node* _current, const Vec3i &_target,node_by_position &_index_by_pos, torch::jit::script::Module& loaded_sdf) override;
 
         utils::CoordinateListPtr checked_nodes, checked_nodes_current;  /*!< TODO Comment */
 

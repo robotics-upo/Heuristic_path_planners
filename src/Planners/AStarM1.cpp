@@ -6,9 +6,9 @@ namespace Planners{
 AStarM1::AStarM1(bool _use_3d):AStar(_use_3d, "astarm1") {}
 AStarM1::AStarM1(bool _use_3d, std::string _name = "astarm1" ):AStar(_use_3d, _name) {}
 
-inline unsigned int AStarM1::computeG(const Node* _current, Node* _suc, unsigned int _n_i, unsigned int _dirs, HIOSDFNet& sdf_net){
+inline unsigned int AStarM1::computeG(const Node* _current, Node* _suc, unsigned int _n_i, unsigned int _dirs, torch::jit::script::Module& loaded_sdf){
     unsigned int cost = _current->G;
-
+    
     if(_dirs == 8){
         cost += (_n_i < 4 ? dist_scale_factor_ : dd_2D_); //This is more efficient
     }else{
@@ -20,14 +20,20 @@ inline unsigned int AStarM1::computeG(const Node* _current, Node* _suc, unsigned
 
     // Query the net
     torch::Tensor input_tensor = torch::tensor({{real_x, real_y, real_z}}, torch::kFloat32);
+    std::vector<torch::jit::IValue> inputs;
+    inputs.push_back(input_tensor);
     // Set the model to evaluation mode
     //sdf_net.eval();
 
     // Query the model
-    torch::Tensor output_tensor = sdf_net.forward(input_tensor);
+    auto start = std::chrono::high_resolution_clock::now();
+    //torch::Tensor output_tensor = sdf_net.forward(input_tensor);
+    at::Tensor output_tensor = loaded_sdf.forward(inputs).toTensor();
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> duration = end - start;
 
     // Convert the output tensor to a scalar value (assuming the model outputs a single value per input)
-    float model_output = output_tensor.item<float>() * map_res;
+    float model_output = output_tensor.item<float>();
     // auto cost_term = static_cast<unsigned int>(cost_weight_ * _suc->cost * dist_scale_factor_reduced_);
     
     //auto cost_term = static_cast<unsigned int>(cost_weight_ * model_output * dist_scale_factor_reduced_);
@@ -38,7 +44,7 @@ inline unsigned int AStarM1::computeG(const Node* _current, Node* _suc, unsigned
 
 
     
-    std::cout << "Previous value: " << _suc->cost << "|| Actual value: " << model_output << std::endl;
+    // std::cout << "Input tensor: (" << real_x << ", " << real_y << ", " << real_z << "|| Previous value: " << _suc->cost << "|| Actual value: " << model_output << " || Time taken to query model: " << duration.count() << " ms" << std::endl;
 
     cost += cost_term;
     _suc->C = cost_term;

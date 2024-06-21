@@ -3,6 +3,7 @@
 
 #include <torch/torch.h>
 #include <ros/ros.h>
+#include <fstream>
 
 
 // Sine non-linearity
@@ -19,7 +20,13 @@ public:
     torch::Tensor forward(torch::Tensor x);
     void eval();
     void load_weights_from_tensor(torch::Tensor& tensor);
-
+    void saveWeightsToFileOriginal(const std::string &filename, const std::vector<uint8_t> &weights);
+    void saveWeightsToFileNew(const std::string &filename, const torch::Tensor &tensor);
+    torch::Tensor getWeightsAsTensor() const;
+    void forwardSave(const std::string &filename, torch::Tensor& input_tensor);
+    void save_net_structure(const std::string& filename, const std::string& prefix) const;
+    void save_params_by_layer(const std::string& filename);
+    
 private:
     torch::nn::Sequential net;
 
