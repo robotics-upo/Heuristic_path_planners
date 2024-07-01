@@ -107,7 +107,7 @@ generate_messages(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
  INCLUDE_DIRS include
- LIBRARIES AlgorithmBase AStar AStarM1 AStarM2 ThetaStar ThetaStarM1 ThetaStarM2 LazyThetaStar LazyThetaStarM1 LazyThetaStarM1Mod LazyThetaStarM2
+ LIBRARIES AlgorithmBase AStar AStarM1 AStarM2 AStarSIREN ThetaStar ThetaStarM1 ThetaStarM2 ThetaStarSIREN LazyThetaStar LazyThetaStarM1 LazyThetaStarM1Mod LazyThetaStarM2 LazyThetaStarSIREN
  # 
  CATKIN_DEPENDS std_msgs visualization_msgs geometry_msgs nav_msgs rospy roscpp message_runtime costmap_2d sensor_msgs pcl_ros pcl_conversions
 #  DEPENDS system_lib
@@ -164,18 +164,21 @@ add_library(AStar                  src/Planners/AStar.cpp
                                             )
 
 add_library(AStarM1            src/Planners/AStarM1.cpp ) 
-add_library(AStarM2            src/Planners/AStarM2.cpp ) 
+add_library(AStarM2            src/Planners/AStarM2.cpp )
+add_library(AStarSIREN         src/Planners/AStarSIREN.cpp ) 
 add_library(ThetaStar          src/Planners/ThetaStar.cpp )
 add_library(ThetaStarM1        src/Planners/ThetaStarM1.cpp )
 add_library(ThetaStarM2        src/Planners/ThetaStarM2.cpp )
+add_library(ThetaStarSIREN     src/Planners/ThetaStarSIREN.cpp )
 add_library(LazyThetaStar      src/Planners/LazyThetaStar.cpp )
 add_library(LazyThetaStarM1    src/Planners/LazyThetaStarM1.cpp )
 add_library(LazyThetaStarM1Mod src/Planners/LazyThetaStarM1Mod.cpp )
 add_library(LazyThetaStarM2    src/Planners/LazyThetaStarM2.cpp )
+add_library(LazyThetaStarSIREN src/Planners/LazyThetaStarSIREN.cpp )
 
 
 
-list(APPEND ${PROJECT_NAME}_LIBRARIES AlgorithmBase AStar AStarM1 AStarM2 ThetaStar ThetaStarM1 ThetaStarM2 LazyThetaStar LazyThetaStarM1 LazyThetaStarM1Mod LazyThetaStarM2)  
+list(APPEND ${PROJECT_NAME}_LIBRARIES AlgorithmBase AStar AStarM1 AStarM2 AStarSIREN ThetaStar ThetaStarM1 ThetaStarM2 ThetaStarSIREN LazyThetaStar LazyThetaStarM1 LazyThetaStarM1Mod LazyThetaStarM2 LazyThetaStarSIREN)  
 target_link_libraries(${${PROJECT_NAME}_LIBRARIES} ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${TORCH_LIBRARIES})
 add_dependencies( ${${PROJECT_NAME}_LIBRARIES} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 list(APPEND ${PROJECT_NAME}_TARGETS ${${PROJECT_NAME}_LIBRARIES})

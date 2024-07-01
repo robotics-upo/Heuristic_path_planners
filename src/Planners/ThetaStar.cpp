@@ -12,11 +12,11 @@ namespace Planners
         checked_nodes_current->reserve(5000);
     }
     
-    inline void ThetaStar::UpdateVertex(Node *_s, Node *_s2, node_by_position &_index_by_pos)
+    inline void ThetaStar::UpdateVertex(Node *_s, Node *_s2, node_by_position &_index_by_pos, torch::jit::script::Module& loaded_sdf)
     {
         unsigned int g_old = _s2->G;
 
-        ComputeCost(_s, _s2);
+        ComputeCost(_s, _s2, loaded_sdf);
         if (_s2->G < g_old)
         {
             /*
@@ -30,7 +30,7 @@ namespace Planners
         }
     }
 
-    inline void ThetaStar::ComputeCost(Node *_s_aux, Node *_s2_aux)
+    inline void ThetaStar::ComputeCost(Node *_s_aux, Node *_s2_aux, torch::jit::script::Module& loaded_sdf)
     {
         auto distanceParent2 = geometry::distanceBetween2Nodes(_s_aux->parent, _s2_aux);
         line_of_sight_checks_++;
@@ -77,7 +77,7 @@ namespace Planners
                 _index_by_pos.insert(successor);
             }
          
-            UpdateVertex(_current, successor, _index_by_pos); 
+            UpdateVertex(_current, successor, _index_by_pos, loaded_sdf); 
         }
     }
 }

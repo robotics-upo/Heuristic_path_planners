@@ -57,7 +57,7 @@ namespace Planners
          * @param _s_aux Pointer to first node
          * @param _s2_aux Pointer to the second node
          */
-        inline virtual void ComputeCost(Node *_s_aux, Node *_s2_aux) override;
+        inline virtual void ComputeCost(Node *_s_aux, Node *_s2_aux, torch::jit::script::Module& loaded_sdf) override;
 
         /**
          * @brief Compute edge distance

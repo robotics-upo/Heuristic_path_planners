@@ -5,7 +5,7 @@ namespace Planners
     LazyThetaStarM1::LazyThetaStarM1(bool _use_3d):LazyThetaStar(_use_3d, "lazythetastarm1") {}
     LazyThetaStarM1::LazyThetaStarM1(bool _use_3d, std::string _name = "lazythetastarm1" ):LazyThetaStar(_use_3d, _name) {}
     
-    void LazyThetaStarM1::SetVertex(Node *_s_aux)
+    void LazyThetaStarM1::SetVertex(Node *_s_aux, torch::jit::script::Module& loaded_sdf)
     {   
         line_of_sight_checks_++;
         if (!LineOfSight::bresenham3DWithMaxThreshold(_s_aux->parent, _s_aux, discrete_world_, max_line_of_sight_cells_ ))
@@ -34,7 +34,7 @@ namespace Planners
             }
         }
     }
-    inline void LazyThetaStarM1::ComputeCost(Node *_s_aux, Node *_s2_aux)
+    inline void LazyThetaStarM1::ComputeCost(Node *_s_aux, Node *_s2_aux, torch::jit::script::Module& loaded_sdf)
     {
         auto distanceParent2 = geometry::distanceBetween2Nodes(_s_aux->parent, _s2_aux);
 

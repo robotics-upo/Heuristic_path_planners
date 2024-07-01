@@ -198,7 +198,7 @@ PathData AStar::findPath(const Vec3i &_source, const Vec3i &_target, torch::jit:
     main_timer.tic();
 
     line_of_sight_checks_ = 0;
-    
+
     node_by_cost&     indexByCost          = openSet_.get<IndexByCost>();
     node_by_position& indexByWorldPosition = openSet_.get<IndexByWorldPosition>();
 

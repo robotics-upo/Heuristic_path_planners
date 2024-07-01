@@ -6,7 +6,7 @@ namespace Planners
     
     ThetaStarM2::ThetaStarM2(bool _use_3d, std::string _name = "thetastarm2" ):ThetaStar(_use_3d, _name) {}
     
-    inline void ThetaStarM2::ComputeCost(Node *_s_aux, Node *_s2_aux)
+    inline void ThetaStarM2::ComputeCost(Node *_s_aux, Node *_s2_aux, torch::jit::script::Module& loaded_sdf)
     {
         line_of_sight_checks_++;
         if (LineOfSight::bresenham3D(_s_aux->parent, _s2_aux, discrete_world_, checked_nodes))  

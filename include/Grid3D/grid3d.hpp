@@ -511,15 +511,17 @@ protected:
 					
 					if(m_kdtree.nearestKSearch(searchPoint, 1, pointIdxNKNSearch, pointNKNSquaredDistance) > 0)
 					{
-						dist = pointNKNSquaredDistance[0];
+						dist = sqrt(pointNKNSquaredDistance[0]);
 						m_grid[index].dist = dist;
 						if(!use_costmap_function){
 							m_grid[index].prob = gaussConst1*exp(-dist*dist*gaussConst2);
+							m_grid[index].prob = dist;
 						}else{
-							double prob =  100*exp(-cost_scaling_factor*std::fabs((dist - robot_radius)));
+							//double prob =  100*exp(-cost_scaling_factor*std::fabs((dist - robot_radius)));
 							// ROS_INFO("[%f, %f, %f] Dist: %f Probability: %f", searchPoint.x, searchPoint.y, searchPoint.z, dist, prob);
 							//JAC: Include the computation of prob considering the distance to the nearest voronoi edge.
-							m_grid[index].prob = prob;
+							//m_grid[index].prob = prob;
+							m_grid[index].prob = dist;
 						}
 					}
 					else

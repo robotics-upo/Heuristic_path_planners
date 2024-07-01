@@ -5,7 +5,7 @@ namespace Planners
     LazyThetaStar::LazyThetaStar(bool _use_3d):ThetaStar(_use_3d, "lazythetastar") {}
     LazyThetaStar::LazyThetaStar(bool _use_3d, std::string _name = "lazythetastar" ):ThetaStar(_use_3d, _name) {}
    
-    void LazyThetaStar::SetVertex(Node *_s_aux)
+    void LazyThetaStar::SetVertex(Node *_s_aux, torch::jit::script::Module& loaded_sdf)
     {
         line_of_sight_checks_++;
 
@@ -35,7 +35,7 @@ namespace Planners
             }
         }
     }
-    inline void LazyThetaStar::ComputeCost(Node *_s_aux, Node *_s2_aux)
+    inline void LazyThetaStar::ComputeCost(Node *_s_aux, Node *_s2_aux, torch::jit::script::Module& loaded_sdf)
     {
         auto distanceParent2 = geometry::distanceBetween2Nodes(_s_aux->parent, _s2_aux);
 
@@ -84,7 +84,7 @@ namespace Planners
             current->isInOpenList = false;
             current->isInClosedList = true;
 
-            SetVertex(current);
+            SetVertex(current, loaded_sdf);
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)
             publishROSDebugData(current, indexByCost, closedSet_);
 #endif

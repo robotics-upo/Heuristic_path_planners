@@ -64,7 +64,7 @@ namespace Planners
                              "explored_nodes", "path_length", "total_cost1", "total_cost2", "h_cost", "g_cost1", "g_cost2", "c_cost", "grid_cost1", "grid_cost2", "g_final_node",
                              "line_of_sight_checks", "min_dist", "max_dist", "mean_dist", "std_dev",
                              "solved", "cost_weight","max_line_of_sight_cells", "av_curv", "std_dev_curv", "min_curv", "max_curv", 
-                             "av_angles", "std_dev_angles", "min_angle", "max_angle", "angle_changes" }): fields_(_fields)
+                             "av_angles", "std_dev_angles", "min_angle", "max_angle", "angle_changes", "path" }): fields_(_fields)
             {
 
             }

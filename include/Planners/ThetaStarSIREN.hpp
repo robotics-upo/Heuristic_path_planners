@@ -1,20 +1,16 @@
-#ifndef THETASTARM1_HPP
-#define THETASTARM1_HPP
+#ifndef THETASTARSIREN_HPP
+#define THETASTARSIREN_HPP
 /**
- * @file ThetaStarM1.hpp
- * @author Rafael Rey (reyarcenegui@gmail.com)
+ * @file ThetaStarSIREN.hpp
+ * @author Guillermo Gil (guillermogilg99@gmail.com)
  * @author Jose Antonio Cobano (jacobsua@upo.es)
  * 
- * @brief This header declares the functions and class 
- * associated to the Cost Aware Theta* Algorithm. It inherits
- * from the original Theta* algorithm and override two functions:
- *  1. ComputeCost  
- *  2. ComputeG
+ * @brief TBD
  * 
  * @version 0.1
- * @date 2021-09-20
+ * @date 2024-06-27
  * 
- * @copyright Copyright (c) 2021
+ * @copyright Copyright (c) 2024
  * 
  */
 #include <Planners/ThetaStar.hpp>
@@ -23,30 +19,30 @@ namespace Planners
 {
 
     /**
-     * @brief Theta* Algorithm Class
+     * @brief Theta* SIREN Algorithm Class
      * 
      */
-    class ThetaStarM1 : public ThetaStar
+    class ThetaStarSIREN : public ThetaStar
     {
 
     public:
         
         /**
-         * @brief Construct a new Theta Star M1 object
+         * @brief Construct a new Theta Star SIREN object
          * 
          * @param _use_3d This parameter allows the user to choose between planning on 
          * a plane (8 directions possibles) or in the 3D full space (26 directions)
          * @param _name Algorithm name stored internally
          * 
          */
-        ThetaStarM1(bool _use_3d, std::string _name );
+        ThetaStarSIREN(bool _use_3d, std::string _name );
 
         /**
-         * @brief Construct a new Cost Aware Theta Star object
+         * @brief Construct a new Theta Star SIREN object
          * 
          * @param _use_3d 
          */
-        ThetaStarM1(bool _use_3d);
+        ThetaStarSIREN(bool _use_3d);
 
 
     protected:
@@ -61,12 +57,7 @@ namespace Planners
 
 
         /**
-         * @brief This functions implements the algorithm G function.  The difference
-         * with the original A* function is that the returned G value here is composed of three terms:
-         * 1. Dist between the current and successor (1, sqrt(2) or sqrt(3))
-         * 2. The G value of the current node (How does it cost to reach to the current)
-         * 3. The edge_neighbour cost which is calculated as the averaged between the _current and _suc cost 
-         * scaled with the value dist_scale_factor_reduced_
+         * @brief TBD
          * 
          *
          * @param _current Pointer to the current node

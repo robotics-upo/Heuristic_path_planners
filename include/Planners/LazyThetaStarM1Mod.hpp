@@ -49,7 +49,7 @@ namespace Planners
          * @param _s_aux Pointer to first node
          * @param _s2_aux Pointer to second node
          */
-        virtual void ComputeCost(Node *_s_aux, Node *_s2_aux) override;
+        virtual void ComputeCost(Node *_s_aux, Node *_s2_aux, torch::jit::script::Module& loaded_sdf) override;
 
     };
 

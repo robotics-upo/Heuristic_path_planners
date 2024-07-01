@@ -1,14 +1,14 @@
-#ifndef LAZYTHETASTARM1_HPP
-#define LAZYTHETASTARM1_HPP
+#ifndef LAZYTHETASTARSIREN_HPP
+#define LAZYTHETASTARSIREN_HPP
 /**
- * @file LazyThetaStarM1.hpp
- * @author Rafael Rey (reyarcenegui@gmail.com)
+ * @file LazyThetaStarSIREN.hpp
+ * @author Guillermo Gil (guillermogilg99@gmail.com)
  * @author Jose Antonio Cobano (jacobsua@upo.es)
  * @brief 
  * @version 0.1
- * @date 2021-06-29
+ * @date 2024-06-27
  * 
- * @copyright Copyright (c) 2021
+ * @copyright Copyright (c) 2024
  * 
  */
 #include <Planners/LazyThetaStar.hpp>
@@ -16,30 +16,30 @@
 namespace Planners
 {
     /**
-     * @brief Lazy Theta* Algorithm Class
+     * @brief Lazy Theta* SIREN Algorithm Class
      * 
      */
-    class LazyThetaStarM1 : public LazyThetaStar
+    class LazyThetaStarSIREN : public LazyThetaStar
     {
 
     public:
         
         /**
-         * @brief Construct a new Lazy Theta Star object
+         * @brief Construct a new Lazy Theta Star SIREN object
          * 
          * @param _use_3d This parameter allows the user to choose between planning on a plane 
          * (8 directions possibles) or in the 3D full space (26 directions)
          * @param _name Algorithm name stored internally
          * 
          */
-        LazyThetaStarM1(bool _use_3d, std::string _name );
+        LazyThetaStarSIREN(bool _use_3d, std::string _name );
 
         /**
-         * @brief Construct a new Cost Aware Lazy Theta Star object
+         * @brief Construct a new Lazy Theta Star SIREN object
          * 
          * @param _use_3d 
          */
-        LazyThetaStarM1(bool _use_3d);
+        LazyThetaStarSIREN(bool _use_3d);
 
     protected:
 

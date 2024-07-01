@@ -4,14 +4,17 @@
 
 #include "Planners/AStar.hpp"
 #include "Planners/AStarM2.hpp"
+#include "Planners/AStarSIREN.hpp"
 #include "Planners/AStarM1.hpp"
 #include "Planners/ThetaStar.hpp"
 #include "Planners/ThetaStarM1.hpp"
 #include "Planners/ThetaStarM2.hpp"
+#include "Planners/ThetaStarSIREN.hpp"
 #include "Planners/LazyThetaStar.hpp"
 #include "Planners/LazyThetaStarM1.hpp"
 #include "Planners/LazyThetaStarM1Mod.hpp"
 #include "Planners/LazyThetaStarM2.hpp"
+#include "Planners/LazyThetaStarSIREN.hpp"
 #include "utils/ros/ROSInterfaces.hpp"
 #include "utils/SaveDataVariantToFile.hpp"
 #include "utils/misc.hpp"
@@ -36,6 +39,8 @@
 #include <heuristic_planners/GetPath.h>
 #include <heuristic_planners/SetAlgorithm.h>
 #include <heuristic_planners/ShareWeights.h>
+
+#define USING_PRETRAINED_MODELS 1
 
 
 /**
@@ -75,6 +80,7 @@ private:
     // Neural network and weights-retrieving service
     std::shared_ptr<HIOSDFNet> sdf_net_ = std::make_shared<HIOSDFNet>();
     torch::jit::script::Module loaded_sdf;
+    int modelcont = 0;
     // HIOSDFNet sdf_net_;
     ros::ServiceClient weights_client_;
 
@@ -135,86 +141,124 @@ private:
 
         ROS_INFO("Path requested, computing path");
 
-        // Update network weights
-        heuristic_planners::ShareWeights srv_resp;
-        ROS_INFO("Contacting the service");
-        if (weights_client_.waitForExistence(ros::Duration(5.0))) {
-            if(weights_client_.call(srv_resp))
+        if (USING_PRETRAINED_MODELS){
+            switch (modelcont)
             {
-                std::vector<float> resp_weights = srv_resp.response.weights;
-                try {
-                    // Try with saved net
-                    // Deserialize the ScriptModule from a file using torch::jit::load().
-                    try {
-                        // Load the model
-                        loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/model.pt", c10::kCPU);
-                    } catch (const c10::Error& e) {
-                        std::cerr << "Error loading the model\n";
-                        return false;
-                    }
+            case 0:
+                loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/model_1_195_40_2.pt", c10::kCUDA);
+                modelcont++;
+                ROS_INFO("Using Model 1 (195.0, 40.0, 2.0)");
+                break;
+            
+            case 1:
+                loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/model_2_199_40_2.pt", c10::kCUDA);
+                modelcont++;
+                ROS_INFO("Using Model 2 (199.0, 40.0, 2.0)");
+                break;
+            
+            case 2:
+                loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/model_3_199_36_2.pt", c10::kCUDA);
+                modelcont++;
+                ROS_INFO("Using Model 3 (199.0, 36.0, 2.0)");
+                break;
+            
+            case 3:
+                loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/model_4_195_36_2.pt", c10::kCUDA);
+                modelcont++;
+                ROS_INFO("Using Model 4 (195.0, 36.0, 2.0)");
+                break;
+            
+            case 4:
+                loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/model_5_195_40_2.pt", c10::kCUDA);
+                modelcont = 0;
+                ROS_INFO("Using Model 5 (195.0, 40.0, 2.0)");
+                break;
 
-                    std::cout << "Model loaded successfully\n";
-
-                    // ---------------------------------- WEIGHT COPY (DEPRECATED METHOD)-----------------------------
-                    // torch::Tensor model_tensor = torch::from_blob(resp_weights.data(), {static_cast<int64_t>(resp_weights.size())}).to(torch::kFloat32);
-                    // sdf_net_->save_params_by_layer("/home/ros/exchange/weight_data/original_weights.txt");
-
-                    // ROS_INFO("Printing Net Structure");
-                    // sdf_net_->save_net_structure("/home/ros/exchange/weight_data/C_Net_Structure.txt", "");
-
-                    // sdf_net_->load_weights_from_tensor(model_tensor);
-                    // // Ensure the model is in evaluation mode
-                    // sdf_net_->eval();
-                    // ROS_INFO("Model weights received and loaded successfully.");
-
-                    // torch::Tensor input_tensor = torch::tensor({{196.0, 38.0, 2.0}}, torch::kFloat32);
-                    // sdf_net_->forwardSave("/home/ros/exchange/weight_data/forwardSave_C.txt", input_tensor);
-                    // input_tensor = torch::tensor({{197.0, 38.0, 2.0}}, torch::kFloat32);
-                    // sdf_net_->forwardSave("/home/ros/exchange/weight_data/forwardSave_C.txt", input_tensor);
-                    // input_tensor = torch::tensor({{198.0, 38.0, 2.0}}, torch::kFloat32);
-                    // sdf_net_->forwardSave("/home/ros/exchange/weight_data/forwardSave_C.txt", input_tensor);
-                    // input_tensor = torch::tensor({{196.0, 39.0, 2.0}}, torch::kFloat32);
-                    // sdf_net_->forwardSave("/home/ros/exchange/weight_data/forwardSave_C.txt", input_tensor);
-                    // input_tensor = torch::tensor({{197.0, 39.0, 2.0}}, torch::kFloat32);
-                    // sdf_net_->forwardSave("/home/ros/exchange/weight_data/forwardSave_C.txt", input_tensor);
-                    // input_tensor = torch::tensor({{198.0, 39.0, 2.0}}, torch::kFloat32);
-                    // sdf_net_->forwardSave("/home/ros/exchange/weight_data/forwardSave_C.txt", input_tensor);
-                    
-                    // //-----Save weights to a file for comparison
-                    // sdf_net_->saveWeightsToFileNew("/home/ros/exchange/weight_data/received_weights.txt", model_tensor);
-                    // sdf_net_->save_params_by_layer("/home/ros/exchange/weight_data/loaded_weights.txt");
-                    //-------------------------------------------------------------------------------------------------
-
-                    // // Create a tensor to pass to the model
-                    // input_tensor = torch::tensor({{196.0, 38.0, 2.0}}, torch::kFloat32);
-                    // std::vector<torch::jit::IValue> inputs;
-                    // inputs.push_back(input_tensor);
-
-                    // // Execute the model and turn its output into a tensor
-                    // at::Tensor output = loaded_sdf.forward(inputs).toTensor();
-
-                    // std::cout << "Model output: " << output << "\n";
-
-
-
-
-                } catch (const c10::Error& e) {
-                    ROS_ERROR("Error loading the model weights: %s", e.what());
-                    // return false;
-                }
-            }
-            else{
-                ROS_ERROR("Couldn't call the service");
+            
+            default:
+                break;
             }
         }
         else{
-            ROS_ERROR("Weight loading service does not exist");
-        }
+            // Update network weights
+            heuristic_planners::ShareWeights srv_resp;
+            ROS_INFO("Contacting the service");
+            if (weights_client_.waitForExistence(ros::Duration(5.0))) {
+                if(weights_client_.call(srv_resp))
+                {
+                    std::vector<float> resp_weights = srv_resp.response.weights;
+                    try {
+                        // Try with saved net
+                        // Deserialize the ScriptModule from a file using torch::jit::load().
+                        try {
+                            // Load the model
+                            loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/model.pt", c10::kCUDA);
+                        } catch (const c10::Error& e) {
+                            std::cerr << "Error loading the model\n";
+                            return false;
+                        }
 
+                        std::cout << "Model loaded successfully\n";
+
+                        // ---------------------------------- WEIGHT COPY (DEPRECATED METHOD)-----------------------------
+                        // torch::Tensor model_tensor = torch::from_blob(resp_weights.data(), {static_cast<int64_t>(resp_weights.size())}).to(torch::kFloat32);
+                        // sdf_net_->save_params_by_layer("/home/ros/exchange/weight_data/original_weights.txt");
+
+                        // ROS_INFO("Printing Net Structure");
+                        // sdf_net_->save_net_structure("/home/ros/exchange/weight_data/C_Net_Structure.txt", "");
+
+                        // sdf_net_->load_weights_from_tensor(model_tensor);
+                        // // Ensure the model is in evaluation mode
+                        // sdf_net_->eval();
+                        // ROS_INFO("Model weights received and loaded successfully.");
+
+                        // torch::Tensor input_tensor = torch::tensor({{196.0, 38.0, 2.0}}, torch::kFloat32);
+                        // sdf_net_->forwardSave("/home/ros/exchange/weight_data/forwardSave_C.txt", input_tensor);
+                        // input_tensor = torch::tensor({{197.0, 38.0, 2.0}}, torch::kFloat32);
+                        // sdf_net_->forwardSave("/home/ros/exchange/weight_data/forwardSave_C.txt", input_tensor);
+                        // input_tensor = torch::tensor({{198.0, 38.0, 2.0}}, torch::kFloat32);
+                        // sdf_net_->forwardSave("/home/ros/exchange/weight_data/forwardSave_C.txt", input_tensor);
+                        // input_tensor = torch::tensor({{196.0, 39.0, 2.0}}, torch::kFloat32);
+                        // sdf_net_->forwardSave("/home/ros/exchange/weight_data/forwardSave_C.txt", input_tensor);
+                        // input_tensor = torch::tensor({{197.0, 39.0, 2.0}}, torch::kFloat32);
+                        // sdf_net_->forwardSave("/home/ros/exchange/weight_data/forwardSave_C.txt", input_tensor);
+                        // input_tensor = torch::tensor({{198.0, 39.0, 2.0}}, torch::kFloat32);
+                        // sdf_net_->forwardSave("/home/ros/exchange/weight_data/forwardSave_C.txt", input_tensor);
+                        
+                        // //-----Save weights to a file for comparison
+                        // sdf_net_->saveWeightsToFileNew("/home/ros/exchange/weight_data/received_weights.txt", model_tensor);
+                        // sdf_net_->save_params_by_layer("/home/ros/exchange/weight_data/loaded_weights.txt");
+                        //-------------------------------------------------------------------------------------------------
+
+                        // // Create a tensor to pass to the model
+                        // input_tensor = torch::tensor({{196.0, 38.0, 2.0}}, torch::kFloat32);
+                        // std::vector<torch::jit::IValue> inputs;
+                        // inputs.push_back(input_tensor);
+
+                        // // Execute the model and turn its output into a tensor
+                        // at::Tensor output = loaded_sdf.forward(inputs).toTensor();
+
+                        // std::cout << "Model output: " << output << "\n";
+
+
+
+
+                    } catch (const c10::Error& e) {
+                        ROS_ERROR("Error loading the model weights: %s", e.what());
+                        // return false;
+                    }
+                }
+                else{
+                    ROS_ERROR("Couldn't call the service");
+                }
+            }
+            else{
+                ROS_ERROR("Weight loading service does not exist");
+            }
+        }
         //delete previous markers
         publishMarker(path_line_markers_, line_markers_pub_);
         publishMarker(path_points_markers_, point_markers_pub_);
-
         //Astar coordinate list is std::vector<vec3i>
         const auto discrete_goal =  Planners::utils::discretePoint(_req.goal, resolution_);
         const auto discrete_start = Planners::utils::discretePoint(_req.start, resolution_);
@@ -223,7 +267,6 @@ private:
             std::cout << discrete_start << ": Start not valid" << std::endl;
             return false;
         }
-
         if( algorithm_->detectCollision(discrete_goal) ){
             std::cout << discrete_goal << ": Goal not valid" << std::endl;
             return false;
@@ -232,11 +275,9 @@ private:
         times.reserve(_req.tries.data);
         int real_tries = _req.tries.data;
         if(real_tries == 0) real_tries = 1;
-
         for(int i = 0; i < real_tries; ++i){
             //auto path_data = algorithm_->findPath(discrete_start, discrete_goal, *sdf_net_);
             auto path_data = algorithm_->findPath(discrete_start, discrete_goal, loaded_sdf);
-            
 
             if( std::get<bool>(path_data["solved"]) ){
                 Planners::utils::CoordinateList path;
@@ -359,7 +400,10 @@ private:
             algorithm_.reset(new Planners::AStarM1(use3d_));
         }else if( algorithm_name == "astarsafetycost" ){
             ROS_INFO("Using A* Safety Cost");
-            algorithm_.reset(new Planners::AStarM2(use3d_));    
+            algorithm_.reset(new Planners::AStarM2(use3d_));
+        }else if( algorithm_name == "astarsiren" ){
+            ROS_INFO("Using A* SIREN");
+            algorithm_.reset(new Planners::AStarSIREN(use3d_));    
         }else if ( algorithm_name == "thetastar" ){
             ROS_INFO("Using Theta*");
             algorithm_.reset(new Planners::ThetaStar(use3d_));
@@ -369,6 +413,9 @@ private:
         }else if ( algorithm_name == "thetastarsafetycost" ){
             ROS_INFO("Using Theta* Safety Cost");
             algorithm_.reset(new Planners::ThetaStarM2(use3d_));
+        }else if ( algorithm_name == "thetastarsiren" ){
+            ROS_INFO("Using Theta* SIREN");
+            algorithm_.reset(new Planners::ThetaStarSIREN(use3d_));
         }else if( algorithm_name == "lazythetastar" ){
             ROS_INFO("Using LazyTheta*");
             algorithm_.reset(new Planners::LazyThetaStar(use3d_));
@@ -381,6 +428,9 @@ private:
         }else if( algorithm_name == "lazythetastarsafetycost"){
             ROS_INFO("Using LazyTheta* Safety Cost");
             algorithm_.reset(new Planners::LazyThetaStarM2(use3d_));
+        }else if( algorithm_name == "lazythetastarsiren" ){
+            ROS_INFO("Using LazyTheta* SIREN");
+            algorithm_.reset(new Planners::LazyThetaStarSIREN(use3d_));
         }else{
             ROS_WARN("Wrong algorithm name parameter. Using ASTAR by default");
             algorithm_.reset(new Planners::AStar(use3d_));

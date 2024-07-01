@@ -53,7 +53,7 @@ namespace Planners
          * @param _s2 Pointer to node s2
          * @param _index_by_pos reference to openset to erase and insert the nodes in some cases
          */
-        virtual void UpdateVertex(Node *_s, Node *_s2, node_by_position &_index_by_pos);
+        virtual void UpdateVertex(Node *_s, Node *_s2, node_by_position &_index_by_pos, torch::jit::script::Module& loaded_sdf);
         
         /**
          * @brief Compute cost algorithm function
@@ -61,7 +61,7 @@ namespace Planners
          * @param _s_aux Pointer to first node
          * @param _s2_aux Pointer to the second node
          */
-        inline virtual void ComputeCost(Node *_s_aux, Node *_s2_aux);
+        inline virtual void ComputeCost(Node *_s_aux, Node *_s2_aux, torch::jit::script::Module& loaded_sdf);
 
         /**
          * @brief This function is the secondary inside the main loop of findPath 
