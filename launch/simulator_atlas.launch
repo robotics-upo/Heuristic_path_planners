@@ -12,6 +12,7 @@
 
   <!-- <node pkg="tf" type="static_transform_publisher" name="map_world" args="32 32 0 -3.1416 0 0 map world 100" /> -->
   <!-- <node pkg="tf" type="static_transform_publisher" name="map_world" args="181.5 -10.0 0 0 0 0 map world 100" /> -->
+  <!-- <node pkg="tf" type="static_transform_publisher" name="map_world" args="191.4 0 1 0 0 0 map world 100" /> -->
   <node pkg="tf" type="static_transform_publisher" name="map_world" args="0 0 0 0 0 0 map world 100" />
 
   <!-- Map name is the filename wihtouth the .bt extensionof the 3D Map -->
@@ -21,19 +22,22 @@
     <!-- <arg name="map_name"            default="manufacturing"/> -->
     <!-- ATLAS -->
     <!-- <arg name="map_name"            default="Atlas_8_300"/> -->
-    <arg name="map_name"            default="Atlas_8_300"/>
+    <arg name="map_name"            default="Atlas_8_puertas_02"/>
     <!-- <arg name="map_name"            default="nube_de_puntos2"/> -->
     <!-- <arg name="map_name"            default="nube_de_puntos_con_etiquetas"/> -->
     <arg name="map"                 default="$(find heuristic_planners)/resources/3dmaps/$(arg map_name).bt"/>
 
     <arg name="algorithm_name"      default="costlazythetastar"/>
 
-    <arg name="world_size_x"        default="212"/>
-    <arg name="world_size_y"        default="170"/>
+    <!-- 212 -->
+    <arg name="world_size_x"        default="211.8"/>
+    <!-- 170 -->
+    <arg name="world_size_y"        default="169.2"/>
     <!-- maze.bt with world_size_z=5 -->
     <!-- <arg name="world_size_z"        default="5"/> -->
     <!-- <arg name="world_size_z"        default="2"/> manufacturing -->
-    <arg name="world_size_z"        default="9"/>  <!-- 6 -->
+    <!-- 9 -->
+    <arg name="world_size_z"        default="9.2"/>  <!-- 6 -->
     <arg name="resolution"          default="0.2"/>
 
     <arg name="inflate_map"         default="true"/>

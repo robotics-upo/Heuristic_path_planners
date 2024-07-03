@@ -195,6 +195,7 @@ if(BUILD_ROS_SUPPORT)
   catkin_install_python(PROGRAMS  scripts/test_algorithms.py
                                   scripts/test_algorithms_compare.py
                                   scripts/grid3d_class.py
+                                  scripts/bim2ros.py
                                   scripts/test_algorithms_performance.py
                                   scripts/test_algorithms_pseudo_random_paths.py
                                   scripts/compare_trajectories_rviz.py

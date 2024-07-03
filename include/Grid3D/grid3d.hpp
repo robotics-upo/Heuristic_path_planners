@@ -69,7 +69,7 @@ private:
 	// Semantic Grid
 			
 	std_msgs::Int32MultiArray semantic_grid;
-	std::vector<int> semanticGrid;
+	std::vector<int> semanticGrid, semanticGrid_x, semanticGrid_y, semanticGrid_z, semanticGrid_v;
 
 	// Visualization of a grid slice as 2D grid map msg
 	nav_msgs::OccupancyGrid m_gridSliceMsg;
@@ -296,10 +296,20 @@ bool loadSemanticGrid() {
     if (client.call(srv)) {
         // Process the response
         // The shape and semantic grid are available in srv.response.shape and srv.response.semantic_grid
-        std::vector<int> shape = srv.response.shape;
+        std::vector<short int> shape = srv.response.shape;
         std::vector<int> int_shape(shape.begin(), shape.end());
 
-        semanticGrid = srv.response.semantic_grid;
+        semanticGrid_x = srv.response.semantic_grid_x;
+		semanticGrid_y = srv.response.semantic_grid_y;
+		semanticGrid_z = srv.response.semantic_grid_z;
+		semanticGrid_v = srv.response.semantic_grid_v;
+
+		// std::cout << "semanticGrid_servicio:" << srv.response.semantic_grid_x[0] << "," << srv.response.semantic_grid_y[0] << "," << srv.response.semantic_grid_z[0] << "," << srv.response.semantic_grid_v[0]  << std::endl;
+		// std::cout << "semanticGrid_cliente:" << semanticGrid_x[0] << "," << semanticGrid_y[0]  << "," << semanticGrid_z[0]  << "," << semanticGrid_v[0]  << std::endl;
+
+		// for(int i=1800 ; i < 1850 ; i++){
+		// 	std::cout << "semanticGrid_values:" << semanticGrid[i] << "," << srv.response.semantic_grid_y[i] << "," << srv.response.semantic_grid_z[i] << "," << srv.response.semantic_grid_v[i]  << std::endl;
+		// }
 		
 		std::cout << "-------------SERVICE OUTPUT-----------" << std::endl;
 
@@ -307,96 +317,9 @@ bool loadSemanticGrid() {
 		std::cout << "SIZE SEMANTIC Y" << int_shape[1] << std::endl;
 		std::cout << "SIZE SEMANTIC Z" << int_shape[2] << std::endl;
 
-		for (unsigned int i = 0; i < semanticGrid.size(); ++i) {
-			if (semanticGrid[i] == 0) {
-            	// std::cout << "UNO " << std::endl;
-        	}
-			else if (semanticGrid[i] == 1) {
-            	// encontrado = true;
-            	// std::cout << "UNO " << std::endl;
-        	}
-			else if (semanticGrid[i] == 2) {
-            	// encontrado = true;
-            	// std::cout << "DOS " << std::endl;
-        	}
-			else if (semanticGrid[i] == 3) {
-            	// encontrado = true;
-            	// std::cout << "TRES " << std::endl;
-        	}
-			else if (semanticGrid[i] == 4) {
-            	// encontrado = true;
-            	// std::cout << "CUATRO " << std::endl;
-        	}
-			else if (semanticGrid[i] == 5) {
-            	// encontrado = true;
-            	// std::cout << "CINCO " << std::endl;
-        	}
-			else if (semanticGrid[i] == 6) {
-            	// encontrado = true;
-            	// std::cout << "SEIS " << std::endl;
-        	}
-			else if (semanticGrid[i] == 7) {
-            	// encontrado = true;
-            	// std::cout << "SIETE " << std::endl;
-        	}
-			else if (semanticGrid[i] == 8) {
-            	// encontrado = true;
-            	// std::cout << "OCHO " << std::endl;
-        	}
-			else {
-            	// encontrado = true;
-            	std::cout << "NADA de NADA " << srv.response.semantic_grid[i] << std::endl;
-        	}
-		}
+		std::cout << "Size semanticGrid_v" << semanticGrid_v.size() << std::endl;
 
-		// for (unsigned int i = 0; i < srv.response.semantic_grid.size(); ++i) {
-		// 	// if (srv.response.semantic_grid[i] != 0 || srv.response.semantic_grid[i] != 1) {
-		// 	// 	std::cout << "NO CERO Y UNO " << srv.response.semantic_grid[i] << std::endl;
-		// 	// }
-
-        // 	if (srv.response.semantic_grid[i] == 0) {
-        //     	// encontrado = true;
-        //     	// std::cout << "CERO " << std::endl;
-        // 	}
-		// 	else if (srv.response.semantic_grid[i] == 1) {
-        //     	// encontrado = true;
-        //     	// std::cout << "UNO " << std::endl;
-        // 	}
-		// 	else if (srv.response.semantic_grid[i] == 2) {
-        //     	// encontrado = true;
-        //     	// std::cout << "DOS " << std::endl;
-        // 	}
-		// 	else if (srv.response.semantic_grid[i] == 3) {
-        //     	// encontrado = true;
-        //     	// std::cout << "TRES " << std::endl;
-        // 	}
-		// 	else if (srv.response.semantic_grid[i] == 4) {
-        //     	// encontrado = true;
-        //     	// std::cout << "CUATRO " << std::endl;
-        // 	}
-		// 	else if (srv.response.semantic_grid[i] == 5) {
-        //     	// encontrado = true;
-        //     	// std::cout << "CINCO " << std::endl;
-        // 	}
-		// 	else if (srv.response.semantic_grid[i] == 6) {
-        //     	// encontrado = true;
-        //     	// std::cout << "SEIS " << std::endl;
-        // 	}
-		// 	else if (srv.response.semantic_grid[i] == 7) {
-        //     	// encontrado = true;
-        //     	// std::cout << "SIETE " << std::endl;
-        // 	}
-		// 	else if (srv.response.semantic_grid[i] == 8) {
-        //     	// encontrado = true;
-        //     	// std::cout << "OCHO " << std::endl;
-        // 	}
-		// 	else {
-        //     	// encontrado = true;
-        //     	std::cout << "NADA de NADA " << srv.response.semantic_grid[i] << std::endl;
-        // 	}
-    	// }
-
-        return !semanticGrid.empty();
+        return !semanticGrid_v.empty();
     } else {
         ROS_ERROR("Failed to call service get_semantic_grid");
         return false;
@@ -605,7 +528,7 @@ bool loadSemanticGrid() {
 		// std::cout << "dim1: " << m_cloud->width << std::endl;
 		m_cloud->height = 1;
 		m_cloud->points.resize(static_cast<long>(m_cloud->width) * m_cloud->height);
-		std::cout << "dim1: " << m_cloud->width << std::endl;
+		std::cout << "Size Octomap: " << m_cloud->width << std::endl;
 		for(octomap::OcTree::leaf_iterator it = m_octomap->begin_leafs(), end = m_octomap->end_leafs(); it != end; ++it)
 		{
 			if(it != NULL && m_octomap->isNodeOccupied(*it))
@@ -635,6 +558,13 @@ bool loadSemanticGrid() {
 		m_gridSizeX = (int)(m_maxX*m_oneDivRes);
 		m_gridSizeY = (int)(m_maxY*m_oneDivRes); 
 		m_gridSizeZ = (int)(m_maxZ*m_oneDivRes);
+
+		// CONSIDERING DIMENSIONES OF THE SEMANTIC LAYER
+		// m_gridSizeX = (int)(212*m_oneDivRes); //1060
+		// m_gridSizeY = (int)(215*m_oneDivRes); //1075
+		// m_gridSizeZ = (int)(10*m_oneDivRes);  //50
+
+
 		m_gridSize = m_gridSizeX*m_gridSizeY*m_gridSizeZ;
 		m_gridStepY = m_gridSizeX;
 		m_gridStepZ = m_gridSizeX*m_gridSizeY;
@@ -644,8 +574,10 @@ bool loadSemanticGrid() {
 		m_kdtree.setInputCloud(m_cloud);
 
 		// Compute the distance to the closest point of the grid
-		int index;
+		int index, index_semantic;
 		float dist;
+		int index_size_semantic;
+		// int maximo;
 		// float gaussConst1 = 1./(m_sensorDev*sqrt(2*M_PI));
 		// float gaussConst2 = 1./(2*m_sensorDev*m_sensorDev);
 		pcl::PointXYZI searchPoint;
@@ -660,6 +592,104 @@ bool loadSemanticGrid() {
 		std::cout << "Size X: " << m_gridSizeX << std::endl;
 		std::cout << "Size Y: " << m_gridSizeY << std::endl;
 		std::cout << "Size Z: " << m_gridSizeZ << std::endl;
+
+		std::cout << "m_max X: " << m_maxX << std::endl;
+		std::cout << "m_may Y: " << m_maxY << std::endl;
+		std::cout << "m_maz Z: " << m_maxZ << std::endl;
+
+		index_size_semantic=semanticGrid_v.size();	
+		std::cout << "index_size_semantic: " << index_size_semantic << std::endl;
+		// maximo=m_gridSizeX*m_gridSizeY*m_gridSizeZ;	
+		// std::cout << "maximo: " << maximo << std::endl;
+		int c0,c1,c2,c3,c4,c5,c6,c7,c8;
+		int ind1,ind2,ind3,ind4;
+		
+		c0=0;
+		c1=0;
+		c2=0;
+		c3=0;
+		c4=0;
+		c5=0;
+		c6=0;
+		c7=0;
+		c8=0;
+		ind1=0;
+		ind2=0;
+		ind3=0;
+		ind4=0;
+
+		for(int iz=0; iz<m_gridSizeZ; iz++)
+		{
+			for(int iy=0; iy<m_gridSizeY; iy++)
+			{
+				for(int ix=0; ix<m_gridSizeX; ix++)
+				{	
+					index = ix + iy*m_gridStepY + iz*m_gridStepZ;		
+					m_grid[index].semantic = 0;
+				}
+			}
+		}
+		// int count_semant=0;
+		for(int i_seman=0; i_seman<index_size_semantic; i_seman++)
+		{
+			// std::cout << "semanticGrid_x: " << semanticGrid_x[i_seman] << std::endl;
+			index_semantic=semanticGrid_x[i_seman];//Correcto
+			// std::cout << "index_semantic: " << index_semantic << std::endl;
+			if (semanticGrid_v[i_seman] == 1)
+				c1=c1+1;
+			else if (semanticGrid_v[i_seman] == 2)
+				c2=c2+1;
+			else if (semanticGrid_v[i_seman] == 3)
+				c3=c3+1;
+			else if (semanticGrid_v[i_seman] == 4)
+				c4=c4+1;
+			else if (semanticGrid_v[i_seman] == 5)
+				c5=c5+1;
+			else if (semanticGrid_v[i_seman] == 6)
+				c6=c6+1;
+			else if (semanticGrid_v[i_seman] == 7)
+				c7=c7+1;
+			else if (semanticGrid_v[i_seman] == 8)
+				c8=c8+1;
+			else
+				c0=c0+1;
+			
+			m_grid[index_semantic].semantic = semanticGrid_v[i_seman];
+
+
+			// Check if index_semantic is out world_size
+			if (index_semantic > m_gridSize)
+			{
+				std::cout << "OUT OF THE WORLD" << std::endl;
+				m_grid[index_semantic].semantic = semanticGrid_v[i_seman];
+				// count_semant=count_semant+1;
+			}	
+			// usleep(1e4);
+			// std::cout << "Please a key to go to the next iteration..." << std::endl;
+			// getchar(); // Comentar para no usar tecla.		
+			
+			// searchPoint.x = semanticGrid_x[i_seman]*m_resolution;
+			// searchPoint.y = semanticGrid_y[i_seman]*m_resolution;
+			// searchPoint.z = semanticGrid_z[i_seman]*m_resolution;
+			// if(m_kdtree.nearestKSearch(searchPoint, 1, pointIdxNKNSearch, pointNKNSquaredDistance) > 0)
+			// {
+			// 	dist = sqrt(pointNKNSquaredDistance[0]);
+			// 	// std::cout << "dist:" << dist << std::endl;
+			// 	// usleep(1e4);
+			// 	// std::cout << "Please a key to go to the next iteration..." << std::endl;
+			// 	// getchar(); // Comentar para no usar tecla.
+			// }
+			// else{
+			// 	std::cout << "OBSTACULO" << dist << std::endl;
+			// 	// m_grid[index_semantic].semantic = semanti	cGrid_v[i_seman];
+			// 	std::cout << "semanticGrid:" << semanticGrid_x[i_seman] << "," << semanticGrid_y[i_seman]  << "," << semanticGrid_z[i_seman]  << "," << semanticGrid_v[i_seman]  << std::endl;
+			// // std::cout << "semanticGrid_cliente:" << semanticGrid_x[i_seman] << "," << semanticGrid_y[i_seman]  << "," << semanticGrid_z[i_seman]  << "," << semanticGrid_v[i_seman]  << std::endl;
+			// 	usleep(1e4);
+			// 	std::cout << "Please a key to go to the next iteration..." << std::endl;
+			// 	getchar(); // Comentar para no usar tecla.
+			// }
+		}
+		// std::cout << "count_semant: " << count_semant << std::endl;
 
 		for(int iz=0; iz<m_gridSizeZ; iz++)
 		{
@@ -698,6 +728,19 @@ bool loadSemanticGrid() {
 								// m_grid[index].prob = 100-dist;
 								m_grid[index].prob = dist;
 							}
+							if ((dist < 0.3) && (m_grid[index].semantic ==0)){
+								ind1=ind1+1;
+							}
+							if ((dist > 0.3) && (m_grid[index].semantic ==0)){
+								ind2=ind2+1;
+							}
+							if ((dist < 0.3) && (m_grid[index].semantic !=0)){
+								ind3=ind3+1;
+							}
+							if ((dist > 2) && (m_grid[index].semantic !=0)){
+								ind4=ind4+1;
+							}
+
 						}
 						else{
 							// std::cout << "dist: " << dist << std::endl;
@@ -706,19 +749,22 @@ bool loadSemanticGrid() {
 							m_grid[index].prob =  0.0;
 						}
 					}
-					else
+					else // NO ENTRA NUNCA
 					{
 						m_grid[index].dist = -1.0;
 						m_grid[index].prob =  0.0;
+						// usleep(1e4);
+						// std::cout << "Please a key to go to the next iteration..." << std::endl;
+						// getchar(); // Comentar para no usar tecla.	
 					}
 
-					m_grid[index].semantic = semanticGrid[index];
-						
+					// m_grid[index].semantic = semanticGrid[index];
+					// m_grid[index].semantic = 0;
 		
-					if(m_grid[index].semantic > 9)
-					{
-						std::cout << "ERROR: " << m_grid[index].semantic << std::endl;
-					}
+					// if(m_grid[index].semantic > 9)
+					// {
+					// 	//std::cout << "ERROR: " << m_grid[index].semantic << std::endl;
+					// }
 					
 					
 				}
@@ -726,6 +772,22 @@ bool loadSemanticGrid() {
 		}
 		percent_msg.data = 100;
 		// percent_computed_pub_.publish(percent_msg);
+
+		std::cout << "c0: " << c0 << std::endl;
+		std::cout << "c1: " << c1 << std::endl;
+		std::cout << "c2: " << c2 << std::endl;
+		std::cout << "c3: " << c3 << std::endl;
+		std::cout << "c4: " << c4 << std::endl;
+		std::cout << "c5: " << c5 << std::endl;
+		std::cout << "c6: " << c6 << std::endl;
+		std::cout << "c7: " << c7 << std::endl;
+		std::cout << "c8: " << c8 << std::endl;
+
+		std::cout << "ind1: " << ind1 << std::endl;
+		std::cout << "ind2: " << ind2 << std::endl;
+		std::cout << "ind3: " << ind3 << std::endl;
+		std::cout << "ind4: " << ind4 << std::endl;
+
 	}
 	
 	void buildGridSliceMsg(float z)

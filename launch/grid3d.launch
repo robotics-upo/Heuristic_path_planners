@@ -1,8 +1,8 @@
 <launch>
-    <node name="semantic_grid" pkg="heuristic_planners" type="grid3d_class.py">
-        <param name="world_size_x" value="212" />
-        <param name="world_size_y" value="170" />
-        <param name="world_size_z" value="9" />
-        <param name="resolution" value="0.1" />
+    <node name="semantic_grid" pkg="heuristic_planners" output="screen" type="grid3d_class.py">
+        <param name="world_size_x" value="211.8" />
+        <param name="world_size_y" value="169.2" />
+        <param name="world_size_z" value="9.2" />
+        <param name="resolution" value="0.2" />
     </node>
 </launch>
