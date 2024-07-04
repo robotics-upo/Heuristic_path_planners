@@ -13,7 +13,7 @@ from visualization_msgs.msg import Marker, MarkerArray
 import tf2_ros
 from tf2_geometry_msgs import do_transform_point
 
-element_occurrences = {}  # Global variable to store element occurrences
+  # Global variable to store element occurrences
 
 def load_ifc_model(model_path):
     rospy.loginfo("Loading IFC model...")
@@ -27,7 +27,6 @@ def load_ifc_model(model_path):
 
 def find_closest_objects_to_point_cloud(points):
     rospy.loginfo("Finding closest objects to point cloud...")
-    global element_occurrences
     for point in points:
         index = point2grid(point[0], point[1], point[2], onedivres, grid_stepy, grid_stepz)
         if loaded_data_zeros[index] == 0 and loaded_data[index]:
@@ -50,7 +49,6 @@ def crop_cloud(cl, mindist=0.00, maxdist=100):
     return cropped_cloud
 
 def save_element_occurrences(filename):
-    global element_occurrences
     try:
         with open(filename, 'w') as f:
             for element_value, count in element_occurrences.items():
@@ -60,7 +58,6 @@ def save_element_occurrences(filename):
         rospy.logerr(f"Failed to save element occurrences: {e}")
 
 def pointcloud_callback(msg):
-    global element_occurrences
     rospy.loginfo("Received point cloud message.")
     points = point_cloud2.read_points(msg, field_names=("x", "y", "z"), skip_nans=True)
     pcl_example = [(point[0], point[1], point[2]) for point in points]
@@ -91,12 +88,14 @@ def pointcloud_callback(msg):
     save_element_occurrences("element_occurrences.txt")
 
 def main():
-    global tf_buffer, onedivres, grid_stepy, grid_stepz, loaded_data, loaded_data_zeros
+    global tf_buffer, onedivres, grid_stepy, grid_stepz, loaded_data, loaded_data_zeros, element_occurrences
 
     rospy.init_node('ifc_processor')
 
     tf_buffer = tf2_ros.Buffer()
     tf_listener = tf2_ros.TransformListener(tf_buffer)
+
+    element_occurrences = {}
 
     RES = 0.1
     GRID_SIZEX = 220
