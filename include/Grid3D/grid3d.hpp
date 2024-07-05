@@ -28,7 +28,7 @@
 #include <iomanip> //for std::setw, std::hex, and std::setfill
 #include <openssl/evp.h> //for all other OpenSSL function calls
 #include <openssl/sha.h> //for SHA512_DIGEST_LENGTH
-#include <heuristic_planners/GetSemanticGrid.h>
+#include <grid_message/GetSemanticGrid.h>
 // #include "utils/ros/ROSInterfaces.hpp"
 
 // #ifdef BUILD_VORONOI
@@ -275,9 +275,9 @@ bool loadSemanticGrid() {
     ros::NodeHandle n;
 
     // Define a ROS service client
-    ros::ServiceClient client = n.serviceClient<heuristic_planners::GetSemanticGrid>("get_semantic_grid");
+    ros::ServiceClient client = n.serviceClient<grid_message::GetSemanticGrid>("get_semantic_grid");
 
-    heuristic_planners::GetSemanticGrid srv;
+    grid_message::GetSemanticGrid srv;
 
 	std::cout << "LOAD SEMANTIC " << std::endl;
 

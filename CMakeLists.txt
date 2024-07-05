@@ -60,6 +60,7 @@ if(BUILD_ROS_SUPPORT)
     pcl_ros
     octomap_ros
     costmap_2d
+    grid_message
   )
   #Eigen is used to calculate metrics parameters
   find_package (Eigen3 REQUIRED NO_MODULE)
@@ -79,7 +80,6 @@ add_service_files(
   FILES
   GetPath.srv
   SetAlgorithm.srv
-  GetSemanticGrid.srv
 )
 
 ## Generate added messages and services with any dependencies listed here
@@ -102,7 +102,7 @@ catkin_package(
  INCLUDE_DIRS include
  LIBRARIES AlgorithmBase AStar AStar_Gradient AStar_EDF AStarM1 AStarM2 ThetaStar ThetaStarM1 ThetaStarM2 LazyThetaStar LazyThetaStarM1 LazyThetaStarM1Mod LazyThetaStarM2 LazyThetaStar_Gradient LazyThetaStar_EDF
  # 
- CATKIN_DEPENDS std_msgs visualization_msgs geometry_msgs nav_msgs roscpp message_runtime costmap_2d
+ CATKIN_DEPENDS std_msgs visualization_msgs geometry_msgs nav_msgs roscpp message_runtime costmap_2d grid_message
 #  DEPENDS system_lib
 )
 endif()
