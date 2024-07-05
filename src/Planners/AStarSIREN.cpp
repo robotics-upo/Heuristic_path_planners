@@ -18,7 +18,7 @@ inline unsigned int AStarSIREN::computeG(const Node* _current, Node* _suc, unsig
     float real_z = _suc->coordinates.z * map_res;
 
     // Query the net
-    torch::Tensor input_tensor = torch::tensor({{real_x, real_y, real_z}}, torch::kFloat32).to(torch::kCUDA);
+    torch::Tensor input_tensor = torch::tensor({{real_x, real_y, real_z}}, torch::kFloat32).to(torch::kCPU);
     std::vector<torch::jit::IValue> inputs;
     inputs.push_back(input_tensor);
     // Set the model to evaluation mode
@@ -35,6 +35,7 @@ inline unsigned int AStarSIREN::computeG(const Node* _current, Node* _suc, unsig
     
     //auto cost_term = static_cast<unsigned int>(cost_weight_ * model_output * dist_scale_factor_reduced_);
 
+    // std::cout <<  "Time taken to query model: " << duration.count() << " ms" << std::endl;
     auto cost_term = static_cast<unsigned int>(cost_weight_ * (1/(model_output * dist_scale_factor_reduced_)));
 
     // auto cost_term = static_cast<unsigned int>(cost_weight_ * (1/(((static_cast<double>(_current->cost) + static_cast<double>(_suc->cost))/2) * dist_scale_factor_reduced_)));

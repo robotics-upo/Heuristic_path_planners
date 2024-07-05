@@ -17,7 +17,7 @@ inline unsigned int AStarM1::computeG(const Node* _current, Node* _suc, unsigned
 
     auto cost_term = static_cast<unsigned int>(cost_weight_ * (1/(_suc->cost * dist_scale_factor_reduced_)));
 
-     std::cout << "Previous cost: " << _suc->cost << std::endl;
+    // std::cout << "Previous cost: " << _suc->cost << std::endl;
     
     cost += cost_term;
     _suc->C = cost_term;

@@ -64,7 +64,7 @@ namespace Planners
                              "explored_nodes", "path_length", "total_cost1", "total_cost2", "h_cost", "g_cost1", "g_cost2", "c_cost", "grid_cost1", "grid_cost2", "g_final_node",
                              "line_of_sight_checks", "min_dist", "max_dist", "mean_dist", "std_dev",
                              "solved", "cost_weight","max_line_of_sight_cells", "av_curv", "std_dev_curv", "min_curv", "max_curv", 
-                             "av_angles", "std_dev_angles", "min_angle", "max_angle", "angle_changes", "path" }): fields_(_fields)
+                             "av_angles", "std_dev_angles", "min_angle", "max_angle", "angle_changes"}): fields_(_fields)
             {
 
             }
@@ -97,6 +97,37 @@ namespace Planners
                     std::visit(overloaded{
                             [this](auto arg) { out_file_data_ << arg << ", "; }, },
                             field->second);
+                }
+                out_file_data_ << std::endl;
+                out_file_data_.close();
+
+
+                return true;
+            }
+            /**
+             * @brief Main function that reads the incoming path coords and saves them to file in append mode
+             * 
+             * @param _data pathdata input object 
+             * @param _file_path
+             * @return true Always returns true at this version
+             * @return false Never returns false right now
+             */
+            bool savePathCoordsToFile(const PathData &_data, const std::string &_file_path)
+            {
+                if( ! fs::exists(_file_path) ){ //If file does not exist, write a header with field names
+                    std::cout << "File does not exists. Creating header at first line" << std::endl;   
+                    out_file_data_.open(_file_path, std::ofstream::app);
+                    out_file_data_ << "path" << std::endl;
+                }else{
+                    out_file_data_.open(_file_path, std::ofstream::app);
+                }
+                auto field = _data.find("path");
+                if (field != _data.end()) {
+                    std::visit(overloaded{
+                        [this](auto arg) { out_file_data_ << arg << ", "; },
+                    }, field->second);
+                }else{
+                    out_file_data_ << " , ";
                 }
                 out_file_data_ << std::endl;
                 out_file_data_.close();

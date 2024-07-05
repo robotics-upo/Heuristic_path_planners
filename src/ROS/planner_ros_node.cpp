@@ -40,7 +40,7 @@
 #include <heuristic_planners/SetAlgorithm.h>
 #include <heuristic_planners/ShareWeights.h>
 
-#define USING_PRETRAINED_MODELS 1
+#define USING_PRETRAINED_MODELS 0
 
 
 /**
@@ -145,31 +145,31 @@ private:
             switch (modelcont)
             {
             case 0:
-                loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/model_1_195_40_2.pt", c10::kCUDA);
+                loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/model_1_195_40_2.pt", c10::kCPU);
                 modelcont++;
                 ROS_INFO("Using Model 1 (195.0, 40.0, 2.0)");
                 break;
             
             case 1:
-                loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/model_2_199_40_2.pt", c10::kCUDA);
+                loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/model_2_199_40_2.pt", c10::kCPU);
                 modelcont++;
                 ROS_INFO("Using Model 2 (199.0, 40.0, 2.0)");
                 break;
             
             case 2:
-                loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/model_3_199_36_2.pt", c10::kCUDA);
+                loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/model_3_199_36_2.pt", c10::kCPU);
                 modelcont++;
                 ROS_INFO("Using Model 3 (199.0, 36.0, 2.0)");
                 break;
             
             case 3:
-                loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/model_4_195_36_2.pt", c10::kCUDA);
+                loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/model_4_195_36_2.pt", c10::kCPU);
                 modelcont++;
                 ROS_INFO("Using Model 4 (195.0, 36.0, 2.0)");
                 break;
             
             case 4:
-                loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/model_5_195_40_2.pt", c10::kCUDA);
+                loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/model_5_195_40_2.pt", c10::kCPU);
                 modelcont = 0;
                 ROS_INFO("Using Model 5 (195.0, 40.0, 2.0)");
                 break;
@@ -341,7 +341,8 @@ private:
 
                     Planners::utils::DataVariantSaver saver;
 
-                    if(saver.savePathDataToFile(path_data, data_folder_ + "/planning.txt") && 
+                    if(saver.savePathDataToFile(path_data, data_folder_ + "/planning.txt") &&
+                       saver.savePathCoordsToFile(path_data, data_folder_ + "/path.txt") && 
                        saver.savePathDistancesToFile(adjacent_path, result_distances, data_folder_ + "/path_metrics.txt") &&
                        saver.saveAnglesToFile(angles, data_folder_ + "/angles.txt") ){
                         ROS_INFO("Path data metrics saved");

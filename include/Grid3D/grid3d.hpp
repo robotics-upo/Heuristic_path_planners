@@ -514,7 +514,7 @@ protected:
 						dist = sqrt(pointNKNSquaredDistance[0]);
 						m_grid[index].dist = dist;
 						if(!use_costmap_function){
-							m_grid[index].prob = gaussConst1*exp(-dist*dist*gaussConst2);
+							//m_grid[index].prob = gaussConst1*exp(-dist*dist*gaussConst2);
 							m_grid[index].prob = dist;
 						}else{
 							//double prob =  100*exp(-cost_scaling_factor*std::fabs((dist - robot_radius)));
