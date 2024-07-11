@@ -40,7 +40,8 @@
 #include <heuristic_planners/SetAlgorithm.h>
 #include <heuristic_planners/ShareWeights.h>
 
-#define USING_PRETRAINED_MODELS 0
+#define USING_PRETRAINED_MODELS 1
+#define EXAMPLE_PATH 0
 
 
 /**
@@ -142,42 +143,139 @@ private:
         ROS_INFO("Path requested, computing path");
 
         if (USING_PRETRAINED_MODELS){
-            switch (modelcont)
+            switch(EXAMPLE_PATH)
             {
             case 0:
-                loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/model_1_195_40_2.pt", c10::kCPU);
-                modelcont++;
-                ROS_INFO("Using Model 1 (195.0, 40.0, 2.0)");
+                switch (modelcont)
+                {
+                case 0:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/model_1_195_40_2.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 1 (195.0, 40.0, 2.0)");
+                    break;
+                
+                case 1:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/model_2_199_40_2.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 2 (199.0, 40.0, 2.0)");
+                    break;
+                
+                case 2:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/model_3_199_36_2.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 3 (199.0, 36.0, 2.0)");
+                    break;
+                
+                case 3:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/model_4_195_36_2.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 4 (195.0, 36.0, 2.0)");
+                    break;
+                
+                case 4:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/model_5_195_40_2.pt", c10::kCPU);
+                    modelcont = 0;
+                    ROS_INFO("Using Model 5 (195.0, 40.0, 2.0)");
+                    break;
+
+
+                default:
+                    break;
+                }
                 break;
             
             case 1:
-                loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/model_2_199_40_2.pt", c10::kCPU);
-                modelcont++;
-                ROS_INFO("Using Model 2 (199.0, 40.0, 2.0)");
-                break;
-            
-            case 2:
-                loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/model_3_199_36_2.pt", c10::kCPU);
-                modelcont++;
-                ROS_INFO("Using Model 3 (199.0, 36.0, 2.0)");
-                break;
-            
-            case 3:
-                loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/model_4_195_36_2.pt", c10::kCPU);
-                modelcont++;
-                ROS_INFO("Using Model 4 (195.0, 36.0, 2.0)");
-                break;
-            
-            case 4:
-                loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/model_5_195_40_2.pt", c10::kCPU);
-                modelcont = 0;
-                ROS_INFO("Using Model 5 (195.0, 40.0, 2.0)");
+                switch (modelcont)
+                {
+                case 0:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/m1_195_18_2.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 1 (195.0, 18.0, 2.0)");
+                    break;
+                
+                case 1:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/m2_195_23_2.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 2 (195.0, 23.0, 2.0)");
+                    break;
+                
+                case 2:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/m3_200_23_2.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 3 (200.0, 23.0, 2.0)");
+                    break;
+                
+                case 3:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/m4_200_23_7.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 4 (200.0, 23.0, 7.0)");
+                    break;
+                
+                case 4:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/m5_203c5_23_7.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 5 (203.5, 23.0, 7.0)");
+                    break;
+                
+                case 5:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/m6_203c5_19_7.pt", c10::kCPU);
+                    modelcont = 0;
+                    ROS_INFO("Using Model 6 (203.5, 19.0, 7.0)");
+                    break;
+
+                
+                default:
+                    break;
+                }
                 break;
 
-            
+            case 2:
+                switch (modelcont)
+                {
+                case 0:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/m1_195_22_7.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 1 (195.0, 22.0, 7.0)");
+                    break;
+                
+                case 1:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/m2_203_22_7.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 2 (203.0, 22.0, 7.0)");
+                    break;
+                
+                case 2:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/m3_203_14c5_7.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 3 (203.0, 14.5, 7.0)");
+                    break;
+                
+                case 3:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/m4_195_14c5_7.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 4 (195.0, 14.5, 7.0)");
+                    break;
+                
+                case 4:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/m5_195_22_7.pt", c10::kCPU);
+                    modelcont = 0;
+                    ROS_INFO("Using Model 5 (195.0, 22.0, 7.0)");
+                    break;
+
+                
+                default:
+                    break;
+                }
+                break;
+
+            case 3:
+                loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/prueba.pt", c10::kCPU);
+                break;
+
             default:
                 break;
             }
+            
         }
         else{
             // Update network weights
@@ -192,7 +290,7 @@ private:
                         // Deserialize the ScriptModule from a file using torch::jit::load().
                         try {
                             // Load the model
-                            loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/model.pt", c10::kCUDA);
+                            loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/model.pt", c10::kCPU);
                         } catch (const c10::Error& e) {
                             std::cerr << "Error loading the model\n";
                             return false;

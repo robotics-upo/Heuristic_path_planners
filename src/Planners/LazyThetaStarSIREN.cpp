@@ -27,7 +27,7 @@ namespace Planners
                     float real_x = successor2->coordinates.x * map_res;
                     float real_y = successor2->coordinates.y * map_res;
                     float real_z = successor2->coordinates.z * map_res;
-                    torch::Tensor input_tensor = torch::tensor({{real_x, real_y, real_z}}, torch::kFloat32).to(torch::kCUDA);
+                    torch::Tensor input_tensor = torch::tensor({{real_x, real_y, real_z}}, torch::kFloat32).to(torch::kCPU);
                     std::vector<torch::jit::IValue> inputs;
                     inputs.push_back(input_tensor);
                     auto start = std::chrono::high_resolution_clock::now();
@@ -59,7 +59,7 @@ namespace Planners
         float real_x = _s2_aux->coordinates.x * map_res;
         float real_y = _s2_aux->coordinates.y * map_res;
         float real_z = _s2_aux->coordinates.z * map_res;
-        torch::Tensor input_tensor = torch::tensor({{real_x, real_y, real_z}}, torch::kFloat32).to(torch::kCUDA);
+        torch::Tensor input_tensor = torch::tensor({{real_x, real_y, real_z}}, torch::kFloat32).to(torch::kCPU);
         std::vector<torch::jit::IValue> inputs;
         inputs.push_back(input_tensor);
         auto start = std::chrono::high_resolution_clock::now();
@@ -95,7 +95,7 @@ namespace Planners
         float real_x = _suc->coordinates.x * map_res;
         float real_y = _suc->coordinates.y * map_res;
         float real_z = _suc->coordinates.z * map_res;
-        torch::Tensor input_tensor = torch::tensor({{real_x, real_y, real_z}}, torch::kFloat32).to(torch::kCUDA);
+        torch::Tensor input_tensor = torch::tensor({{real_x, real_y, real_z}}, torch::kFloat32).to(torch::kCPU);
         std::vector<torch::jit::IValue> inputs;
         inputs.push_back(input_tensor);
         auto start = std::chrono::high_resolution_clock::now();
