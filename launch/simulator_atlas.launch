@@ -49,7 +49,7 @@
     <!-- This should be a folder -->
     <arg name="data_folder"         default="$(env HOME)"/>
 
-    <arg name="overlay_markers"     default="false"/>
+    <arg name="overlay_markers"     default="true"/>
     
     <arg name="cost_weight" default="500.0"/>
     <arg name="max_line_of_sight_distance" default="1.0"/>

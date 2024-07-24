@@ -100,7 +100,7 @@ generate_messages(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
  INCLUDE_DIRS include
- LIBRARIES AlgorithmBase AStar AStar_Gradient AStar_EDF AStarM1 AStarM2 ThetaStar ThetaStarM1 ThetaStarM2 LazyThetaStar LazyThetaStarM1 LazyThetaStarM1Mod LazyThetaStarM2 LazyThetaStar_Gradient LazyThetaStar_EDF
+ LIBRARIES AlgorithmBase AStar AStarSemantic AStarSemanticCost AStar_Gradient AStar_EDF AStarM1 AStarM2 ThetaStar ThetaStarSemantic ThetaStarSemanticCost ThetaStarM1 ThetaStarM2 LazyThetaStar LazyThetaStarSemantic LazyThetaStarSemanticCost LazyThetaStarM1 LazyThetaStarM1Mod LazyThetaStarM2 LazyThetaStar_Gradient LazyThetaStar_EDF
  # 
  CATKIN_DEPENDS std_msgs visualization_msgs geometry_msgs nav_msgs roscpp message_runtime costmap_2d grid_message
 #  DEPENDS system_lib
@@ -156,12 +156,18 @@ add_library(AStar                  src/Planners/AStar.cpp
 
 add_library(AStar_Gradient            src/Planners/AStar_Gradient.cpp ) 
 add_library(AStar_EDF            src/Planners/AStar_EDF.cpp ) 
+add_library(AStarSemantic            src/Planners/AStarSemantic.cpp ) 
+add_library(AStarSemanticCost            src/Planners/AStarSemanticCost.cpp )
 add_library(AStarM1            src/Planners/AStarM1.cpp ) 
 add_library(AStarM2            src/Planners/AStarM2.cpp ) 
 add_library(ThetaStar          src/Planners/ThetaStar.cpp )
+add_library(ThetaStarSemantic          src/Planners/ThetaStarSemantic.cpp )
+add_library(ThetaStarSemanticCost          src/Planners/ThetaStarSemanticCost.cpp )
 add_library(ThetaStarM1        src/Planners/ThetaStarM1.cpp )
 add_library(ThetaStarM2        src/Planners/ThetaStarM2.cpp )
 add_library(LazyThetaStar      src/Planners/LazyThetaStar.cpp )
+add_library(LazyThetaStarSemantic      src/Planners/LazyThetaStarSemantic.cpp )
+add_library(LazyThetaStarSemanticCost      src/Planners/LazyThetaStarSemanticCost.cpp )
 add_library(LazyThetaStarM1    src/Planners/LazyThetaStarM1.cpp )
 add_library(LazyThetaStarM1Mod src/Planners/LazyThetaStarM1Mod.cpp )
 add_library(LazyThetaStarM2    src/Planners/LazyThetaStarM2.cpp )
@@ -170,7 +176,7 @@ add_library(LazyThetaStar_EDF    src/Planners/LazyThetaStar_EDF.cpp )
 
 
 
-list(APPEND ${PROJECT_NAME}_LIBRARIES AlgorithmBase AStar AStar_Gradient AStar_EDF AStarM1 AStarM2 ThetaStar ThetaStarM1 ThetaStarM2 LazyThetaStar LazyThetaStarM1 LazyThetaStarM1Mod LazyThetaStarM2 LazyThetaStar_Gradient LazyThetaStar_EDF) 
+list(APPEND ${PROJECT_NAME}_LIBRARIES AlgorithmBase AStar AStarSemantic AStarSemanticCost AStar_Gradient AStar_EDF AStarM1 AStarM2 ThetaStar ThetaStarSemantic ThetaStarSemanticCost ThetaStarM1 ThetaStarM2 LazyThetaStar LazyThetaStarSemantic LazyThetaStarSemanticCost LazyThetaStarM1 LazyThetaStarM1Mod LazyThetaStarM2 LazyThetaStar_Gradient LazyThetaStar_EDF) 
 target_link_libraries(${${PROJECT_NAME}_LIBRARIES} ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 add_dependencies( ${${PROJECT_NAME}_LIBRARIES} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 list(APPEND ${PROJECT_NAME}_TARGETS ${${PROJECT_NAME}_LIBRARIES})
