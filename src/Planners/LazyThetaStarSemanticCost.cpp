@@ -235,37 +235,83 @@ namespace Planners
         else if (_suc->semantic == 2){
             // cost2=(c_door/(1+static_cast<double>(_suc->cost)))*cost2; // + cost2;
             cost2=(c_door/coste)*cost2;
+
+            // std::cout << "cost: " << _suc->cost << std::endl;
+            // std::cout << "semantic: " << _suc->semantic << std::endl;
+            // usleep(1e4);
+	        // std::cout << "Please a key to go to the next iteration..." << std::endl;
+	        // getchar(); // Comentar para no usar tecla.
         }
 
         // Colum
         else if (_suc->semantic == 3){
             // cost2=(c_colum/(1+static_cast<double>(_suc->cost)))*cost2; // + cost2;
             cost2=(c_colum/coste)*cost2;
+
+            // std::cout << "cost: " << _suc->cost << std::endl;
+            // std::cout << "semantic: " << _suc->semantic << std::endl;
+            // usleep(1e4);
+	        // std::cout << "Please a key to go to the next iteration..." << std::endl;
+	        // getchar(); // Comentar para no usar tecla.
         }
         // Furnishing
         else if (_suc->semantic == 4){
             // cost2=(c_furnish/(1+static_cast<double>(_suc->cost)))*cost2; // + cost2;
             cost2=(c_furnish/coste)*cost2;
+
+            // std::cout << "cost: " << _suc->cost << std::endl;
+            // std::cout << "semantic: " << _suc->semantic << std::endl;
+            // usleep(1e4);
+	        // std::cout << "Please a key to go to the next iteration..." << std::endl;
+	        // getchar(); // Comentar para no usar tecla.
         }
         // Stairs
         else if (_suc->semantic == 5){
             // cost2=(c_stair/(1+static_cast<double>(_suc->cost)))*cost2; // + cost2;
             cost2=(c_stair/coste)*cost2;
+
+            // std::cout << "cost: " << _suc->cost << std::endl;
+            // std::cout << "semantic: " << _suc->semantic << std::endl;
+            // usleep(1e4);
+	        // std::cout << "Please a key to go to the next iteration..." << std::endl;
+	        // getchar(); // Comentar para no usar tecla.
         }
         // Panels --> Barandilla
         else if (_suc->semantic == 6){
             // cost2=(c_panel/(1+static_cast<double>(_suc->cost)))*cost2; // + cost2;
             cost2=(c_panel/coste)*cost2;
+
+            // std::cout << "cost: " << _suc->cost << std::endl;
+            // std::cout << "semantic: " << _suc->semantic << std::endl;
+            // usleep(1e4);
+	        // std::cout << "Please a key to go to the next iteration..." << std::endl;
+	        // getchar(); // Comentar para no usar tecla.
         }
         // Lamp
         else if (_suc->semantic == 7){
             // cost2=(c_lamp/(1+static_cast<double>(_suc->cost)))*cost2; // + cost2;
             cost2=(c_lamp/coste)*cost2;
+
+            // std::cout << "cost: " << _suc->cost << std::endl;
+            // std::cout << "semantic: " << _suc->semantic << std::endl;
+            // usleep(1e4);
+	        // std::cout << "Please a key to go to the next iteration..." << std::endl;
+	        // getchar(); // Comentar para no usar tecla.std::cout << "cost: " << _suc->cost << std::endl;
+            // std::cout << "semantic: " << _suc->semantic << std::endl;
+            // usleep(1e4);
+	        // std::cout << "Please a key to go to the next iteration..." << std::endl;
+	        // getchar(); // Comentar para no usar tecla.
         }
         // Glass wall
         else if (_suc->semantic == 8){
             // cost2=(c_glass/(1+static_cast<double>(_suc->cost)))*cost2; // + cost2;
             cost2=(c_glass/coste)*cost2;
+
+            // std::cout << "cost: " << _suc->cost << std::endl;
+            // std::cout << "semantic: " << _suc->semantic << std::endl;
+            // usleep(1e4);
+	        // std::cout << "Please a key to go to the next iteration..." << std::endl;
+	        // getchar(); // Comentar para no usar tecla.
         }
 
         cost = cost + cost2;

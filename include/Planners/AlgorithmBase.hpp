@@ -135,6 +135,9 @@ namespace Planners
          */
         bool configureCellCost(const Vec3i &coordinates_, const double &_cost);
 
+        // ************************************************************************************************************************
+        // JAC --> Semantic layer
+
         /**
          * @brief Function to use in the future to configure the semantic cost of each node
          * 
@@ -144,6 +147,14 @@ namespace Planners
          * @return false 
          */
         bool configureCellSemantic(const Vec3i &coordinates_, const int &_cost);
+
+        void inflateCellSemantic(const Vec3i &coordinates_, const int &_cost, bool do_inflate, unsigned int steps);
+
+        void inflateCellSemantic(const Vec3i &coordinates_, const int &_cost);
+
+        unsigned int getCellSemantic(const Vec3i &coordinates_);
+
+        // ************************************************************************************************************************
 
         /**
          * @brief Check if a set of discrete coordinates are marked as occupied
@@ -204,6 +215,18 @@ namespace Planners
         void inflateNodeAsCube(const Vec3i &_ref,
                                const CoordinateList &_directions,
                                const unsigned int &_inflate_steps);
+
+        /**
+         * @brief Basic inflation function for Semantic layer
+         * 
+         * @param _ref Discrete coordinates vector
+         * @param _directions Directions vector to inflate
+         * @param _inflate_steps number of cells to inflate in each direction
+         */
+        void inflateSemanticNodeAsCube(const Vec3i &_ref, 
+                                       const CoordinateList &_directions, 
+                                       const unsigned int &_inflate_steps,
+                                       const int &_cost);
         
         /**
          * @brief Create a Result Data Object object

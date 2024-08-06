@@ -12,8 +12,8 @@ import math
 import rospy
 import rospkg
 from std_msgs.msg import Int32MultiArray, MultiArrayDimension, MultiArrayLayout
-from heuristic_planners.srv import *
-
+# from heuristic_planners.srv import *
+from grid_message.srv import *
 
 class grid3d():
     def __init__(self):
@@ -127,7 +127,7 @@ class grid3d():
             yx = int(ind / (self.world_size_x / self.resolution))
             xx = int(ind % (self.world_size_x / self.resolution))
 
-            print(f'{xx},{yx},{zx},{v}')
+            # print(f'{xx},{yx},{zx},{v}')
             
             self.semantic_grid_x[i] = int(index)
 

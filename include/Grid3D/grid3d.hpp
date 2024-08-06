@@ -602,7 +602,7 @@ bool loadSemanticGrid() {
 		// maximo=m_gridSizeX*m_gridSizeY*m_gridSizeZ;	
 		// std::cout << "maximo: " << maximo << std::endl;
 		int c0,c1,c2,c3,c4,c5,c6,c7,c8;
-		int ind1,ind2,ind3,ind4;
+		int ind1,ind2,ind3,ind4,ind5;
 		
 		c0=0;
 		c1=0;
@@ -617,12 +617,27 @@ bool loadSemanticGrid() {
 		ind2=0;
 		ind3=0;
 		ind4=0;
+		ind5=0;
 
-		for(int iz=0; iz<m_gridSizeZ; iz++)
+		// CURRENT VERSION IN THE REPO: 2024-08-06
+		// for(int iz=0; iz<m_gridSizeZ; iz++)
+		// {
+		// 	for(int iy=0; iy<m_gridSizeY; iy++)
+		// 	{
+		// 		for(int ix=0; ix<m_gridSizeX; ix++)
+		// 		{	
+		// 			index = ix + iy*m_gridStepY + iz*m_gridStepZ;		
+		// 			m_grid[index].semantic = 0;
+		// 		}
+		// 	}
+		// }
+
+		// VERSION OF 2024-MARCH
+		for(int iz=0; iz<(m_gridSizeZ-2); iz++) //m_gridSizeZ-2?
 		{
-			for(int iy=0; iy<m_gridSizeY; iy++)
+			for(int iy=0; iy<(m_gridSizeY-3); iy++) //m_gridSizeY-3?
 			{
-				for(int ix=0; ix<m_gridSizeX; ix++)
+				for(int ix=0; ix<(m_gridSizeX); ix++)
 				{	
 					index = ix + iy*m_gridStepY + iz*m_gridStepZ;		
 					m_grid[index].semantic = 0;
@@ -715,7 +730,7 @@ bool loadSemanticGrid() {
 						dist = sqrt(pointNKNSquaredDistance[0]);
 						
 						// std::cout << "dist: " << dist << std::endl;
-						if (dist < 300){
+						if (dist < 500){
 							m_grid[index].dist = dist;
 							if(!use_costmap_function){
 								// m_grid[index].prob = gaussConst1*exp(-dist*dist*gaussConst2);
@@ -728,17 +743,37 @@ bool loadSemanticGrid() {
 								// m_grid[index].prob = 100-dist;
 								m_grid[index].prob = dist;
 							}
-							if ((dist < 0.3) && (m_grid[index].semantic ==0)){
+							if ((dist < 0.2) && (m_grid[index].semantic ==0)){
 								ind1=ind1+1;
+								// std::cout << "IND 1 " << std::endl;
+								// std::cout << "index: " << index << std::endl;
+								// std::cout << "dist: " << dist << std::endl;
+								// std::cout << "value of semanticGrid: " << semanticGrid_v[index] << std::endl;
+								// std::cout << "searchPoint:" << searchPoint.x << "," << searchPoint.y << "," << searchPoint.z << std::endl;
+
+								// 	usleep(1e4);
+								// 	std::cout << "Please a key to go to the next iteration..." << std::endl;
+								// 	getchar(); // Comentar para no usar tecla.
 							}
-							if ((dist > 0.3) && (m_grid[index].semantic ==0)){
+							if ((dist > 0.2) && (m_grid[index].semantic ==0)){
 								ind2=ind2+1;
 							}
-							if ((dist < 0.3) && (m_grid[index].semantic !=0)){
+							if ((dist < 0.2) && (m_grid[index].semantic !=0)){
 								ind3=ind3+1;
 							}
-							if ((dist > 2) && (m_grid[index].semantic !=0)){
+							if ((dist > 0.2) && (dist < 0.5) && (m_grid[index].semantic !=0)){
 								ind4=ind4+1;
+								// std::cout << "IND 4 " << std::endl;
+								// std::cout << "index: " << index << std::endl;
+								// std::cout << "dist: " << dist << std::endl;
+								// std::cout << "value of semanticGrid: " << m_grid[index].semantic << std::endl;
+								// std::cout << "searchPoint:" << searchPoint.x << "," << searchPoint.y << "," << searchPoint.z << std::endl;
+								// usleep(1e4);
+								// std::cout << "Please a key to go to the next iteration..." << std::endl;
+								// getchar(); // Comentar para no usar tecla.
+							}
+							if ((dist > 0.5) && (m_grid[index].semantic !=0)){
+								ind5=ind5+1;
 							}
 
 						}
@@ -787,6 +822,7 @@ bool loadSemanticGrid() {
 		std::cout << "ind2: " << ind2 << std::endl;
 		std::cout << "ind3: " << ind3 << std::endl;
 		std::cout << "ind4: " << ind4 << std::endl;
+		std::cout << "ind5: " << ind5 << std::endl;
 
 	}
 	

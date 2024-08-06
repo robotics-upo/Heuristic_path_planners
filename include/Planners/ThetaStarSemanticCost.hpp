@@ -86,7 +86,7 @@ namespace Planners
          * @return unsigned int The G Value calculated by the function
          */
         virtual unsigned int computeG(const Node* _current, Node* _suc,  unsigned int _n_i, unsigned int _dirs) override;
-        int coef=10;
+        int coef=5;
 
     };
 

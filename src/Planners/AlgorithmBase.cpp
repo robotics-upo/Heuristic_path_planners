@@ -53,6 +53,26 @@ namespace Planners
 
         return discrete_world_.setNodeSemantic(coordinates_, _cost);
     }
+    void AlgorithmBase::inflateCellSemantic(const Vec3i &coordinates_, const int &_cost, bool do_inflate, unsigned int steps)
+    {
+        // std::cout << "Cost: " << _cost << std::endl;
+        if (do_inflate)
+        {
+            unsigned int inflate_seman_steps = 6* steps;
+            // std::cout << "inflate_seman_steps: " << inflate_seman_steps << std::endl;
+            inflateSemanticNodeAsCube(coordinates_, direction, inflate_seman_steps, _cost);
+        }
+
+        // return discrete_world_.setNodeSemantic(coordinates_, _cost);
+    }
+    void AlgorithmBase::inflateCellSemantic(const Vec3i &coordinates_, const int &_cost)
+    {
+        inflateCellSemantic(coordinates_, _cost, do_inflate_, inflate_steps_);
+    }
+    unsigned int AlgorithmBase::getCellSemantic(const Vec3i &coordinates_){
+        return discrete_world_.getNodeSemantic(coordinates_);
+    }
+    
     void AlgorithmBase::addCollision(const Vec3i &coordinates_, bool do_inflate, unsigned int steps)
     {
         if (do_inflate)
@@ -84,6 +104,28 @@ namespace Planners
             {
                 auto new_vec = _ref + (i + 1) * it;
                 discrete_world_.setOccupied(new_vec);
+            }
+        }
+    }
+
+    void AlgorithmBase::inflateSemanticNodeAsCube(const Vec3i &_ref, const CoordinateList &_directions, const unsigned int &_inflate_steps, const int &_cost)
+    {
+        // std::cout << "inflate_seman_steps: " << _inflate_steps << std::endl;
+        // std::cout << "Cost TO INFLATE: " << _cost << std::endl;
+        for (const auto &it : _directions)
+        {
+            for (unsigned int i = 0; i < _inflate_steps; ++i)
+            {
+                auto new_vec = _ref + (i + 1) * it;
+                // discrete_world_.setOccupied(new_vec);
+                // std::cout << "Cost OLD: " << discrete_world_.getNodeSemantic(new_vec) << std::endl;
+                // std::cout << "Cost TO INFLATE: " << _cost << std::endl;
+                discrete_world_.setNodeSemantic(new_vec, _cost);
+                // NO UPDATE COST WHEN NODE IS OCCUPIED!!!! BUT WEN IT IS OCCUPIED THE COST IS 0?????
+                // usleep(1e4);
+                // std::cout << "Please a key to go to the next iteration..." << std::endl;
+                // getchar(); // Comentar para no usar tecla.
+                // std::cout << "Cost NEW: " << discrete_world_.getNodeSemantic(new_vec) << std::endl;
             }
         }
     }

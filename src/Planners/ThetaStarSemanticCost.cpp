@@ -80,11 +80,11 @@ namespace Planners
             // std::cout << "Nodes: " << n_checked_nodes << std::endl;
             for(auto &it: *_checked_nodes){
                 // if (discrete_world_.getNodePtr(it)->semantic !=0){
-                //     std::cout << "COSTE: " << discrete_world_.getNodePtr(it)->cost << std::endl;
-                //     std::cout << "COSTE SEMANTICO: " << discrete_world_.getNodePtr(it)->semantic << std::endl;
-                //     usleep(1e4);
-	            //     std::cout << "Please a key to go to the next iteration..." << std::endl;
-	            //     getchar(); // Comentar para no usar tecla.
+                    // std::cout << "COSTE: " << discrete_world_.getNodePtr(it)->cost << std::endl;
+                    // std::cout << "COSTE SEMANTICO: " << discrete_world_.getNodePtr(it)->semantic << std::endl;
+                    // usleep(1e4);
+	                // std::cout << "Please a key to go to the next iteration..." << std::endl;
+	                // getchar(); // Comentar para no usar tecla.
                 // }
                 if (discrete_world_.getNodePtr(it)->semantic == 1)
                     cost_semantic += c_wall/discrete_world_.getNodePtr(it)->cost;
