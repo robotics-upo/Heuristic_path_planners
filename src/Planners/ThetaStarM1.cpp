@@ -16,7 +16,7 @@ namespace Planners
             if (n_checked_nodes==0)
                     n_checked_nodes = 1;
 
-            auto cost_term = static_cast<unsigned int>(cost_weight_ * _s2_aux->cost * dist_scale_factor_reduced_)* n_checked_nodes;
+            auto cost_term = static_cast<unsigned int>(cost_weight_ / (_s2_aux->cost * dist_scale_factor_reduced_))* n_checked_nodes;
             if ( (_s_aux->parent->G + distanceParent2 + cost_term) < _s2_aux->G )  // Conmensurable
             {
                 _s2_aux->parent = _s_aux->parent;
@@ -28,7 +28,7 @@ namespace Planners
         } else {
             auto distance2 = geometry::distanceBetween2Nodes(_s_aux, _s2_aux);
             
-            auto cost_term = static_cast<unsigned int>(cost_weight_ * _s2_aux->cost * dist_scale_factor_reduced_);
+            auto cost_term = static_cast<unsigned int>(cost_weight_ / (_s2_aux->cost * dist_scale_factor_reduced_));
             unsigned int G_new = _s_aux->G + distance2 + cost_term;
 
             if ( G_new < _s2_aux->G){
@@ -50,7 +50,7 @@ namespace Planners
             cost += (_n_i < 6 ? dist_scale_factor_ : (_n_i < 18 ? dd_2D_ : dd_3D_)); //This is more efficient
         }
 
-        auto cost_term = static_cast<unsigned int>(cost_weight_ * _suc->cost * dist_scale_factor_reduced_);
+        auto cost_term = static_cast<unsigned int>(cost_weight_ / (_suc->cost * dist_scale_factor_reduced_));
         cost   += cost_term;
         _suc->C = cost_term;
         

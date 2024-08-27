@@ -41,7 +41,16 @@
 #include <heuristic_planners/ShareWeights.h>
 
 #define USING_PRETRAINED_MODELS 1
-#define EXAMPLE_PATH 0
+#define EXAMPLE_PATH 2
+
+#define grid_x_size 8
+#define grid_y_size 8
+#define grid_z_size 3
+#define grid_resolution 0.2
+
+#define x_d 200
+#define y_d 18
+#define z_d 3
 
 
 /**
@@ -84,6 +93,7 @@ private:
     int modelcont = 0;
     // HIOSDFNet sdf_net_;
     ros::ServiceClient weights_client_;
+
 
     void occupancyGridCallback(const nav_msgs::OccupancyGrid::ConstPtr &_grid){
         ROS_INFO("Loading OccupancyGrid map... [MESSAGE /GRID RECEIVED]");
@@ -149,35 +159,120 @@ private:
                 switch (modelcont)
                 {
                 case 0:
-                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/model_1_195_40_2.pt", c10::kCPU);
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario1BIS_Columna1_5m/30000p/1_1.pt", c10::kCPU);
                     modelcont++;
-                    ROS_INFO("Using Model 1 (195.0, 40.0, 2.0)");
+                    ROS_INFO("Using Model 1 - 30000");
                     break;
                 
                 case 1:
-                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/model_2_199_40_2.pt", c10::kCPU);
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario1BIS_Columna1_5m/30000p/1_2.pt", c10::kCPU);
                     modelcont++;
-                    ROS_INFO("Using Model 2 (199.0, 40.0, 2.0)");
+                    ROS_INFO("Using Model 2 - 30000");
                     break;
                 
                 case 2:
-                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/model_3_199_36_2.pt", c10::kCPU);
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario1BIS_Columna1_5m/30000p/1_3.pt", c10::kCPU);
                     modelcont++;
-                    ROS_INFO("Using Model 3 (199.0, 36.0, 2.0)");
+                    ROS_INFO("Using Model 3 - 30000");
                     break;
                 
                 case 3:
-                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/model_4_195_36_2.pt", c10::kCPU);
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario1BIS_Columna1_5m/30000p/1_4.pt", c10::kCPU);
                     modelcont++;
-                    ROS_INFO("Using Model 4 (195.0, 36.0, 2.0)");
+                    ROS_INFO("Using Model 4 - 30000");
+                    break;
+                case 4:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario1BIS_Columna1_5m/40000p/1_1.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 1 - 40000");
                     break;
                 
-                case 4:
-                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/model_5_195_40_2.pt", c10::kCPU);
-                    modelcont = 0;
-                    ROS_INFO("Using Model 5 (195.0, 40.0, 2.0)");
+                case 5:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario1BIS_Columna1_5m/40000p/1_2.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 2 - 40000");
                     break;
-
+                
+                case 6:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario1BIS_Columna1_5m/40000p/1_3.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 3 - 40000");
+                    break;
+                
+                case 7:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario1BIS_Columna1_5m/40000p/1_4.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 4 - 40000");
+                    break;
+                case 8:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario1BIS_Columna1_5m/50000p/1_1.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 1 - 50000");
+                    break;
+                
+                case 9:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario1BIS_Columna1_5m/50000p/1_2.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 2 - 50000");
+                    break;
+                
+                case 10:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario1BIS_Columna1_5m/50000p/1_3.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 3 - 50000");
+                    break;
+                
+                case 11:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario1BIS_Columna1_5m/50000p/1_4.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 4 - 50000");
+                    break;
+                case 12:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario1BIS_Columna1_5m/60000p/1_1.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 1 - 60000");
+                    break;
+                
+                case 13:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario1BIS_Columna1_5m/60000p/1_2.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 2 - 60000");
+                    break;
+                
+                case 14:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario1BIS_Columna1_5m/60000p/1_3.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 3 - 60000");
+                    break;
+                
+                case 15:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario1BIS_Columna1_5m/60000p/1_4.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 4 - 60000");
+                    break;
+                case 16:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario1BIS_Columna1_5m/70000p/1_1.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 1 - 70000");
+                    break;
+                
+                case 17:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario1BIS_Columna1_5m/70000p/1_2.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 2 - 70000");
+                    break;
+                
+                case 18:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario1BIS_Columna1_5m/70000p/1_3.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 3 - 70000");
+                    break;
+                
+                case 19:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario1BIS_Columna1_5m/70000p/1_4.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 4 - 70000");
+                    break;
 
                 default:
                     break;
@@ -188,78 +283,139 @@ private:
                 switch (modelcont)
                 {
                 case 0:
-                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/m1_195_18_2.pt", c10::kCPU);
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario3BIS_Esquina1_5m/30000p/1_1.pt", c10::kCPU);
                     modelcont++;
-                    ROS_INFO("Using Model 1 (195.0, 18.0, 2.0)");
+                    ROS_INFO("Using Model 1 - 30000");
                     break;
                 
                 case 1:
-                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/m2_195_23_2.pt", c10::kCPU);
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario3BIS_Esquina1_5m/30000p/1_2.pt", c10::kCPU);
                     modelcont++;
-                    ROS_INFO("Using Model 2 (195.0, 23.0, 2.0)");
+                    ROS_INFO("Using Model 2 - 30000");
                     break;
                 
                 case 2:
-                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/m3_200_23_2.pt", c10::kCPU);
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario3BIS_Esquina1_5m/30000p/1_3.pt", c10::kCPU);
                     modelcont++;
-                    ROS_INFO("Using Model 3 (200.0, 23.0, 2.0)");
+                    ROS_INFO("Using Model 3 - 30000");
                     break;
                 
                 case 3:
-                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/m4_200_23_7.pt", c10::kCPU);
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario3BIS_Esquina1_5m/30000p/1_4.pt", c10::kCPU);
                     modelcont++;
-                    ROS_INFO("Using Model 4 (200.0, 23.0, 7.0)");
+                    ROS_INFO("Using Model 4 - 30000");
                     break;
-                
                 case 4:
-                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/m5_203c5_23_7.pt", c10::kCPU);
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario3BIS_Esquina1_5m/40000p/1_1.pt", c10::kCPU);
                     modelcont++;
-                    ROS_INFO("Using Model 5 (203.5, 23.0, 7.0)");
+                    ROS_INFO("Using Model 1 - 40000");
                     break;
                 
                 case 5:
-                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/m6_203c5_19_7.pt", c10::kCPU);
-                    modelcont = 0;
-                    ROS_INFO("Using Model 6 (203.5, 19.0, 7.0)");
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario3BIS_Esquina1_5m/40000p/1_2.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 2 - 40000");
+                    break;
+                
+                case 6:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario3BIS_Esquina1_5m/40000p/1_3.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 3 - 40000");
+                    break;
+                
+                case 7:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario3BIS_Esquina1_5m/40000p/1_4.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 4 - 40000");
+                    break;
+                case 8:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario3BIS_Esquina1_5m/50000p/1_1.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 1 - 50000");
+                    break;
+                
+                case 9:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario3BIS_Esquina1_5m/50000p/1_2.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 2 - 50000");
+                    break;
+                
+                case 10:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario3BIS_Esquina1_5m/50000p/1_3.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 3 - 50000");
+                    break;
+                
+                case 11:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario3BIS_Esquina1_5m/50000p/1_4.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 4 - 50000");
+                    break;
+                case 12:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario3BIS_Esquina1_5m/60000p/1_1.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 1 - 60000");
+                    break;
+                
+                case 13:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario3BIS_Esquina1_5m/60000p/1_2.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 2 - 60000");
+                    break;
+                
+                case 14:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario3BIS_Esquina1_5m/60000p/1_3.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 3 - 60000");
+                    break;
+                
+                case 15:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario3BIS_Esquina1_5m/60000p/1_4.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 4 - 60000");
+                    break;
+                case 16:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario3BIS_Esquina1_5m/70000p/1_1.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 1 - 70000");
+                    break;
+                
+                case 17:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario3BIS_Esquina1_5m/70000p/1_2.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 2 - 70000");
+                    break;
+                
+                case 18:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario3BIS_Esquina1_5m/70000p/1_3.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 3 - 70000");
+                    break;
+                
+                case 19:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario3BIS_Esquina1_5m/70000p/1_4.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 4 - 70000");
                     break;
 
-                
                 default:
                     break;
                 }
                 break;
-
+            
             case 2:
                 switch (modelcont)
                 {
                 case 0:
-                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/m1_195_22_7.pt", c10::kCPU);
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario1BIS_Columna1_5m/30000p/1_1.pt", c10::kCPU);
                     modelcont++;
-                    ROS_INFO("Using Model 1 (195.0, 22.0, 7.0)");
+                    ROS_INFO("Using Model 1 - 30000p");
                     break;
                 
                 case 1:
-                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/m2_203_22_7.pt", c10::kCPU);
-                    modelcont++;
-                    ROS_INFO("Using Model 2 (203.0, 22.0, 7.0)");
-                    break;
-                
-                case 2:
-                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/m3_203_14c5_7.pt", c10::kCPU);
-                    modelcont++;
-                    ROS_INFO("Using Model 3 (203.0, 14.5, 7.0)");
-                    break;
-                
-                case 3:
-                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/m4_195_14c5_7.pt", c10::kCPU);
-                    modelcont++;
-                    ROS_INFO("Using Model 4 (195.0, 14.5, 7.0)");
-                    break;
-                
-                case 4:
-                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/m5_195_22_7.pt", c10::kCPU);
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/Escenario1BIS_Columna1_5m/70000p/1_4.pt", c10::kCPU);
                     modelcont = 0;
-                    ROS_INFO("Using Model 5 (195.0, 22.0, 7.0)");
+                    ROS_INFO("Using Model 4 - 70000p");
                     break;
 
                 
@@ -269,6 +425,46 @@ private:
                 break;
 
             case 3:
+                switch (modelcont)
+                {
+                case 0:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/mod_30000p.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 1 (30.000 outside points)");
+                    break;
+                
+                case 1:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/mod_40000p.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 2 (40.000 outside points)");
+                    break;
+                
+                case 2:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/mod_50000p.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 3 (50.000 outside points)");
+                    break;
+                
+                case 3:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/mod_60000p.pt", c10::kCPU);
+                    modelcont++;
+                    ROS_INFO("Using Model 4 (60.000 outside points)");
+                    break;
+                
+                case 4:
+                    loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/mod_70000p.pt", c10::kCPU);
+                    modelcont = 0;
+                    ROS_INFO("Using Model 5 (70.000 outside points)");
+                    break;
+
+
+                default:
+                    break;
+                }
+                break;
+            
+
+            case 4:
                 loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/prueba.pt", c10::kCPU);
                 break;
 
@@ -354,6 +550,47 @@ private:
                 ROS_ERROR("Weight loading service does not exist");
             }
         }
+        // ------- WORK IN PROGRESS ------ (CALCULATE GRID AROUND DRONE)
+        // Calcula el número de puntos en cada dimensión
+        int num_points_x = static_cast<int>(std::round(grid_x_size / grid_resolution));
+        int num_points_y = static_cast<int>(std::round(grid_y_size / grid_resolution));
+        int num_points_z = static_cast<int>(std::round(grid_z_size / grid_resolution));
+
+        // Crear un vector para almacenar las coordenadas (3 columnas para x, y, z)
+        std::vector<std::vector<float>> coordinates_vector;
+        coordinates_vector.reserve(num_points_x * num_points_y * num_points_z);
+
+        // Generar las coordenadas del volumen
+        for (int i = 0; i < num_points_x; ++i) {
+            for (int j = 0; j < num_points_y; ++j) {
+                for (int k = 0; k < num_points_z; ++k) {
+                    float x = x_d + (i - num_points_x / 2) * grid_resolution;
+                    float y = y_d + (j - num_points_y / 2) * grid_resolution;
+                    float z = z_d + (k - num_points_z / 2) * grid_resolution;
+
+                    // Almacenar la coordenada (x, y, z) en la matriz
+                    coordinates_vector.push_back({x, y, z});
+                }
+            }
+        }
+
+        // Convertir el vector de puntos a un tensor de libtorch
+        auto num_points = coordinates_vector.size();
+        torch::Tensor coordinates_tensor = torch::zeros({static_cast<long>(num_points), 3}, torch::kFloat);
+        for (size_t i = 0; i < num_points; ++i) {
+            coordinates_tensor[i][0] = coordinates_vector[i][0];
+            coordinates_tensor[i][1] = coordinates_vector[i][1];
+            coordinates_tensor[i][2] = coordinates_vector[i][2];
+        }
+
+        // Pasar el tensor a la red neuronal
+        auto start = std::chrono::high_resolution_clock::now();
+        torch::Tensor grid_output_tensor = loaded_sdf.forward({coordinates_tensor}).toTensor();        
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> duration = end - start;
+        std::cout << "Points queried: " << num_points <<" |  Time taken to query model: " << duration.count() << " ms" << std::endl;
+
+        // ---------------------------------------------------------
         //delete previous markers
         publishMarker(path_line_markers_, line_markers_pub_);
         publishMarker(path_points_markers_, point_markers_pub_);

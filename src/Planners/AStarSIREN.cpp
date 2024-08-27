@@ -18,11 +18,11 @@ inline unsigned int AStarSIREN::computeG(const Node* _current, Node* _suc, unsig
     float real_z = _suc->coordinates.z * map_res;
 
     // Query the net
-    torch::Tensor input_tensor = torch::tensor({{real_x, real_y, real_z}}, torch::kFloat32).to(torch::kCPU);
+    torch::Tensor input_tensor = torch::tensor({{real_x, real_y, real_z}}, torch::kFloat32).requires_grad_(true).to(torch::kCPU);
     std::vector<torch::jit::IValue> inputs;
     inputs.push_back(input_tensor);
     // Set the model to evaluation mode
-    //sdf_net.eval();
+    loaded_sdf.eval();
     // Query the model
     auto start = std::chrono::high_resolution_clock::now();
     //torch::Tensor output_tensor = sdf_net.forward(input_tensor);
@@ -31,11 +31,11 @@ inline unsigned int AStarSIREN::computeG(const Node* _current, Node* _suc, unsig
     std::chrono::duration<double, std::milli> duration = end - start;
     // Convert the output tensor to a scalar value (assuming the model outputs a single value per input)
     float model_output = output_tensor.item<float>();
-    // auto cost_term = static_cast<unsigned int>(cost_weight_ * _suc->cost * dist_scale_factor_reduced_);
-    
-    //auto cost_term = static_cast<unsigned int>(cost_weight_ * model_output * dist_scale_factor_reduced_);
 
-    // std::cout <<  "Time taken to query model: " << duration.count() << " ms" << std::endl;
+    //output_tensor.backward();
+    //torch::Tensor gradient = input_tensor.grad();
+
+    //std::cout << "Model output: " << model_output << "|  Gradient: " << gradient << std::endl;
     auto cost_term = static_cast<unsigned int>(cost_weight_ * (1/(model_output * dist_scale_factor_reduced_)));
 
     // auto cost_term = static_cast<unsigned int>(cost_weight_ * (1/(((static_cast<double>(_current->cost) + static_cast<double>(_suc->cost))/2) * dist_scale_factor_reduced_)));

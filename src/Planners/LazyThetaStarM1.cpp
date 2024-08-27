@@ -21,7 +21,7 @@ namespace Planners
 
                 if ( successor2->isInClosedList ) 
                 {
-                    auto cost_term = static_cast<unsigned int>(cost_weight_ * successor2->cost * dist_scale_factor_reduced_);
+                    auto cost_term = static_cast<unsigned int>(cost_weight_ / (successor2->cost * dist_scale_factor_reduced_));
                     G_new = successor2->G +  geometry::distanceBetween2Nodes(successor2, _s_aux) + cost_term; 
                     if (G_new < G_max)
                     {
@@ -43,7 +43,7 @@ namespace Planners
         if ( distanceParent2_nodes == 0 )
             distanceParent2_nodes = 1;
 
-        auto cost_term = static_cast<unsigned int>(cost_weight_ * _s2_aux->cost * dist_scale_factor_reduced_) * distanceParent2_nodes;
+        auto cost_term = static_cast<unsigned int>(cost_weight_ / (_s2_aux->cost * dist_scale_factor_reduced_)) * distanceParent2_nodes;
         if ( ( _s_aux->parent->G + distanceParent2 + cost_term ) < _s2_aux->G )
         {
             _s2_aux->parent = _s_aux->parent;
@@ -63,7 +63,7 @@ namespace Planners
             cost += (_n_i < 6 ? dist_scale_factor_ : (_n_i < 18 ? dd_2D_ : dd_3D_)); //This is more efficient
         }
 
-        auto cost_term = static_cast<unsigned int>(cost_weight_ * _suc->cost * dist_scale_factor_reduced_);
+        auto cost_term = static_cast<unsigned int>(cost_weight_ / (_suc->cost * dist_scale_factor_reduced_));
         cost += cost_term;
         _suc->C = cost_term;
 

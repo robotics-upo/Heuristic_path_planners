@@ -117,7 +117,7 @@ namespace Planners
                 if( ! fs::exists(_file_path) ){ //If file does not exist, write a header with field names
                     std::cout << "File does not exists. Creating header at first line" << std::endl;   
                     out_file_data_.open(_file_path, std::ofstream::app);
-                    out_file_data_ << "path" << std::endl;
+                    //out_file_data_ << "path" << std::endl;
                 }else{
                     out_file_data_.open(_file_path, std::ofstream::app);
                 }
