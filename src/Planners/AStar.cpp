@@ -88,6 +88,23 @@ void AStar::publishOccupationMarkersMap()
 #endif
 }
 
+void AStar::publishLocalOccupationMarkersMap()
+{
+#ifdef ROS
+	local_occupancy_marker_.clear();    
+    for(const auto &it: discrete_world_.getElements()){
+        if(!it.occuppied) continue;
+        pcl::PointXYZ point;
+
+		point.x = it.coordinates.x * resolution_;
+		point.y = it.coordinates.y * resolution_;
+		point.z = it.coordinates.z * resolution_;
+		local_occupancy_marker_.push_back(point);
+    }
+	local_occupancy_marker_pub_.publish(local_occupancy_marker_);
+#endif
+}
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 template<typename T, typename U>

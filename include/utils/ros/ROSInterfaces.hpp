@@ -23,9 +23,14 @@
 
 #include "utils/utils.hpp"
 #include "Grid3D/grid3d.hpp"
+#include "Grid3D/local_grid3d.hpp"
 #include "Planners/AlgorithmBase.hpp"
 
+#include <ctime> 
 #include <cmath>
+
+#include <torch/torch.h>
+#include <torch/script.h>
 
 namespace Planners
 {
@@ -138,6 +143,19 @@ namespace Planners
          * @return false 
          */
         bool configureWorldCosts(Grid3d &_grid, AlgorithmBase &_algorithm);
+
+        /**
+         * @brief 
+         * 
+         * @param _grid 
+         * @param _algorithm 
+         * @return true 
+         * @return false 
+         */
+        bool configureLocalWorldCosts(Local_Grid3d &_grid, AlgorithmBase &_algorithm, float drone_x, float drone_y, float drone_z);
+        //bool configureLocalWorldCosts(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &_points, Local_Grid3d &_grid, AlgorithmBase &_algorithm);
+
+
 
     }
 }

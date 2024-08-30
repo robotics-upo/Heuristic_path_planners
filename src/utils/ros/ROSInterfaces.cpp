@@ -7,7 +7,7 @@ namespace Planners
 
         Vec3i discretePoint(const pcl::PointXYZ &_point, const double &_res)
         { //Take care of negative values
-
+                
             return {static_cast<int>(std::round(_point.x / _res)),
                     static_cast<int>(std::round(_point.y / _res)),
                     static_cast<int>(std::round(_point.z / _res))};
@@ -104,6 +104,18 @@ namespace Planners
             return true;
         }
 
+        // bool configureLocalMapFromPointCloud(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &_points, AlgorithmBase &_algorithm, const double &_resolution)
+        // {
+
+        //     for (auto &it : *_points){
+        //         _algorithm.addCollision(discretePoint(it, _resolution));
+        //         if (it.y <0)
+        //             ROS_INFO("Y NEGATIVO");
+        //     }       
+
+        //     return true;
+        // }       
+
         bool configureWorldCosts(Grid3d &_grid, AlgorithmBase &_algorithm)
         {
 
@@ -125,6 +137,89 @@ namespace Planners
                 }
             }
 
+            return true;
+        }
+        // // OLD VERSION - DELETE
+        // bool configureLocalWorldCosts(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &_points, Local_Grid3d &_grid, AlgorithmBase &_algorithm)
+        // {
+        //     //  JAC: Generate the local grid
+        //     // std::cout << "no. of pts=" << _points->size() << std::endl;
+        //     // unsigned t0, t1;
+        //     // t0 = clock();
+        //     _grid.computeLocalGrid(_points);
+        //     // t1 = clock();
+        //     // double time = (double(t1-t0)/CLOCKS_PER_SEC);
+        //     // std::cout << "Execution Time: " << time << std::endl;
+
+        //     auto world_size = _algorithm.getWorldSize();
+        //     auto resolution = _algorithm.getWorldResolution();
+        //     // std::cout << "world size: " << world_size.x  << std::endl;  //200
+        //     // std::cout << "resolution: " << resolution  << std::endl;  //0.05
+
+        //     // JAC: 50-50 milliseconds --> CUDA
+        //     // t0 = clock();
+        //     for (int i = 0; i < world_size.x; i++)
+        //     {
+        //         for (int j = 0; j < world_size.y; j++)
+        //         {
+        //             for (int k = 0; k < world_size.z; k++)
+        //             {
+        //                 //JAC: Precision
+        //                 // auto cost = _grid.getCellCost(i * resolution, j * resolution, k * resolution);
+        //                 float cost = _grid.getCellCost(i * resolution, j * resolution, k * resolution);
+        //                 // if (cost > 285.65) // JAC: cost is given in the discrete_world. 
+        //                     // std::cout << "Cost: " << cost << std::endl;   
+        //                 _algorithm.configureCellCost({i, j, k}, cost);
+        //             }
+        //         }
+        //     }
+        //     // t1 = clock();
+        //     // double time = (double(t1-t0)/CLOCKS_PER_SEC);
+        //     // std::cout << "Execution Time: " << time << std::endl;
+        //     return true;
+        // }
+
+        // NEW VERSION - NN SDF BASED
+        bool configureLocalWorldCosts(Local_Grid3d &_grid, AlgorithmBase &_algorithm, float drone_x, float drone_y, float drone_z)
+        {
+            //  JAC: Generate the local grid
+            // std::cout << "no. of pts=" << _points->size() << std::endl;
+            // unsigned t0, t1;
+            // t0 = clock();
+            std::cout << "---!!!--- Entered configureLocalWorldCosts ---!!!---" << std::endl;
+            torch::jit::script::Module loaded_sdf;
+            loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/mod_70000p.pt", c10::kCPU);
+            _grid.computeLocalGrid(loaded_sdf, drone_x, drone_y, drone_z);
+
+            // t1 = clock();
+            // double time = (double(t1-t0)/CLOCKS_PER_SEC);
+            // std::cout << "Execution Time: " << time << std::endl;
+
+            auto world_size = _algorithm.getWorldSize();
+            auto resolution = _algorithm.getWorldResolution();
+            // std::cout << "world size: " << world_size.x  << std::endl;  //200
+            // std::cout << "resolution: " << resolution  << std::endl;  //0.05
+
+            // JAC: 50-50 milliseconds --> CUDA
+            // t0 = clock();
+            for (int i = 0; i < world_size.x; i++)
+            {
+                for (int j = 0; j < world_size.y; j++)
+                {
+                    for (int k = 0; k < world_size.z; k++)
+                    {
+                        //JAC: Precision
+                        // auto cost = _grid.getCellCost(i * resolution, j * resolution, k * resolution);
+                        float cost = _grid.getCellCost(i * resolution, j * resolution, k * resolution);
+                        // if (cost > 285.65) // JAC: cost is given in the discrete_world. 
+                            // std::cout << "Cost: " << cost << std::endl;   
+                        _algorithm.configureCellCost({i, j, k}, cost);
+                    }
+                }
+            }
+            // t1 = clock();
+            // double time = (double(t1-t0)/CLOCKS_PER_SEC);
+            // std::cout << "Execution Time: " << time << std::endl;
             return true;
         }
 

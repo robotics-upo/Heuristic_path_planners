@@ -28,7 +28,6 @@ if(BUILD_DOC)
       set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile)
       set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
       
-
       # request to configure the file
       configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
       message("Doxygen build started")
@@ -189,6 +188,10 @@ if(BUILD_ROS_SUPPORT)
   add_dependencies(planner_ros_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_LIBRARIES})
   target_link_libraries(planner_ros_node ${catkin_LIBRARIES} ${TORCH_LIBRARIES} ${${PROJECT_NAME}_LIBRARIES} -lstdc++fs Eigen3::Eigen -lcrypto -lssl)
   list(APPEND ${PROJECT_NAME}_TARGETS planner_ros_node)
+  add_executable(local_planner_ros_node src/ROS/local_planner_ros_node.cpp )
+  add_dependencies(local_planner_ros_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_LIBRARIES})
+  target_link_libraries(local_planner_ros_node ${catkin_LIBRARIES} ${${PROJECT_NAME}_LIBRARIES} -lstdc++fs Eigen3::Eigen -lcrypto -lssl)
+  list(APPEND ${PROJECT_NAME}_TARGETS local_planner_ros_node)
 #############
   ## Install ##
 #############

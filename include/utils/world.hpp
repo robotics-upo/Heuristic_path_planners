@@ -38,6 +38,22 @@ namespace utils
         {
         }
         /**
+         * @brief Clean the World 
+         * JAC
+         */
+        void cleanWorld()
+        {
+            for(long unsigned int i = 0; i < discrete_world_vector_.size(); ++i){
+                discrete_world_vector_[i].occuppied = false;
+            }
+            // for(auto &it: discrete_world_vector_){
+            //     it.isInClosedList = false;
+            //     it.isInOpenList = false;
+            //     it.H = it.G = it.C = 0;
+            //     it.parent = nullptr;
+            // }
+        } 
+        /**
          * @brief Overloaded resizeWorld function for Vec3i objects
          * 
          * @param _world_size Vec3i object with world size data
@@ -69,17 +85,67 @@ namespace utils
             resolution_   = _resolution;
             x_y_size_      = static_cast<long>(world_x_size_) * world_y_size_;
 
-            discrete_world_vector_.clear();
-            discrete_world_vector_.resize(static_cast<long>(world_x_size_) * world_y_size_ * _world_z_size);
+            discrete_world_vector_.clear(); 
+            discrete_world_vector_.resize(static_cast<long>(world_x_size_) * world_y_size_ * world_z_size_); // JAC Corrected: _world_z_size should be world_z_size_
             Node node;
             std::fill(discrete_world_vector_.begin(), discrete_world_vector_.end(), node);
-            
+
+            // std::cout << "WORLD SIZE: "      << discrete_world_vector_.size()  << std::endl;
             for(long unsigned int i = 0; i < discrete_world_vector_.size(); ++i){
                 discrete_world_vector_[i].coordinates =  getDiscreteWorldPositionFromIndex(i);
                 discrete_world_vector_[i].world_index = i;
-            }
+            }           
             
         }
+
+        // JAC
+        /**
+         * @brief Overloaded resizeLocalWorld function for Vec3i objects
+         * 
+         * @param _local_world_size Vec3i object with world size data
+         * @param _resolution resolution to create the internal world vector
+         */
+        void resizeLocalWorld(const Vec3i &_local_world_size, const double &_resolution){
+            return resizeLocalWorld(_local_world_size.x, _local_world_size.y, _local_world_size.z, _resolution);
+        }
+        // /**
+        //  * @brief It configures the inner world vector. Internally the world coordinates 
+        //  *  goes from [0, world_x_size], [0, world_y_size], [0, world_z_size]
+        //  *  It clears the previous world and create a new one. 
+        //  *  JAC
+        //  * @param _local_world_x_size 
+        //  * @param _local_world_y_size 
+        //  * @param _local_world_z_size 
+        //  * @param _resolution 
+        //  */
+        void resizeLocalWorld(const unsigned int &_local_world_x_size,
+                         const unsigned int &_local_world_y_size,
+                         const unsigned int &_local_world_z_size,
+                         const double &_resolution)
+        {
+            if( _resolution <= 0.005 )
+                throw std::out_of_range("Resolution too small, it should be > 0.005");
+            
+            world_x_size_ = _local_world_x_size; // Debe ser el world_x_size because it is necessary in CheckValid and getworldIndex.
+            world_y_size_ = _local_world_y_size;
+            world_z_size_ = _local_world_z_size;
+            resolution_   = _resolution;
+            x_y_size_      = static_cast<long>(world_x_size_) * world_y_size_; // Change x_y_size --> x_y_local_size?
+
+            discrete_world_vector_.clear(); 
+            discrete_world_vector_.resize(static_cast<long>(world_x_size_) * world_y_size_ * world_z_size_); // JAC Corrected: _world_z_size should be world_z_size_
+
+            Node node;
+            std::fill(discrete_world_vector_.begin(), discrete_world_vector_.end(), node);
+
+            // std::cout << "LOCAL WORLD SIZE: "      << discrete_world_vector_.size()  << std::endl;
+            for(long unsigned int i = 0; i < discrete_world_vector_.size(); ++i){
+                discrete_world_vector_[i].coordinates =  getDiscreteWorldPositionFromIndex(i);
+                discrete_world_vector_[i].world_index = i;
+            }           
+            
+        }
+
         /**
          * @brief Set the Node Cost object overloaded function for continous coordinates
          * 
@@ -176,11 +242,26 @@ namespace utils
          */
         void setOccupied(const int _x, const int _y, const int _z)
         {
+            // IF LOCAL PLANNER
+            // JAC: _x, _y, _z have negative and positive values
+            int x_aux, y_aux, z_aux;
+            x_aux = _x+(world_x_size_/2); // JAC: 100 is given by the world_size_z/res
+            y_aux = _y+(world_y_size_/2);
+            z_aux = _z+(world_z_size_/2);
 
-            if (!checkValid(_x, _y, _z))
-                return;
+            if (!checkValid(x_aux, y_aux, z_aux))
+                return;     
+            
+            // std::cout << "AQUI"  << std::endl;
+            discrete_world_vector_[getWorldIndex(x_aux, y_aux, z_aux)].occuppied = true;
 
-            discrete_world_vector_[getWorldIndex(_x, _y, _z)].occuppied = true;
+            // IF GLOBAL PLANNER
+            // // Original function
+            // if (!checkValid(_x, _y, _z))
+            //     return;  
+
+            // discrete_world_vector_[getWorldIndex(_x, _y, _z)].occuppied = true;
+            
         }
         /**
          * @brief Set the world's node associated
@@ -188,7 +269,7 @@ namespace utils
          * @param _pos discrete node position vector
          */
         void setOccupied(const Vec3i &_pos){
-
+            // JAC: _pos has negative and positive values
             return setOccupied(_pos.x, _pos.y, _pos.z);
         }
         /**
@@ -401,9 +482,10 @@ namespace utils
          * @return true if position inside the workspace 
          * @return false if any of the coordinates is bigger than the associated world size dimension
          */
+    
         inline bool checkValid(const unsigned int _x, 
                         const unsigned int _y, 
-                        const unsigned int _z) const{
+                        const unsigned int _z) const{          
 
             if ( _x >= world_x_size_ ||
                  _y >= world_y_size_ ||
@@ -412,6 +494,7 @@ namespace utils
 
             return true;
         }
+
         /**
          * @brief getWorldIndex overloaded function for Vec3i coordinates
          * 
@@ -419,6 +502,13 @@ namespace utils
          * @return unsigned int world index associated to the requested discrete position
          */
         inline long unsigned int getWorldIndex(const Vec3i &_pos) const{
+            if (_pos.x<0){
+                // std::cout << "X NEGATIVE"  << std::endl;
+                std::cout << "X: " << _pos.x  << std::endl; 
+                // std::cout << "INDEX: " << _z * x_y_size_ + _y * world_x_size_ + _x  << std::endl;
+            }
+            // else 
+            //     std::cout << "AQUI"  << std::endl;
 
             return getWorldIndex(_pos.x, _pos.y, _pos.z);
         }
@@ -456,11 +546,13 @@ namespace utils
         }
 
         std::vector<Planners::utils::Node> discrete_world_vector_;
+        // std::vector<Planners::utils::Node> discrete_local_world_vector_;
 
-        long unsigned int x_y_size_;
+        long unsigned int x_y_size_, x_y_local_size_;
 
         unsigned int world_x_size_, world_y_size_, world_z_size_;
-        double resolution_;
+        unsigned int local_world_x_size_, local_world_y_size_, local_world_z_size_;
+        double resolution_; // JAC: Should I define another variable for the local planner (resolution_local_)?
     };
 
 }
