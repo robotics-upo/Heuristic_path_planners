@@ -499,7 +499,7 @@ private:
         // lnh_.param("frame_id", frame_id, std::string("map"));		
         // configMarkers(algorithm_name, frame_id, resolution_);
 
-        lnh_.param("save_data_file", save_data_, (bool)true);		
+        lnh_.param("save_data_file", save_data_, (bool)true);
         lnh_.param("data_folder", data_folder_, std::string("planing_data.txt"));		
         if(save_data_)
             ROS_INFO_STREAM("Saving path planning data results to " << data_folder_);

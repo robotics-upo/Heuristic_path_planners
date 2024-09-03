@@ -190,12 +190,13 @@ namespace Planners
             torch::jit::script::Module loaded_sdf;
             loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/mod_70000p.pt", c10::kCPU);
             _grid.computeLocalGrid(loaded_sdf, drone_x, drone_y, drone_z);
-
+            
             // t1 = clock();
             // double time = (double(t1-t0)/CLOCKS_PER_SEC);
             // std::cout << "Execution Time: " << time << std::endl;
 
             auto world_size = _algorithm.getWorldSize();
+            std::cout << "World size: " << world_size << std::endl;
             auto resolution = _algorithm.getWorldResolution();
             // std::cout << "world size: " << world_size.x  << std::endl;  //200
             // std::cout << "resolution: " << resolution  << std::endl;  //0.05

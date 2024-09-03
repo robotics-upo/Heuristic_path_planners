@@ -189,7 +189,7 @@ public:
 	float getCellCost(const float &_x, const float &_y, const float &_z){
 		
 		if( !isIntoMap(_x, _y, _z) ){
-			std::cout << "OUT " << _x << "," << _y << "," << _z << std::endl;
+			std::cout << "OUT " << _x << "," << _y << "," << _z << "Expected: " << m_maxX << "," << m_maxY << "," << m_maxZ << std::endl;
 			return 0;
 		}
 			
@@ -330,7 +330,8 @@ public:
 		m_gridSize = m_gridSizeX*m_gridSizeY*m_gridSizeZ;
 		m_gridStepY = m_gridSizeX;
 		m_gridStepZ = m_gridSizeX*m_gridSizeY;
-
+		//std::cout << "m_gridSizeX = " << m_gridSizeX << "m_gridSizeY = " << m_gridSizeY << "m_gridSizeZ = " << m_gridSizeZ << std::endl;
+		//std::cout << "m_gridSize = " << m_gridSize << std::endl;
 		// JAC: Pongo los mismo datos que en global planner y no funciona
 		// m_gridSizeX = 341;
 		// m_gridSizeY = 241; 
@@ -364,7 +365,8 @@ public:
 		std::vector<std::vector<float>> coordinates_vector;
         coordinates_vector.reserve(m_gridSizeX*m_gridSizeY*m_gridSizeZ);
 
-		std::cout << "m_resolution = " << m_resolution << std::endl;
+		//std::cout << "m_resolution = " << m_resolution << std::endl;
+		std::cout << "Drone position: " << "x = " << drone_x << " | y = " << drone_y << " | z = " << drone_z << std::endl;
 
 		for(int iz=0; iz<m_gridSizeZ; iz++)
 		{
@@ -382,7 +384,7 @@ public:
 			}
 		}
 
-		std::cout << "---!!!--- Completed coordinates_vector ---!!!---" << std::endl;
+		//std::cout << "---!!!--- Completed coordinates_vector ---!!!---" << std::endl;
 
 		// Convertir el vector de puntos a un tensor de libtorch
         auto num_points = coordinates_vector.size();
@@ -393,19 +395,22 @@ public:
             coordinates_tensor[i][2] = coordinates_vector[i][2];
         }
 
-		std::cout << "---!!!--- Completed coordinates_tensor ---!!!---" << std::endl;
-		std::cout << coordinates_tensor << std::endl;
+		//std::cout << "---!!!--- Completed coordinates_tensor ---!!!---" << std::endl;
+		//std::cout << coordinates_tensor << std::endl;
 
         // Pasar el tensor por la red neuronal
         auto start = std::chrono::high_resolution_clock::now();
-		std::cout << "---!!!--- Started timer ---!!!---" << std::endl;
+		//std::cout << "---!!!--- Started timer ---!!!---" << std::endl;
         torch::Tensor grid_output_tensor = loaded_sdf.forward({coordinates_tensor}).toTensor();
-		std::cout << "---!!!--- Query done ---!!!---" << std::endl;
+		//std::cout << "---!!!--- Query done ---!!!---" << std::endl;
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double, std::milli> duration = end - start;
+		// usleep(1e4);
+        // std::cout << "Please a key to go to the next iteration..." << std::endl;
+        // getchar(); // Comentar para no usar tecla.
         std::cout << "Points queried: " << num_points <<" |  Time taken to query model: " << duration.count() << " ms" << std::endl;
 
-		std::cout << "---!!!--- Completed query ---!!!---" << std::endl;
+		//std::cout << "---!!!--- Completed query ---!!!---" << std::endl;
 
 		int index;
 		//Asignar cada valor a la posición correcta del grid
@@ -474,9 +479,9 @@ protected:
         // Get map parameters: They have to take from local_world_size_x, local_world_size_y , local_world_size_z of the launch
 		double minX, minY, minZ, maxX, maxY, maxZ, res;
         
-		maxX = 10.0;
+		maxX = 8.0;
         minX = 0.0;
-        maxY = 10.0;
+        maxY = 8.0;
         minY = 0.0;
         maxZ = 4.0;
         minZ = 0.0;
