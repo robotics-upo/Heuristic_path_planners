@@ -126,9 +126,9 @@ private:
     }
 
     void globalPositionCallback(const geometry_msgs::PoseStamped::ConstPtr& msg){
-        double drone_x = msg->pose.position.x;
-        double drone_y = msg->pose.position.y;
-        double drone_z = msg->pose.position.z;
+        double drone_x = resolution_ * std::round(msg->pose.position.x / resolution_);
+        double drone_y = resolution_ * std::round(msg->pose.position.y / resolution_);
+        double drone_z = resolution_ * std::round(msg->pose.position.z / resolution_);
 
         // Store as class members
         this->drone_x_ = drone_x;
@@ -224,7 +224,7 @@ private:
         // Configure the distance grid and the cost grid
         //Planners::utils::configureLocalWorldCosts(boost::make_shared<pcl::PointCloud<pcl::PointXYZ>>(local_cloud_), *m_local_grid3d_, *algorithm_, float drone_x_, float drone_y_, float drone_z_); // JAC: Is this correctly generated?
         Planners::utils::configureLocalWorldCosts(*m_local_grid3d_, *algorithm_, drone_x_, drone_y_, drone_z_); // GUILLERMO: NEW VERSION
-
+        sdfupdate = true;
         // ROS_INFO("Published occupation marker local map");
 
 
@@ -285,6 +285,74 @@ private:
 
     void calculatePath3D()
 {
+    if (sdfupdate)
+    {
+        sdfupdate = false;
+
+        // PASO 1 - Revisar si el punto de inicio está libre
+        if(m_local_grid3d_->m_grid[(m_local_grid3d_->m_gridSize-1)/2].dist > 0)
+        {
+            ROS_INFO("Starting point is free");
+        }
+        else
+        {
+            ROS_INFO("Starting point is NOT FREE -> ABORTING")
+            return 0
+        }
+
+        // PASO 2 - Calcular goal local a partir del global -> Comprobar si el punto más alejado de la trayectoria global es accesible. Si no, buscar puntos alrededor
+        // Suponemos la existencia de una variable "path" del global con los waypoints
+        Planners::utils::CoordinateList global_path;
+        Planners::utils::CoordinateList global_path_local;
+        
+        // 2.1 - Pasar los waypoints al local
+
+            //Cálculo del origen del sistema local
+        int origen_local_x, origen_local_y, origen_local_z;
+        origen_local_x = drone_x_/resolution_ - (m_local_grid3d_->m_gridSizeX - 1)/2;
+        origen_local_y = drone_y_/resolution_ - (m_local_grid3d_->m_gridSizeY - 1)/2;
+        origen_local_z = drone_z_/resolution_ - (m_local_grid3d_->m_gridSizeZ - 1)/2;
+
+        for (const auto& vec : global_path) 
+        {
+            Planners::utils::Vec3i newpoint;
+            newpoint.x = vec.x - origen_local_x;
+            newpoint.y = vec.y - origen_local_y;
+            newpoint.z = vec.z - origen_local_z;
+        
+            // Agregar el punto desplazado al nuevo vector
+            global_path_local.push_back(newpoint);
+        }
+
+            // 2.2 - Encontrar punto más tardío dentro del mapa local
+        bool no_point_in_range = true;
+        int it = global_path_local.size() - 1;
+        Planners::utils::Vec3i local_goal;
+
+        while (it >= 0 && no_point_in_range)
+        {
+            if (0 <= global_path_local[it].x && global_path_local[it].x < m_local_grid3d_->m_gridSizeX && 
+                0 <= global_path_local[it].y && global_path_local[it].y < m_local_grid3d_->m_gridSizeY &&
+                0 <= global_path_local[it].z && global_path_local[it].z < m_local_grid3d_->m_gridSizeZ) 
+            {
+                local_goal.x = global_path_local[it].x;
+                local_goal.y = global_path_local[it].y;
+                local_goal.z = global_path_local[it].z;
+                no_point_in_range = false;
+            }
+            --it;
+        }
+        
+            // 2.3 - Si el punto está ocupado, buscar en los alrededores
+        
+
+
+    }
+
+
+
+
+
     if (mapReceived) // It is true once a pointcloud is received.
     {
         // ROS_INFO("Local Planner 3D: Global trj received and pointcloud received");
@@ -650,7 +718,7 @@ private:
     // JAC: local_world_size_meters: size of the local world provided by the launch
     // JAC: local_world_size_: size of the discrete local world from local_world_size_meters (of the launch) and resolution
     Planners::utils::Vec3i local_world_size_, local_world_size_meters; // Discrete
-    float resolution_;
+    float resolution_ = 0.2;
 
     bool save_data_;
     bool use3d_{true};
@@ -684,6 +752,7 @@ private:
 
     int number_of_points;
     bool mapReceived;
+    bool sdfupdate;
 
     //drone global position
     double drone_x_ = 0.0;
