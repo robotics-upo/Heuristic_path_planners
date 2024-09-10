@@ -35,6 +35,7 @@ namespace Planners
     // // JAC QUITAR setLocalWorldSize?
     void AlgorithmBase::setLocalWorldSize(const Vec3i &_worldSize,const double _resolution)
     {
+        // el resizeLocalWorld lo hace bien (sept-2024)
         discrete_world_.resizeLocalWorld(_worldSize, _resolution); // Hay un error y parece que proviene del getWorldIndex en el world.hpp porque toma los valores del world_x_size y x_y_size en lugar de los "local"
     }
 

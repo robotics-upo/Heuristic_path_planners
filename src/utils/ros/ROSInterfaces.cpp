@@ -153,8 +153,10 @@ namespace Planners
 
             auto world_size = _algorithm.getWorldSize();
             auto resolution = _algorithm.getWorldResolution();
-            // std::cout << "world size: " << world_size.x  << std::endl;  //200
-            // std::cout << "resolution: " << resolution  << std::endl;  //0.05
+            // std::cout << "world size X: " << world_size.x  << std::endl;  //50
+            // std::cout << "world size Y: " << world_size.y  << std::endl;  //50
+            // std::cout << "world size Z: " << world_size.z  << std::endl;  //20
+            // std::cout << "resolution: " << resolution  << std::endl;  //0.2
 
             // JAC: 50-50 milliseconds --> CUDA
             // t0 = clock();

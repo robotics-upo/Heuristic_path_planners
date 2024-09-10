@@ -116,7 +116,8 @@ public:
 		// configureParameters();
 		if(configureParameters())
 		{
-            computeLocalGrid(m_cloud);
+            // computeLocalGrid(m_cloud);
+			std::cout << "\tENTRA COMPUTE GRID" << std::endl;
 			
 			// Build the msg with a slice of the grid if needed
 			if(m_gridSlice >= 0 && m_gridSlice <= m_maxZ)
@@ -135,7 +136,7 @@ public:
 			percent_computed_pub_ = m_nh.advertise<std_msgs::Float32>(m_nodeName+"/percent_computed", 1, false);
         }
         else{
-			// std::cout << "\tCOMPUTE GRID" << std::endl;
+			std::cout << "\tCOMPUTE GRID" << std::endl;
             // computeLocalGrid(m_cloud);
             // JAC: Here "Build the msg with a slice of the grid if needed" should be?
         }
@@ -205,6 +206,8 @@ public:
 		// std_msgs::Float32 percent_msg;
 		// percent_msg.data = 0;
 
+		// std::cout << "\tSDF SDF" << std::endl;
+
 		// Alloc the 3D grid JAC: Alloc the size of the local grid
 		m_gridSizeX = (int)(m_maxX*m_oneDivRes);
 		m_gridSizeY = (int)(m_maxY*m_oneDivRes); 
@@ -231,7 +234,7 @@ public:
 		// double time = (double(t1-t0)/CLOCKS_PER_SEC);
         // std::cout << "Execution Time: " << time << std::endl;
 
-		// std::cout << "_maxX: " << m_maxX  << std::endl;
+		// std::cout << "_maxX computeLocalGrid: " << m_maxX  << std::endl;
 		// std::cout << "_gridSizeX: " << m_gridSizeX  << std::endl;
 
 		// Setup kdtree
@@ -284,6 +287,10 @@ public:
 					{	
 						dist = pointNKNSquaredDistance[0];
 						m_grid[index].dist = dist; // dist in the discrete world
+						// std::cout << "\tDIST" << std::endl;
+						// usleep(1e4);
+        				// std::cout << "Please a key to go to the next iteration..." << std::endl;
+        				// getchar(); // Comentar para no usar tecla.
 						// if(!use_costmap_function){
 						// 	m_grid[index].prob = gaussConst1*exp(-dist*dist*gaussConst2);
 						// }else{
@@ -368,7 +375,9 @@ protected:
         minY = 0.0;
         maxZ = 4.0;
         minZ = 0.0;
-        res = 0.05;
+        res = 0.2;
+
+		// std::cout << "maxX: " << maxX  << std::endl;
 
         // maxX = 4.0;
         // minX = 0.0;

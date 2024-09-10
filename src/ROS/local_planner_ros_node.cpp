@@ -488,13 +488,15 @@ private:
         if(save_data_)
             ROS_INFO_STREAM("Saving path planning data results to " << data_folder_);
 
-        // JAC: This is not neccesary in local planner.
+        // JAC: This is not neccesary in local planner --> input_map_ = 0
+        // std::cout << "\timput_map" << input_map_ << std::endl; 
         if( input_map_ == 1 ){
             Planners::utils::configureWorldFromOccupancyWithCosts(occupancy_grid_, *algorithm_);
+            // ROS_INFO("CONFIGURED WORLD1");
         }else if( input_map_ == 2 ){
             Planners::utils::configureWorldFromPointCloud(boost::make_shared<pcl::PointCloud<pcl::PointXYZ>>(cloud_), *algorithm_, resolution_);
             // Planners::utils::configureLocalWorldCosts(*m_local_grid3d_, *algorithm_); //JAC: Discomment
-            ROS_INFO("CONFIGURED WORLD2");
+            // ROS_INFO("CONFIGURED WORLD2");
 
         }
         //Algorithm specific parameters. Its important to set line of sight after configuring world size(it depends on the resolution)

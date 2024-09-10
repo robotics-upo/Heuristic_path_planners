@@ -14,7 +14,7 @@
     <arg name="local_world_size_x"        default="5"/>
     <arg name="local_world_size_y"        default="5"/>
     <arg name="local_world_size_z"        default="2"/>
-    <arg name="resolution"          default="0.05"/>
+    <arg name="resolution"          default="0.2"/>
 
     <arg name="inflate_map"         default="true"/>
     <arg name="inflation_size"      default="$(arg resolution)"/>
