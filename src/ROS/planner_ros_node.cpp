@@ -39,6 +39,8 @@
 #include <heuristic_planners/GetPath.h>
 #include <heuristic_planners/SetAlgorithm.h>
 #include <heuristic_planners/ShareWeights.h>
+#include <heuristic_planners/Vec3i.h>
+#include <heuristic_planners/CoordinateList.h>
 
 #define USING_PRETRAINED_MODELS 1
 #define EXAMPLE_PATH 2
@@ -83,6 +85,7 @@ public:
 
         line_markers_pub_  = lnh_.advertise<visualization_msgs::Marker>("path_line_markers", 1);
         point_markers_pub_ = lnh_.advertise<visualization_msgs::Marker>("path_points_markers", 1);
+        global_path_pub_ = lnh_.advertise<heuristic_planners::CoordinateList>("global_path", 1);
 
     }
 
@@ -150,7 +153,7 @@ private:
             configureHeuristic(_req.heuristic.data);
         }
 
-        ROS_INFO("Path requested, computing path");
+        ROS_INFO("Path requested, computing global path");
 
         if (USING_PRETRAINED_MODELS){
             switch(EXAMPLE_PATH)
@@ -638,6 +641,20 @@ private:
                     }
                     path = std::get<Planners::utils::CoordinateList>(path_data["path"]);
 
+                    // Send a message through the global_path topic
+                    heuristic_planners::CoordinateList coord_msg;
+                    for (const auto& vec3 : path) {
+                        heuristic_planners::Vec3i vec_msg;
+                        vec_msg.x = vec3.x;
+                        vec_msg.y = vec3.y;
+                        vec_msg.z = vec3.z;
+
+                        coord_msg.coordinates.push_back(vec_msg);
+                    }
+                    global_path_pub_.publish(coord_msg);
+
+
+
                 }catch(std::bad_variant_access const& ex){
                     std::cerr << "Bad variant error: " << ex.what() << std::endl;
                 }
@@ -929,7 +946,7 @@ private:
     ros::ServiceServer request_path_server_, change_planner_server_;
     ros::Subscriber pointcloud_sub_, occupancy_grid_sub_, sdf_sub_;
     //TODO Fix point markers
-    ros::Publisher line_markers_pub_, point_markers_pub_;
+    ros::Publisher line_markers_pub_, point_markers_pub_, global_path_pub_;
 
     std::unique_ptr<Grid3d> m_grid3d_;
 

@@ -152,7 +152,7 @@ namespace Planners
          * @return true 
          * @return false 
          */
-        bool configureLocalWorldCosts(Local_Grid3d &_grid, AlgorithmBase &_algorithm, float drone_x, float drone_y, float drone_z);
+        bool configureLocalWorldCosts(Local_Grid3d &_grid, AlgorithmBase &_algorithm, float drone_x, float drone_y, float drone_z, torch::jit::script::Module& loaded_sdf);
         //bool configureLocalWorldCosts(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &_points, Local_Grid3d &_grid, AlgorithmBase &_algorithm);
 
 

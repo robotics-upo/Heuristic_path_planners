@@ -180,15 +180,12 @@ namespace Planners
         // }
 
         // NEW VERSION - NN SDF BASED
-        bool configureLocalWorldCosts(Local_Grid3d &_grid, AlgorithmBase &_algorithm, float drone_x, float drone_y, float drone_z)
+        bool configureLocalWorldCosts(Local_Grid3d &_grid, AlgorithmBase &_algorithm, float drone_x, float drone_y, float drone_z, torch::jit::script::Module& loaded_sdf)
         {
             //  JAC: Generate the local grid
             // std::cout << "no. of pts=" << _points->size() << std::endl;
             // unsigned t0, t1;
             // t0 = clock();
-            std::cout << "---!!!--- Entered configureLocalWorldCosts ---!!!---" << std::endl;
-            torch::jit::script::Module loaded_sdf;
-            loaded_sdf = torch::jit::load("/home/ros/exchange/weight_data/mod_70000p.pt", c10::kCPU);
             _grid.computeLocalGrid(loaded_sdf, drone_x, drone_y, drone_z);
             
             // t1 = clock();

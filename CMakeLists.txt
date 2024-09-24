@@ -80,6 +80,13 @@ if(BUILD_ROS_SUPPORT)
 ################################################
 catkin_python_setup()
 
+# Add message files
+add_message_files(
+  FILES
+  Vec3i.msg
+  CoordinateList.msg
+)
+
 ## Generate services in the 'srv' folder
 add_service_files(
   FILES

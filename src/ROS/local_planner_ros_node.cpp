@@ -37,6 +37,8 @@
 
 #include <heuristic_planners/GetPath.h>
 #include <heuristic_planners/SetAlgorithm.h>
+#include <heuristic_planners/Vec3i.h>
+#include <heuristic_planners/CoordinateList.h>
 
 
 /**
@@ -59,12 +61,15 @@ public:
 
         // pointcloud_local_sub_     = lnh_.subscribe<pcl::PointCloud<pcl::PointXYZ>>("/points", 1, &HeuristicLocalPlannerROS::pointCloudCallback, this);
         // !!!!!!!!!!!!!!! LAS ITERACIONES NO DEBEN HACERSE CADA VEZ QUE SE PUBLIQUEN PUNTOS, SINO CADA X TIEMPO (cambiar en algún momento)
-        pointcloud_local_sub_     = lnh_.subscribe<sensor_msgs::PointCloud2>("/points", 1, &HeuristicLocalPlannerROS::pointCloudCallback, this);
+        //pointcloud_local_sub_     = lnh_.subscribe<sensor_msgs::PointCloud2>("/points", 1, &HeuristicLocalPlannerROS::pointCloudCallback, this);
+
+        path_local_sub_     = lnh_.subscribe<heuristic_planners::CoordinateList>("/planner_ros_node/global_path", 1, &HeuristicLocalPlannerROS::globalPathCallback, this);
         
         //GLOBAL POSITIONING SUBSCRIBER - for SDF query
-        globalposition_local_sub_ = lnh_.subscribe<geometry_msgs::PoseStamped>("/drone_position", 1, &HeuristicLocalPlannerROS::globalPositionCallback, this);
+        globalposition_local_sub_ = lnh_.subscribe<geometry_msgs::PoseStamped>("/ground_truth_to_tf/pose", 1, &HeuristicLocalPlannerROS::globalPositionCallback, this);
         // pointcloud_local_sub_     = lnh_.subscribe("/points", 1, &HeuristicLocalPlannerROS::pointCloudCallback, this); //compile
         occupancy_grid_local_sub_ = lnh_.subscribe<nav_msgs::OccupancyGrid>("/grid", 1, &HeuristicLocalPlannerROS::occupancyGridCallback, this);
+        network_update_sub_ = lnh_.subscribe<std_msgs::Empty>("/net_update", 1, &HeuristicLocalPlannerROS::networkUpdateCallback, this);
 
         // request_path_server_   = lnh_.advertiseService("request_path",  &HeuristicLocalPlannerROS::requestPathService, this); // This is in planner_ros_node.cpp and the corresponding service defined.
         change_planner_server_ = lnh_.advertiseService("set_algorithm", &HeuristicLocalPlannerROS::setAlgorithm, this);
@@ -72,6 +77,10 @@ public:
         line_markers_pub_  = lnh_.advertise<visualization_msgs::Marker>("path_line_markers", 1);
         point_markers_pub_ = lnh_.advertise<visualization_msgs::Marker>("path_points_markers", 1);
         cloud_test  = lnh_.advertise<pcl::PointCloud<pcl::PointXYZ> >("/cloud_PCL", 1, true);  // Defined by me to show the point cloud as pcl::PointCloud<pcl::PointXYZ
+        
+        networkReceivedFlag_ = 1;
+        globalPathReceived_ = 0;
+        timed_local_path_ = lnh_.createTimer(ros::Duration(1), &HeuristicLocalPlannerROS::localtimedCallback, this);
     }
 
     void plan(){
@@ -84,32 +93,8 @@ public:
         //     return;
         // }
 
-        calculatePath3D();
-        // state.reset(new actionlib::SimpleClientGoalState(navigation3DClient->getState()));
-
-        // seconds = finishT.time - startT.time - 1;
-        // milliseconds = (1000 - startT.millitm) + finishT.millitm;
-        // publishExecutePathFeedback();
-
-        // if (*state == actionlib::SimpleClientGoalState::SUCCEEDED)
-        // {
-        //     clearMarkers();
-        //     action_result.arrived = true;
-        //     execute_path_srv_ptr->setSucceeded(action_result);
-        //     ROS_ERROR("LocalPlanner: Goal Succed");
-        //     return;
-        // }
-        // else if (*state == actionlib::SimpleClientGoalState::ABORTED)
-        // {
-        //     ROS_INFO_COND(debug, "Goal aborted by path tracker");
-        //     resetFlags();
-        // }
-        // else if (*state == actionlib::SimpleClientGoalState::PREEMPTED)
-        // {
-        //     ROS_INFO_COND(debug, "Goal preempted by path tracker");
-        //     resetFlags();
-        // }
-        //ROS_INFO_COND(debug, "Before start loop calculation");
+        //calculatePath3D();
+        
     }
 
 
@@ -136,9 +121,64 @@ private:
         this->drone_z_ = drone_z;
     }
 
+    void networkUpdateCallback(const std_msgs::Empty::ConstPtr& msg){
+        networkReceivedFlag_ = 1;
+    }
     // From lazy_theta_star_planners
     // void pointCloudCallback(const PointCloud::ConstPtr &points)
     // void pointCloudCallback(const sensor_msgs::PointCloud2::ConstPtr &_points)
+
+    void globalPathCallback(const heuristic_planners::CoordinateList::ConstPtr& msg)
+    {
+        //Vaciamos la variable del path global anteriormente
+        global_path_.clear();
+
+        //Pasamos el mensaje a la variable global_path
+        for (const auto& vec : msg->coordinates) {
+            // Convert each your_package::Vec3i to Planners::utils::Vec3i
+            Planners::utils::Vec3i vec_intermedio;
+            vec_intermedio.x = vec.x;
+            vec_intermedio.y = vec.y;
+            vec_intermedio.z = vec.z;
+
+            // Add the converted Vec3i to the path
+            global_path_.push_back(vec_intermedio);
+        }
+
+        //Ponemos el flag de recepción a 1
+        globalPathReceived_ = 1;
+
+    }
+
+    void localtimedCallback(const ros::TimerEvent& event)
+    {
+        std::cout << "---TIMED CALLBACK---" << std::endl;
+
+        // Check the flag and execute local path planning if true
+        if(globalPathReceived_ == 1)
+        {
+            // 1. Actualizar el estado de la red si es necesario
+            if(networkReceivedFlag_ == 1)
+            {
+                std::cout << "---Importando nuevo estado de la red---" << std::endl;
+                loaded_sdf_ = torch::jit::load("/home/ros/exchange/weight_data/model.pt", c10::kCPU); // CAMBIAR --> LA RED DEBE ACTUALIZARSE CADA X TIEMPO O CADA VEZ QUE SE SAQUE UNA NUEVA (MUCHO MEJOR)
+                networkReceivedFlag_ = 0;
+            }
+
+            // 2. Actualizar el mapa local con la información actual (sdf y posición del drone)
+            Planners::utils::configureLocalWorldCosts(*m_local_grid3d_, *algorithm_, drone_x_, drone_y_, drone_z_, loaded_sdf_); // GUILLERMO: NEW VERSION
+
+            // 3. Calcular el local path actual
+            calculatePath3D();
+
+            // 4. Imprimir/publicar el local path
+                std::cout << "---Publicando path local---" << std::endl;
+            // 5. Desactivar el flag si se ha llegado al destino
+        }
+    }
+
+
+
     void pointCloudCallback(const sensor_msgs::PointCloud2ConstPtr &cloud)
     {
         // // ROS_INFO_COND(debug, PRINTF_MAGENTA "Collision Map Received");
@@ -223,7 +263,7 @@ private:
 
         // Configure the distance grid and the cost grid
         //Planners::utils::configureLocalWorldCosts(boost::make_shared<pcl::PointCloud<pcl::PointXYZ>>(local_cloud_), *m_local_grid3d_, *algorithm_, float drone_x_, float drone_y_, float drone_z_); // JAC: Is this correctly generated?
-        Planners::utils::configureLocalWorldCosts(*m_local_grid3d_, *algorithm_, drone_x_, drone_y_, drone_z_); // GUILLERMO: NEW VERSION
+        Planners::utils::configureLocalWorldCosts(*m_local_grid3d_, *algorithm_, drone_x_, drone_y_, drone_z_, loaded_sdf_); // GUILLERMO: NEW VERSION
         sdfupdate = true;
         // ROS_INFO("Published occupation marker local map");
 
@@ -285,69 +325,102 @@ private:
 
     void calculatePath3D()
 {
-    if (sdfupdate)
-    {
-        sdfupdate = false;
 
-        // PASO 1 - Revisar si el punto de inicio está libre
-        if(m_local_grid3d_->m_grid[(m_local_grid3d_->m_gridSize-1)/2].dist > 0)
+    // PASO 1 - Revisar si el punto de inicio está libre
+    if(m_local_grid3d_->m_grid[(m_local_grid3d_->m_gridSize-1)/2].dist > 0)
+    {
+        // ROS_INFO("Starting point is free");
+    }
+    else
+    {
+        ROS_INFO("Starting point is NOT FREE -> ABORTING");
+        std::cout << "Point index queried: " << (m_local_grid3d_->m_gridSize-1)/2 <<" |  Value of dist: " << m_local_grid3d_->m_grid[(m_local_grid3d_->m_gridSize-1)/2].dist << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    // PASO 2 - Calcular goal local a partir del global -> Comprobar si el punto más alejado de la trayectoria global es accesible. Si no, buscar puntos alrededor
+    // Suponemos la existencia de una variable "path" del global con los waypoints
+    Planners::utils::CoordinateList global_path_local;
+    
+        // 2.1 - Pasar los waypoints globales al sistema local
+
+        //Cálculo del origen del sistema local (a nivel de celda)
+    int origen_local_x, origen_local_y, origen_local_z, drone_local_x, drone_local_y, drone_local_z;
+    drone_local_x = (m_local_grid3d_->m_gridSizeX - 1)/2;
+    drone_local_y = (m_local_grid3d_->m_gridSizeY - 1)/2;
+    drone_local_z = (m_local_grid3d_->m_gridSizeZ - 1)/2;
+    origen_local_x = round(drone_x_/resolution_) - drone_local_x;
+    origen_local_y = round(drone_y_/resolution_) - drone_local_y;
+    origen_local_z = round(drone_z_/resolution_) - drone_local_z;
+
+    for (const auto& vec : global_path_) 
+    {
+        Planners::utils::Vec3i newpoint;
+        newpoint.x = vec.x - origen_local_x;
+        newpoint.y = vec.y - origen_local_y;
+        newpoint.z = vec.z - origen_local_z;
+    
+        // Agregar el punto desplazado al nuevo vector
+        global_path_local.push_back(newpoint);
+    }
+
+        // 2.2 - Encontrar el índice del punto más cercano
+    double min_dist = std::numeric_limits<double>::infinity();
+    int closest_index = -1;
+
+        for (size_t i = 0; i < global_path_local.size(); ++i) 
         {
-            ROS_INFO("Starting point is free");
+        const Planners::utils::Vec3i& act_waypoint = global_path_local[i];
+
+        double dist_to_wayp = std::sqrt(
+            std::pow(act_waypoint.x - drone_local_x, 2) +
+            std::pow(act_waypoint.y - drone_local_y, 2) +
+            std::pow(act_waypoint.z - drone_local_z, 2)
+        );
+
+        if (dist_to_wayp < min_dist) {
+            min_dist = dist_to_wayp;
+            closest_index = i;
+        }
+    }
+
+        // 2.3 - Encontrar punto siguiente más lejos dentro del mapa local ==> Ese es el goal local
+    bool points_in_range = true;
+    int it = closest_index;
+    Planners::utils::Vec3i local_goal;
+    
+    while (it <= (global_path_local.size() - 1) && points_in_range)
+    {
+        if (0 <= global_path_local[it].x && global_path_local[it].x < m_local_grid3d_->m_gridSizeX && 
+            0 <= global_path_local[it].y && global_path_local[it].y < m_local_grid3d_->m_gridSizeY &&
+            0 <= global_path_local[it].z && global_path_local[it].z < m_local_grid3d_->m_gridSizeZ) 
+        {
+            it++;
         }
         else
         {
-            ROS_INFO("Starting point is NOT FREE -> ABORTING")
-            return 0
-        }
-
-        // PASO 2 - Calcular goal local a partir del global -> Comprobar si el punto más alejado de la trayectoria global es accesible. Si no, buscar puntos alrededor
-        // Suponemos la existencia de una variable "path" del global con los waypoints
-        Planners::utils::CoordinateList global_path;
-        Planners::utils::CoordinateList global_path_local;
-        
-        // 2.1 - Pasar los waypoints al local
-
-            //Cálculo del origen del sistema local
-        int origen_local_x, origen_local_y, origen_local_z;
-        origen_local_x = drone_x_/resolution_ - (m_local_grid3d_->m_gridSizeX - 1)/2;
-        origen_local_y = drone_y_/resolution_ - (m_local_grid3d_->m_gridSizeY - 1)/2;
-        origen_local_z = drone_z_/resolution_ - (m_local_grid3d_->m_gridSizeZ - 1)/2;
-
-        for (const auto& vec : global_path) 
-        {
-            Planners::utils::Vec3i newpoint;
-            newpoint.x = vec.x - origen_local_x;
-            newpoint.y = vec.y - origen_local_y;
-            newpoint.z = vec.z - origen_local_z;
-        
-            // Agregar el punto desplazado al nuevo vector
-            global_path_local.push_back(newpoint);
-        }
-
-            // 2.2 - Encontrar punto más tardío dentro del mapa local
-        bool no_point_in_range = true;
-        int it = global_path_local.size() - 1;
-        Planners::utils::Vec3i local_goal;
-
-        while (it >= 0 && no_point_in_range)
-        {
-            if (0 <= global_path_local[it].x && global_path_local[it].x < m_local_grid3d_->m_gridSizeX && 
-                0 <= global_path_local[it].y && global_path_local[it].y < m_local_grid3d_->m_gridSizeY &&
-                0 <= global_path_local[it].z && global_path_local[it].z < m_local_grid3d_->m_gridSizeZ) 
-            {
-                local_goal.x = global_path_local[it].x;
-                local_goal.y = global_path_local[it].y;
-                local_goal.z = global_path_local[it].z;
-                no_point_in_range = false;
-            }
-            --it;
+            local_goal.x = global_path_local[it - 1].x;
+            local_goal.y = global_path_local[it - 1].y;
+            local_goal.z = global_path_local[it - 1].z;
+            points_in_range = false;
         }
         
-            // 2.3 - Si el punto está ocupado, buscar en los alrededores
-        
-
-
     }
+        // 3 - Confirmar que el goal está dentro del mapa local (?)
+
+        // 4 - Si el punto está ocupado, buscar en los alrededores -- TODO
+        //estrategia? Mismo plano? Waypoint anterior? Más cercano de la pared?
+
+        // 5 - Lanzar el planificador local hacia dicho punto (necesita coordenadas reales)
+    Planners::utils::Vec3i discrete_start, discrete_goal;
+    discrete_start.x = round(drone_x_/resolution_);
+    discrete_start.y = round(drone_y_/resolution_);
+    discrete_start.z = round(drone_z_/resolution_);
+    discrete_goal.x = local_goal.x + origen_local_x;
+    discrete_goal.y = local_goal.y + origen_local_y;
+    discrete_goal.z = local_goal.z + origen_local_z;
+
+    auto path_data = algorithm_->findPath(discrete_start, discrete_goal, loaded_sdf_);
 
 
 
@@ -701,7 +774,7 @@ private:
 
     ros::NodeHandle lnh_{"~"};
     ros::ServiceServer request_path_server_, change_planner_server_;
-    ros::Subscriber pointcloud_local_sub_, occupancy_grid_local_sub_, globalposition_local_sub_;
+    ros::Subscriber pointcloud_local_sub_, occupancy_grid_local_sub_, globalposition_local_sub_, path_local_sub_, network_update_sub_;
     //TODO Fix point markers
     ros::Publisher line_markers_pub_, point_markers_pub_, cloud_test;
 
@@ -758,6 +831,17 @@ private:
     double drone_x_ = 0.0;
     double drone_y_ = 0.0;
     double drone_z_ = 0.0;
+
+    //global path variable
+    Planners::utils::CoordinateList global_path_;
+
+    //timer para el path local
+    ros::Timer timed_local_path_;
+    int globalPathReceived_;
+    int networkReceivedFlag_;
+
+    //red para el mapa local
+    torch::jit::script::Module loaded_sdf_;
 
 };
 // int main(int argc, char **argv)
