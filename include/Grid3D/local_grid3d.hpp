@@ -388,7 +388,7 @@ public:
 			}
 		}
 
-		//std::cout << "---!!!--- Completed coordinates_vector ---!!!---" << std::endl;
+		std::cout << "---!!!--- Completed coordinates_vector ---!!!---" << std::endl;
 
 		// Convertir el vector de puntos a un tensor de libtorch
         auto num_points = coordinates_vector.size();
@@ -399,7 +399,7 @@ public:
             coordinates_tensor[i][2] = coordinates_vector[i][2];
         }
 
-		//std::cout << "---!!!--- Completed coordinates_tensor ---!!!---" << std::endl;
+		std::cout << "---!!!--- Completed coordinates_tensor ---!!!---" << std::endl;
 		//std::cout << coordinates_tensor << std::endl;
 
         // Pasar el tensor por la red neuronal
@@ -414,7 +414,7 @@ public:
         // getchar(); // Comentar para no usar tecla.
         std::cout << "Points queried: " << num_points <<" |  Time taken to query model: " << duration.count() << " ms" << std::endl;
 
-		//std::cout << "---!!!--- Completed query ---!!!---" << std::endl;
+		std::cout << "---!!!--- Completed query ---!!!---" << std::endl;
 
 		int index;
 		//Asignar cada valor a la posición correcta del grid
@@ -429,6 +429,7 @@ public:
 				}
 			}
 		}
+		std::cout << "---!!!--- Exiting computeLocalGrid ---!!!---" << std::endl;
 	}
 	
 	std::pair<Planners::utils::Vec3i, double>  getClosestObstacle(const Planners::utils::Vec3i& _coords){

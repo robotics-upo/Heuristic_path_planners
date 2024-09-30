@@ -122,6 +122,7 @@ private:
     }
 
     void networkUpdateCallback(const std_msgs::Empty::ConstPtr& msg){
+        ROS_INFO("Received new network callback");
         networkReceivedFlag_ = 1;
     }
     // From lazy_theta_star_planners
@@ -325,7 +326,7 @@ private:
 
     void calculatePath3D()
 {
-
+    std::cout << "---Entered calculatePath3D--- " << std::endl;
     // PASO 1 - Revisar si el punto de inicio está libre
     if(m_local_grid3d_->m_grid[(m_local_grid3d_->m_gridSize-1)/2].dist > 0)
     {
