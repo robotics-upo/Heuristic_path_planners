@@ -85,6 +85,22 @@ namespace Planners
         void setWorldSize(const Vec3i &worldSize_,const double _resolution);
 
         /**
+         * @brief Set the Local World Size object. This method call the  method 
+         * from the internal discrete world object
+         * JAC
+         * @param worldSize_ Discrete local world size vector in units of resolution.
+         * @param _resolution resolution to save inside the world object
+         */
+        void setLocalWorldSize(const Vec3i &_worldSize,const double _resolution);
+
+        /**
+         * @brief Clean the World Size object. This method call the method 
+         * from the internal discrete world object
+         * JAC
+         */
+        void cleanLocalWorld();
+
+        /**
          * @brief Get the World Size, it simply call the getWorldSize method from the
          * discrete world internal object
          * 
@@ -185,6 +201,8 @@ namespace Planners
          * 
          */
         virtual void publishOccupationMarkersMap() = 0;
+
+        virtual void publishLocalOccupationMarkersMap() = 0;
 
     protected:
 

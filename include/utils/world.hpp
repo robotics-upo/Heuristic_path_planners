@@ -37,6 +37,24 @@ namespace utils
         DiscreteWorld()
         {
         }
+
+        /**
+         * @brief Clean the World 
+         * JAC
+         */
+        void cleanWorld()
+        {
+            for(long unsigned int i = 0; i < discrete_world_vector_.size(); ++i){
+                discrete_world_vector_[i].occuppied = false;
+            }
+            // for(auto &it: discrete_world_vector_){
+            //     it.isInClosedList = false;
+            //     it.isInOpenList = false;
+            //     it.H = it.G = it.C = 0;
+            //     it.parent = nullptr;
+            // }
+        } 
+
         /**
          * @brief Overloaded resizeWorld function for Vec3i objects
          * 
@@ -70,7 +88,7 @@ namespace utils
             x_y_size_      = static_cast<long>(world_x_size_) * world_y_size_;
 
             discrete_world_vector_.clear();
-            discrete_world_vector_.resize(static_cast<long>(world_x_size_) * world_y_size_ * _world_z_size);
+            discrete_world_vector_.resize(static_cast<long>(world_x_size_) * world_y_size_ * world_z_size_);
             Node node;
             std::fill(discrete_world_vector_.begin(), discrete_world_vector_.end(), node);
             
@@ -80,6 +98,56 @@ namespace utils
             }
             
         }
+        // JAC
+        /**
+         * @brief Overloaded resizeLocalWorld function for Vec3i objects
+         * 
+         * @param _local_world_size Vec3i object with world size data
+         * @param _resolution resolution to create the internal world vector
+         */
+        void resizeLocalWorld(const Vec3i &_local_world_size, const double &_resolution){
+            return resizeLocalWorld(_local_world_size.x, _local_world_size.y, _local_world_size.z, _resolution);
+        }
+        // /**
+        //  * @brief It configures the inner world vector. Internally the world coordinates 
+        //  *  goes from [0, world_x_size], [0, world_y_size], [0, world_z_size]
+        //  *  It clears the previous world and create a new one. 
+        //  *  JAC
+        //  * @param _local_world_x_size 
+        //  * @param _local_world_y_size 
+        //  * @param _local_world_z_size 
+        //  * @param _resolution 
+        //  */
+        void resizeLocalWorld(const unsigned int &_local_world_x_size,
+                         const unsigned int &_local_world_y_size,
+                         const unsigned int &_local_world_z_size,
+                         const double &_resolution)
+        {
+            if( _resolution <= 0.005 )
+                throw std::out_of_range("Resolution too small, it should be > 0.005");
+
+            world_x_size_ = _local_world_x_size; // Debe ser el world_x_size because it is necessary in CheckValid and getworldIndex.
+            world_y_size_ = _local_world_y_size;
+            world_z_size_ = _local_world_z_size;
+            resolution_   = _resolution;
+            x_y_size_      = static_cast<long>(world_x_size_) * world_y_size_; // Change x_y_size --> x_y_local_size?
+
+            discrete_world_vector_.clear(); 
+            discrete_world_vector_.resize(static_cast<long>(world_x_size_) * world_y_size_ * world_z_size_); // JAC Corrected: _world_z_size should be world_z_size_
+
+            Node node;
+            std::fill(discrete_world_vector_.begin(), discrete_world_vector_.end(), node);
+
+            // std::cout << "LOCAL WORLD SIZE: "      << discrete_world_vector_.size()  << std::endl;
+            for(long unsigned int i = 0; i < discrete_world_vector_.size(); ++i){
+                discrete_world_vector_[i].coordinates =  getDiscreteWorldPositionFromIndex(i);
+                discrete_world_vector_[i].world_index = i;
+            }
+        }
+
+
+
+
         /**
          * @brief Set the Node Cost object overloaded function for continous coordinates
          * 
@@ -457,9 +525,10 @@ namespace utils
 
         std::vector<Planners::utils::Node> discrete_world_vector_;
 
-        long unsigned int x_y_size_;
+        long unsigned int x_y_size_, x_y_local_size;
 
         unsigned int world_x_size_, world_y_size_, world_z_size_;
+        unsigned int local_world_x_size_, local_world_y_size_, local_world_z_size_;
         double resolution_;
     };
 
