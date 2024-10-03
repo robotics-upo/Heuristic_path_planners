@@ -3,16 +3,13 @@
 #include "Planners/AStar.hpp"
 #include "Planners/AStarM2.hpp"
 #include "Planners/AStarM1.hpp"
-#include "Planners/AStarSIREN.hpp"
 #include "Planners/ThetaStar.hpp"
 #include "Planners/ThetaStarM1.hpp"
 #include "Planners/ThetaStarM2.hpp"
-#include "Planners/ThetaStarSIREN.hpp"
 #include "Planners/LazyThetaStar.hpp"
 #include "Planners/LazyThetaStarM1.hpp"
 #include "Planners/LazyThetaStarM1Mod.hpp"
 #include "Planners/LazyThetaStarM2.hpp"
-#include "Planners/LazyThetaStarSIREN.hpp"
 #include "utils/ros/ROSInterfaces.hpp"
 #include "utils/SaveDataVariantToFile.hpp"
 #include "utils/misc.hpp"
@@ -40,6 +37,8 @@
 
 #include <heuristic_planners/GetPath.h>
 #include <heuristic_planners/SetAlgorithm.h>
+#include <heuristic_planners/Vec3i.h>
+#include <heuristic_planners/CoordinateList.h>
 
 
 /**
@@ -61,9 +60,15 @@ public:
         configureAlgorithm(algorithm_name, heuristic_);
 
         // pointcloud_local_sub_     = lnh_.subscribe<pcl::PointCloud<pcl::PointXYZ>>("/points", 1, &HeuristicLocalPlannerROS::pointCloudCallback, this);
-        pointcloud_local_sub_     = lnh_.subscribe<sensor_msgs::PointCloud2>("/points", 1, &HeuristicLocalPlannerROS::pointCloudCallback, this); 
+        // pointcloud_local_sub_     = lnh_.subscribe<sensor_msgs::PointCloud2>("/points", 1, &HeuristicLocalPlannerROS::pointCloudCallback, this);
+
+        path_local_sub_     = lnh_.subscribe<heuristic_planners::CoordinateList>("/planner_ros_node/global_path", 1, &HeuristicLocalPlannerROS::globalPathCallback, this);
+        
+        //GLOBAL POSITIONING SUBSCRIBER - for SDF query
+        // globalposition_local_sub_ = lnh_.subscribe<geometry_msgs::PoseStamped>("/ground_truth_to_tf/pose", 1, &HeuristicLocalPlannerROS::globalPositionCallback, this);
         // pointcloud_local_sub_     = lnh_.subscribe("/points", 1, &HeuristicLocalPlannerROS::pointCloudCallback, this); //compile
         occupancy_grid_local_sub_ = lnh_.subscribe<nav_msgs::OccupancyGrid>("/grid", 1, &HeuristicLocalPlannerROS::occupancyGridCallback, this);
+        //network_update_sub_ = lnh_.subscribe<std_msgs::Empty>("/net_update", 1, &HeuristicLocalPlannerROS::networkUpdateCallback, this);
 
         // request_path_server_   = lnh_.advertiseService("request_path",  &HeuristicLocalPlannerROS::requestPathService, this); // This is in planner_ros_node.cpp and the corresponding service defined.
         change_planner_server_ = lnh_.advertiseService("set_algorithm", &HeuristicLocalPlannerROS::setAlgorithm, this);
@@ -71,44 +76,16 @@ public:
         line_markers_pub_  = lnh_.advertise<visualization_msgs::Marker>("path_line_markers", 1);
         point_markers_pub_ = lnh_.advertise<visualization_msgs::Marker>("path_points_markers", 1);
         cloud_test  = lnh_.advertise<pcl::PointCloud<pcl::PointXYZ> >("/cloud_PCL", 1, true);  // Defined by me to show the point cloud as pcl::PointCloud<pcl::PointXYZ
+        
+        //networkReceivedFlag_ = 1;
+        globalPathReceived_ = 0;
+        timed_local_path_ = lnh_.createTimer(ros::Duration(1), &HeuristicLocalPlannerROS::localtimedCallback, this);
     }
 
     void plan(){
         // ROS_INFO("Call to Local Plan");
         number_of_points = 0; //Reset variable
 
-        // if (!execute_path_srv_ptr->isActive())
-        // {
-        //     clearMarkers();
-        //     return;
-        // }
-
-        calculatePath3D();
-        // state.reset(new actionlib::SimpleClientGoalState(navigation3DClient->getState()));
-
-        // seconds = finishT.time - startT.time - 1;
-        // milliseconds = (1000 - startT.millitm) + finishT.millitm;
-        // publishExecutePathFeedback();
-
-        // if (*state == actionlib::SimpleClientGoalState::SUCCEEDED)
-        // {
-        //     clearMarkers();
-        //     action_result.arrived = true;
-        //     execute_path_srv_ptr->setSucceeded(action_result);
-        //     ROS_ERROR("LocalPlanner: Goal Succed");
-        //     return;
-        // }
-        // else if (*state == actionlib::SimpleClientGoalState::ABORTED)
-        // {
-        //     ROS_INFO_COND(debug, "Goal aborted by path tracker");
-        //     resetFlags();
-        // }
-        // else if (*state == actionlib::SimpleClientGoalState::PREEMPTED)
-        // {
-        //     ROS_INFO_COND(debug, "Goal preempted by path tracker");
-        //     resetFlags();
-        // }
-        //ROS_INFO_COND(debug, "Before start loop calculation");
     }
 
 
@@ -122,6 +99,36 @@ private:
         ROS_INFO("Occupancy Grid Loaded");
         occupancy_grid_ = *_grid;
         input_map_ = 1;
+    }
+
+    void globalPathCallback(const heuristic_planners::CoordinateList::ConstPtr& msg)
+    {
+        std::cout << "Entered global path retrieving callback" << std::endl;
+        //Vaciamos la variable del path global anteriormente
+        global_path_.clear();
+
+        //Pasamos el mensaje a la variable global_path
+        for (const auto& vec : msg->coordinates) {
+            // Convert each your_package::Vec3i to Planners::utils::Vec3i
+            Planners::utils::Vec3i vec_intermedio;
+            vec_intermedio.x = vec.x;
+            vec_intermedio.y = vec.y;
+            vec_intermedio.z = vec.z;
+
+            // Add the converted Vec3i to the path
+            global_path_.push_back(vec_intermedio);
+        }
+
+        //Ponemos el flag de recepción a 1
+        globalPathReceived_ = 1;
+        std::cout << "Global path successfully received" << std::endl;
+        std::cout << global_path_ << std::endl;
+
+    }
+
+    void localtimedCallback(const ros::TimerEvent& event)
+    {
+        std::cout << "-----TIMED CALLBACK------" << std::endl;
     }
 
     // From lazy_theta_star_planners
@@ -231,7 +238,7 @@ private:
     }
 
 	bool PointCloud2_to_PointXYZ_pcl(sensor_msgs::PointCloud2 &in, pcl::PointCloud<pcl::PointXYZ> &out)
-	{		
+	{	
 		sensor_msgs::PointCloud2Iterator<float> iterX(in, "x");
 		sensor_msgs::PointCloud2Iterator<float> iterY(in, "y");
 		sensor_msgs::PointCloud2Iterator<float> iterZ(in, "z");
@@ -254,7 +261,7 @@ private:
 	}
 
 	bool PointCloud2_to_PointXYZ(sensor_msgs::PointCloud2 &in, std::vector<pcl::PointXYZ> &out)
-	{		
+	{	
 		sensor_msgs::PointCloud2Iterator<float> iterX(in, "x");
 		sensor_msgs::PointCloud2Iterator<float> iterY(in, "y");
 		sensor_msgs::PointCloud2Iterator<float> iterZ(in, "z");
@@ -271,112 +278,9 @@ private:
 	}
 
     void calculatePath3D()
-{
-    if (mapReceived) // It is true once a pointcloud is received.
     {
-        // ROS_INFO("Local Planner 3D: Global trj received and pointcloud received");
-        mapReceived = false;
-
-    //     //TODO : Set to robot pose to the center of the workspace?
-    //     if (theta3D.setValidInitialPosition(robotPose) || theta3D.searchInitialPosition3d(initialSearchAround))
-    //     {
-    //         ROS_INFO_COND(debug, PRINTF_MAGENTA "Local Planner 3D: Calculating local goal");
-
-    //         if (calculateLocalGoal3D()) //TODO: VER CUAL SERIA EL LOCAL GOAL EN ESTE CASO
-    //         {
-    //             ROS_INFO_COND(debug, PRINTF_MAGENTA "Local Planner 3D: Local Goal calculated");
-
-    //             // ROS_INFO("%.6f,%.6f, %.6f", localGoal.x, localGoal.y,localGoal.z);
-    //             RCLCPP_INFO(this->get_logger(),"%.6f,%.6f, %.6f", localGoal.x, localGoal.y,localGoal.z);
-
-    //             if (!theta3D.isInside(localGoal))
-    //             {
-    //                 ROS_INFO("Returning, not inside :(");
-    //                 action_result.arrived=false;
-    //                 execute_path_srv_ptr->setAborted(action_result, "Not inside after second check");
-    //                 navigation3DClient->cancelAllGoals();
-    //                 return;
-    //             }
-
-    //             if (theta3D.setValidFinalPosition(localGoal) || theta3D.searchFinalPosition3dAheadHorizontalPrior(finalSearchAround))
-    //             {
-    //                 ROS_INFO_COND(debug, PRINTF_BLUE "Local Planner 3D: Computing Local Path");
-
-    //                 // JAC: Should we calculate the path with findpath (which return the path instead of the number of points)? 
-    //                 number_of_points = theta3D.computePath();
-    //                 ROS_INFO_COND(debug, PRINTF_BLUE "Local Planner 3D: Path computed, %d points", number_of_points);
-    //                 occGoalCnt = 0;
-
-    //                 if (number_of_points > 0)
-    //                 {
-    //                     buildAndPubTrayectory3D();
-    //                     planningStatus.data = "OK";
-    //                     if (impossibleCnt > 0) //If previously the local planner couldn t find solution, reset
-    //                         impossibleCnt = 0;
-    //                 }
-    //                 else if (number_of_points == 0) //!Esto es lo que devuelve el algoritmo cuando NO HAY SOLUCION
-    //                 {
-
-    //                     impossibleCnt++;
-    //                     //ROS_INFO_COND(debug,"Local: +1 impossible");
-    //                     if (impossibleCnt > 2)
-    //                     {
-
-    //                         clearMarkers();
-    //                         action_result.arrived=false;
-    //                         execute_path_srv_ptr->setAborted(action_result, "Requesting new global path, navigation cancelled");
-    //                         navigation3DClient->cancelAllGoals();
-    //                         planningStatus.data = "Requesting new global path, navigation cancelled";
-    //                         impossibleCnt = 0;
-    //                     }
-    //                 }
-    //             }
-    //             else if (occGoalCnt > 2) //!Caso GOAL OCUPADO
-    //             {                        //If it cant find a free position near local goal, it means that there is something there.
-    //                 ROS_INFO_COND(debug, PRINTF_BLUE "Local Planner 3D: Pausing planning, final position busy");
-    //                 planningStatus.data = "Final position Busy, Cancelling goal";
-    //                 //TODO What to tell to the path tracker
-    //                 action_result.arrived=false;
-    //                 execute_path_srv_ptr->setAborted(action_result, "Local goal occupied");
-    //                 //In order to resume planning, someone must call the pause/resume planning Service that will change the flag to true
-    //                 occGoalCnt = 0;
-    //             }
-    //             else
-    //             {
-    //                 ++occGoalCnt;
-    //             }
-    //         }
-    //         else if (badGoal < 3)
-    //         {
-    //             ROS_INFO_COND(debug, "Local Planner 3D: Bad Goal Calculated: [%.2f, %.2f]", localGoal.x, localGoal.y);
-
-    //             ++badGoal;
-    //         }
-    //         else
-    //         {
-    //             navigation3DClient->cancelAllGoals();
-    //             action_result.arrived=false;
-    //             execute_path_srv_ptr->setAborted(action_result,"Bad goal calculated 3 times");
-    //             badGoal = 0;
-    //             ROS_INFO("Bad goal calculated 3 times");
-    //         }
-    //     }
-    //     else
-    //     {
-    //         planningStatus.data = "No initial position found...";
-    //         action_result.arrived=false;
-    //         execute_path_srv_ptr->setAborted(action_result,"No initial position found");
-    //         navigation3DClient->cancelAllGoals();
-
-    //         clearMarkers();
-    //         ROS_INFO_COND(debug, "Local Planner 3D: No initial free position found");
-    //     }
+    std::cout << "------ENTERED CALCULATEPATH3D-------" << std::endl;
     }
-    // else
-    // {
-    //     ROS_INFO("Map not received");
-    // }
-}
 
     bool setAlgorithm(heuristic_planners::SetAlgorithmRequest &_req, heuristic_planners::SetAlgorithmResponse &rep){
         
@@ -387,6 +291,7 @@ private:
 
     void configureAlgorithm(const std::string &algorithm_name, const std::string &_heuristic){
 
+        std::cout << "Entered configureAlgorithm" << std::endl;
         float ws_x, ws_y, ws_z;
 
         lnh_.param("local_world_size_x", ws_x, (float)2.0); // In meters
@@ -512,6 +417,7 @@ private:
         // Init internal variables: TF transform 
         m_tfCache = false;
     }
+
     void configureHeuristic(const std::string &_heuristic){
         
         if( _heuristic == "euclidean" ){
@@ -534,6 +440,7 @@ private:
             ROS_WARN("Wrong Heuristic param. Using Euclidean Heuristics by default");
         }
     }
+
     std::vector<std::pair<Planners::utils::Vec3i, double>> getClosestObstaclesToPathPoints(const Planners::utils::CoordinateList &_path){
         
         std::vector<std::pair<Planners::utils::Vec3i, double>> result;
@@ -549,6 +456,7 @@ private:
         }
         return result;
     }
+
     void configMarkers(const std::string &_ns, const std::string &_frame, const double &_scale){
 
         path_line_markers_.ns = _ns;
@@ -584,6 +492,7 @@ private:
         path_points_markers_.scale.z = _scale;
 
     }
+
     void publishMarker(visualization_msgs::Marker &_marker, const ros::Publisher &_pub){
         
         //Clear previous marker
@@ -620,7 +529,7 @@ private:
 
     ros::NodeHandle lnh_{"~"};
     ros::ServiceServer request_path_server_, change_planner_server_;
-    ros::Subscriber pointcloud_local_sub_, occupancy_grid_local_sub_;
+    ros::Subscriber pointcloud_local_sub_, occupancy_grid_local_sub_, path_local_sub_;
     //TODO Fix point markers
     ros::Publisher line_markers_pub_, point_markers_pub_, cloud_test;
 
@@ -672,6 +581,14 @@ private:
     int number_of_points;
     bool mapReceived;
 
+    //global path variable and flag
+    Planners::utils::CoordinateList global_path_;
+    int globalPathReceived_;
+
+
+    // local pathplanner loop timer
+    ros::Timer timed_local_path_;
+
 };
 // int main(int argc, char **argv)
 // {
@@ -697,11 +614,9 @@ int main(int argc, char **argv)
 
 	ros::Rate loop_rate(30);
     while(ros::ok()){
-        
         ros::spinOnce();
-        
         // Call to Local Plan
-        heuristic_local_planner_ros.plan();
+        // heuristic_local_planner_ros.plan();
                 
         loop_rate.sleep();
     }
