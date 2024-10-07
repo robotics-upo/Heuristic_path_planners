@@ -41,6 +41,7 @@
 #include <heuristic_planners/CoordinateList.h>
 
 
+
 /**
  * @brief Demo Class that demonstrate how to use the algorithms classes and utils 
  * with ROS 
@@ -65,10 +66,10 @@ public:
         path_local_sub_     = lnh_.subscribe<heuristic_planners::CoordinateList>("/planner_ros_node/global_path", 1, &HeuristicLocalPlannerROS::globalPathCallback, this);
         
         //GLOBAL POSITIONING SUBSCRIBER - for SDF query
-        // globalposition_local_sub_ = lnh_.subscribe<geometry_msgs::PoseStamped>("/ground_truth_to_tf/pose", 1, &HeuristicLocalPlannerROS::globalPositionCallback, this);
+        globalposition_local_sub_ = lnh_.subscribe<geometry_msgs::PoseStamped>("/ground_truth_to_tf/pose", 1, &HeuristicLocalPlannerROS::globalPositionCallback, this);
         // pointcloud_local_sub_     = lnh_.subscribe("/points", 1, &HeuristicLocalPlannerROS::pointCloudCallback, this); //compile
         occupancy_grid_local_sub_ = lnh_.subscribe<nav_msgs::OccupancyGrid>("/grid", 1, &HeuristicLocalPlannerROS::occupancyGridCallback, this);
-        //network_update_sub_ = lnh_.subscribe<std_msgs::Empty>("/net_update", 1, &HeuristicLocalPlannerROS::networkUpdateCallback, this);
+        network_update_sub_ = lnh_.subscribe<std_msgs::Empty>("/net_update", 1, &HeuristicLocalPlannerROS::networkUpdateCallback, this);
 
         // request_path_server_   = lnh_.advertiseService("request_path",  &HeuristicLocalPlannerROS::requestPathService, this); // This is in planner_ros_node.cpp and the corresponding service defined.
         change_planner_server_ = lnh_.advertiseService("set_algorithm", &HeuristicLocalPlannerROS::setAlgorithm, this);
@@ -77,7 +78,7 @@ public:
         point_markers_pub_ = lnh_.advertise<visualization_msgs::Marker>("path_points_markers", 1);
         cloud_test  = lnh_.advertise<pcl::PointCloud<pcl::PointXYZ> >("/cloud_PCL", 1, true);  // Defined by me to show the point cloud as pcl::PointCloud<pcl::PointXYZ
         
-        //networkReceivedFlag_ = 1;
+        networkReceivedFlag_ = 1;
         globalPathReceived_ = 0;
         timed_local_path_ = lnh_.createTimer(ros::Duration(1), &HeuristicLocalPlannerROS::localtimedCallback, this);
     }
@@ -124,6 +125,22 @@ private:
         std::cout << "Global path successfully received" << std::endl;
         std::cout << global_path_ << std::endl;
 
+    }
+
+    void networkUpdateCallback(const std_msgs::Empty::ConstPtr& msg){
+        ROS_INFO("Received new network callback");
+        networkReceivedFlag_ = 1;
+    }
+
+    void globalPositionCallback(const geometry_msgs::PoseStamped::ConstPtr& msg){
+        double drone_x = resolution_ * std::round(msg->pose.position.x / resolution_);
+        double drone_y = resolution_ * std::round(msg->pose.position.y / resolution_);
+        double drone_z = resolution_ * std::round(msg->pose.position.z / resolution_);
+
+        // Store as class members
+        this->drone_x_ = drone_x;
+        this->drone_y_ = drone_y;
+        this->drone_z_ = drone_z;
     }
 
     void localtimedCallback(const ros::TimerEvent& event)
@@ -581,9 +598,22 @@ private:
     int number_of_points;
     bool mapReceived;
 
+    // --------NEW VARIABLES -- SIREN LOCAL PLANNER
+    //drone global position
+    double drone_x_ = 0.0;
+    double drone_y_ = 0.0;
+    double drone_z_ = 0.0;
+
     //global path variable and flag
     Planners::utils::CoordinateList global_path_;
     int globalPathReceived_;
+
+    //Network Flag and subscriber
+    int networkReceivedFlag_;
+    ros::Subscriber network_update_sub_;
+
+    //Global position subscriber
+    ros::Subscriber globalposition_local_sub_;
 
 
     // local pathplanner loop timer
