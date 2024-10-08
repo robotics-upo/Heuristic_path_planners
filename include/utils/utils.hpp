@@ -58,8 +58,21 @@ namespace Planners
          */
         struct gridCell
 	    {
-	    	float dist{0};
-	    	float prob{0};
+            gridCell(void) {
+                dist = 0;
+                prob = 0;
+            }
+            gridCell(const gridCell& other) {
+                dist = other.dist;
+                prob = other.prob;
+            }
+            gridCell& operator=(const gridCell& other) {
+                dist = other.dist;
+                prob = other.prob;
+                return *this;
+            }
+	    	float dist;
+	    	float prob;
 	    };
         /**
          * @brief 

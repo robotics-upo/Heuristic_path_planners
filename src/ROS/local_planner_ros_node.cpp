@@ -145,7 +145,24 @@ private:
 
     void localtimedCallback(const ros::TimerEvent& event)
     {
-        std::cout << "-----TIMED CALLBACK------" << std::endl;
+        printf("-----TIMED CALLBACK------\n");
+
+        // Only perform local planning if global path was received
+        if(globalPathReceived_ == 1){
+
+            // 1. Update Neural Network State (if new state available)
+            if(networkReceivedFlag_ == 1)
+            {
+                printf("Importing new neural network state\n");
+                loaded_sdf_ = torch::jit::load("/home/ros/exchange/weight_data/model.pt", c10::kCPU); 
+                networkReceivedFlag_ = 0;
+            }
+
+            // 2. Update local map with the neural network information around the drone
+            Planners::utils::configureLocalWorldCosts(*m_local_grid3d_, *algorithm_, drone_x_, drone_y_, drone_z_, loaded_sdf_);
+            printf("-- Exiting callback --\n");
+
+        }
     }
 
     // From lazy_theta_star_planners
@@ -234,7 +251,7 @@ private:
         algorithm_->publishLocalOccupationMarkersMap();
 
         // Configure the distance grid and the cost grid
-        Planners::utils::configureLocalWorldCosts(boost::make_shared<pcl::PointCloud<pcl::PointXYZ>>(local_cloud_), *m_local_grid3d_, *algorithm_); // JAC: Is this correctly generated?
+        //!!!!!Planners::utils::configureLocalWorldCosts(boost::make_shared<pcl::PointCloud<pcl::PointXYZ>>(local_cloud_), *m_local_grid3d_, *algorithm_); // JAC: Is this correctly generated?
 
         // ROS_INFO("Published occupation marker local map");
 
@@ -433,6 +450,7 @@ private:
 
         // Init internal variables: TF transform 
         m_tfCache = false;
+        ROS_INFO("CONFIGURE ALGORITHM COMPLETED");
     }
 
     void configureHeuristic(const std::string &_heuristic){
@@ -608,7 +626,8 @@ private:
     Planners::utils::CoordinateList global_path_;
     int globalPathReceived_;
 
-    //Network Flag and subscriber
+    //Network, network flag, subscriber
+    torch::jit::script::Module loaded_sdf_;
     int networkReceivedFlag_;
     ros::Subscriber network_update_sub_;
 
