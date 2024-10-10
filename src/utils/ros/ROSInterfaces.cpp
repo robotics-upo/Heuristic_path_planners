@@ -132,7 +132,24 @@ namespace Planners
         {
             // Computar el grid local
             _grid.computeLocalGrid(loaded_sdf, drone_x, drone_y, drone_z);
-            printf("-- Exiting computeLocalWorldCosts --\n");
+
+            auto world_size = _algorithm.getWorldSize();
+            std::cout << "World size: " << world_size << std::endl;
+            auto resolution = _algorithm.getWorldResolution();
+
+            for (int i = 0; i < world_size.x; i++)
+            {
+                for (int j = 0; j < world_size.y; j++)
+                {
+                    for (int k = 0; k < world_size.z; k++)
+                    {
+                        float cost = _grid.getCellCost(i * resolution, j * resolution, k * resolution);
+                        _algorithm.configureCellCost({i, j, k}, cost);
+                    }
+                }
+            }
+
+
             return true;
         }
 

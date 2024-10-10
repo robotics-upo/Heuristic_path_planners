@@ -183,7 +183,7 @@ public:
 	
 	bool isIntoMap(float x, float y, float z)
 	{
-		return (x >= 0.0 && y >= 0.0 && z >= 0.0 && x < m_maxX && y < m_maxY && z < m_maxZ);
+		return (x >= 0.0 && y >= 0.0 && z >= 0.0 && x <= (2*m_maxX) && y <= (2*m_maxY) && z <= (2*m_maxZ));
 	}
 	// int getCellCost(const float &_x, const float &_y, const float &_z){
 	// JAC Precision
@@ -436,9 +436,9 @@ protected:
         // Get map parameters: They have to take from local_world_size_x, local_world_size_y , local_world_size_z of the launch
 		double maxX, maxY, maxZ, res;
         
-		maxX = 1.0; // distancia a cada lado del dron (en x)
-        maxY = 1.0; // distancia a cada lado del dron (en y)
-        maxZ = 1.0; // distancia a cada lado del dron (en z)
+		maxX = 4.0; // distancia a cada lado del dron (en x)
+        maxY = 4.0; // distancia a cada lado del dron (en y)
+        maxZ = 2.0; // distancia a cada lado del dron (en z)
         res = 0.2;
 
 
