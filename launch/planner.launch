@@ -1,7 +1,7 @@
 <launch>
     <!-- Map name is the filename wihtouth the .bt extensionof the 3D Map -->
-    <!-- <arg name="map_name"            default="mbzirc_challenge3"/> -->
-    <arg name="map_name"            default="abu_dhabi_002_blender"/>
+    <arg name="map_name"            default="mbzirc_challenge3"/>
+    <!-- <arg name="map_name"            default="abu_dhabi_002_blender"/> -->
     <!-- <arg name="map_name"            default="teatro"/> -->
     <!-- <arg name="map_name"            default="maze"/> -->
     <!-- U -->
