@@ -97,7 +97,6 @@ namespace Planners
         }
         bool configureWorldFromPointCloud(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &_points, AlgorithmBase &_algorithm, const double &_resolution)
         {
-
             for (auto &it : *_points)
                 _algorithm.addCollision(discretePoint(it, _resolution));
 

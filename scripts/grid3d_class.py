@@ -21,7 +21,8 @@ class grid3d():
         # Inicializacion del archivo IFC
 
         rospack = rospkg.RosPack()
-        model_path = str(rospack.get_path('heuristic_planners') )+ str("/scripts/model.ifc")
+        # model_path = str(rospack.get_path('heuristic_planners') )+ str("/scripts/model.ifc")
+        model_path = str(rospack.get_path('heuristic_planners') )+ str("/scripts/casoplonv2.ifc")
         self.model = ifcopenshell.open(model_path)
         self.settings = ifcopenshell.geom.settings()
         self.settings.set(self.settings.USE_WORLD_COORDS, True)
@@ -36,15 +37,24 @@ class grid3d():
         self.lamps = self.model.by_type("IfcFlowTerminal")
         self.slabs = self.model.by_type("IfcSlab")
         self.windows = self.model.by_type("IfcWindow")
-        self.glasses = ifcopenshell.util.selector.filter_elements(self.model, "IfcElement, material=Glass")
+        # self.glasses = ifcopenshell.util.selector.filter_elements(self.model, "IfcElement, material=Glass")
 
-        self.semantic_objects = [self.walls, self.doors, self.columns, self.furniture, self.stairs, self.plates, self.lamps, self.glasses]
+        # self.semantic_objects = [self.walls, self.doors, self.columns, self.furniture, self.stairs, self.plates, self.lamps, self.glasses]
+        self.semantic_objects = [self.walls, self.doors, self.columns, self.furniture, self.stairs, self.plates, self.lamps]
 
         rospy.loginfo("Termina carga de IFC")
+        # Model Atlas
+        # self.world_size_x = rospy.get_param('~world_size_x', 220)
+        # self.world_size_y = rospy.get_param('~world_size_y', 220)
+        # self.world_size_z = rospy.get_param('~world_size_z', 20)
+        # self.resolution = rospy.get_param('~resolution', 0.2)
+
+        # Model casoplonv2
         self.world_size_x = rospy.get_param('~world_size_x', 220)
         self.world_size_y = rospy.get_param('~world_size_y', 220)
         self.world_size_z = rospy.get_param('~world_size_z', 20)
         self.resolution = rospy.get_param('~resolution', 0.2)
+
         self.x_y_size = self.world_size_x * self.world_size_y
 
         self.semantic_grid_x = []

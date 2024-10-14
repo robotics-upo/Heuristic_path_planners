@@ -96,7 +96,7 @@ public:
 		if(!lnh.getParam("publish_point_cloud_rate", m_publishPointCloudRate))
 			m_publishPointCloudRate = 0.2;	
 		if(!lnh.getParam("publish_grid_slice", value))
-			value = 1.0;
+			value = 4.0;
 		if(!lnh.getParam("publish_grid_slice_rate", m_publishGridSliceRate))
 			m_publishGridSliceRate = 0.2;
 		m_gridSlice = (float)value;
@@ -149,12 +149,12 @@ public:
 
 			
 			
-			// Setup point-cloud publisher
-			if(m_publishPc)
-			{
-				m_pcPub  = m_nh.advertise<sensor_msgs::PointCloud2>(m_nodeName+"/map_point_cloud", 1, true);
-				mapTimer = m_nh.createTimer(ros::Duration(1.0/m_publishPointCloudRate), &Grid3d::publishMapPointCloudTimer, this);
-			}
+				// Setup point-cloud publisher
+				if(m_publishPc)
+				{
+					m_pcPub  = m_nh.advertise<sensor_msgs::PointCloud2>(m_nodeName+"/map_point_cloud", 1, true);
+					mapTimer = m_nh.createTimer(ros::Duration(1.0/m_publishPointCloudRate), &Grid3d::publishMapPointCloudTimer, this);
+				}
 			percent_computed_pub_ = m_nh.advertise<std_msgs::Float32>(m_nodeName+"/percent_computed", 1, false);
 		}
 

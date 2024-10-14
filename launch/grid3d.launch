@@ -1,8 +1,18 @@
 <launch>
     <node name="semantic_grid" pkg="heuristic_planners" output="screen" type="grid3d_class.py">
-        <param name="world_size_x" value="211.8" />
+        <!-- <param name="world_size_x" value="211.8" />
         <param name="world_size_y" value="169.2" />
         <param name="world_size_z" value="9.2" />
+        <param name="resolution" value="0.2" /> -->
+        <!-- Casa CON muebles -->
+        <!-- <param name="world_size_x" value="169.2" />
+        <param name="world_size_y" value="102.2" />
+        <param name="world_size_z" value="71.0" />
+        <param name="resolution" value="0.2" /> -->
+        <!-- Casa SIN muebles -->
+        <param name="world_size_x" value="170.4" />
+        <param name="world_size_y" value="107.4" />
+        <param name="world_size_z" value="71.2" />
         <param name="resolution" value="0.2" />
     </node>
 </launch>
