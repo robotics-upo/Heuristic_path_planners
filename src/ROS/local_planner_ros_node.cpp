@@ -74,8 +74,8 @@ public:
         // request_path_server_   = lnh_.advertiseService("request_path",  &HeuristicLocalPlannerROS::requestPathService, this); // This is in planner_ros_node.cpp and the corresponding service defined.
         change_planner_server_ = lnh_.advertiseService("set_algorithm", &HeuristicLocalPlannerROS::setAlgorithm, this);
 
-        line_markers_pub_  = lnh_.advertise<visualization_msgs::Marker>("path_line_markers", 1);
-        point_markers_pub_ = lnh_.advertise<visualization_msgs::Marker>("path_points_markers", 1);
+        line_markers_pub_  = lnh_.advertise<visualization_msgs::Marker>("local_path_line_markers", 1);
+        point_markers_pub_ = lnh_.advertise<visualization_msgs::Marker>("local_path_points_markers", 1);
         cloud_test  = lnh_.advertise<pcl::PointCloud<pcl::PointXYZ> >("/cloud_PCL", 1, true);  // Defined by me to show the point cloud as pcl::PointCloud<pcl::PointXYZ
         
         networkReceivedFlag_ = 1;
@@ -119,6 +119,8 @@ private:
             // Add the converted Vec3i to the path
             global_path_.push_back(vec_intermedio);
         }
+        //Reverse waypoints order!! (GLOBAL PLANNER SENDS GOAL FIRST AND START LAST)
+        std::reverse(global_path_.begin(), global_path_.end());
 
         //Ponemos el flag de recepción a 1
         globalPathReceived_ = 1;
@@ -158,9 +160,12 @@ private:
                 networkReceivedFlag_ = 0;
             }
 
-            // 2. Update local map with the neural network information around the drone
             Planners::utils::configureLocalWorldCosts(*m_local_grid3d_, *algorithm_, drone_x_, drone_y_, drone_z_, loaded_sdf_);
+            // 2. Update local map with the neural network information around the drone
             printf("-- Exiting callback --\n");
+
+            // 3. Calculate Local Path
+            calculatePath3D();
 
         }
     }
@@ -313,7 +318,121 @@ private:
 
     void calculatePath3D()
     {
-    std::cout << "------ENTERED CALCULATEPATH3D-------" << std::endl;
+        std::cout << "------ENTERED CALCULATEPATH3D-------" << std::endl;
+
+        // 1. Check if starting point is free
+        if(m_local_grid3d_->m_grid[(m_local_grid3d_->m_gridSize-1)/2].dist > 0)
+        {
+            ROS_INFO("Starting point is FREE");
+            std::cout << "Point index queried: " << (m_local_grid3d_->m_gridSize-1)/2 <<" |  Value of dist: " << m_local_grid3d_->m_grid[(m_local_grid3d_->m_gridSize-1)/2].dist << std::endl;
+        }
+        else
+        {
+            ROS_INFO("Starting point is NOT FREE -> ABORTING");
+            std::cout << "Point index queried: " << (m_local_grid3d_->m_gridSize-1)/2 <<" |  Value of dist: " << m_local_grid3d_->m_grid[(m_local_grid3d_->m_gridSize-1)/2].dist << std::endl;
+            exit(EXIT_FAILURE);
+        }
+
+        // 2. Calculate local goal from global goal -> Check furthest global goal in the local goal
+        Planners::utils::CoordinateList global_path_local;
+
+        // 2.1 - Convert waypoints to local reference
+
+        //Cálculo del origen del sistema local (a nivel de celda)
+
+        int origen_local_x, origen_local_y, origen_local_z, drone_local_x, drone_local_y, drone_local_z;
+        drone_local_x = (m_local_grid3d_->m_gridSizeX - 1)/2;
+        drone_local_y = (m_local_grid3d_->m_gridSizeY - 1)/2;
+        drone_local_z = (m_local_grid3d_->m_gridSizeZ - 1)/2;
+        origen_local_x = round(drone_x_/resolution_) - drone_local_x;
+        origen_local_y = round(drone_y_/resolution_) - drone_local_y;
+        origen_local_z = round(drone_z_/resolution_) - drone_local_z;
+
+        for (const auto& vec : global_path_) 
+        {
+            Planners::utils::Vec3i newpoint;
+            newpoint.x = vec.x - origen_local_x;
+            newpoint.y = vec.y - origen_local_y;
+            newpoint.z = vec.z - origen_local_z;
+        
+            // Agregar el punto desplazado al nuevo vector
+            global_path_local.push_back(newpoint);
+        }
+        std::cout << "Global path (local reference): " << global_path_local << std::endl;
+
+        // 2.2 - Find closest waypoint to the drone (which is supposed to be the "current" waypoint)
+        double min_dist = std::numeric_limits<double>::infinity();
+        int closest_index = -1;
+
+        for (size_t i = 0; i < global_path_local.size(); ++i) 
+        {
+            const Planners::utils::Vec3i& act_waypoint = global_path_local[i];
+
+            double dist_to_wayp = std::sqrt(
+                std::pow(act_waypoint.x - drone_local_x, 2) +
+                std::pow(act_waypoint.y - drone_local_y, 2) +
+                std::pow(act_waypoint.z - drone_local_z, 2)
+            );
+
+            if (dist_to_wayp < min_dist) 
+            {
+                min_dist = dist_to_wayp;
+                closest_index = i;
+            }
+        }
+        std::cout << "Closest waypoint: " << global_path_local[closest_index] << std::endl;
+
+        // 2.3 - Find furthest next waypoint that is still inside the local map (the drone will treat this waypoint as the local goal
+        bool points_in_range = true;
+        int it = closest_index;
+        Planners::utils::Vec3i local_goal;
+        
+        while (it <= (global_path_local.size() - 1) && points_in_range)
+        {
+            if (0 <= global_path_local[it].x && global_path_local[it].x < m_local_grid3d_->m_gridSizeX && 
+                0 <= global_path_local[it].y && global_path_local[it].y < m_local_grid3d_->m_gridSizeY &&
+                0 <= global_path_local[it].z && global_path_local[it].z < m_local_grid3d_->m_gridSizeZ) 
+            {
+                it++;
+            }
+            else
+            {
+                local_goal.x = global_path_local[it - 1].x;
+                local_goal.y = global_path_local[it - 1].y;
+                local_goal.z = global_path_local[it - 1].z;
+                points_in_range = false;
+            }
+            
+        }
+        std::cout << "Local goal found: " << local_goal << std::endl;
+
+        // 3 - Check if local goal accessible. If not, find closest point
+        
+        // 4 - Use path planner to find local waypoints
+        Planners::utils::Vec3i discrete_start, discrete_goal;
+        discrete_start.x = drone_local_x;
+        discrete_start.y = drone_local_y;
+        discrete_start.z = drone_local_z;
+        discrete_goal.x = local_goal.x;
+        discrete_goal.y = local_goal.y;
+        discrete_goal.z = local_goal.z;
+
+        std::cout << "Discrete local start: " << discrete_start << "  | Discrete local goal: " << discrete_goal << std::endl;
+
+        if( algorithm_->detectCollision(discrete_start) ){
+            std::cout << discrete_start << ": Start not valid" << std::endl;
+        }
+        if( algorithm_->detectCollision(discrete_goal) ){
+            std::cout << discrete_goal << ": Goal not valid" << std::endl;
+        }
+
+
+        auto local_path_data = algorithm_->findPath(discrete_start, discrete_goal, loaded_sdf_);
+        std::cout << "LOCAL PATH CALCULATED SUCCESSFULLY" << std::endl;
+        Planners::utils::CoordinateList local_path = std::get<Planners::utils::CoordinateList>(local_path_data["path"]);
+        std::cout << "Local path: " << local_path << std::endl;        
+            
+    
     }
 
     bool setAlgorithm(heuristic_planners::SetAlgorithmRequest &_req, heuristic_planners::SetAlgorithmResponse &rep){
@@ -342,9 +461,9 @@ private:
         local_world_size_meters.y=ws_y;
         local_world_size_meters.z=ws_z;
 
-        local_world_size_.x = std::floor((2*ws_x) / resolution_);
-        local_world_size_.y = std::floor((2*ws_y) / resolution_);
-        local_world_size_.z = std::floor((2*ws_z) / resolution_);
+        local_world_size_.x = std::floor((2*ws_x) / resolution_) + 1;
+        local_world_size_.y = std::floor((2*ws_y) / resolution_) + 1;
+        local_world_size_.z = std::floor((2*ws_z) / resolution_) + 1;
 
         lnh_.param("use3d", use3d_, (bool)true);
 

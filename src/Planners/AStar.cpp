@@ -211,8 +211,8 @@ void AStar::exploreNeighbours(Node* _current, const Vec3i &_target, node_by_posi
 }
 PathData AStar::findPath(const Vec3i &_source, const Vec3i &_target, torch::jit::script::Module& loaded_sdf)
 {
+    std::cout << "ENTERED ASTAR FINDPATH" << std::endl;
     Node *current = nullptr;
-
     bool solved{false};
 
     discrete_world_.getNodePtr(_source)->parent = new Node(_source);
@@ -222,12 +222,14 @@ PathData AStar::findPath(const Vec3i &_source, const Vec3i &_target, torch::jit:
     utils::Clock main_timer;
     main_timer.tic();
 
+
     line_of_sight_checks_ = 0;
 
     node_by_cost&     indexByCost          = openSet_.get<IndexByCost>();
     node_by_position& indexByWorldPosition = openSet_.get<IndexByWorldPosition>();
 
     indexByCost.insert(discrete_world_.getNodePtr(_source));
+
     
     while (!indexByCost.empty()) {
         //Get the element at the start of the open set ordered by cost
@@ -243,13 +245,13 @@ PathData AStar::findPath(const Vec3i &_source, const Vec3i &_target, torch::jit:
         current->isInOpenList = false;
         current->isInClosedList = true;
 
+
 #if defined(ROS) && defined(PUB_EXPLORED_NODES)
         publishROSDebugData(current, indexByCost, closedSet_);
 #endif
         exploreNeighbours(current, _target, indexByWorldPosition, loaded_sdf);     
     }
     main_timer.toc();
-    
     PathData result_data = createResultDataObject(current, main_timer, closedSet_.size(), 
                                                  solved, _source, line_of_sight_checks_);
    //Clear internal variables. This should be done

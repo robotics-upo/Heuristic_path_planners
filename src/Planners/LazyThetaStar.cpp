@@ -49,6 +49,7 @@ namespace Planners
 
     PathData LazyThetaStar::findPath(const Vec3i &_source, const Vec3i &_target, torch::jit::script::Module& loaded_sdf)
     {
+        std::cout << "ENTERED LAZYTHETASTAR FINDPATH" << std::endl;
         Node *current = nullptr;
 
         bool solved{false};

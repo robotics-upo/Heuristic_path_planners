@@ -64,8 +64,9 @@ namespace Planners
 
             if ( successor == nullptr || 
                  successor->isInClosedList || 
-                 successor->occuppied ) 
-                continue;
+                 successor->occuppied )
+                    continue;
+                
     
             if (! successor->isInOpenList ) { 
 

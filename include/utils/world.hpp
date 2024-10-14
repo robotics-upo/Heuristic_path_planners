@@ -205,8 +205,10 @@ namespace utils
          */
         bool isOccupied(const int _x, const int _y, const int _z) const
         {
-            if (!checkValid(_x, _y, _z))
+            if (!checkValid(_x, _y, _z)){
+                std::cout << "isOccupied failed because of checkValid" << std::endl;
                 return true;
+            }
 
             if (discrete_world_vector_[getWorldIndex(_x, _y, _z)].occuppied)
             {

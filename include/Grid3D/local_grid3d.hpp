@@ -62,10 +62,6 @@ private:
 	float m_resolution, m_oneDivRes;
 	octomap::OcTree *m_octomap;
 	
-	// 3D probabilistic grid cell
-	Planners::utils::gridCell *m_grid;
-	int m_gridSize, m_gridSizeX, m_gridSizeY, m_gridSizeZ;
-	int m_gridStepY, m_gridStepZ;
 	
 	// 3D point cloud representation of the map
 	pcl::PointCloud<pcl::PointXYZ>::Ptr m_cloud, filter_cloud;
@@ -86,6 +82,11 @@ private:
 	bool use_costmap_function;
 	
 public:
+	// 3D probabilistic grid cell
+	Planners::utils::gridCell *m_grid;
+	int m_gridSize, m_gridSizeX, m_gridSizeY, m_gridSizeZ;
+	int m_gridStepY, m_gridStepZ;
+
 	// Local_Grid3d(): m_cloud(new pcl::PointCloud<pcl::PointXYZI>)
 	Local_Grid3d(): m_cloud(new pcl::PointCloud<pcl::PointXYZ>)
 	{
@@ -266,7 +267,22 @@ public:
 				}
 			}
 		}
+
+		// // Visualize the middle layer
+		// int midZ = m_gridSizeZ / 2;
+		// std::vector<float> gridSlice(m_gridSizeX * m_gridSizeY);
+
+		// for(int iy = 0; iy < m_gridSizeY; iy++) {
+		// 	for(int ix = 0; ix < m_gridSizeX; ix++) {
+		// 		int index = ix + iy * m_gridStepY + midZ * m_gridStepZ;
+		// 		gridSlice[iy * m_gridSizeX + ix] = m_grid[index].dist;
+		// 	}
+		// }
+
+		// std::cout << "Stored grid: " << gridSlice << std::endl;
+
 		std::cout << "---!!!--- Exiting computeLocalGrid ---!!!---" << std::endl;
+
 
 	}
 
