@@ -709,6 +709,8 @@ private:
                         path_points_markers_.points.push_back(Planners::utils::continousPoint(it, resolution_));
                     }
 
+                    std::cout << "Global path line markers: " << path_line_markers_.points << std::endl;
+
                     publishMarker(path_line_markers_, line_markers_pub_);
                     publishMarker(path_points_markers_, point_markers_pub_);
 

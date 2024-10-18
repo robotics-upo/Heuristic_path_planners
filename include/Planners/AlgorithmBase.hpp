@@ -238,7 +238,7 @@ namespace Planners
 
         utils::DiscreteWorld discrete_world_; /*!< TODO Comment */
         unsigned int inflate_steps_{1}; /*!< TODO Comment */
-        bool do_inflate_{true}; /*!< TODO Comment */
+        bool do_inflate_{false}; /*!< TODO Comment */
 
         double cost_weight_{0}; /*!< TODO Comment */
         unsigned int max_line_of_sight_cells_{0}; /*!< TODO Comment */

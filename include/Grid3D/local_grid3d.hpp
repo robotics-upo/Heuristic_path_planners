@@ -39,6 +39,7 @@
 #include <iomanip> //for std::setw, std::hex, and std::setfill
 #include <openssl/evp.h> //for all other OpenSSL function calls
 #include <openssl/sha.h> //for SHA512_DIGEST_LENGTH
+#include <chrono>
 // #include "utils/ros/ROSInterfaces.hpp"
 
 // #ifdef BUILD_VORONOI
@@ -206,13 +207,13 @@ public:
 
 	void computeLocalGrid(torch::jit::script::Module& loaded_sdf, float drone_x, float drone_y, float drone_z)
 	{
-		printf("-- Executing computeLocalGrid --\n");
+		// printf("-- Executing computeLocalGrid --\n");
 
 
 		// Build global positions vector
 		std::vector<std::vector<float>> coordinates_vector;
         coordinates_vector.reserve(m_gridSizeX*m_gridSizeY*m_gridSizeZ);
-		std::cout << "Drone position: " << "x = " << drone_x << " | y = " << drone_y << " | z = " << drone_z << std::endl;
+		// std::cout << "Drone position: " << "x = " << drone_x << " | y = " << drone_y << " | z = " << drone_z << std::endl;
 		for(int iz=0; iz<m_gridSizeZ; iz++)
 		{
 			for(int iy=0; iy<m_gridSizeY; iy++)
@@ -230,15 +231,15 @@ public:
 
 		// DEBUGGING: PRINT FIRST, MIDDLE AND LAST POINT
 
-		std::vector<float> first_point = coordinates_vector.front();  // O coordinates_vector[0]
-		std::cout << "Primer punto: (" << first_point[0] << ", " << first_point[1] << ", " << first_point[2] << ")\n";
+		// std::vector<float> first_point = coordinates_vector.front();  // O coordinates_vector[0]
+		// std::cout << "Primer punto: (" << first_point[0] << ", " << first_point[1] << ", " << first_point[2] << ")\n";
 
-		std::vector<float> last_point = coordinates_vector.back();  // O coordinates_vector[coordinates_vector.size() - 1]
-		std::cout << "Último punto: (" << last_point[0] << ", " << last_point[1] << ", " << last_point[2] << ")\n";
+		// std::vector<float> last_point = coordinates_vector.back();  // O coordinates_vector[coordinates_vector.size() - 1]
+		// std::cout << "Último punto: (" << last_point[0] << ", " << last_point[1] << ", " << last_point[2] << ")\n";
 
-		size_t middle_index = coordinates_vector.size() / 2;
-		std::vector<float> middle_point = coordinates_vector[middle_index];
-		std::cout << "Punto medio: (" << middle_point[0] << ", " << middle_point[1] << ", " << middle_point[2] << ")\n";
+		// size_t middle_index = coordinates_vector.size() / 2;
+		// std::vector<float> middle_point = coordinates_vector[middle_index];
+		// std::cout << "Punto medio: (" << middle_point[0] << ", " << middle_point[1] << ", " << middle_point[2] << ")\n";
 
 		// Convert vector tu libtorch array and query the neural network
         auto num_points = coordinates_vector.size();
@@ -253,7 +254,7 @@ public:
 		torch::Tensor grid_output_tensor = loaded_sdf.forward({coordinates_tensor}).toTensor();
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double, std::milli> duration = end - start;
-        std::cout << "Points queried: " << num_points <<" |  Time taken to query model: " << duration.count() << " ms" << std::endl;
+        //std::cout << "Points queried: " << num_points <<" |  Time taken to query model: " << duration.count() << " ms" << std::endl;
 
 		// Place the queried values into the m_grid distance data field
 		for(int iz=0; iz<m_gridSizeZ; iz++)
@@ -281,7 +282,7 @@ public:
 
 		// std::cout << "Stored grid: " << gridSlice << std::endl;
 
-		std::cout << "---!!!--- Exiting computeLocalGrid ---!!!---" << std::endl;
+		//std::cout << "---!!!--- Exiting computeLocalGrid ---!!!---" << std::endl;
 
 
 	}
@@ -452,9 +453,9 @@ protected:
         // Get map parameters: They have to take from local_world_size_x, local_world_size_y , local_world_size_z of the launch
 		double maxX, maxY, maxZ, res;
         
-		maxX = 4.0; // distancia a cada lado del dron (en x)
-        maxY = 4.0; // distancia a cada lado del dron (en y)
-        maxZ = 2.0; // distancia a cada lado del dron (en z)
+		maxX = 3.0; // distancia a cada lado del dron (en x)
+        maxY = 3.0; // distancia a cada lado del dron (en y)
+        maxZ = 1.6; // distancia a cada lado del dron (en z)
         res = 0.2;
 
 

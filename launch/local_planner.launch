@@ -11,9 +11,9 @@
     <arg name="algorithm_name"      default="costlazythetastar"/>
 
     <!-- Size of the Local Map  -->
-    <arg name="local_world_size_x"        default="4"/>
-    <arg name="local_world_size_y"        default="4"/>
-    <arg name="local_world_size_z"        default="2"/>
+    <arg name="local_world_size_x"        default="3"/>
+    <arg name="local_world_size_y"        default="3"/>
+    <arg name="local_world_size_z"        default="1.6"/>
     <arg name="resolution"          default="0.2"/>
 
     <arg name="inflate_map"         default="true"/>

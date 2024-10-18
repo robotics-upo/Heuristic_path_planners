@@ -74,8 +74,8 @@ public:
         // request_path_server_   = lnh_.advertiseService("request_path",  &HeuristicLocalPlannerROS::requestPathService, this); // This is in planner_ros_node.cpp and the corresponding service defined.
         change_planner_server_ = lnh_.advertiseService("set_algorithm", &HeuristicLocalPlannerROS::setAlgorithm, this);
 
-        line_markers_pub_  = lnh_.advertise<visualization_msgs::Marker>("local_path_line_markers", 1);
-        point_markers_pub_ = lnh_.advertise<visualization_msgs::Marker>("local_path_points_markers", 1);
+        local_line_markers_pub_  = lnh_.advertise<visualization_msgs::Marker>("local_path_line_markers", 1);
+        local_point_markers_pub_ = lnh_.advertise<visualization_msgs::Marker>("local_path_points_markers", 1);
         cloud_test  = lnh_.advertise<pcl::PointCloud<pcl::PointXYZ> >("/cloud_PCL", 1, true);  // Defined by me to show the point cloud as pcl::PointCloud<pcl::PointXYZ
         
         networkReceivedFlag_ = 1;
@@ -152,6 +152,10 @@ private:
         // Only perform local planning if global path was received
         if(globalPathReceived_ == 1){
 
+            auto loop_start = std::chrono::high_resolution_clock::now();
+        
+
+
             // 1. Update Neural Network State (if new state available)
             if(networkReceivedFlag_ == 1)
             {
@@ -160,12 +164,16 @@ private:
                 networkReceivedFlag_ = 0;
             }
 
-            Planners::utils::configureLocalWorldCosts(*m_local_grid3d_, *algorithm_, drone_x_, drone_y_, drone_z_, loaded_sdf_);
             // 2. Update local map with the neural network information around the drone
-            printf("-- Exiting callback --\n");
+            Planners::utils::configureLocalWorldCosts(*m_local_grid3d_, *algorithm_, drone_x_, drone_y_, drone_z_, loaded_sdf_);
+            // printf("-- Exiting callback --\n");
 
             // 3. Calculate Local Path
             calculatePath3D();
+
+            auto loop_end = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double, std::milli> loop_duration = loop_end - loop_start;
+            printf("TIEMPO DE LOOP: %.2f ms\n", loop_duration.count());
 
         }
     }
@@ -358,7 +366,7 @@ private:
             // Agregar el punto desplazado al nuevo vector
             global_path_local.push_back(newpoint);
         }
-        std::cout << "Global path (local reference): " << global_path_local << std::endl;
+        // std::cout << "Global path (local reference): " << global_path_local << std::endl;
 
         // 2.2 - Find closest waypoint to the drone (which is supposed to be the "current" waypoint)
         double min_dist = std::numeric_limits<double>::infinity();
@@ -380,7 +388,7 @@ private:
                 closest_index = i;
             }
         }
-        std::cout << "Closest waypoint: " << global_path_local[closest_index] << std::endl;
+        // std::cout << "Closest waypoint: " << global_path_local[closest_index] << std::endl;
 
         // 2.3 - Find furthest next waypoint that is still inside the local map (the drone will treat this waypoint as the local goal
         bool points_in_range = true;
@@ -404,7 +412,7 @@ private:
             }
             
         }
-        std::cout << "Local goal found: " << local_goal << std::endl;
+        // std::cout << "Local goal found: " << local_goal << std::endl;
 
         // 3 - Check if local goal accessible. If not, find closest point
         
@@ -426,12 +434,40 @@ private:
             std::cout << discrete_goal << ": Goal not valid" << std::endl;
         }
 
+        //std::cout << "LOCAL PATH CALCULATED SUCCESSFULLY" << std::endl;
+        //Planners::utils::CoordinateList local_path = std::get<Planners::utils::CoordinateList>(local_path_data["path"]);
+        //std::cout << "Local path: " << local_path << std::endl;
 
+        
         auto local_path_data = algorithm_->findPath(discrete_start, discrete_goal, loaded_sdf_);
-        std::cout << "LOCAL PATH CALCULATED SUCCESSFULLY" << std::endl;
-        Planners::utils::CoordinateList local_path = std::get<Planners::utils::CoordinateList>(local_path_data["path"]);
-        std::cout << "Local path: " << local_path << std::endl;        
-            
+        if( std::get<bool>(local_path_data["solved"]) ){
+            Planners::utils::CoordinateList local_path;
+            local_path = std::get<Planners::utils::CoordinateList>(local_path_data["path"]);
+
+            //Convert the local path to GLOBAL COORDINATES and push them into the markers
+
+            Planners::utils::Vec3i local_origin = {origen_local_x, origen_local_y, origen_local_z};
+            std::cout << "Local origin: " << local_origin;
+
+            for(const auto &it: std::get<Planners::utils::CoordinateList>(local_path_data["path"])){
+                Planners::utils::Vec3i global_wp_point = it + local_origin;
+                local_path_line_markers_.points.push_back(Planners::utils::continousPoint(global_wp_point, resolution_));
+                local_path_points_markers_.points.push_back(Planners::utils::continousPoint(global_wp_point, resolution_));
+            }
+
+            // std::cout << "Local_path_line_markers: " << local_path_line_markers_.points << std::endl;
+            // std::cout << "Local_path_points_markers: " << local_path_points_markers_.points << std::endl;
+
+            publishMarker(local_path_line_markers_, local_line_markers_pub_);
+            publishMarker(local_path_points_markers_, local_point_markers_pub_);
+
+            local_path_line_markers_.points.clear();
+            local_path_points_markers_.points.clear();
+
+            ROS_INFO("Path calculated succesfully");
+        }
+        else
+            ROS_INFO("Couldn't calculate path");
     
     }
 
@@ -536,8 +572,8 @@ private:
 		if(!lnh_.getParam("global_frame_id", globalFrameId))
 			globalFrameId = "map";	
 
-        // configMarkers(algorithm_name, globalFrameId, resolution_);  // Not influence by baseFrameId
-        configMarkers(algorithm_name, baseFrameId, resolution_);
+        configMarkers(algorithm_name, globalFrameId, resolution_);  // Not influence by baseFrameId
+        // configMarkers(algorithm_name, baseFrameId, resolution_);
 
         // From planner_ros_node
         // std::string frame_id;
@@ -613,37 +649,37 @@ private:
 
     void configMarkers(const std::string &_ns, const std::string &_frame, const double &_scale){
 
-        path_line_markers_.ns = _ns;
-        path_line_markers_.header.frame_id = _frame;
-        path_line_markers_.header.stamp = ros::Time::now();
-        path_line_markers_.id = rand();
-        path_line_markers_.lifetime = ros::Duration(500);
-        path_line_markers_.type = visualization_msgs::Marker::LINE_STRIP;
-        path_line_markers_.action = visualization_msgs::Marker::ADD;
-        path_line_markers_.pose.orientation.w = 1;
+        local_path_line_markers_.ns = _ns;
+        local_path_line_markers_.header.frame_id = _frame;
+        local_path_line_markers_.header.stamp = ros::Time::now();
+        local_path_line_markers_.id = rand();
+        local_path_line_markers_.lifetime = ros::Duration(500);
+        local_path_line_markers_.type = visualization_msgs::Marker::LINE_STRIP;
+        local_path_line_markers_.action = visualization_msgs::Marker::ADD;
+        local_path_line_markers_.pose.orientation.w = 1;
 
-        path_line_markers_.color.r = 0.0;
-        path_line_markers_.color.g = 1.0;
-        path_line_markers_.color.b = 0.0;
+        local_path_line_markers_.color.r = 0.0;
+        local_path_line_markers_.color.g = 1.0;
+        local_path_line_markers_.color.b = 0.0;
 
-        path_line_markers_.color.a = 1.0;
-        path_line_markers_.scale.x = _scale;
+        local_path_line_markers_.color.a = 1.0;
+        local_path_line_markers_.scale.x = _scale;
 
-        path_points_markers_.ns = _ns;
-        path_points_markers_.header.frame_id = _frame;
-        path_points_markers_.header.stamp = ros::Time::now();
-        path_points_markers_.id = rand();
-        path_points_markers_.lifetime = ros::Duration(500);
-        path_points_markers_.type = visualization_msgs::Marker::POINTS;
-        path_points_markers_.action = visualization_msgs::Marker::ADD;
-        path_points_markers_.pose.orientation.w = 1;
-        path_points_markers_.color.r = 0.0;
-        path_points_markers_.color.g = 1.0;
-        path_points_markers_.color.b = 1.0;
-        path_points_markers_.color.a = 1.0;
-        path_points_markers_.scale.x = _scale;
-        path_points_markers_.scale.y = _scale;
-        path_points_markers_.scale.z = _scale;
+        local_path_points_markers_.ns = _ns;
+        local_path_points_markers_.header.frame_id = _frame;
+        local_path_points_markers_.header.stamp = ros::Time::now();
+        local_path_points_markers_.id = rand();
+        local_path_points_markers_.lifetime = ros::Duration(500);
+        local_path_points_markers_.type = visualization_msgs::Marker::POINTS;
+        local_path_points_markers_.action = visualization_msgs::Marker::ADD;
+        local_path_points_markers_.pose.orientation.w = 1;
+        local_path_points_markers_.color.r = 0.0;
+        local_path_points_markers_.color.g = 1.0;
+        local_path_points_markers_.color.b = 1.0;
+        local_path_points_markers_.color.a = 1.0;
+        local_path_points_markers_.scale.x = _scale;
+        local_path_points_markers_.scale.y = _scale;
+        local_path_points_markers_.scale.z = _scale;
 
     }
 
@@ -654,13 +690,13 @@ private:
             _marker.action = visualization_msgs::Marker::DELETEALL;
             _pub.publish(_marker);
         }else{
-            path_points_markers_.id           = rand();
-            path_points_markers_.header.stamp = ros::Time::now();
-            setRandomColor(path_points_markers_.color);
+            local_path_points_markers_.id           = rand();
+            local_path_points_markers_.header.stamp = ros::Time::now();
+            setRandomColor(local_path_points_markers_.color);
 
-            path_line_markers_.id             = rand();
-            path_line_markers_.header.stamp   = ros::Time::now();
-            setRandomColor(path_line_markers_.color);
+            local_path_line_markers_.id             = rand();
+            local_path_line_markers_.header.stamp   = ros::Time::now();
+            setRandomColor(local_path_line_markers_.color);
         }
         _marker.action = visualization_msgs::Marker::ADD;
         _pub.publish(_marker);
@@ -685,7 +721,7 @@ private:
     ros::ServiceServer request_path_server_, change_planner_server_;
     ros::Subscriber pointcloud_local_sub_, occupancy_grid_local_sub_, path_local_sub_;
     //TODO Fix point markers
-    ros::Publisher line_markers_pub_, point_markers_pub_, cloud_test;
+    ros::Publisher local_line_markers_pub_, local_point_markers_pub_, cloud_test;
 
     tf::TransformListener m_tfListener;
 
@@ -693,7 +729,7 @@ private:
 
     std::unique_ptr<Planners::AlgorithmBase> algorithm_;
         
-    visualization_msgs::Marker path_line_markers_, path_points_markers_;
+    visualization_msgs::Marker local_path_line_markers_, local_path_points_markers_;
     
     //Parameters
     Planners::utils::Vec3i world_size_; // Discrete
