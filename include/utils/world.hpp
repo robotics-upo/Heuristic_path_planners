@@ -261,6 +261,31 @@ namespace utils
 
             return setOccupied(_pos.x, _pos.y, _pos.z);
         }
+
+        /**
+         * @brief Set the world's node associated
+         * 
+         * @param _pos discrete node position vector
+         */
+        void setUnoccupied(const int _x, const int _y, const int _z){
+
+            if (!checkValid(_x, _y, _z))
+                return;
+
+            discrete_world_vector_[getWorldIndex(_x, _y, _z)].occuppied = false;
+            
+        }
+
+        /**
+         * @brief Set the world's node associated
+         * 
+         * @param _pos discrete node position vector
+         */
+        void setUnoccupied(const Vec3i &_pos){
+
+            return setUnoccupied(_pos.x, _pos.y, _pos.z);
+        }
+
         /**
          * @brief Checks the value of the internal flag of the node
          * that is used to mark that the node is in the open list

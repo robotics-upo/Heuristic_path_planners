@@ -77,6 +77,10 @@ namespace Planners
     {
         addCollision(coordinates_, do_inflate_, inflate_steps_);
     }
+    void AlgorithmBase::removeCollision(const Vec3i &coordinates_)
+    {
+        discrete_world_.setUnoccupied(coordinates_);
+    }
     bool AlgorithmBase::detectCollision(const Vec3i &coordinates_)
     {
         if (discrete_world_.isOccupied(coordinates_))

@@ -146,6 +146,13 @@ namespace Planners
         void addCollision(const Vec3i &coordinates_);
 
         /**
+         * @brief Calls removeCollision for a given coordinate
+         * 
+         * @param coordinates_ Discrete coordinates vector
+         */
+        void removeCollision(const Vec3i &coordinates_);
+
+        /**
          * @brief Function to use in the future to configure the cost of each node
          * 
          * @param coordinates_ Discrete coordinates

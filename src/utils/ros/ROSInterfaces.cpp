@@ -145,8 +145,10 @@ namespace Planners
                     {
                         float cost = _grid.getCellCost(i * resolution, j * resolution, k * resolution);
                         _algorithm.configureCellCost({i, j, k}, cost);
-                        if(cost <= 0)
+                        if(cost <= resolution)
                             _algorithm.addCollision({i, j, k});
+                        else
+                            _algorithm.removeCollision({i, j, k});
                     }
                 }
             }

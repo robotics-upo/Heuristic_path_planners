@@ -401,6 +401,9 @@ private:
                 0 <= global_path_local[it].y && global_path_local[it].y < m_local_grid3d_->m_gridSizeY &&
                 0 <= global_path_local[it].z && global_path_local[it].z < m_local_grid3d_->m_gridSizeZ) 
             {
+                local_goal.x = global_path_local[it].x;
+                local_goal.y = global_path_local[it].y;
+                local_goal.z = global_path_local[it].z;
                 it++;
             }
             else
