@@ -389,9 +389,16 @@ bool loadSemanticGrid() {
 		m_octomap->getMetricMin(minX, minY, minZ);
 		m_octomap->getMetricMax(maxX, maxY, maxZ);
 		res = m_octomap->getResolution();
+
 		m_maxX = (float)(maxX-minX);
 		m_maxY = (float)(maxY-minY);
 		m_maxZ = (float)(maxZ-minZ);
+
+		// ATLAS - 1 Floor - Close to origin
+		// m_maxX = (float)(maxX-minX)/2;
+		// m_maxY = (float)(maxY-minY)/2;
+		// m_maxZ = (float)(maxZ-minZ)/2;
+		// m_maxZ = m_maxZ + 1;
 		m_resolution = (float)res;
 		m_oneDivRes = 1.0/m_resolution;
 		ROS_INFO("Map size:\n");
@@ -558,6 +565,8 @@ bool loadSemanticGrid() {
 		m_gridSizeX = (int)(m_maxX*m_oneDivRes);
 		m_gridSizeY = (int)(m_maxY*m_oneDivRes); 
 		m_gridSizeZ = (int)(m_maxZ*m_oneDivRes);
+		// ATLAS 1 Floor - Close to origin
+		// m_gridSizeZ = (int)(m_maxZ*m_oneDivRes)+1;
 
 		// CONSIDERING DIMENSIONES OF THE SEMANTIC LAYER
 		// m_gridSizeX = (int)(212*m_oneDivRes); //1060
@@ -632,7 +641,7 @@ bool loadSemanticGrid() {
 		// 	}
 		// }
 
-		// VERSION OF 2024-MARCH
+		// VERSION OF 2024-MARCH WITH ATLAR FAR
 		for(int iz=0; iz<(m_gridSizeZ-2); iz++) //m_gridSizeZ-2?
 		{
 			for(int iy=0; iy<(m_gridSizeY-3); iy++) //m_gridSizeY-3?
@@ -644,32 +653,99 @@ bool loadSemanticGrid() {
 				}
 			}
 		}
+		// VERSION ATLAS CLOSE TO THE ORIGIN
+		// for(int iz=0; iz<(m_gridSizeZ); iz++) //m_gridSizeZ-2?
+		// {
+		// 	for(int iy=0; iy<(m_gridSizeY); iy++) //m_gridSizeY-3?
+		// 	{
+		// 		for(int ix=0; ix<(m_gridSizeX); ix++)
+		// 		{	
+		// 			index = ix + iy*m_gridStepY + iz*m_gridStepZ;		
+		// 			m_grid[index].semantic = 0;
+		// 		}
+		// 	}
+		// }
+
 		// int count_semant=0;
 		for(int i_seman=0; i_seman<index_size_semantic; i_seman++)
 		{
 			// std::cout << "semanticGrid_x: " << semanticGrid_x[i_seman] << std::endl;
 			index_semantic=semanticGrid_x[i_seman];//Correcto
 			// std::cout << "index_semantic: " << index_semantic << std::endl;
-			if (semanticGrid_v[i_seman] == 1)
+			if (semanticGrid_v[i_seman] == 1){
 				c1=c1+1;
-			else if (semanticGrid_v[i_seman] == 2)
+				// std::cout << "semantic: 1" << std::endl;
+				// usleep(1e4);
+				// std::cout << "Please a key to go to the next iteration..." << std::endl;
+				// getchar(); // Comentar para no usar tecla.
+			}	
+			else if (semanticGrid_v[i_seman] == 2){
 				c2=c2+1;
-			else if (semanticGrid_v[i_seman] == 3)
+				// std::cout << "semantic: 2" << std::endl;
+				// usleep(1e4);
+				// std::cout << "Please a key to go to the next iteration..." << std::endl;
+				// getchar(); // Comentar para no usar tecla.
+			}
+			else if (semanticGrid_v[i_seman] == 3){
 				c3=c3+1;
-			else if (semanticGrid_v[i_seman] == 4)
+				// std::cout << "semantic: 3" << std::endl;
+				// usleep(1e4);
+				// std::cout << "Please a key to go to the next iteration..." << std::endl;
+				// getchar(); // Comentar para no usar tecla.
+			}
+			else if (semanticGrid_v[i_seman] == 4){
 				c4=c4+1;
-			else if (semanticGrid_v[i_seman] == 5)
+				// std::cout << "semantic: 1" << std::endl;
+				// usleep(1e4);
+				// std::cout << "Please a key to go to the next iteration..." << std::endl;
+				// getchar(); // Comentar para no usar tecla.
+			}
+			else if (semanticGrid_v[i_seman] == 5){
 				c5=c5+1;
-			else if (semanticGrid_v[i_seman] == 6)
+				// std::cout << "semantic: 1" << std::endl;
+				// usleep(1e4);
+				// std::cout << "Please a key to go to the next iteration..." << std::endl;
+				// getchar(); // Comentar para no usar tecla.
+			}
+			else if (semanticGrid_v[i_seman] == 6){
 				c6=c6+1;
-			else if (semanticGrid_v[i_seman] == 7)
+				// std::cout << "semantic: 1" << std::endl;
+				// usleep(1e4);
+				// std::cout << "Please a key to go to the next iteration..." << std::endl;
+				// getchar(); // Comentar para no usar tecla.
+			}
+			else if (semanticGrid_v[i_seman] == 7){
 				c7=c7+1;
-			else if (semanticGrid_v[i_seman] == 8)
+				// std::cout << "semantic: 1" << std::endl;
+				// usleep(1e4);
+				// std::cout << "Please a key to go to the next iteration..." << std::endl;
+				// getchar(); // Comentar para no usar tecla.
+			}				
+			else if (semanticGrid_v[i_seman] == 8){
 				c8=c8+1;
-			else
+				// std::cout << "semantic: 1" << std::endl;
+				// usleep(1e4);
+				// std::cout << "Please a key to go to the next iteration..." << std::endl;
+				// getchar(); // Comentar para no usar tecla.
+			}
+			else{
 				c0=c0+1;
+				// std::cout << "semantic: 1" << std::endl;
+				// usleep(1e4);
+				// std::cout << "Please a key to go to the next iteration..." << std::endl;
+				// getchar(); // Comentar para no usar tecla.
+			}
+				
 			
 			m_grid[index_semantic].semantic = semanticGrid_v[i_seman];
+
+			// if (m_grid[index_semantic].semantic == 3){
+			// 	std::cout << "index: " << index_semantic << std::endl;
+			// 	std::cout << "semantic: " << m_grid[index_semantic].semantic << std::endl;
+			// 	usleep(1e4);
+			// 	std::cout << "Please a key to go to the next iteration..." << std::endl;
+			// 	getchar(); // Comentar para no usar tecla.
+			// }
 
 
 			// Check if index_semantic is out world_size
@@ -705,6 +781,12 @@ bool loadSemanticGrid() {
 			// }
 		}
 		// std::cout << "count_semant: " << count_semant << std::endl;
+
+		std::cout << "semantic: " << semanticGrid_v[100] << std::endl;
+		std::cout << "indice: " << semanticGrid_x[100] << std::endl;
+		std::cout << "Y: " << semanticGrid_y[100] << std::endl;
+		std::cout << "Z: " << semanticGrid_z[100] << std::endl;
+		
 
 		for(int iz=0; iz<m_gridSizeZ; iz++)
 		{

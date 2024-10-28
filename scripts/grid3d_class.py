@@ -22,7 +22,8 @@ class grid3d():
 
         rospack = rospkg.RosPack()
         # model_path = str(rospack.get_path('heuristic_planners') )+ str("/scripts/model.ifc")
-        model_path = str(rospack.get_path('heuristic_planners') )+ str("/scripts/casoplonv2.ifc")
+        model_path = str(rospack.get_path('heuristic_planners') )+ str("/scripts/atlas_1F.ifc")
+        # model_path = str(rospack.get_path('heuristic_planners') )+ str("/scripts/casoplonv2.ifc")
         self.model = ifcopenshell.open(model_path)
         self.settings = ifcopenshell.geom.settings()
         self.settings.set(self.settings.USE_WORLD_COORDS, True)
@@ -111,6 +112,9 @@ class grid3d():
 
 
         # Verifica si el valor mínimo es negativo y suma su valor absoluto a todos los elementos
+        self.semantic_grid_x -= abs(min_x)
+        self.semantic_grid_y -= abs(min_y)
+        self.semantic_grid_z -= abs(min_z)
         if min_x < 0:
             print(f'Hay offset de X: {min_x}')
             self.semantic_grid_x += abs(min_x)
@@ -142,7 +146,8 @@ class grid3d():
             self.semantic_grid_x[i] = int(index)
 
             
-
+        print(len(self.semantic_grid_x))
+        print((self.world_size_x/self.resolution)*(self.world_size_y/self.resolution)*(self.world_size_z/self.resolution))
 
     rospy.loginfo("Termina de rellenar las matrices")
 

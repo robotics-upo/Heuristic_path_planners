@@ -224,7 +224,7 @@ namespace Planners
             // cost2=(c_wall/(1+static_cast<double>(_suc->cost)))*cost2; // + cost2;
             cost2=(c_wall/coste)*cost2;
 
-            // cost2=(c_wall/static_cast<double>(_suc->cost))*cost2 + cost2;
+            cost2=(c_wall/static_cast<double>(_suc->cost))*cost2 + cost2;
             // std::cout << "cost: " << _suc->cost << std::endl;
             // std::cout << "semantic: " << _suc->semantic << std::endl;
             // usleep(1e4);
