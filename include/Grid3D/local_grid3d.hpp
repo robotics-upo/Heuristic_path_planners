@@ -46,6 +46,21 @@
 // #include "voro++-0.4.6/src/voro++.hh"
 // #endif
 
+struct TrilinearParams
+{
+	float a0, a1, a2, a3, a4, a5, a6, a7;
+
+	TrilinearParams(void)
+	{
+		a0 = a1 = a2 = a3 = a4 = a5 = a6 = a7 = 0.0;
+	}
+
+	double interpolate(double x, double y, double z)
+	{
+		return a0 + a1*x + a2*y + a3*z + a4*x*y + a5*x*z + a6*y*z + a7*x*y*z;
+	}
+};
+
 class Local_Grid3d
 {
 private:
@@ -60,7 +75,7 @@ private:
 	
 	// Octomap parameters
 	float m_maxX, m_maxY, m_maxZ;
-	float m_resolution, m_oneDivRes;
+	float m_oneDivRes;
 	octomap::OcTree *m_octomap;
 	
 	
@@ -87,6 +102,7 @@ public:
 	Planners::utils::gridCell *m_grid;
 	int m_gridSize, m_gridSizeX, m_gridSizeY, m_gridSizeZ;
 	int m_gridStepY, m_gridStepZ;
+	float m_resolution;
 
 	// Local_Grid3d(): m_cloud(new pcl::PointCloud<pcl::PointXYZI>)
 	Local_Grid3d(): m_cloud(new pcl::PointCloud<pcl::PointXYZ>)
@@ -182,6 +198,57 @@ public:
 		m_gridSliceMsg.header.stamp = ros::Time::now();
 		m_gridSlicePub.publish(m_gridSliceMsg);
 	}
+
+	TrilinearParams computeDistInterpolation(const double x, const double y, const double z)
+	{
+		TrilinearParams r;
+
+		if(isIntoMap(x, y, z) && isIntoMap(x+m_resolution, y+m_resolution, z+m_resolution))
+		{
+			// Get 3D point index
+			uint64_t i = point2grid(x, y, z); 
+
+			// Get neightbour values to compute trilinear interpolation
+			float c000, c001, c010, c011, c100, c101, c110, c111;
+			c000 = m_grid[i].dist; 
+			c001 = m_grid[i+m_gridStepZ].dist; 
+			c010 = m_grid[i+m_gridStepY].dist; 
+			c011 = m_grid[i+m_gridStepY+m_gridStepZ].dist; 
+			c100 = m_grid[i+1].dist; 
+			c101 = m_grid[i+1+m_gridStepZ].dist; 
+			c110 = m_grid[i+1+m_gridStepY].dist; 
+			c111 = m_grid[i+1+m_gridStepY+m_gridStepZ].dist; 
+
+			// Compute trilinear parameters
+			const float div = -m_oneDivRes*m_oneDivRes*m_oneDivRes;
+			float x0, y0, z0, x1, y1, z1;
+			x0 = ((int)(x*m_oneDivRes))*m_resolution;
+			x1 = x0+m_resolution;
+			y0 = ((int)(y*m_oneDivRes))*m_resolution;
+			y1 = y0+m_resolution;
+			z0 = ((int)(z*m_oneDivRes))*m_resolution;
+			z1 = z0+m_resolution;
+			r.a0 = (-c000*x1*y1*z1 + c001*x1*y1*z0 + c010*x1*y0*z1 - c011*x1*y0*z0 
+			+ c100*x0*y1*z1 - c101*x0*y1*z0 - c110*x0*y0*z1 + c111*x0*y0*z0)*div;
+			r.a1 = (c000*y1*z1 - c001*y1*z0 - c010*y0*z1 + c011*y0*z0
+			- c100*y1*z1 + c101*y1*z0 + c110*y0*z1 - c111*y0*z0)*div;
+			r.a2 = (c000*x1*z1 - c001*x1*z0 - c010*x1*z1 + c011*x1*z0 
+			- c100*x0*z1 + c101*x0*z0 + c110*x0*z1 - c111*x0*z0)*div;
+			r.a3 = (c000*x1*y1 - c001*x1*y1 - c010*x1*y0 + c011*x1*y0 
+			- c100*x0*y1 + c101*x0*y1 + c110*x0*y0 - c111*x0*y0)*div;
+			r.a4 = (-c000*z1 + c001*z0 + c010*z1 - c011*z0 + c100*z1 
+			- c101*z0 - c110*z1 + c111*z0)*div;
+			r.a5 = (-c000*y1 + c001*y1 + c010*y0 - c011*y0 + c100*y1 
+			- c101*y1 - c110*y0 + c111*y0)*div;
+			r.a6 = (-c000*x1 + c001*x1 + c010*x1 - c011*x1 + c100*x0 
+			- c101*x0 - c110*x0 + c111*x0)*div;
+			r.a7 = (c000 - c001 - c010 + c011 - c100
+			+ c101 + c110 - c111)*div;
+		}
+
+		return r;
+	}
+
 	
 	bool isIntoMap(float x, float y, float z)
 	{

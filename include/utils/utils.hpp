@@ -203,6 +203,13 @@ namespace Planners
                     
             return { _vec.x * _mult, _vec.y * _mult, _vec.z * _mult};
         }
+        
+        struct Vec3d 
+        {
+            double x, y, z;
+            Vec3d(double x_, double y_, double z_) : x(x_), y(y_), z(z_) {}
+        };
+
         /**
          * @brief 
          * 

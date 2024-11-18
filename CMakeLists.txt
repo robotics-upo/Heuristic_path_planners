@@ -70,6 +70,9 @@ if(BUILD_ROS_SUPPORT)
   set(Torch_DIR "/home/ros/libtorch/share/cmake/Torch")
   find_package(Torch REQUIRED)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
+  
+  find_package(Ceres REQUIRED)
+  
   if(BUILD_DEBUG)
     add_definitions(-DPUB_EXPLORED_NODES)
   endif()
@@ -127,6 +130,7 @@ include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ${TORCH_INCLUDE_DIRS}
+  ${CERES_INCLUDE_DIRS}
   ${CMAKE_CURRENT_SOURCE_DIR}/include/voro++-0.4.6
 )
 if( BUILD_VOROCPP )
@@ -155,7 +159,8 @@ list(APPEND ${PROJECT_NAME}_UTILS_SOURCES src/utils/geometry_utils.cpp
                                           src/utils/LineOfSight.cpp
                                           src/utils/utils.cpp       
                                           src/utils/metrics.cpp
-                                          src/utils/FCNet.cpp       
+                                          src/utils/FCNet.cpp
+                                          src/utils/CeresOpt.cpp       
                                           )
 if(BUILD_ROS_SUPPORT)
   list(APPEND ${PROJECT_NAME}_UTILS_SOURCES src/utils/ros/ROSInterfaces.cpp)
@@ -185,7 +190,7 @@ add_library(LazyThetaStarSIREN src/Planners/LazyThetaStarSIREN.cpp )
 
 
 list(APPEND ${PROJECT_NAME}_LIBRARIES AlgorithmBase AStar AStarM1 AStarM2 AStarSIREN ThetaStar ThetaStarM1 ThetaStarM2 ThetaStarSIREN LazyThetaStar LazyThetaStarM1 LazyThetaStarM1Mod LazyThetaStarM2 LazyThetaStarSIREN)  
-target_link_libraries(${${PROJECT_NAME}_LIBRARIES} ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${TORCH_LIBRARIES})
+target_link_libraries(${${PROJECT_NAME}_LIBRARIES} ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${TORCH_LIBRARIES} ${CERES_LIBRARIES})
 add_dependencies( ${${PROJECT_NAME}_LIBRARIES} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 list(APPEND ${PROJECT_NAME}_TARGETS ${${PROJECT_NAME}_LIBRARIES})
 
