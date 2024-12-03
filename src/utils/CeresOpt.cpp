@@ -31,34 +31,41 @@ namespace Ceresopt
         // Declare Ceres optimization problem
         ceres::Problem problem;
 
-        // Equidistance function target distance squared
+        // // Equidistance function target distance squared
 
-        double dist_target = 0;
-        for (int i=0; i < (num_wp-1); i++){
-            double tdx = wp_state_vector[i+1].parameter[0] - wp_state_vector[i].parameter[0];
-            double tdy = wp_state_vector[i+1].parameter[1] - wp_state_vector[i].parameter[1];
-            double tdz = wp_state_vector[i+1].parameter[2] - wp_state_vector[i].parameter[2];
+        // double dist_target = 0;
+        // for (int i=0; i < (num_wp-1); i++){
+        //     double tdx = wp_state_vector[i+1].parameter[0] - wp_state_vector[i].parameter[0];
+        //     double tdy = wp_state_vector[i+1].parameter[1] - wp_state_vector[i].parameter[1];
+        //     double tdz = wp_state_vector[i+1].parameter[2] - wp_state_vector[i].parameter[2];
 
-            dist_target += tdx * tdx + tdy * tdy + tdz * tdz;
-        }
-        dist_target = dist_target/(num_wp-1);
+        //     dist_target += tdx * tdx + tdy * tdy + tdz * tdz;
+        // }
+        // dist_target = dist_target/(num_wp-1);
 
         // Cost function weights
 
         double weight_equidistance = 1.0;
         double weight_path_length = 1.0;
-        double weight_esdf = 1.0;
+        double weight_esdf = 10.0;
+        double weight_smoothness = 1.0;
 
         // Define cost functions
 
-        for (int i = 0; i < wp_state_vector.size() - 1; i++){
+        // 1 - Equidistance cost function + Smoothness cost function
+        for (int i = 0; i < wp_state_vector.size() - 2; i++)
+        {
+            ceres::CostFunction* equidistance_function = new AutoDiffCostFunction<EquidistanceFunctor, 1, 3, 3, 3>
+                                                        (new EquidistanceFunctor(weight_equidistance));
+            ceres::CostFunction* smoothness_function = new AutoDiffCostFunction<SmoothnessFunctor, 1, 3, 3, 3>
+                                                        (new SmoothnessFunctor(weight_smoothness));
+            problem.AddResidualBlock(equidistance_function, nullptr, wp_state_vector[i].parameter, wp_state_vector[i+1].parameter, wp_state_vector[i+2].parameter);
+            problem.AddResidualBlock(smoothness_function, nullptr, wp_state_vector[i].parameter, wp_state_vector[i+1].parameter, wp_state_vector[i+2].parameter);
+        }
 
-            // 1 - Equidistance cost function
-            ceres::CostFunction* equidistance_function = new AutoDiffCostFunction<EquidistanceFunctor, 1, 3, 3>
-                                                        (new EquidistanceFunctor(dist_target, weight_equidistance));
-            problem.AddResidualBlock(equidistance_function, nullptr, wp_state_vector[i].parameter, wp_state_vector[i+1].parameter);
-
-            // 2 - Path length cost function
+        // 2 - Path length cost function
+        for (int i = 0; i < wp_state_vector.size() - 1; i++)
+        {
             ceres::CostFunction* path_length_function = new AutoDiffCostFunction<PathLengthFunctor, 1, 3, 3>
                                                         (new PathLengthFunctor(weight_path_length));;
             problem.AddResidualBlock(path_length_function, nullptr, wp_state_vector[i].parameter, wp_state_vector[i+1].parameter);
@@ -82,9 +89,16 @@ namespace Ceresopt
         options.linear_solver_type = ceres::DENSE_QR;
         options.minimizer_progress_to_stdout = true;
         options.max_num_iterations = 100;
-
+        options.num_threads = 12;
+        
         ceres::Solver::Summary summary;
+
+        auto start_opt = std::chrono::high_resolution_clock::now();
         ceres::Solve(options, &problem, &summary);
+        auto end_opt = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> opt_duration = end_opt - start_opt;
+        printf("TIEMPO DE OPTIMIZACIÓN: %.2f ms\n", opt_duration.count());
+
 
         // std::cout << summary.FullReport() << "\n";
 

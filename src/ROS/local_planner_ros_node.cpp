@@ -41,6 +41,8 @@
 #include <heuristic_planners/Vec3i.h>
 #include <heuristic_planners/CoordinateList.h>
 
+#define USING_PREPLANNING 1
+
 
 
 /**
@@ -392,9 +394,19 @@ private:
         // std::cout << "Closest waypoint: " << global_path_local[closest_index] << std::endl;
 
         // 2.3 - Find furthest next waypoint that is still inside the local map (the drone will treat this waypoint as the local goal
+        // 2.3b - Build a vector with the local part of the global path (that will be used as the first iteration of the optimizer when NOT using preplanning)
         bool points_in_range = true;
         int it = closest_index;
         Planners::utils::Vec3i local_goal;
+        Planners::utils::CoordinateList global_path_local_section;
+        if(USING_PREPLANNING==0){
+            Planners::utils::Vec3i auxnewpoint;
+            auxnewpoint.x = drone_local_x;
+            auxnewpoint.y = drone_local_y;
+            auxnewpoint.z = drone_local_z;
+            global_path_local_section.push_back(auxnewpoint);
+        }
+
         
         while (it <= (global_path_local.size() - 1) && points_in_range)
         {
@@ -405,6 +417,13 @@ private:
                 local_goal.x = global_path_local[it].x;
                 local_goal.y = global_path_local[it].y;
                 local_goal.z = global_path_local[it].z;
+                if(USING_PREPLANNING==0){
+                    Planners::utils::Vec3i auxnewpoint;
+                    auxnewpoint.x = global_path_local[it].x;
+                    auxnewpoint.y = global_path_local[it].y;
+                    auxnewpoint.z = global_path_local[it].z;
+                    global_path_local_section.push_back(auxnewpoint);
+                }
                 it++;
             }
             else
@@ -419,52 +438,74 @@ private:
         // std::cout << "Local goal found: " << local_goal << std::endl;
 
         // 3 - Check if local goal accessible. If not, find closest point
-        
-        // 4 - Use path planner to find local waypoints
-        Planners::utils::Vec3i discrete_start, discrete_goal;
-        discrete_start.x = drone_local_x;
-        discrete_start.y = drone_local_y;
-        discrete_start.z = drone_local_z;
-        discrete_goal.x = local_goal.x;
-        discrete_goal.y = local_goal.y;
-        discrete_goal.z = local_goal.z;
 
-        std::cout << "Discrete local start: " << discrete_start << "  | Discrete local goal: " << discrete_goal << std::endl;
+        // 4 - Use path planner to find local waypoints (if planning before the Ceres optimizer)
+        int planning_solved = 0;
+        Planners::utils::CoordinateList local_path;
+        if(USING_PREPLANNING == 1){
+            Planners::utils::Vec3i discrete_start, discrete_goal;
+            discrete_start.x = drone_local_x;
+            discrete_start.y = drone_local_y;
+            discrete_start.z = drone_local_z;
+            discrete_goal.x = local_goal.x;
+            discrete_goal.y = local_goal.y;
+            discrete_goal.z = local_goal.z;
 
-        if( algorithm_->detectCollision(discrete_start) ){
-            std::cout << discrete_start << ": Start not valid" << std::endl;
-        }
-        if( algorithm_->detectCollision(discrete_goal) ){
-            std::cout << discrete_goal << ": Goal not valid" << std::endl;
-        }
+            std::cout << "Discrete local start: " << discrete_start << "  | Discrete local goal: " << discrete_goal << std::endl;
 
-        //std::cout << "LOCAL PATH CALCULATED SUCCESSFULLY" << std::endl;
-        //Planners::utils::CoordinateList local_path = std::get<Planners::utils::CoordinateList>(local_path_data["path"]);
-        //std::cout << "Local path: " << local_path << std::endl;
-
-        
-        auto local_path_data = algorithm_->findPath(discrete_start, discrete_goal, loaded_sdf_);
-        if( std::get<bool>(local_path_data["solved"]) ){
-            Planners::utils::CoordinateList local_path;
-            local_path = std::get<Planners::utils::CoordinateList>(local_path_data["path"]);
-
-            // Trilinear params test
-            for(const auto& point: local_path){
-                double x_test = static_cast<double>(point.x) * m_local_grid3d_->m_resolution;
-                double y_test = static_cast<double>(point.y) * m_local_grid3d_->m_resolution;
-                double z_test = static_cast<double>(point.z) * m_local_grid3d_->m_resolution;
-                TrilinearParams p_test = m_local_grid3d_->computeDistInterpolation(x_test, y_test, z_test);
-                std::cout << "Params for x = " << x_test/m_local_grid3d_->m_resolution << ", y = " << y_test/m_local_grid3d_->m_resolution << ", z = " << z_test/m_local_grid3d_->m_resolution << ": a0=" << p_test.a0 << ", a1=" << p_test.a1 << ", a2=" << p_test.a2 << ", a3=" << p_test.a3 << ", a4=" << p_test.a4 << ", a5=" << p_test.a5 << ", a6=" << p_test.a6 << ", a7=" << p_test.a7 << std::endl;
-
-                float test_dist = p_test.a0 + p_test.a1*x_test + p_test.a2*y_test + p_test.a3*z_test + p_test.a4*x_test*y_test + p_test.a5*x_test*z_test + p_test.a6*y_test*z_test + p_test.a7*x_test*y_test*z_test;
-                uint64_t test_index = point.x + point.y*m_local_grid3d_->m_gridStepY + point.z*m_local_grid3d_->m_gridStepZ;
-                std::cout << "Interpolated distance : " << test_dist << "Real distance : " << m_local_grid3d_->m_grid[test_index].dist << std::endl;
+            if( algorithm_->detectCollision(discrete_start) ){
+                std::cout << discrete_start << ": Start not valid" << std::endl;
+            }
+            if( algorithm_->detectCollision(discrete_goal) ){
+                std::cout << discrete_goal << ": Goal not valid" << std::endl;
             }
 
+            //std::cout << "LOCAL PATH CALCULATED SUCCESSFULLY" << std::endl;
+            //Planners::utils::CoordinateList local_path = std::get<Planners::utils::CoordinateList>(local_path_data["path"]);
+            //std::cout << "Local path: " << local_path << std::endl;
+
+            auto local_planning_start = std::chrono::high_resolution_clock::now();
+            auto local_path_data = algorithm_->findPath(discrete_start, discrete_goal, loaded_sdf_);
+            auto local_planning_stop = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double, std::milli> local_duration = local_planning_stop - local_planning_start;
+            printf("TIEMPO TOTAL DEL PLANIFICADOR LOCAL: %.2f ms\n", local_duration.count());
+
+            if(std::get<bool>(local_path_data["solved"])){
+                local_path = std::get<Planners::utils::CoordinateList>(local_path_data["path"]);
+                planning_solved = 1;
+            }
+        }
+
+
+        // 5 - If solved (or if not planning before optimization), optimize the path
+
+        if(planning_solved == 1 || USING_PREPLANNING == 0){
+            
+            if(USING_PREPLANNING == 0)
+                local_path = global_path_local_section;
+
+            // // Trilinear params test
+            // for(const auto& point: local_path){
+            //     double x_test = static_cast<double>(point.x) * m_local_grid3d_->m_resolution;
+            //     double y_test = static_cast<double>(point.y) * m_local_grid3d_->m_resolution;
+            //     double z_test = static_cast<double>(point.z) * m_local_grid3d_->m_resolution;
+            //     TrilinearParams p_test = m_local_grid3d_->computeDistInterpolation(x_test, y_test, z_test);
+            //     std::cout << "Params for x = " << x_test/m_local_grid3d_->m_resolution << ", y = " << y_test/m_local_grid3d_->m_resolution << ", z = " << z_test/m_local_grid3d_->m_resolution << ": a0=" << p_test.a0 << ", a1=" << p_test.a1 << ", a2=" << p_test.a2 << ", a3=" << p_test.a3 << ", a4=" << p_test.a4 << ", a5=" << p_test.a5 << ", a6=" << p_test.a6 << ", a7=" << p_test.a7 << std::endl;
+
+            //     float test_dist = p_test.a0 + p_test.a1*x_test + p_test.a2*y_test + p_test.a3*z_test + p_test.a4*x_test*y_test + p_test.a5*x_test*z_test + p_test.a6*y_test*z_test + p_test.a7*x_test*y_test*z_test;
+            //     uint64_t test_index = point.x + point.y*m_local_grid3d_->m_gridStepY + point.z*m_local_grid3d_->m_gridStepZ;
+            //     std::cout << "Interpolated distance : " << test_dist << "Real distance : " << m_local_grid3d_->m_grid[test_index].dist << std::endl;
+            // }
+
             // -----------------CERES OPTIMIZATION OF THE PATH-----------------
+            auto ceres_start = std::chrono::high_resolution_clock::now();
             Planners::utils::CoordinateList opt_local_path = Ceresopt::ceresOptimizer(local_path, *m_local_grid3d_);
+            auto ceres_stop = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double, std::milli> ceres_duration = ceres_stop - ceres_start;
+            printf("TIEMPO TOTAL DEL OPTIMIZADOR: %.2f ms\n", ceres_duration.count());
+            std::cout << "Value of dist: " << m_local_grid3d_->m_grid[(m_local_grid3d_->m_gridSize-1)/2].dist << std::endl;
 
-
+    
             //Convert the local path to GLOBAL COORDINATES and push them into the markers
 
             Planners::utils::Vec3i local_origin = {origen_local_x, origen_local_y, origen_local_z};

@@ -8,6 +8,7 @@
 #include "utils/geometry_utils.hpp"
 #include "utils/metrics.hpp"
 #include <ros/ros.h>
+#include <chrono>
 
 #include <heuristic_planners/Vec3i.h>
 #include <heuristic_planners/CoordinateList.h>
@@ -19,6 +20,8 @@
 #include "local_planner_optimizer/ceres_constraint_dist_to_obstacle.hpp"
 #include "local_planner_optimizer/ceres_constraint_wp_equidistance.hpp"
 #include "local_planner_optimizer/ceres_constraint_path_length.hpp"
+#include "local_planner_optimizer/ceres_constraint_smoothness.hpp"
+
 
 using ceres::AutoDiffCostFunction;
 using ceres::NumericDiffCostFunction;

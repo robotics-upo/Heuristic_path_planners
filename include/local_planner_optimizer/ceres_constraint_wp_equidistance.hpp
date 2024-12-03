@@ -27,21 +27,24 @@ using ceres::Solver;
 class EquidistanceFunctor {
 
 public:
-    EquidistanceFunctor(double d_target, double weight): d_target_(d_target), weight_(weight) {}
+    EquidistanceFunctor(double weight): weight_(weight) {}
 
     template <typename T>
-    bool operator()(const T* const stateWP1, const T* const stateWP2, T* residual) const {
+    bool operator()(const T* const stateWP1, const T* const stateWP2, const T* const stateWP3, T* residual) const {
 
-        T dx = stateWP2[0] - stateWP1[0];
-        T dy = stateWP2[1] - stateWP1[1];
-        T dz = stateWP2[2] - stateWP1[2];
+        T dx1 = stateWP2[0] - stateWP1[0];
+        T dy1 = stateWP2[1] - stateWP1[1];
+        T dz1 = stateWP2[2] - stateWP1[2];
+        T dx2 = stateWP3[0] - stateWP2[0];
+        T dy2 = stateWP3[1] - stateWP2[1];
+        T dz2 = stateWP3[2] - stateWP2[2];
 
-        residual[0] = weight_* (dx * dx + dy * dy + dz * dz - T(d_target_));
+        residual[0] = weight_* ((dx2 * dx2 + dy2 * dy2 + dz2 * dz2) - (dx1 * dx1 + dy1 * dy1 + dz1 * dz1));
 
         return true;
     }
 
-    double d_target_, weight_;
+    double weight_;
     
 private:
 
