@@ -499,7 +499,7 @@ private:
 
             // -----------------CERES OPTIMIZATION OF THE PATH-----------------
             auto ceres_start = std::chrono::high_resolution_clock::now();
-            Planners::utils::CoordinateList opt_local_path = Ceresopt::ceresOptimizer(local_path, *m_local_grid3d_);
+            Planners::utils::CoordinateList opt_local_path = Ceresopt::ceresOptimizer(local_path, *m_local_grid3d_, resolution_);
             auto ceres_stop = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double, std::milli> ceres_duration = ceres_stop - ceres_start;
             printf("TIEMPO TOTAL DEL OPTIMIZADOR: %.2f ms\n", ceres_duration.count());

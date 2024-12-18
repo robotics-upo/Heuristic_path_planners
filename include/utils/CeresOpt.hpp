@@ -21,6 +21,9 @@
 #include "local_planner_optimizer/ceres_constraint_wp_equidistance.hpp"
 #include "local_planner_optimizer/ceres_constraint_path_length.hpp"
 #include "local_planner_optimizer/ceres_constraint_smoothness.hpp"
+#include "local_planner_optimizer/ceres_constraint_velocity_change.hpp"
+#include "local_planner_optimizer/ceres_constraint_min_acceleration.hpp"
+#include "local_planner_optimizer/ceres_constraint_pos_vel_coherence.hpp"
 
 
 using ceres::AutoDiffCostFunction;
@@ -36,11 +39,12 @@ using ceres::LossFunction;
 using ceres::CauchyLoss;
 
 struct parameterBlockWP{
-	double parameter[3];
+	double parameter[6];
 };
 
 namespace Ceresopt{
-    Planners::utils::CoordinateList ceresOptimizer(Planners::utils::CoordinateList initial_path, Local_Grid3d &_grid);
+    std::vector<double> InitVelCalculator(std::vector<parameterBlockWP> wp_state_vector, float total_travel_time, int num_wp, float res);
+    Planners::utils::CoordinateList ceresOptimizer(Planners::utils::CoordinateList initial_path, Local_Grid3d &_grid, float resolution_);
 }
 
 
