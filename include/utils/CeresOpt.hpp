@@ -38,13 +38,18 @@ using ceres::Solver;
 using ceres::LossFunction;
 using ceres::CauchyLoss;
 
-struct parameterBlockWP{
+struct parameterBlockTrajectoryWP{
 	double parameter[6];
 };
 
+struct parameterBlockPathWP{
+	double parameter[3];
+};
+
 namespace Ceresopt{
-    std::vector<double> InitVelCalculator(std::vector<parameterBlockWP> wp_state_vector, float total_travel_time, int num_wp, float res);
-    Planners::utils::CoordinateList ceresOptimizer(Planners::utils::CoordinateList initial_path, Local_Grid3d &_grid, float resolution_);
+    std::vector<double> InitVelCalculator(std::vector<parameterBlockTrajectoryWP> wp_state_vector, float total_travel_time, int num_wp, float res);
+    Planners::utils::OptimizedPath ceresOptimizerPath(Planners::utils::CoordinateList initial_path, Local_Grid3d &_grid, float resolution_);
+    Planners::utils::OptimizedTrajectory ceresOptimizerTrajectory(Planners::utils::CoordinateList initial_path, Local_Grid3d &_grid, float resolution_);
 }
 
 

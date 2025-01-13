@@ -210,6 +210,15 @@ namespace Planners
             Vec3d(double x_, double y_, double z_) : x(x_), y(y_), z(z_) {}
         };
 
+        struct OptimizedPath{
+            CoordinateList positions;
+        };
+
+        struct OptimizedTrajectory {
+            CoordinateList positions;
+            CoordinateList velocities;
+        };
+
         /**
          * @brief 
          * 
