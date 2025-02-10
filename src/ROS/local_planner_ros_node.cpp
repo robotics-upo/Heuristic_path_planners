@@ -42,6 +42,7 @@
 #include <heuristic_planners/CoordinateList.h>
 
 #define USING_PREPLANNING 1
+#define USING_CERES 0
 #define CERES_PATH_PLANNER 0
 #define CERES_TRAJECTORY_PLANNER 1
 #define MAX_LOCAL_PATH 6
@@ -333,18 +334,18 @@ private:
 
     void calculatePath3D()
     {
-        std::cout << "------ENTERED CALCULATEPATH3D-------" << std::endl;
+        // std::cout << "------ENTERED CALCULATEPATH3D-------" << std::endl;
 
         // 1. Check if starting point is free
         if(m_local_grid3d_->m_grid[(m_local_grid3d_->m_gridSize-1)/2].dist > 0)
         {
             ROS_INFO("Starting point is FREE");
-            std::cout << "Point index queried: " << (m_local_grid3d_->m_gridSize-1)/2 <<" |  Value of dist: " << m_local_grid3d_->m_grid[(m_local_grid3d_->m_gridSize-1)/2].dist << std::endl;
+            //std::cout << "Point index queried: " << (m_local_grid3d_->m_gridSize-1)/2 <<" |  Value of dist: " << m_local_grid3d_->m_grid[(m_local_grid3d_->m_gridSize-1)/2].dist << std::endl;
         }
         else
         {
             ROS_INFO("Starting point is NOT FREE -> ABORTING");
-            std::cout << "Point index queried: " << (m_local_grid3d_->m_gridSize-1)/2 <<" |  Value of dist: " << m_local_grid3d_->m_grid[(m_local_grid3d_->m_gridSize-1)/2].dist << std::endl;
+            //std::cout << "Point index queried: " << (m_local_grid3d_->m_gridSize-1)/2 <<" |  Value of dist: " << m_local_grid3d_->m_grid[(m_local_grid3d_->m_gridSize-1)/2].dist << std::endl;
             exit(EXIT_FAILURE);
         }
 
@@ -401,7 +402,10 @@ private:
         // 2.3b - Build a vector with the local part of the global path (that will be used as the first iteration of the optimizer when NOT using preplanning)
         bool points_in_range = true;
         int it = closest_index;
-        Planners::utils::Vec3i local_goal;
+        Planners::utils::Vec3i local_goal, local_goal_candidate;
+        local_goal.x = 0;
+        local_goal.y = 0;
+        local_goal.z = 0;
         Planners::utils::CoordinateList global_path_local_section;
         if(USING_PREPLANNING==0){
             Planners::utils::Vec3i auxnewpoint;
@@ -411,37 +415,38 @@ private:
             global_path_local_section.push_back(auxnewpoint);
         }
 
-        
         while (it <= (global_path_local.size() - 1) && points_in_range)
         {
             if (0 <= global_path_local[it].x && global_path_local[it].x < m_local_grid3d_->m_gridSizeX && 
                 0 <= global_path_local[it].y && global_path_local[it].y < m_local_grid3d_->m_gridSizeY &&
-                0 <= global_path_local[it].z && global_path_local[it].z < m_local_grid3d_->m_gridSizeZ) 
+                0 <= global_path_local[it].z && global_path_local[it].z < m_local_grid3d_->m_gridSizeZ) // If inside the map
             {
-                local_goal.x = global_path_local[it].x;
-                local_goal.y = global_path_local[it].y;
-                local_goal.z = global_path_local[it].z;
+                local_goal_candidate.x = global_path_local[it].x;
+                local_goal_candidate.y = global_path_local[it].y;
+                local_goal_candidate.z = global_path_local[it].z;
+                // 3 - Check if local goal accessible. If not, it can't be the local goal
+                if(algorithm_->detectCollision(local_goal_candidate)){ // And if not occupied, set local goal
+                    //std::cout << "Collision detected in point: " << local_goal_candidate. x << " " << local_goal_candidate.y << " " <<  local_goal_candidate.z << std::endl;
+                }
+                else{
+                    local_goal = local_goal_candidate;
+                    //ROS_INFO("No collision detected");
+                }
                 if(USING_PREPLANNING==0){
-                    Planners::utils::Vec3i auxnewpoint;
-                    auxnewpoint.x = global_path_local[it].x;
-                    auxnewpoint.y = global_path_local[it].y;
-                    auxnewpoint.z = global_path_local[it].z;
-                    global_path_local_section.push_back(auxnewpoint);
+                    global_path_local_section.push_back(local_goal_candidate);
                 }
                 it++;
             }
             else
             {
-                local_goal.x = global_path_local[it - 1].x;
-                local_goal.y = global_path_local[it - 1].y;
-                local_goal.z = global_path_local[it - 1].z;
+                //local_goal.x = global_path_local[it - 1].x;
+                //local_goal.y = global_path_local[it - 1].y;
+                //local_goal.z = global_path_local[it - 1].z;
                 points_in_range = false;
             }
             
         }
         // std::cout << "Local goal found: " << local_goal << std::endl;
-
-        // 3 - Check if local goal accessible. If not, find closest point
 
         // 4 - Use path planner to find local waypoints (if planning before the Ceres optimizer)
         int planning_solved = 0;
@@ -483,97 +488,141 @@ private:
         }
 
 
-        // 5 - If solved (or if not planning before optimization), optimize the path
+        // 5 - IF USING CERES ->If solved (or if not planning before optimization), optimize the path
 
-        if(planning_solved == 1 || USING_PREPLANNING == 0){
-            
-            if(USING_PREPLANNING == 0)
-                if(global_path_local_section.size() < MAX_LOCAL_PATH)
-                {
-                    local_path = global_path_local_section;
-                }
-                else
-                {
-                    for(size_t i=0; i < MAX_LOCAL_PATH; i++){
-                        size_t jump_index = static_cast<size_t>(i*(global_path_local_section.size() - 1) / (MAX_LOCAL_PATH - 1));
-                        local_path.push_back(global_path_local_section[jump_index]);
+        if(USING_CERES){
+            if(planning_solved == 1 || USING_PREPLANNING == 0){
+                if(USING_PREPLANNING == 0){
+                    if(global_path_local_section.size() < MAX_LOCAL_PATH)
+                    {
+                        local_path = global_path_local_section;
+                    }
+                    else
+                    {
+                        for(size_t i=0; i < MAX_LOCAL_PATH; i++){
+                            size_t jump_index = static_cast<size_t>(i*(global_path_local_section.size() - 1) / (MAX_LOCAL_PATH - 1));
+                            local_path.push_back(global_path_local_section[jump_index]);
+                        }
                     }
                 }
+                // -----------------CERES OPTIMIZATION-----------------
+                Planners::utils::CoordinateList opt_local_path_positions, opt_local_path_velocities;
+                Planners::utils::OptimizedPath opt_local_path;
+                Planners::utils::OptimizedTrajectory opt_local_trajectory;
+                auto ceres_start = std::chrono::high_resolution_clock::now();
+                if(CERES_PATH_PLANNER){
+                    opt_local_path = Ceresopt::ceresOptimizerPath(local_path, *m_local_grid3d_, resolution_);
+                    opt_local_path_positions = opt_local_path.positions;
+                }
+                else if(CERES_TRAJECTORY_PLANNER){
+                    opt_local_trajectory = Ceresopt::ceresOptimizerTrajectory(local_path, *m_local_grid3d_, resolution_);
+                    opt_local_path_positions = opt_local_trajectory.positions;
+                    opt_local_path_velocities = opt_local_trajectory.velocities;
+                }
+                auto ceres_stop = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double, std::milli> ceres_duration = ceres_stop - ceres_start;
+                printf("TIEMPO TOTAL DEL OPTIMIZADOR: %.2f ms\n", ceres_duration.count());
+        
+                //Convert the local path to GLOBAL COORDINATES and push them into the markers
 
-            // -----------------CERES OPTIMIZATION-----------------
-            Planners::utils::CoordinateList opt_local_path_positions, opt_local_path_velocities;
-            Planners::utils::OptimizedPath opt_local_path;
-            Planners::utils::OptimizedTrajectory opt_local_trajectory;
-            auto ceres_start = std::chrono::high_resolution_clock::now();
-            if(CERES_PATH_PLANNER){
-                opt_local_path = Ceresopt::ceresOptimizerPath(local_path, *m_local_grid3d_, resolution_);
-                opt_local_path_positions = opt_local_path.positions;
+                Planners::utils::Vec3i local_origin = {origen_local_x, origen_local_y, origen_local_z};
+                std::cout << "Local origin: " << local_origin;
+
+                if(CERES_PATH_PLANNER){
+                    for(const auto &it: opt_local_path_positions){
+                        Planners::utils::Vec3i global_wp_point = it + local_origin;
+                        local_path_line_markers_.points.push_back(Planners::utils::continousPoint(global_wp_point, resolution_));
+                        local_path_points_markers_.points.push_back(Planners::utils::continousPoint(global_wp_point, resolution_));
+                    }
+
+                    publishMarker(local_path_line_markers_, local_line_markers_pub_);
+                    publishMarker(local_path_points_markers_, local_point_markers_pub_);
+
+                    local_path_line_markers_.points.clear();
+                    local_path_points_markers_.points.clear();
+                }
+                else if(CERES_TRAJECTORY_PLANNER){
+                    for(const auto &it: opt_local_path_positions){
+                        Planners::utils::Vec3i global_wp_point = it + local_origin;
+                        local_path_line_markers_.points.push_back(Planners::utils::continousPoint(global_wp_point, resolution_));
+                        local_path_points_markers_.points.push_back(Planners::utils::continousPoint(global_wp_point, resolution_));
+                    }
+
+                    for(int i = 0; i < opt_local_path_positions.size(); i++){
+                        Planners::utils::Vec3i start_point, end_point;
+
+                        start_point.x = round(opt_local_path_positions[i].x + local_origin.x);
+                        start_point.y = round(opt_local_path_positions[i].y + local_origin.y);
+                        start_point.z = round(opt_local_path_positions[i].z + local_origin.z);
+                        end_point.x = round(opt_local_path_positions[i].x + local_origin.x + opt_local_path_velocities[i].x * 5);
+                        end_point.y = round(opt_local_path_positions[i].y + local_origin.y + opt_local_path_velocities[i].y * 5);
+                        end_point.z = round(opt_local_path_positions[i].z + local_origin.z + opt_local_path_velocities[i].z * 5);
+                        
+                        local_path_velocity_markers_.points.push_back(Planners::utils::continousPoint(start_point, resolution_));
+                        local_path_velocity_markers_.points.push_back(Planners::utils::continousPoint(end_point, resolution_));
+                    }
+
+
+                    publishMarker(local_path_line_markers_, local_line_markers_pub_);
+                    publishMarker(local_path_points_markers_, local_point_markers_pub_);
+                    publishMarker(local_path_velocity_markers_, local_velocity_markers_pub_);
+
+                    local_path_line_markers_.points.clear();
+                    local_path_points_markers_.points.clear();
+                    local_path_velocity_markers_.points.clear();
+
+                }
+
+                
+
+                ROS_INFO("Path calculated succesfully - USING CERES");
             }
-            else if(CERES_TRAJECTORY_PLANNER){
-                opt_local_trajectory = Ceresopt::ceresOptimizerTrajectory(local_path, *m_local_grid3d_, resolution_);
-                opt_local_path_positions = opt_local_trajectory.positions;
-                opt_local_path_velocities = opt_local_trajectory.velocities;
-            }
-            auto ceres_stop = std::chrono::high_resolution_clock::now();
-            std::chrono::duration<double, std::milli> ceres_duration = ceres_stop - ceres_start;
-            printf("TIEMPO TOTAL DEL OPTIMIZADOR: %.2f ms\n", ceres_duration.count());
-    
+            else
+                ROS_INFO("Couldn't calculate path - USING CERES ( Preplanning not solved correctly )");
+
+        }
+        else{
+
             //Convert the local path to GLOBAL COORDINATES and push them into the markers
 
             Planners::utils::Vec3i local_origin = {origen_local_x, origen_local_y, origen_local_z};
-            std::cout << "Local origin: " << local_origin;
+            Planners::utils::CoordinateList local_path_real;
 
-            if(CERES_PATH_PLANNER){
-                for(const auto &it: opt_local_path_positions){
-                    Planners::utils::Vec3i global_wp_point = it + local_origin;
-                    local_path_line_markers_.points.push_back(Planners::utils::continousPoint(global_wp_point, resolution_));
-                    local_path_points_markers_.points.push_back(Planners::utils::continousPoint(global_wp_point, resolution_));
-                }
+            for(const auto &it: local_path){
+                Planners::utils::Vec3i global_wp_point = it + local_origin;
+                Planners::utils::Vec3i aux_point;
+                local_path_line_markers_.points.push_back(Planners::utils::continousPoint(global_wp_point, resolution_));
+                local_path_points_markers_.points.push_back(Planners::utils::continousPoint(global_wp_point, resolution_));
 
-                publishMarker(local_path_line_markers_, local_line_markers_pub_);
-                publishMarker(local_path_points_markers_, local_point_markers_pub_);
-
-                local_path_line_markers_.points.clear();
-                local_path_points_markers_.points.clear();
+                local_path_real.push_back(global_wp_point);
             }
-            else if(CERES_TRAJECTORY_PLANNER){
-                for(const auto &it: opt_local_path_positions){
-                    Planners::utils::Vec3i global_wp_point = it + local_origin;
-                    local_path_line_markers_.points.push_back(Planners::utils::continousPoint(global_wp_point, resolution_));
-                    local_path_points_markers_.points.push_back(Planners::utils::continousPoint(global_wp_point, resolution_));
+
+            publishMarker(local_path_line_markers_, local_line_markers_pub_);
+            publishMarker(local_path_points_markers_, local_point_markers_pub_);
+
+            local_path_line_markers_.points.clear();
+            local_path_points_markers_.points.clear();
+
+            std::cout << "Global Path (in meters): [";
+            for (size_t i = 0; i < local_path_real.size(); ++i) {
+                const auto &wp = local_path_real[i];
+                float x_aux = wp.x * resolution_;
+                float y_aux = wp.y * resolution_;
+                float z_aux = wp.z * resolution_;
+                std::cout << "(" << x_aux << "," << y_aux << "," << z_aux << ")";
+                
+                if (i < local_path_real.size() - 1) {
+                    std::cout << ", ";
                 }
-
-                for(int i = 0; i < opt_local_path_positions.size(); i++){
-                    Planners::utils::Vec3i start_point, end_point;
-
-                    start_point.x = round(opt_local_path_positions[i].x + local_origin.x);
-                    start_point.y = round(opt_local_path_positions[i].y + local_origin.y);
-                    start_point.z = round(opt_local_path_positions[i].z + local_origin.z);
-                    end_point.x = round(opt_local_path_positions[i].x + local_origin.x + opt_local_path_velocities[i].x * 5);
-                    end_point.y = round(opt_local_path_positions[i].y + local_origin.y + opt_local_path_velocities[i].y * 5);
-                    end_point.z = round(opt_local_path_positions[i].z + local_origin.z + opt_local_path_velocities[i].z * 5);
-                    
-                    local_path_velocity_markers_.points.push_back(Planners::utils::continousPoint(start_point, resolution_));
-                    local_path_velocity_markers_.points.push_back(Planners::utils::continousPoint(end_point, resolution_));
-                }
-
-
-                publishMarker(local_path_line_markers_, local_line_markers_pub_);
-                publishMarker(local_path_points_markers_, local_point_markers_pub_);
-                publishMarker(local_path_velocity_markers_, local_velocity_markers_pub_);
-
-                local_path_line_markers_.points.clear();
-                local_path_points_markers_.points.clear();
-                local_path_velocity_markers_.points.clear();
-
             }
+            std::cout << "]" << std::endl;
 
             
 
-            ROS_INFO("Path calculated succesfully");
+
         }
-        else
-            ROS_INFO("Couldn't calculate path ( Preplanning not solved correctly )");
+
+        
     
     }
 

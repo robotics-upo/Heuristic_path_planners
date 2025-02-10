@@ -78,6 +78,14 @@ namespace Planners
         geometry_msgs::Point continousPoint(const Vec3i &_vec, const double &_res);
 
         /**
+         * @brief get a Vec3i coordinate from a discrete position and resolution
+         * 
+         * @param _vec discrete position
+         * @param _res resolution
+         * @return Vec3i 
+         */
+        Vec3i continousPoint_coord(const Vec3i &_vec, const double &_res);
+        /**
          * @brief 
          * 
          * @tparam T 

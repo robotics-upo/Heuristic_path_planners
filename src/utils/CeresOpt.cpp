@@ -87,7 +87,7 @@ namespace Ceresopt
 
         // Define cost functions
 
-        // 1 - Equidistance cost function + Smoothness cost function --> Tries to maintain equal distance between WP and avoid big changes in direction
+        // 1/2 - Equidistance cost function + Smoothness cost function --> Tries to maintain equal distance between WP and avoid big changes in direction
         for (int i = 0; i < wp_state_vector.size() - 2; i++)
         {
             ceres::CostFunction* equidistance_function = new AutoDiffCostFunction<EquidistanceFunctor, 1, 6, 6, 6>
@@ -98,7 +98,7 @@ namespace Ceresopt
             problem.AddResidualBlock(smoothness_function, nullptr, wp_state_vector[i].parameter, wp_state_vector[i+1].parameter, wp_state_vector[i+2].parameter);
         }
 
-        // 2 - Path length cost function --> Tries to minimize path length
+        // 3 - Path length cost function --> Tries to minimize path length
         for (int i = 0; i < wp_state_vector.size() - 1; i++)
         {
             ceres::CostFunction* path_length_function = new AutoDiffCostFunction<PathLengthFunctor, 1, 6, 6>
@@ -107,7 +107,7 @@ namespace Ceresopt
         }
 
 
-        // 3 - Distance to obstacles cost function --> Tries to maintain the biggest distance to obstacles possible
+        // 4 - Distance to obstacles cost function --> Tries to maintain the biggest distance to obstacles possible
         for (int i = 0; i < wp_state_vector.size(); i++)
         {
             ceres::CostFunction* esdf_function = new ObstacleDistanceCostFunctor(&_grid, weight_esdf);
@@ -239,7 +239,7 @@ namespace Ceresopt
 
         // Define cost functions
 
-        // 1 - Equidistance cost function + Smoothness cost function --> Tries to maintain equal distance between WP and avoid big changes in direction
+        // 1/2 - Equidistance cost function + Smoothness cost function --> Tries to maintain equal distance between WP and avoid big changes in direction
         for (int i = 0; i < wp_state_vector.size() - 2; i++)
         {
             ceres::CostFunction* equidistance_function = new AutoDiffCostFunction<EquidistanceFunctor, 1, 6, 6, 6>
@@ -250,7 +250,7 @@ namespace Ceresopt
             problem.AddResidualBlock(smoothness_function, nullptr, wp_state_vector[i].parameter, wp_state_vector[i+1].parameter, wp_state_vector[i+2].parameter);
         }
 
-        // 2 - Path length cost function --> Tries to minimize path length
+        // 3 - Path length cost function --> Tries to minimize path length
         for (int i = 0; i < wp_state_vector.size() - 1; i++)
         {
             ceres::CostFunction* path_length_function = new AutoDiffCostFunction<PathLengthFunctor, 1, 6, 6>
@@ -259,7 +259,7 @@ namespace Ceresopt
         }
 
 
-        // 3 - Distance to obstacles cost function --> Tries to maintain the biggest distance to obstacles possible
+        // 4 - Distance to obstacles cost function --> Tries to maintain the biggest distance to obstacles possible
         for (int i = 0; i < wp_state_vector.size(); i++)
         {
             ceres::CostFunction* esdf_function = new ObstacleDistanceCostFunctor(&_grid, weight_esdf);
@@ -268,7 +268,7 @@ namespace Ceresopt
         }
 
 
-        // 4 - Velocity module function --> Tries to maintain the desired velocity module
+        // 5 - Velocity module function --> Tries to maintain the desired velocity module
         for (int i = 0; i < wp_state_vector.size() - 1; i++)
         {
             ceres::CostFunction* velocity_change_function = new AutoDiffCostFunction<VelocityChangeFunctor, 1, 6>
@@ -276,7 +276,7 @@ namespace Ceresopt
             problem.AddResidualBlock(velocity_change_function, nullptr, wp_state_vector[i].parameter);
         }
 
-        // 5 - Minimize acceleration function --> Tries to minimize acceleration along the trajectory
+        // 6 - Minimize acceleration function --> Tries to minimize acceleration along the trajectory
 
         for (int i = 0; i < wp_state_vector.size() - 2; i++)
         {
@@ -285,7 +285,7 @@ namespace Ceresopt
             problem.AddResidualBlock(min_acceleration_function, nullptr, wp_state_vector[i].parameter, wp_state_vector[i+1].parameter);
         }
 
-        // 6 - Position-velocity coherence function --> Maintains the position-velocity direction coherence
+        // 7 - Position-velocity coherence function --> Maintains the position-velocity direction coherence
 
         for (int i = 0; i < wp_state_vector.size() - 2; i++)
         {

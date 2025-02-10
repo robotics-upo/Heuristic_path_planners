@@ -36,6 +36,18 @@ namespace Planners
 
             return ret;
         }
+        
+        Vec3i continousPoint_coord(const Vec3i &_vec, const double &_res)
+        {
+            Vec3i ret;
+
+            ret.x = _vec.x * _res;
+            ret.y = _vec.y * _res;
+            ret.z = _vec.z * _res;
+
+            return ret;
+        }
+
         inline Vec3i indexToXY(const unsigned int &_index, const unsigned int _grid_width)
         {
 
