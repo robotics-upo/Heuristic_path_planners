@@ -329,3 +329,9 @@ for i in {1..5}; do obs=$(echo "$i/10" | bc -l); echo "$obs"; ./generate2d_rando
 - [ ] Migrate Pointers to Smart Pointers
 
 See also the [issues](https://github.com/robotics-upo/Heuristic_path_planners/issues) tab.
+
+## ACKNOWLEDGEMENT
+
+This work is partially supported by the Programa Operativo FEDER Andalucia 2014–2020 through the project DeepBot (PY20 00817)
+
+<img src="https://raw.githubusercontent.com/robotics-upo/Heuristic_path_planners/master/resources/images/jandalucia.png" alt="jandalucia" width="400"/>
