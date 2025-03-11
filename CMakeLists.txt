@@ -88,6 +88,7 @@ add_message_files(
   FILES
   Vec3i.msg
   CoordinateList.msg
+  Esdfbuffer.msg
 )
 
 ## Generate services in the 'srv' folder

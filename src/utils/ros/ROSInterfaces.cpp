@@ -169,6 +169,34 @@ namespace Planners
             return true;
         }
 
+        bool configureLocalWorldCostsFIESTA(Local_Grid3d &_grid, AlgorithmBase &_algorithm, float drone_x, float drone_y, float drone_z, std::vector<double> esdf_buffer, int fiesta_range_x, int fiesta_range_y, int fiesta_range_z, double fiesta_resolution, double fiesta_x_min, double fiesta_y_min, double fiesta_z_min)
+        {
+            // Computar el grid local
+            _grid.computeLocalGridFIESTA(esdf_buffer, drone_x, drone_y, drone_z, fiesta_range_x, fiesta_range_y, fiesta_range_z, fiesta_resolution, fiesta_x_min, fiesta_y_min, fiesta_z_min);
+
+            auto world_size = _algorithm.getWorldSize();
+            std::cout << "World size: " << world_size << std::endl;
+            auto resolution = _algorithm.getWorldResolution();
+
+            for (int i = 0; i < world_size.x; i++)
+            {
+                for (int j = 0; j < world_size.y; j++)
+                {
+                    for (int k = 0; k < world_size.z; k++)
+                    {
+                        float cost = _grid.getCellCost(i * resolution, j * resolution, k * resolution);
+                        _algorithm.configureCellCost({i, j, k}, cost);
+                        if(cost <= resolution)
+                            _algorithm.addCollision({i, j, k});
+                        else
+                            _algorithm.removeCollision({i, j, k});
+                    }
+                }
+            }
+
+
+            return true;
+        }
         
         // bool configureLocalWorldCosts(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &_points, Local_Grid3d &_grid, AlgorithmBase &_algorithm)
         // {

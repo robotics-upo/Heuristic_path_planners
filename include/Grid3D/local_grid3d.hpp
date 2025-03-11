@@ -274,9 +274,6 @@ public:
 
 	void computeLocalGrid(torch::jit::script::Module& loaded_sdf, float drone_x, float drone_y, float drone_z)
 	{
-		// printf("-- Executing computeLocalGrid --\n");
-
-
 		// Build global positions vector
 		std::vector<std::vector<float>> coordinates_vector;
         coordinates_vector.reserve(m_gridSizeX*m_gridSizeY*m_gridSizeZ);
@@ -295,18 +292,6 @@ public:
 				}
 			}
 		}
-
-		// DEBUGGING: PRINT FIRST, MIDDLE AND LAST POINT
-
-		// std::vector<float> first_point = coordinates_vector.front();  // O coordinates_vector[0]
-		// std::cout << "Primer punto: (" << first_point[0] << ", " << first_point[1] << ", " << first_point[2] << ")\n";
-
-		// std::vector<float> last_point = coordinates_vector.back();  // O coordinates_vector[coordinates_vector.size() - 1]
-		// std::cout << "Último punto: (" << last_point[0] << ", " << last_point[1] << ", " << last_point[2] << ")\n";
-
-		// size_t middle_index = coordinates_vector.size() / 2;
-		// std::vector<float> middle_point = coordinates_vector[middle_index];
-		// std::cout << "Punto medio: (" << middle_point[0] << ", " << middle_point[1] << ", " << middle_point[2] << ")\n";
 
 		// Convert vector tu libtorch array and query the neural network
         auto num_points = coordinates_vector.size();
@@ -336,137 +321,43 @@ public:
 			}
 		}
 
-		// // Visualize the middle layer
-		// int midZ = m_gridSizeZ / 2;
-		// std::vector<float> gridSlice(m_gridSizeX * m_gridSizeY);
-
-		// for(int iy = 0; iy < m_gridSizeY; iy++) {
-		// 	for(int ix = 0; ix < m_gridSizeX; ix++) {
-		// 		int index = ix + iy * m_gridStepY + midZ * m_gridStepZ;
-		// 		gridSlice[iy * m_gridSizeX + ix] = m_grid[index].dist;
-		// 	}
-		// }
-
-		// std::cout << "Stored grid: " << gridSlice << std::endl;
-
-		//std::cout << "---!!!--- Exiting computeLocalGrid ---!!!---" << std::endl;
-
-
 	}
 
-	// // JAC
-	// void computeLocalGrid(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &_cloud) //void
-	// {
-	// 	// unsigned t0, t1, t2, t3, t4, t5;        
-
-	// 	//Publish percent variable
-	// 	// std_msgs::Float32 percent_msg;
-	// 	// percent_msg.data = 0;
-
-	// 	// Alloc the 3D grid JAC: Alloc the size of the local grid
-	// 	m_gridSizeX = (int)(m_maxX*m_oneDivRes);
-	// 	m_gridSizeY = (int)(m_maxY*m_oneDivRes); 
-	// 	m_gridSizeZ = (int)(m_maxZ*m_oneDivRes);
-	// 	m_gridSize = m_gridSizeX*m_gridSizeY*m_gridSizeZ;
-	// 	m_gridStepY = m_gridSizeX;
-	// 	m_gridStepZ = m_gridSizeX*m_gridSizeY;
-
-	// 	// JAC: Pongo los mismo datos que en global planner y no funciona
-	// 	// m_gridSizeX = 341;
-	// 	// m_gridSizeY = 241; 
-	// 	// m_gridSizeZ = 101;
-	// 	// m_gridSize = m_gridSizeX*m_gridSizeY*m_gridSizeZ;
-	// 	// m_gridStepY = m_gridSizeX;
-	// 	// m_gridStepZ = m_gridSizeX*m_gridSizeY;
-
-	// 	// JAC: Alloc the 3D local Grid from input parameters. These parameters should be defined once at the beginning.
-	// 	// release previously loaded data
-	// 	if(m_grid != NULL)
-	// 		delete []m_grid;
-	// 	// t0 = clock();
-	// 	m_grid = new Planners::utils::gridCell[m_gridSize]; // 2-3 milliseconds
-	// 	// t1 = clock();
-	// 	// double time = (double(t1-t0)/CLOCKS_PER_SEC);
-    //     // std::cout << "Execution Time: " << time << std::endl;
-
-	// 	// std::cout << "_maxX: " << m_maxX  << std::endl;
-	// 	// std::cout << "_gridSizeX: " << m_gridSizeX  << std::endl;
-
-	// 	// Setup kdtree
-	// 	// std::vector<int> ind;
-	// 	// pcl::removeNaNFromPointCloud(*_cloud, *filter_cloud, ind);  // JAC: Falla aqui
-	// 	// std::cout << "no. of pts in input=" << _cloud->size() << std::endl;  //JAC: Confirmado que el pointcloud se pasa bien
-	// 	// std::cout << "no. of pts in output="<< filter_cloud->size() << std::endl;
-	// 	// t2 = clock();
-	// 	m_kdtree.setInputCloud(_cloud);   //Less than 1 millisecond
-	// 	// t3 = clock();
-	// 	// double time2 = (double(t3-t2)/CLOCKS_PER_SEC);
-    //     // std::cout << "Execution Time2: " << time2 << std::endl;
-		
-	// 	// Compute the distance to the closest point of the grid
-	// 	int index;
-	// 	float dist;
-	// 	// float gaussConst1 = 1./(m_sensorDev*sqrt(2*M_PI));
-	// 	// float gaussConst2 = 1./(2*m_sensorDev*m_sensorDev);
-	// 	// pcl::PointXYZI searchPoint;
-	// 	pcl::PointXYZ searchPoint;
-	// 	std::vector<int> pointIdxNKNSearch(1);
-	// 	std::vector<float> pointNKNSquaredDistance(1);
-	// 	double count=0;
-	// 	// double percent;
-	// 	// double size=m_gridSizeX*m_gridSizeY*m_gridSizeZ;
-	// 	// t4 = clock();
-	// 	// JAC: 2-3 seconds
-	// 	for(int iz=0; iz<m_gridSizeZ; iz++)
-	// 	{
-	// 		for(int iy=0; iy<m_gridSizeY; iy++)
-	// 		{
-	// 			for(int ix=0; ix<m_gridSizeX; ix++)
-	// 			{
-	// 				searchPoint.x = ix*m_resolution;
-	// 				searchPoint.y = iy*m_resolution;
-	// 				searchPoint.z = iz*m_resolution;
-	// 				index = ix + iy*m_gridStepY + iz*m_gridStepZ;
-	// 				++count;
-	// 				// percent = count/size *100.0;
-	// 				// ROS_INFO_THROTTLE(0.5,"Progress: %lf %%", percent);	
+	void computeLocalGridFIESTA(std::vector<double> esdf_buffer, float drone_x, float drone_y, float drone_z, int fiesta_range_x, int fiesta_range_y, int fiesta_range_z, double fiesta_resolution, double fiesta_x_min, double fiesta_y_min, double fiesta_z_min)
+	{
+		// Place the queried values into the m_grid distance data field
+		for(int iz=0; iz<m_gridSizeZ; iz++)
+		{
+			for(int iy=0; iy<m_gridSizeY; iy++)
+			{
+				for(int ix=0; ix<m_gridSizeX; ix++)
+				{
+					// Calculate index in mgrid
+					int index_mgrid = ix + iy*m_gridStepY + iz*m_gridStepZ;
 					
-	// 				// if(percent > percent_msg.data + 0.5){
-	// 				// 	percent_msg.data = percent;
-	// 				// 	// percent_computed_pub_.publish(percent_msg);
-	// 				// }
+					// Calculate global point to be computed
+					float xc = drone_x + (ix - (m_gridSizeX -1) / 2) * m_resolution;
+					float yc = drone_y + (iy - (m_gridSizeY -1) / 2) * m_resolution;
+					float zc = drone_z + (iz - (m_gridSizeZ -1) / 2) * m_resolution;
 
-	// 				// JAC Error:Define correctly size of local map
-	// 				// JAC: AQUI PETA CUANDO NO SE RECIBE POINTCLOUD
-	// 				if(m_kdtree.nearestKSearch(searchPoint, 1, pointIdxNKNSearch, pointNKNSquaredDistance) > 0)
-	// 				{	
-	// 					dist = pointNKNSquaredDistance[0];
-	// 					m_grid[index].dist = dist; // dist in the discrete world
-	// 					// if(!use_costmap_function){
-	// 					// 	m_grid[index].prob = gaussConst1*exp(-dist*dist*gaussConst2);
-	// 					// }else{
-	// 					// 	double prob =  100*exp(-cost_scaling_factor*std::fabs((dist - robot_radius)));
-	// 					// 	// ROS_INFO("[%f, %f, %f] Dist: %f Probability: %f", searchPoint.x, searchPoint.y, searchPoint.z, dist, prob);
-	// 					// 	//JAC: Include the computation of prob considering the distance to the nearest voronoi edge.
-	// 					// 	m_grid[index].prob = prob;
-	// 					// }
-	// 				}
-	// 				else
-	// 				{
-	// 					m_grid[index].dist = -1.0;
-	// 					// m_grid[index].prob =  0.0;
-	// 				}
+					// Convert local point to local point in FIESTA's grid
+					int index_fiesta = floor((zc-fiesta_z_min)/fiesta_resolution) + floor((yc-fiesta_y_min)/fiesta_resolution)*fiesta_range_z + floor((xc-fiesta_x_min)/fiesta_resolution)*fiesta_range_y*fiesta_range_z;
 
-	// 			}
-	// 		}
-	// 	}
-	// 	// t5 = clock();
-	// 	// double time3 = (double(t5-t4)/CLOCKS_PER_SEC);
-    //     // std::cout << "Execution Time3: " << time3 << std::endl;
+					// Populate the local grid
+					if(esdf_buffer[index_fiesta] == -10000)
+					{
+						m_grid[index_mgrid].dist = 0.001;
+					}
+					else
+					{
+						m_grid[index_mgrid].dist = esdf_buffer[index_fiesta];
+					}
 
-	// 	// percent_msg.data = 100;
-	// 	// percent_computed_pub_.publish(percent_msg);
-	// }
+				}
+			}
+		}
+	}
+
 	
 	std::pair<Planners::utils::Vec3i, double>  getClosestObstacle(const Planners::utils::Vec3i& _coords){
 

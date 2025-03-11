@@ -40,6 +40,12 @@
 #include <heuristic_planners/SetAlgorithm.h>
 #include <heuristic_planners/Vec3i.h>
 #include <heuristic_planners/CoordinateList.h>
+#include <heuristic_planners/Esdfbuffer.h>
+
+
+#define ENVIRONMENT_REPRESENTATION 1
+    //      0       HIO-ESDF
+    //      1       FIESTA
 
 #define USING_PREPLANNING 1
 #define USING_CERES 0
@@ -77,6 +83,7 @@ public:
         // pointcloud_local_sub_     = lnh_.subscribe("/points", 1, &HeuristicLocalPlannerROS::pointCloudCallback, this); //compile
         occupancy_grid_local_sub_ = lnh_.subscribe<nav_msgs::OccupancyGrid>("/grid", 1, &HeuristicLocalPlannerROS::occupancyGridCallback, this);
         network_update_sub_ = lnh_.subscribe<std_msgs::Empty>("/net_update", 1, &HeuristicLocalPlannerROS::networkUpdateCallback, this);
+        fiesta_update_sub_ = lnh_.subscribe<heuristic_planners::Esdfbuffer>("/fiesta/ESDFMap/esdf_buffer", 1, &HeuristicLocalPlannerROS::fiestaUpdateCallback, this);
 
         // request_path_server_   = lnh_.advertiseService("request_path",  &HeuristicLocalPlannerROS::requestPathService, this); // This is in planner_ros_node.cpp and the corresponding service defined.
         change_planner_server_ = lnh_.advertiseService("set_algorithm", &HeuristicLocalPlannerROS::setAlgorithm, this);
@@ -142,6 +149,19 @@ private:
         networkReceivedFlag_ = 1;
     }
 
+    void fiestaUpdateCallback(const heuristic_planners::Esdfbuffer::ConstPtr& msg){
+        fiesta_distance_buffer_ = msg->esdf_buffer;
+        fiesta_grid_size_x_ = msg->grid_size_x;
+        fiesta_grid_size_y_ = msg->grid_size_y;
+        fiesta_grid_size_z_ = msg->grid_size_z;
+        fiesta_x_min_ = msg->min_x;
+        fiesta_y_min_ = msg->min_y;
+        fiesta_z_min_ = msg->min_z;
+        fiesta_resolution_ = msg->resolution;
+
+        if(fiesta_flag == 0) fiesta_flag = 1;
+    }
+
     void globalPositionCallback(const geometry_msgs::PoseStamped::ConstPtr& msg){
         double drone_x = resolution_ * std::round(msg->pose.position.x / resolution_);
         double drone_y = resolution_ * std::round(msg->pose.position.y / resolution_);
@@ -161,21 +181,27 @@ private:
         if(globalPathReceived_ == 1){
 
             auto loop_start = std::chrono::high_resolution_clock::now();
+
+            if(ENVIRONMENT_REPRESENTATION == 1 && fiesta_flag == 0) return;
         
 
 
-            // 1. Update Neural Network State (if new state available)
-            if(networkReceivedFlag_ == 1)
-            {
-                printf("Importing new neural network state\n");
-                loaded_sdf_ = torch::jit::load("/home/ros/exchange/weight_data/model.pt", c10::kCPU); 
-                networkReceivedFlag_ = 0;
+            // 1. Update Neural Network State (if new state available and using HIO-SDF)
+
+            if(ENVIRONMENT_REPRESENTATION == 0){
+                if(networkReceivedFlag_ == 1)
+                {
+                    printf("Importing new neural network state\n");
+                    loaded_sdf_ = torch::jit::load("/home/ros/exchange/weight_data/model.pt", c10::kCPU); 
+                    networkReceivedFlag_ = 0;
+                }
             }
-
+            
             // 2. Update local map with the neural network information around the drone
-            Planners::utils::configureLocalWorldCosts(*m_local_grid3d_, *algorithm_, drone_x_, drone_y_, drone_z_, loaded_sdf_);
-            // printf("-- Exiting callback --\n");
-
+            
+            if(ENVIRONMENT_REPRESENTATION == 0) Planners::utils::configureLocalWorldCosts(*m_local_grid3d_, *algorithm_, drone_x_, drone_y_, drone_z_, loaded_sdf_);
+            else if (ENVIRONMENT_REPRESENTATION == 1) Planners::utils::configureLocalWorldCostsFIESTA(*m_local_grid3d_, *algorithm_, drone_x_, drone_y_, drone_z_, fiesta_distance_buffer_, fiesta_grid_size_x_, fiesta_grid_size_y_, fiesta_grid_size_z_, fiesta_resolution_, fiesta_x_min_, fiesta_y_min_, fiesta_z_min_);
+            
             // 3. Calculate Local Path
             calculatePath3D();
 
@@ -340,12 +366,12 @@ private:
         if(m_local_grid3d_->m_grid[(m_local_grid3d_->m_gridSize-1)/2].dist > 0)
         {
             ROS_INFO("Starting point is FREE");
-            //std::cout << "Point index queried: " << (m_local_grid3d_->m_gridSize-1)/2 <<" |  Value of dist: " << m_local_grid3d_->m_grid[(m_local_grid3d_->m_gridSize-1)/2].dist << std::endl;
+            std::cout << "Point index queried: " << (m_local_grid3d_->m_gridSize-1)/2 <<" |  Value of dist: " << m_local_grid3d_->m_grid[(m_local_grid3d_->m_gridSize-1)/2].dist << std::endl;
         }
         else
         {
             ROS_INFO("Starting point is NOT FREE -> ABORTING");
-            //std::cout << "Point index queried: " << (m_local_grid3d_->m_gridSize-1)/2 <<" |  Value of dist: " << m_local_grid3d_->m_grid[(m_local_grid3d_->m_gridSize-1)/2].dist << std::endl;
+            std::cout << "Point index queried: " << (m_local_grid3d_->m_gridSize-1)/2 <<" |  Value of dist: " << m_local_grid3d_->m_grid[(m_local_grid3d_->m_gridSize-1)/2].dist << std::endl;
             exit(EXIT_FAILURE);
         }
 
@@ -961,6 +987,18 @@ private:
     torch::jit::script::Module loaded_sdf_;
     int networkReceivedFlag_;
     ros::Subscriber network_update_sub_;
+
+    // --------NEW VARIABLES -- FIESTA PLANNER
+    //FIESTA updates subscriber
+    ros::Subscriber fiesta_update_sub_;
+
+    //FIESTA implementation variables
+    std::vector<double> fiesta_distance_buffer_;
+    int fiesta_grid_size_x_, fiesta_grid_size_y_, fiesta_grid_size_z_;
+    double fiesta_x_min_, fiesta_y_min_, fiesta_z_min_;
+    double fiesta_resolution_;
+
+    int fiesta_flag = 0; //Checks if already received a FIESTA message -> Avoids planning without proper initialization
 
     //Global position subscriber
     ros::Subscriber globalposition_local_sub_;

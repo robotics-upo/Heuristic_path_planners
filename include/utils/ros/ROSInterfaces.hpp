@@ -159,7 +159,15 @@ namespace Planners
          */
         bool configureLocalWorldCosts(Local_Grid3d &_grid, AlgorithmBase &_algorithm, float drone_x, float drone_y, float drone_z, torch::jit::script::Module& loaded_sdf);
 
-        //bool configureLocalWorldCosts(const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &_points, Local_Grid3d &_grid, AlgorithmBase &_algorithm);
+        /**
+         * @brief 
+         * 
+         * @param _grid 
+         * @param _algorithm 
+         * @return true 
+         * @return false 
+         */
+        bool configureLocalWorldCostsFIESTA(Local_Grid3d &_grid, AlgorithmBase &_algorithm, float drone_x, float drone_y, float drone_z, std::vector<double> esdf_buffer, int fiesta_range_x, int fiesta_range_y, int fiesta_range_z, double fiesta_resolution, double fiesta_x_min, double fiesta_y_min, double fiesta_z_min);
 
     }
 }
