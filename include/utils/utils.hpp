@@ -219,6 +219,12 @@ namespace Planners
             CoordinateList velocities;
         };
 
+        struct OptimizedContinuousFunction{
+            std::vector<double> x_params;
+            std::vector<double> y_params;
+            std::vector<double> z_params;
+        };
+
         /**
          * @brief 
          * 
