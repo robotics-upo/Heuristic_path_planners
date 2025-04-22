@@ -20,7 +20,7 @@
 
 #include <ceres/ceres.h>
 
-#define SEGMENTS 100
+#define SEGMENTS 10
 #define t_final 10.0
 
 using ceres::SizedCostFunction;
@@ -63,7 +63,7 @@ class DistanceFunction : public SizedCostFunction<1, 3>
             }
             else // This might give an error
             {
-                std::cout << "Ceres found point outside map" << std::endl;
+                std::cout << "Cont - Ceres found point outside map" << std::endl;
                 residuals[0] = 100;
                 if (jacobians != nullptr && jacobians[0] != nullptr)
                 {

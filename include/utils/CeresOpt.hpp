@@ -28,7 +28,9 @@
 
 #include "local_planner_optimizer/ceres_constraint_cont_smoothness.hpp"
 #include "local_planner_optimizer/ceres_constraint_cont_path_length.hpp"
+#include "local_planner_optimizer/ceres_constraint_cont_path_length_segment.hpp"
 #include "local_planner_optimizer/ceres_constraint_cont_dist_to_obstacle.hpp"
+#include "local_planner_optimizer/ceres_constraint_cont_dist_to_obstacle_segment.hpp"
 #include "local_planner_optimizer/ceres_constraint_cont_fix_goal.hpp"
 
 #include "local_planner_optimizer/ceres_constraint_cont_init_distance_to_wp.hpp"

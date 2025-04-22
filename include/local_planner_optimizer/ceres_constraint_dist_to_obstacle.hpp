@@ -61,7 +61,7 @@ class ObstacleDistanceCostFunctor : public SizedCostFunction<1, 6>
             }
             else // This might give an error
             {
-                std::cout << "Ceres found point outside map" << std::endl;
+                std::cout << "Dist - Ceres found point outside map" << std::endl;
                 residuals[0] = 100;
                 if (jacobians != nullptr && jacobians[0] != nullptr)
                 {

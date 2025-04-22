@@ -57,6 +57,8 @@ public:
             z0 = z1;
         }
 
+        //std::cout << "Length residual: " << residual[0] << std::endl;
+
         return true;
     }
 
