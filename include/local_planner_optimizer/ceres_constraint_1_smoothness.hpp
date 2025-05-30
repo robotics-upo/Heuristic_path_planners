@@ -1,5 +1,5 @@
-#ifndef CERES_CONSTRAINTS_POS_VEL_COHERENCE
-#define CERES_CONSTRAINTS_POS_VEL_COHERENCE
+#ifndef CERES_CONSTRAINTS_1_SMOOTHNESS
+#define CERES_CONSTRAINTS_1_SMOOTHNESS
 
 #include <iostream>
 #include <fstream>
@@ -24,22 +24,22 @@ using ceres::Problem;
 using ceres::Solve;
 using ceres::Solver;
 
-class PosVelCoherenceFunctor {
+class Ceres1_SmoothnessFunctor {
 
 public:
-    PosVelCoherenceFunctor(double weight): weight_(weight) {}
+    Ceres1_SmoothnessFunctor(double weight): weight_(weight) {}
 
     template <typename T>
-    bool operator()(const T* const stateWP1, const T* const stateWP2, T* residual) const {
+    bool operator()(const T* const stateWP1, const T* const stateWP2, const T* const stateWP3, T* residual) const {
 
         // Compute both vectors and the dot product
-        T vel_total[3] = {stateWP1[3] + stateWP2[3], stateWP1[4] + stateWP2[4], stateWP1[5] + stateWP2[5]};
-        T pos_dif[3] = {stateWP2[0] - stateWP1[0], stateWP2[1] - stateWP1[1], stateWP2[2] - stateWP1[2]};
-        T dot_product = (vel_total[0] * pos_dif[0]) + (vel_total[1] * pos_dif[1]) + (vel_total[2] * pos_dif[2]);
+        T vecAB[3] = {stateWP2[0]-stateWP1[0], stateWP2[1]-stateWP1[1], stateWP2[2]-stateWP1[2]};
+        T vecBC[3] = {stateWP3[0]-stateWP2[0], stateWP3[1]-stateWP2[1], stateWP3[2]-stateWP2[2]};
+        T dot_product = (vecBC[0] * vecAB[0]) + (vecBC[1] * vecAB[1]) + (vecBC[2] * vecAB[2]);
 
         // Compute vector norms
-		T arg1 = (vel_total[0] * vel_total[0]) + (vel_total[1] * vel_total[1]) + (vel_total[2] * vel_total[2]);
-		T arg2 = (pos_dif[0] * pos_dif[0]) + (pos_dif[1] * pos_dif[1]) + (pos_dif[2] * pos_dif[2]);
+		T arg1 = (vecAB[0] * vecAB[0]) + (vecAB[1] * vecAB[1]) + (vecAB[2] * vecAB[2]);
+		T arg2 = (vecBC[0] * vecBC[0]) + (vecBC[1] * vecBC[1]) + (vecBC[2] * vecBC[2]);
 		T norm_vector1, norm_vector2, cos_angle;
 		
 		if (arg1 < 0.0001 && arg1 > -0.0001)
@@ -65,7 +65,8 @@ public:
         T max_cos_residual = T{0.0}; // We want the angle to be 0 -> Residual is 0 when cos(angle) = 1
 
         residual[0] = weight_ * (min_cos_residual + ((cos_angle - min_expected_cos) * (max_cos_residual - min_cos_residual) / (max_expected_cos - min_expected_cos)));
-        
+
+
         return true;
     }
 

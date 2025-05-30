@@ -1,5 +1,5 @@
-#ifndef CERES_CONSTRAINTS_DIST_TO_OBSTACLE
-#define CERES_CONSTRAINTS_DIST_TO_OBSTACLE
+#ifndef CERES_CONSTRAINTS_0_DIST_TO_OBSTACLE
+#define CERES_CONSTRAINTS_0_DIST_TO_OBSTACLE
 
 #include <iostream>
 #include <fstream>
@@ -24,13 +24,13 @@ using ceres::Problem;
 using ceres::Solve;
 using ceres::Solver;
 
-class ObstacleDistanceCostFunctor : public SizedCostFunction<1, 6>
+class Ceres0_ObstacleDistanceCostFunctor : public SizedCostFunction<1, 3>
     {
     public:
-        ObstacleDistanceCostFunctor(Local_Grid3d* grid_, double weight): g_3D(grid_), weight_(weight)
+        Ceres0_ObstacleDistanceCostFunctor(Local_Grid3d* grid_, double weight): g_3D(grid_), weight_(weight)
         {}
 
-        virtual ~ObstacleDistanceCostFunctor(void)
+        virtual ~Ceres0_ObstacleDistanceCostFunctor(void)
         {}
 
         virtual bool Evaluate(double const* const* parameters, double* residuals, double** jacobians) const

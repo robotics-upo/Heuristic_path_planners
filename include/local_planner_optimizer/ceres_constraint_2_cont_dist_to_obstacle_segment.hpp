@@ -1,5 +1,5 @@
-#ifndef CERES_CONSTRAINTS_CONT_DIST_TO_OBSTACLE_SEGMENT
-#define CERES_CONSTRAINTS_CONT_DIST_TO_OBSTACLE_SEGMENT
+#ifndef CERES_CONSTRAINTS_2_CONT_DIST_TO_OBSTACLE_SEGMENT
+#define CERES_CONSTRAINTS_2_CONT_DIST_TO_OBSTACLE_SEGMENT
 
 #include <iostream>
 #include <fstream>
@@ -51,16 +51,15 @@ class DistanceFunctionSegment : public SizedCostFunction<1, 3>
                 dist_ = p.a0 + p.a1*x + p.a2*y + p.a3*z + p.a4*x*y + p.a5*x*z + p.a6*y*z + p.a7*x*y*z;
                 if(dist_ < 0.01)
                     dist_ = 0.01;
-                // residuals[0] = 1/dist_;
-                residuals[0] = 6 - dist_;
+                residuals[0] = 1/dist_;
+                // residuals[0] = 6 - dist_;
                 // std::cout << "Coordenadas del punto: " << parameters[0][0] << ", " << parameters[0][1] << ", " << parameters[0][2] << "  ||  Dist: " << dist_ << std::endl; 
                 if (jacobians != NULL && jacobians[0] != NULL)
                 {
-                    // int cte = -1/(dist_*dist_);
-                    int cte = -1;
-                    jacobians[0][0] = - (p.a1 + p.a4*y + p.a5*z + p.a7*y*z);
-                    jacobians[0][1] = - (p.a2 + p.a4*x + p.a6*z + p.a7*x*z);
-                    jacobians[0][2] = - (p.a3 + p.a5*x + p.a6*y + p.a7*x*y);
+                    int cte = -1/(dist_*dist_);
+                    jacobians[0][0] = cte * (p.a1 + p.a4*y + p.a5*z + p.a7*y*z);
+                    jacobians[0][1] = cte * (p.a2 + p.a4*x + p.a6*z + p.a7*x*z);
+                    jacobians[0][2] = cte * (p.a3 + p.a5*x + p.a6*y + p.a7*x*y);
                 }
             }
             else // This might give an error
@@ -93,15 +92,15 @@ class DistanceFunctionSegment : public SizedCostFunction<1, 3>
 
 
 
-class ObstacleDistanceCostContSegmentFunctor
+class Ceres2_ObstacleDistanceCostContSegmentFunctor
 {
  public:
-    ObstacleDistanceCostContSegmentFunctor(Local_Grid3d &grid, double t_act, int esdf_seg = 10, double weight = 1.0)
+    Ceres2_ObstacleDistanceCostContSegmentFunctor(Local_Grid3d &grid, double t_act, int esdf_seg = 10, double weight = 1.0)
       : grid_(grid), t_act_(t_act), esdf_seg_(esdf_seg), weight_(weight), distanceFunctor_(new DistanceFunctionSegment(grid))
     {
     }
 
-    virtual ~ObstacleDistanceCostContSegmentFunctor(void) 
+    virtual ~Ceres2_ObstacleDistanceCostContSegmentFunctor(void) 
     {
     }
 
@@ -110,9 +109,9 @@ class ObstacleDistanceCostContSegmentFunctor
     {   
         T p[3], invdist;
 
-        p[0] = stateCoeff[0] * ceres::pow(t_act_, 5) + stateCoeff[1] * ceres::pow(t_act_, 4) + stateCoeff[2] * ceres::pow(t_act_, 3) + stateCoeff[3] * ceres::pow(t_act_, 2) + stateCoeff[4] * t_act_ + stateCoeffConstant[0];
-        p[1] = stateCoeff[5] * ceres::pow(t_act_, 5) + stateCoeff[6] * ceres::pow(t_act_, 4) + stateCoeff[7] * ceres::pow(t_act_, 3) + stateCoeff[8] * ceres::pow(t_act_, 2) + stateCoeff[9] * t_act_ + stateCoeffConstant[1];
-        p[2] = stateCoeff[10] * ceres::pow(t_act_, 5) + stateCoeff[11] * ceres::pow(t_act_, 4) + stateCoeff[12] * ceres::pow(t_act_, 3) + stateCoeff[13] * ceres::pow(t_act_, 2) + stateCoeff[14] * t_act_ + stateCoeffConstant[2];
+        p[0] = stateCoeff[0] * ceres::pow(t_act_, 3) + stateCoeff[1] * ceres::pow(t_act_, 2) + stateCoeff[2] * t_act_ + stateCoeffConstant[0];
+        p[1] = stateCoeff[3] * ceres::pow(t_act_, 3) + stateCoeff[4] * ceres::pow(t_act_, 2) + stateCoeff[5] * t_act_ + stateCoeffConstant[1];
+        p[2] = stateCoeff[6] * ceres::pow(t_act_, 3) + stateCoeff[7] * ceres::pow(t_act_, 2) + stateCoeff[8] * t_act_ + stateCoeffConstant[2];
 
         // Compute distance
         distanceFunctor_(p, &invdist);

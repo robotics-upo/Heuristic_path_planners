@@ -35,9 +35,9 @@ public:
     template <typename T>
     bool operator()(const T* const stateCoeff, const T* const stateCoeffConstant, T* residual) const {
 
-        T x_act = stateCoeff[0] * ceres::pow(t_act_, 5) + stateCoeff[1] * ceres::pow(t_act_, 4) + stateCoeff[2] * ceres::pow(t_act_, 3) + stateCoeff[3] * ceres::pow(t_act_, 2) + stateCoeff[4] * t_act_ + stateCoeffConstant[0];
-        T y_act = stateCoeff[5] * ceres::pow(t_act_, 5) + stateCoeff[6] * ceres::pow(t_act_, 4) + stateCoeff[7] * ceres::pow(t_act_, 3) + stateCoeff[8] * ceres::pow(t_act_, 2) + stateCoeff[9] * t_act_ + stateCoeffConstant[1];
-        T z_act = stateCoeff[10] * ceres::pow(t_act_, 5) + stateCoeff[11] * ceres::pow(t_act_, 4) + stateCoeff[12] * ceres::pow(t_act_, 3) + stateCoeff[13] * ceres::pow(t_act_, 2) + stateCoeff[14] * t_act_ + stateCoeffConstant[2];
+        T x_act = stateCoeff[0] * ceres::pow(t_act_, 3) + stateCoeff[1] * ceres::pow(t_act_, 2) + stateCoeff[2] * t_act_ + stateCoeffConstant[0];
+        T y_act = stateCoeff[3] * ceres::pow(t_act_, 3) + stateCoeff[4] * ceres::pow(t_act_, 2) + stateCoeff[5] * t_act_ + stateCoeffConstant[1];
+        T z_act = stateCoeff[6] * ceres::pow(t_act_, 3) + stateCoeff[7] * ceres::pow(t_act_, 2) + stateCoeff[8] * t_act_ + stateCoeffConstant[2];
 
         residual[0] = weight_ * (ceres::pow((x_act-T(global_wp_.x)),2) + ceres::pow((y_act-T(global_wp_.y)),2) + ceres::pow((z_act-T(global_wp_.z)),2));
 

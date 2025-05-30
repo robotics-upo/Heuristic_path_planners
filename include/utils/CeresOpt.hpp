@@ -18,23 +18,39 @@
 
 #include <ceres/ceres.h>
 
-#include "local_planner_optimizer/ceres_constraint_dist_to_obstacle.hpp"
-#include "local_planner_optimizer/ceres_constraint_wp_equidistance.hpp"
-#include "local_planner_optimizer/ceres_constraint_path_length.hpp"
-#include "local_planner_optimizer/ceres_constraint_smoothness.hpp"
-#include "local_planner_optimizer/ceres_constraint_velocity_change.hpp"
-#include "local_planner_optimizer/ceres_constraint_min_acceleration.hpp"
-#include "local_planner_optimizer/ceres_constraint_pos_vel_coherence.hpp"
+#include "local_planner_optimizer/ceres_constraint_0_dist_to_obstacle.hpp"
+#include "local_planner_optimizer/ceres_constraint_0_wp_equidistance.hpp"
+#include "local_planner_optimizer/ceres_constraint_0_path_length.hpp"
+#include "local_planner_optimizer/ceres_constraint_0_smoothness.hpp"
 
-#include "local_planner_optimizer/ceres_constraint_cont_smoothness.hpp"
-#include "local_planner_optimizer/ceres_constraint_cont_path_length.hpp"
-#include "local_planner_optimizer/ceres_constraint_cont_path_length_segment.hpp"
-#include "local_planner_optimizer/ceres_constraint_cont_dist_to_obstacle.hpp"
-#include "local_planner_optimizer/ceres_constraint_cont_dist_to_obstacle_segment.hpp"
-#include "local_planner_optimizer/ceres_constraint_cont_fix_goal.hpp"
+
+#include "local_planner_optimizer/ceres_constraint_1_dist_to_obstacle.hpp"
+#include "local_planner_optimizer/ceres_constraint_1_wp_equidistance.hpp"
+#include "local_planner_optimizer/ceres_constraint_1_path_length.hpp"
+#include "local_planner_optimizer/ceres_constraint_1_smoothness.hpp"
+#include "local_planner_optimizer/ceres_constraint_1_velocity_change.hpp"
+#include "local_planner_optimizer/ceres_constraint_1_min_acceleration.hpp"
+#include "local_planner_optimizer/ceres_constraint_1_pos_vel_coherence.hpp"
+
+
+#include "local_planner_optimizer/ceres_constraint_2_cont_dist_to_obstacle_segment.hpp"
+#include "local_planner_optimizer/ceres_constraint_2_cont_fix_goal.hpp"
+#include "local_planner_optimizer/ceres_constraint_2_cont_path_length_segment.hpp"
+#include "local_planner_optimizer/ceres_constraint_2_cont_smoothness.hpp"
+
+
+#include "local_planner_optimizer/ceres_constraint_3_cont_dist_to_obstacle_segment_pc.hpp"
+#include "local_planner_optimizer/ceres_constraint_3_cont_fix_goal.hpp"
+#include "local_planner_optimizer/ceres_constraint_3_cont_path_length_segment.hpp"
+
 
 #include "local_planner_optimizer/ceres_constraint_cont_init_distance_to_wp.hpp"
 #include "local_planner_optimizer/ceres_constraint_cont_init_smoothness.hpp"
+
+// Deprecated
+#include "local_planner_optimizer/ceres_constraint_cont_path_length.hpp"
+#include "local_planner_optimizer/ceres_constraint_cont_dist_to_obstacle.hpp"
+
 
 
 
@@ -73,6 +89,8 @@ namespace Ceresopt{
     Planners::utils::OptimizedTrajectory ceresOptimizerTrajectory(Planners::utils::CoordinateList initial_path, Local_Grid3d &_grid, float resolution_);
     Planners::utils::OptimizedContinuousFunction ceresOptimizerContinuousPath(Eigen::VectorXd coeff_x, Eigen::VectorXd coeff_y, Eigen::VectorXd coeff_z, Planners::utils::Vec3i local_goal, Local_Grid3d &_grid, float resolution_);
     Planners::utils::OptimizedContinuousFunction ceresOptimizerContinuousPathInit(Eigen::VectorXd init_coeff_x, Eigen::VectorXd init_coeff_y, Eigen::VectorXd init_coeff_z, Planners::utils::CoordinateList global_path_local_section, double t_last);
+
+    Planners::utils::OptimizedContinuousFunction ceresOptimizerTestContinuousPath(Eigen::VectorXd coeff_x, Eigen::VectorXd coeff_y, Eigen::VectorXd coeff_z, Planners::utils::Vec3i local_goal, float resolution_, const std::vector<Eigen::Vector3d>& obstacle_point_cloud);
 
 }
 

@@ -1,5 +1,5 @@
-#ifndef CERES_CONSTRAINTS_SMOOTHNESS
-#define CERES_CONSTRAINTS_SMOOTHNESS
+#ifndef CERES_CONSTRAINTS_0_SMOOTHNESS
+#define CERES_CONSTRAINTS_0_SMOOTHNESS
 
 #include <iostream>
 #include <fstream>
@@ -24,10 +24,10 @@ using ceres::Problem;
 using ceres::Solve;
 using ceres::Solver;
 
-class SmoothnessFunctor {
+class Ceres0_SmoothnessFunctor {
 
 public:
-    SmoothnessFunctor(double weight): weight_(weight) {}
+    Ceres0_SmoothnessFunctor(double weight): weight_(weight) {}
 
     template <typename T>
     bool operator()(const T* const stateWP1, const T* const stateWP2, const T* const stateWP3, T* residual) const {

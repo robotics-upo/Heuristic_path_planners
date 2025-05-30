@@ -1,5 +1,5 @@
-#ifndef CERES_CONSTRAINTS_WP_EQUIDISTANCE
-#define CERES_CONSTRAINTS_WP_EQUIDISTANCE
+#ifndef CERES_CONSTRAINTS_0_WP_EQUIDISTANCE
+#define CERES_CONSTRAINTS_0_WP_EQUIDISTANCE
 
 #include <iostream>
 #include <fstream>
@@ -24,10 +24,10 @@ using ceres::Problem;
 using ceres::Solve;
 using ceres::Solver;
 
-class EquidistanceFunctor {
+class Ceres0_EquidistanceFunctor {
 
 public:
-    EquidistanceFunctor(double weight): weight_(weight) {}
+    Ceres0_EquidistanceFunctor(double weight): weight_(weight) {}
 
     template <typename T>
     bool operator()(const T* const stateWP1, const T* const stateWP2, const T* const stateWP3, T* residual) const {

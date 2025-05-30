@@ -1,5 +1,5 @@
-#ifndef CERES_CONSTRAINTS_PATH_LEGTH
-#define CERES_CONSTRAINTS_PATH_LEGTH
+#ifndef CERES_CONSTRAINTS_1_VELOCITY_CHANGE
+#define CERES_CONSTRAINTS_1_VELOCITY_CHANGE
 
 #include <iostream>
 #include <fstream>
@@ -24,24 +24,26 @@ using ceres::Problem;
 using ceres::Solve;
 using ceres::Solver;
 
-class PathLengthFunctor {
+class Ceres1_VelocityChangeFunctor {
 
 public:
-    PathLengthFunctor(double weight): weight_(weight) {}
+    Ceres1_VelocityChangeFunctor(double weight, double desired_vel): weight_(weight), desired_vel_(desired_vel) {}
 
     template <typename T>
-    bool operator()(const T* const stateWP1, const T* const stateWP2, T* residual) const {
+    bool operator()(const T* const stateWP1, T* residual) const {
 
-        T dx = stateWP2[0] - stateWP1[0];
-        T dy = stateWP2[1] - stateWP1[1];
-        T dz = stateWP2[2] - stateWP1[2];
+        T vx = stateWP1[3];
+        T vy = stateWP1[4];
+        T vz = stateWP1[5];
 
-        residual[0] = weight_* (dx * dx + dy * dy + dz * dz);
+
+        residual[0] = weight_* (T(desired_vel_) - ceres::sqrt(vx * vx + vy * vy + vz * vz)) * (T(desired_vel_)  - ceres::sqrt(vx * vx + vy * vy + vz * vz));
 
         return true;
     }
 
     double weight_;
+    double desired_vel_;
     
 private:
 

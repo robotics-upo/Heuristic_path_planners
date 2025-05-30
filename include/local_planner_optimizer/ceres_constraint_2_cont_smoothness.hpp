@@ -1,5 +1,5 @@
-#ifndef CERES_CONSTRAINTS_CONT_INIT_SMOOTHNESS
-#define CERES_CONSTRAINTS_CONT_INIT_SMOOTHNESS
+#ifndef CERES_CONSTRAINTS_2_CONT_SMOOTHNESS
+#define CERES_CONSTRAINTS_2_CONT_SMOOTHNESS
 
 #include <iostream>
 #include <fstream>
@@ -26,10 +26,10 @@ using ceres::Problem;
 using ceres::Solve;
 using ceres::Solver;
 
-class SmoothnessContInitFunctor {
+class Ceres2_SmoothnessContFunctor {
 
 public:
-    SmoothnessContInitFunctor(double weight): weight_(weight) {}
+    Ceres2_SmoothnessContFunctor(double weight): weight_(weight) {}
 
     template <typename T>
     bool operator()(const T* const stateCoeff, T* residual) const {

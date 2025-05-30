@@ -110,9 +110,9 @@ class ObstacleDistanceCostContFunctor
             T t_act = t_step * T(i+1);
 
 
-            p[0] = stateCoeff[0] * ceres::pow(t_act, 5) + stateCoeff[1] * ceres::pow(t_act, 4) + stateCoeff[2] * ceres::pow(t_act, 3) + stateCoeff[3] * ceres::pow(t_act, 2) + stateCoeff[4] * t_act + stateCoeffConstant[0];
-            p[1] = stateCoeff[5] * ceres::pow(t_act, 5) + stateCoeff[6] * ceres::pow(t_act, 4) + stateCoeff[7] * ceres::pow(t_act, 3) + stateCoeff[8] * ceres::pow(t_act, 2) + stateCoeff[9] * t_act + stateCoeffConstant[1];
-            p[2] = stateCoeff[10] * ceres::pow(t_act, 5) + stateCoeff[11] * ceres::pow(t_act, 4) + stateCoeff[12] * ceres::pow(t_act, 3) + stateCoeff[13] * ceres::pow(t_act, 2) + stateCoeff[14] * t_act + stateCoeffConstant[2];
+            p[0] = stateCoeff[0] * ceres::pow(t_act, 3) + stateCoeff[1] * ceres::pow(t_act, 2) + stateCoeff[2] * t_act + stateCoeffConstant[0];
+            p[1] = stateCoeff[3] * ceres::pow(t_act, 3) + stateCoeff[4] * ceres::pow(t_act, 2) + stateCoeff[5] * t_act + stateCoeffConstant[1];
+            p[2] = stateCoeff[6] * ceres::pow(t_act, 3) + stateCoeff[7] * ceres::pow(t_act, 2) + stateCoeff[8] * t_act + stateCoeffConstant[2];
 
             // Compute distance
             distanceFunctor_(p, &invdist);

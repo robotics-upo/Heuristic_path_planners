@@ -306,7 +306,19 @@ public:
 		torch::Tensor grid_output_tensor = loaded_sdf.forward({coordinates_tensor}).toTensor();
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double, std::milli> duration = end - start;
-        //std::cout << "Points queried: " << num_points <<" |  Time taken to query model: " << duration.count() << " ms" << std::endl;
+        std::cout << "Points queried: " << num_points <<" |  Time taken to query model: " << duration.count() << " ms" << std::endl;
+
+		// // Convert vector tu libtorch array and query the neural network
+        // torch::Tensor coordinates_tensor_2 = torch::zeros({1, 3}, torch::kFloat);
+        // coordinates_tensor_2[0][0] = coordinates_vector[0][0];
+        // coordinates_tensor_2[0][1] = coordinates_vector[0][1];
+        // coordinates_tensor_2[0][2] = coordinates_vector[0][2];
+
+		// start = std::chrono::high_resolution_clock::now();
+		// torch::Tensor grid_output_tensor_2 = loaded_sdf.forward({coordinates_tensor_2}).toTensor();
+        // end = std::chrono::high_resolution_clock::now();
+        // duration = end - start;
+        // std::cout << "Points queried: 1 |  Time taken to query model: " << duration.count() << " ms" << std::endl;
 
 		// Place the queried values into the m_grid distance data field
 		for(int iz=0; iz<m_gridSizeZ; iz++)
@@ -320,7 +332,6 @@ public:
 				}
 			}
 		}
-
 	}
 
 	void computeLocalGridFIESTA(std::vector<double> esdf_buffer, float drone_x, float drone_y, float drone_z, int fiesta_range_x, int fiesta_range_y, int fiesta_range_z, double fiesta_resolution, double fiesta_x_min, double fiesta_y_min, double fiesta_z_min)
@@ -414,7 +425,7 @@ protected:
 		maxX = 3.0; // distancia a cada lado del dron (en x)
         maxY = 3.0; // distancia a cada lado del dron (en y)
         maxZ = 1.6; // distancia a cada lado del dron (en z)
-        res = 0.2;
+        res = 0.05;
 
 
 		m_maxX = (float)(maxX);
