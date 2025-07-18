@@ -337,5 +337,5 @@ This work is partially supported by the Programa Operativo FEDER Andalucia 2014â
 <img src="https://raw.githubusercontent.com/robotics-upo/Heuristic_path_planners/master/resources/images/jandalucia.png" alt="jandalucia" width="400"/>
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/robotics-upo/Heuristic_path_planners/master/resources/images/logo.png alt="Logo image" width="550"/>
+  <img src="https://raw.githubusercontent.com/robotics-upo/Heuristic_path_planners/master/readme_images/logo.png alt="Logo image" width="550"/>
 </p>
