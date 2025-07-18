@@ -335,7 +335,6 @@ See also the [issues](https://github.com/robotics-upo/Heuristic_path_planners/is
 This work is partially supported by the Programa Operativo FEDER Andalucia 2014–2020 through the project DeepBot (PY20 00817), and by the grants INSERTION PID2021-127648OB-C31 and NORDIC TED2021-132476B-I00, funded by MCIN/AEI/10.13039/501100011033 and “European Union NextGenerationEU/PRTR”.
 
 <img src="https://raw.githubusercontent.com/robotics-upo/Heuristic_path_planners/master/resources/images/jandalucia.png" alt="jandalucia" width="400"/>
+<img src="https://raw.githubusercontent.com/robotics-upo/Heuristic_path_planners/master/resources/images/logo.png" alt="logo" width="400"/>
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/robotics-upo/Heuristic_path_planners/master/resources/images/logo.png alt="logo" width="400"/>
-</p>
+
