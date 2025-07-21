@@ -334,6 +334,22 @@ public:
 		}
 	}
 
+	void bypassLocalGrid()
+	{
+		// Place positive placeholders in the local grid
+		for(int iz=0; iz<m_gridSizeZ; iz++)
+		{
+			for(int iy=0; iy<m_gridSizeY; iy++)
+			{
+				for(int ix=0; ix<m_gridSizeX; ix++)
+				{
+					int index = ix + iy*m_gridStepY + iz*m_gridStepZ;
+					m_grid[index].dist = 1;
+				}
+			}
+		}
+	}
+
 	void computeLocalGridFIESTA(std::vector<double> esdf_buffer, float drone_x, float drone_y, float drone_z, int fiesta_range_x, int fiesta_range_y, int fiesta_range_z, double fiesta_resolution, double fiesta_x_min, double fiesta_y_min, double fiesta_z_min)
 	{
 		// Place the queried values into the m_grid distance data field

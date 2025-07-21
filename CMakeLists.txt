@@ -161,7 +161,7 @@ list(APPEND ${PROJECT_NAME}_UTILS_SOURCES src/utils/geometry_utils.cpp
                                           src/utils/utils.cpp       
                                           src/utils/metrics.cpp
                                           src/utils/FCNet.cpp
-                                          src/utils/CeresOpt.cpp       
+                                          src/utils/CeresOpt.cpp
                                           )
 if(BUILD_ROS_SUPPORT)
   list(APPEND ${PROJECT_NAME}_UTILS_SOURCES src/utils/ros/ROSInterfaces.cpp)
