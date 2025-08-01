@@ -332,6 +332,6 @@ See also the [issues](https://github.com/robotics-upo/Heuristic_path_planners/is
 
 ## Acknowledgements
 
-![Logos](minci.png)
-
 This work was partially supported by the following grants: 1) INSERTION PID2021-127648OB-C31, and 2) NORDIC TED2021-132476B-I00, funded by MCIN/AEI/10.13039/501100011033 and the European Union "NextGenerationEU"/"PRTR".
+
+<img src="https://raw.githubusercontent.com/robotics-upo/Heuristic_path_planners/sdf_local/resources/images/logo_ministerio.png" alt="logo" width="400"/>
