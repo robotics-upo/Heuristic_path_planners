@@ -246,9 +246,15 @@ class Ceres4_ObstacleDistanceCostContSegmentFunctor
         // Compute distance
         distanceFunctor_(p, &dist);
 
-        // Compute weigthed residual
+        // Extract gradient at this point (for penalty)
+        Eigen::Vector3d grad = evaluation_callback_.jacobians().row(index_);
+        double grad_norm = grad.norm();
+        float k = 1.0; // Penalty constant (for points with grad =/= 1)
+
+
+        // Compute weight
         //residual[0] = T(weight_) / (T(esdf_seg_) * dist);
-        residual[0] = T(weight_) / (T(esdf_seg_)) * exp(T(-4) * (dist - T(1)));
+        residual[0] = T(weight_) / (T(esdf_seg_ - 2) * (T(1.0) + T(k) * ceres::pow(T(grad_norm) - T(1.0), 2))) * exp(T(-4) * (dist - T(1.5)));
 
         return true;
     }

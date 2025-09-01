@@ -36,7 +36,7 @@ public:
 
         residual[0] = T(0);
         for (int i = 0; i < 3; i++){
-            residual[0] += (stateCoeff[5*i+1] * stateCoeff[5*i+1] + stateCoeff[5*i+2] * stateCoeff[5*i+2] + stateCoeff[5*i+3] * stateCoeff[5*i+3] + stateCoeff[5*i+4] * stateCoeff[5*i+4]);
+            residual[0] += (stateCoeff[5*i] * stateCoeff[5*i] * 5.0 + stateCoeff[5*i+1] * stateCoeff[5*i+1] * 4.0 + stateCoeff[5*i+2] * stateCoeff[5*i+2] * 3.0 + stateCoeff[5*i+3] * stateCoeff[5*i+3] * 2.0);
         }
         residual[0] = weight_ * residual[0];
 

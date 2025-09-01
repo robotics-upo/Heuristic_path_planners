@@ -434,9 +434,9 @@ namespace Ceresopt
         options.linear_solver_type = ceres::DENSE_QR;
         //options.linear_solver_type = ceres::DENSE_SCHUR;
         options.trust_region_strategy_type = ceres::LEVENBERG_MARQUARDT;
-        options.minimizer_progress_to_stdout = true;
-        options.max_num_iterations = 5000;
-        options.num_threads = 12;
+        options.minimizer_progress_to_stdout = false;
+        options.max_num_iterations = 40;
+        options.num_threads = 14;
         options.use_nonmonotonic_steps = true;
 
 
@@ -469,7 +469,7 @@ namespace Ceresopt
         auto end_opt = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double, std::milli> opt_duration = end_opt - start_opt;
         printf("TIEMPO DE OPTIMIZACIÓN: %.2f ms\n", opt_duration.count());
-
+        
         // Building the output
         std::cout << "Building output" << std::endl;
         Planners::utils::OptimizedContinuousFunction optimized_coeffs;
@@ -675,8 +675,8 @@ namespace Ceresopt
         ceres::Solver::Options options;
         options.linear_solver_type = ceres::DENSE_QR;
         options.trust_region_strategy_type = ceres::LEVENBERG_MARQUARDT;
-        options.minimizer_progress_to_stdout = true;
-        options.max_num_iterations = 5000;
+        options.minimizer_progress_to_stdout = false;
+        options.max_num_iterations = 50;
         options.num_threads = 12;
         options.use_nonmonotonic_steps = true;
         options.evaluation_callback = &evaluation_callback;
@@ -689,7 +689,7 @@ namespace Ceresopt
 
         // Cost function weights
 
-        double weight_path_length = 1.0;
+        double weight_path_length = 20.0;
         double weight_esdf = 10000.0;
         double weight_smoothness = 1.0;
         double weight_fix_goal = 20.0;
@@ -740,20 +740,20 @@ namespace Ceresopt
         
         ceres::Solver::Summary summary;
 
-        // Test 1
-        ceres::Problem::EvaluateOptions eval_options;
-        eval_options.apply_loss_function = false;  // Evaluar sin la función de pérdida
+        // // Test 1
+        // ceres::Problem::EvaluateOptions eval_options;
+        // eval_options.apply_loss_function = false;  // Evaluar sin la función de pérdida
 
-        double total_cost = 0.0;
-        std::vector<double> test_residuals;
+        // double total_cost = 0.0;
+        // std::vector<double> test_residuals;
 
-        problem.Evaluate(eval_options, &total_cost, &test_residuals, nullptr, nullptr);
+        // problem.Evaluate(eval_options, &total_cost, &test_residuals, nullptr, nullptr);
 
-        std::cout << "Costo antes de la optimización: " << total_cost << std::endl;
+        // std::cout << "Costo antes de la optimización: " << total_cost << std::endl;
 
-        for (size_t i = 0; i < test_residuals.size(); ++i) {
-            std::cout << "Residual " << i << ": " << test_residuals[i] << std::endl;
-        }
+        // for (size_t i = 0; i < test_residuals.size(); ++i) {
+        //     std::cout << "Residual " << i << ": " << test_residuals[i] << std::endl;
+        // }
 
 
         // Solve
@@ -776,14 +776,14 @@ namespace Ceresopt
         optimized_coeffs.z_params.resize(6);
 
         // Test 2
-        total_cost = 0.0;
-        problem.Evaluate(eval_options, &total_cost, &test_residuals, nullptr, nullptr);
+        // total_cost = 0.0;
+        // problem.Evaluate(eval_options, &total_cost, &test_residuals, nullptr, nullptr);
 
-        std::cout << "Costo total después de la optimización: " << total_cost << std::endl;
+        // std::cout << "Costo total después de la optimización: " << total_cost << std::endl;
 
-        for (size_t i = 0; i < test_residuals.size(); ++i) {
-            std::cout << "Residual " << i << ": " << test_residuals[i] << std::endl;
-        }
+        // for (size_t i = 0; i < test_residuals.size(); ++i) {
+        //     std::cout << "Residual " << i << ": " << test_residuals[i] << std::endl;
+        // }
 
         for (int i = 0; i < 5; i++) {
             optimized_coeffs.x_params[i] = coeff_state_vector.parameter[i];
@@ -1001,7 +1001,6 @@ namespace Ceresopt
                                                         (new DistanceToWPG5Functor(weight_distance_to_wp, global_path_local_section[i], t_list[i]));
 
             problem.AddResidualBlock(distance_to_wp, nullptr, coeff_state_vector.parameter, coeff_state_vector_constant.parameter);
-
         }
 
         // 2. Cost Function - Smoothness
@@ -1019,8 +1018,8 @@ namespace Ceresopt
         ceres::Solver::Options options;
         //options.linear_solver_type = ceres::DENSE_QR;
         options.linear_solver_type = ceres::DENSE_SCHUR;
-        options.minimizer_progress_to_stdout = true;
-        options.max_num_iterations = 200;
+        options.minimizer_progress_to_stdout = false;
+        options.max_num_iterations = 50;
         options.num_threads = 12;
         options.use_nonmonotonic_steps = true;
         

@@ -910,9 +910,9 @@ private:
                     y_coeff_1 = (local_goal.y - drone_local_y) / T_FIN_EXPECTED;
                     z_coeff_1 = (local_goal.z - drone_local_z) / T_FIN_EXPECTED;
 
-                    coeff_x << 0, 0, x_coeff_1, drone_local_x;
-                    coeff_y << 0, 0, y_coeff_1, drone_local_y;
-                    coeff_z << 0, 0, z_coeff_1, drone_local_z;
+                    coeff_x << 0, 0, 0, 0, x_coeff_1, drone_local_x;
+                    coeff_y << 0, 0, 0, 0, y_coeff_1, drone_local_y;
+                    coeff_z << 0, 0, 0, 0, z_coeff_1, drone_local_z;
                 }
                 else if(CONTINUOUS_FUNCTION_INITIAL_PARAMETERS == 1) // GLOBAL PATH APPROXIMATION
                 {
