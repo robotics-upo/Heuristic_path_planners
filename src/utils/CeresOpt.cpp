@@ -650,7 +650,7 @@ namespace Ceresopt
         return optimized_coeffs;
     }
 
-    Planners::utils::OptimizedContinuousFunction ceresOptimizerEvCallbackContinuousPath(Eigen::VectorXd coeff_x, Eigen::VectorXd coeff_y, Eigen::VectorXd coeff_z, double origin_x, double origin_y, double origin_z, Planners::utils::Vec3i local_goal, Local_Grid3d &_grid, torch::jit::script::Module& loaded_sdf, float resolution_)
+    Planners::utils::OptimizedContinuousFunction ceresOptimizerEvCallbackContinuousPath(Eigen::VectorXd coeff_x, Eigen::VectorXd coeff_y, Eigen::VectorXd coeff_z, double origin_x, double origin_y, double origin_z, Planners::utils::Vec3i local_goal, Local_Grid3d &_grid, torch::jit::script::Module& loaded_sdf, float resolution_, std::shared_ptr<voxblox::EsdfMap>& esdf_map_, bool use_voxfield)
     {
 
         // Convert function coeffs to state block (excluding the last one, that's fixed by the starting point)
@@ -670,7 +670,7 @@ namespace Ceresopt
         int esdf_seg = 20;
         double t_max_esdf_seg = 10.0;
         
-        CeresESDFUpdate evaluation_callback(coeff_state_vector, coeff_state_vector_constant, esdf_seg, t_max_esdf_seg, loaded_sdf, origin_x, origin_y, origin_z, resolution_);
+        CeresESDFUpdate evaluation_callback(coeff_state_vector, coeff_state_vector_constant, esdf_seg, t_max_esdf_seg, loaded_sdf, origin_x, origin_y, origin_z, resolution_, esdf_map_, use_voxfield);
         ceres::Problem problem;
         ceres::Solver::Options options;
         options.linear_solver_type = ceres::DENSE_QR;

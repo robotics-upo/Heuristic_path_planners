@@ -43,6 +43,11 @@
 #include <heuristic_planners/CoordinateList.h>
 #include <heuristic_planners/Esdfbuffer.h>
 
+#include <voxblox_msgs/DiscreteSDF.h>
+#include <voxblox/core/esdf_map.h>
+#include <voxblox/core/layer.h>
+#include <voxblox/core/voxel.h>
+#include <voxblox/core/common.h>
 
 #define ENVIRONMENT_REPRESENTATION 0
     //      0       HIO-ESDF
@@ -60,6 +65,9 @@
     //      0       STRAIGHT LINE APPROXIMATION
     //      1       GLOBAL PATH APPROXIMATION
 #define MAX_LOCAL_PATH 6
+#define USING_VOXFIELD_PERFECT_ESDF 1
+    //      0       NEURAL ESDF
+    //      1       VOXFIELD PERFECT ESDF (FOR CERES_MODE 4)
 
 
 
@@ -86,6 +94,9 @@ public:
 
         path_local_sub_     = lnh_.subscribe<heuristic_planners::CoordinateList>("/planner_ros_node/global_path", 1, &HeuristicLocalPlannerROS::globalPathCallback, this);
         
+        //Voxblox subscriber (if needed for experimentation)
+        voxblox_map_sub_ = lnh_.subscribe("/exp_voxblox/voxblox_node/esdf_map_out", 1, &HeuristicLocalPlannerROS::voxbloxCallback, this);
+
         //GLOBAL POSITIONING SUBSCRIBER - for SDF query
         globalposition_local_sub_ = lnh_.subscribe<geometry_msgs::PoseStamped>("/ground_truth_to_tf/pose", 1, &HeuristicLocalPlannerROS::globalPositionCallback, this);
         // pointcloud_local_sub_     = lnh_.subscribe("/points", 1, &HeuristicLocalPlannerROS::pointCloudCallback, this); //compile
@@ -126,6 +137,27 @@ private:
         ROS_INFO("Occupancy Grid Loaded");
         occupancy_grid_ = *_grid;
         input_map_ = 1;
+    }
+
+    void voxbloxCallback(const voxblox_msgs::Layer::ConstPtr& msg)
+    {
+        // Create a temporary Layer for deserialization
+        voxblox::Layer<voxblox::EsdfVoxel> tmp_layer(msg->voxel_size, msg->voxels_per_side);
+
+        // Deserialize directly into the Layer
+        if (!voxblox::deserializeMsgToLayer(*msg, &tmp_layer)) {
+            ROS_WARN("Failed to deserialize voxblox Layer");
+            return;
+        }
+
+        // Initialize EsdfMap if not already
+        if (!esdf_map_) {
+            esdf_map_ = std::make_shared<voxblox::EsdfMap>(tmp_layer);
+        } else {
+            // Copy data into the existing map's ESDF layer
+            std::lock_guard<std::mutex> lock(esdf_map_mutex_); // if multi-threaded
+            *esdf_map_->getEsdfLayerPtr() = tmp_layer;
+        }
     }
 
     void globalPathCallback(const heuristic_planners::CoordinateList::ConstPtr& msg)
@@ -966,7 +998,7 @@ private:
 
                 Planners::utils::OptimizedContinuousFunction opt_local_path_function;
                 auto ceres_start = std::chrono::high_resolution_clock::now();
-                opt_local_path_function = Ceresopt::ceresOptimizerEvCallbackContinuousPath(coeff_x, coeff_y, coeff_z, origen_local_x_cont, origen_local_y_cont, origen_local_z_cont, local_goal, *m_local_grid3d_, loaded_sdf_, resolution_);
+                opt_local_path_function = Ceresopt::ceresOptimizerEvCallbackContinuousPath(coeff_x, coeff_y, coeff_z, origen_local_x_cont, origen_local_y_cont, origen_local_z_cont, local_goal, *m_local_grid3d_, loaded_sdf_, resolution_, esdf_map_, USING_VOXFIELD_PERFECT_ESDF);
                 auto ceres_stop = std::chrono::high_resolution_clock::now();
                 std::chrono::duration<double, std::milli> ceres_duration = ceres_stop - ceres_start;
                 printf("TIEMPO TOTAL DEL OPTIMIZADOR: %.2f ms\n", ceres_duration.count());
@@ -1383,7 +1415,7 @@ private:
 
     ros::NodeHandle lnh_{"~"};
     ros::ServiceServer request_path_server_, change_planner_server_;
-    ros::Subscriber pointcloud_local_sub_, occupancy_grid_local_sub_, path_local_sub_;
+    ros::Subscriber pointcloud_local_sub_, occupancy_grid_local_sub_, path_local_sub_, voxblox_map_sub_;
     //TODO Fix point markers
     ros::Publisher local_line_markers_pub_, local_point_markers_pub_, local_velocity_markers_pub_, ini_local_line_markers_pub_, ini_local_point_markers_pub_, obstacle_pc_point_markers_pub_,  cloud_test;
 
@@ -1466,6 +1498,10 @@ private:
     int fiesta_flag = 0; //Checks if already received a FIESTA message -> Avoids planning without proper initialization
 
     int first_iteration_ = 1;
+
+    // -------VOXBLOX PERFECT ESDF IMPLEMENTATION VARIABLES
+    std::shared_ptr<voxblox::EsdfMap> esdf_map_;
+    std::mutex esdf_map_mutex_;
 
     //Global position subscriber
     ros::Subscriber globalposition_local_sub_;

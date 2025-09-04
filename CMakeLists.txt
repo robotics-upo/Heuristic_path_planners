@@ -62,6 +62,8 @@ if(BUILD_ROS_SUPPORT)
     octomap_ros
     costmap_2d
     sensor_msgs
+    voxblox_ros
+    voxblox_msgs
   )
   #Eigen is used to calculate metrics parameters
   find_package (Eigen3 REQUIRED NO_MODULE)
@@ -119,7 +121,7 @@ catkin_package(
  INCLUDE_DIRS include
  LIBRARIES AlgorithmBase AStar AStarM1 AStarM2 AStarSIREN ThetaStar ThetaStarM1 ThetaStarM2 ThetaStarSIREN LazyThetaStar LazyThetaStarM1 LazyThetaStarM1Mod LazyThetaStarM2 LazyThetaStarSIREN
  # 
- CATKIN_DEPENDS std_msgs visualization_msgs geometry_msgs nav_msgs rospy roscpp message_runtime costmap_2d sensor_msgs pcl_ros pcl_conversions
+ CATKIN_DEPENDS std_msgs visualization_msgs geometry_msgs nav_msgs rospy roscpp message_runtime costmap_2d sensor_msgs voxblox_ros voxblox_msgs pcl_ros pcl_conversions
 #  DEPENDS system_lib
 )
 endif()

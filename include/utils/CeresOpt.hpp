@@ -22,6 +22,10 @@
 #include <ceres/ceres.h>
 #include "utils/ceres_utils.hpp"
 
+#include <voxblox_ros/conversions.h>
+#include <voxblox/core/esdf_map.h>
+#include <voxblox_msgs/Layer.h>
+
 
 #include "local_planner_optimizer/ceres_constraint_0_dist_to_obstacle.hpp"
 #include "local_planner_optimizer/ceres_constraint_0_wp_equidistance.hpp"
@@ -48,7 +52,8 @@
 #include "local_planner_optimizer/ceres_constraint_3_cont_fix_goal.hpp"
 #include "local_planner_optimizer/ceres_constraint_3_cont_path_length_segment.hpp"
 
-#include "local_planner_optimizer/ceres_constraint_4_cont_dist_to_obstacle_segment.hpp"
+// #include "local_planner_optimizer/ceres_constraint_4_cont_dist_to_obstacle_segment.hpp"
+#include "local_planner_optimizer/experimental_ceres_constraint_4_cont_dist_to_obstacle_segment.hpp"
 #include "local_planner_optimizer/ceres_constraint_4_cont_fix_goal.hpp"
 #include "local_planner_optimizer/ceres_constraint_4_cont_path_length_segment.hpp"
 #include "local_planner_optimizer/ceres_constraint_4_cont_smoothness.hpp"
@@ -87,7 +92,7 @@ namespace Ceresopt{
     Planners::utils::OptimizedTrajectory ceresOptimizerTrajectory(Planners::utils::CoordinateList initial_path, Local_Grid3d &_grid, float resolution_);
     Planners::utils::OptimizedContinuousFunction ceresOptimizerContinuousPath(Eigen::VectorXd coeff_x, Eigen::VectorXd coeff_y, Eigen::VectorXd coeff_z, Planners::utils::Vec3i local_goal, Local_Grid3d &_grid, float resolution_);
     Planners::utils::OptimizedContinuousFunction ceresOptimizerContinuousPathInit(Eigen::VectorXd init_coeff_x, Eigen::VectorXd init_coeff_y, Eigen::VectorXd init_coeff_z, Planners::utils::CoordinateList global_path_local_section, double t_last);
-    Planners::utils::OptimizedContinuousFunction ceresOptimizerEvCallbackContinuousPath(Eigen::VectorXd coeff_x, Eigen::VectorXd coeff_y, Eigen::VectorXd coeff_z, double origin_x, double origin_y, double origin_z, Planners::utils::Vec3i local_goal, Local_Grid3d &_grid, torch::jit::script::Module& loaded_sdf, float resolution_);
+    Planners::utils::OptimizedContinuousFunction ceresOptimizerEvCallbackContinuousPath(Eigen::VectorXd coeff_x, Eigen::VectorXd coeff_y, Eigen::VectorXd coeff_z, double origin_x, double origin_y, double origin_z, Planners::utils::Vec3i local_goal, Local_Grid3d &_grid, torch::jit::script::Module& loaded_sdf, float resolution_, std::shared_ptr<voxblox::EsdfMap>& esdf_map_, bool use_voxfield);
     Planners::utils::OptimizedContinuousFunction ceresOptimizerContinuousPathInitG5(Eigen::VectorXd init_coeff_x, Eigen::VectorXd init_coeff_y, Eigen::VectorXd init_coeff_z, Planners::utils::CoordinateList global_path_local_section, double t_last);
     Planners::utils::OptimizedContinuousFunction ceresOptimizerTestContinuousPath(Eigen::VectorXd coeff_x, Eigen::VectorXd coeff_y, Eigen::VectorXd coeff_z, Planners::utils::Vec3i local_goal, float resolution_, const std::vector<Eigen::Vector3d>& obstacle_point_cloud);
 
