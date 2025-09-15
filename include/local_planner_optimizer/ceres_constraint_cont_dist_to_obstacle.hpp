@@ -21,7 +21,7 @@
 #include <ceres/ceres.h>
 
 #define SEGMENTS 10
-#define t_final 10.0
+#define t_final 1.0
 
 using ceres::SizedCostFunction;
 using ceres::AutoDiffCostFunction;

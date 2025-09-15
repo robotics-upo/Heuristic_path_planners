@@ -52,8 +52,7 @@
 #include "local_planner_optimizer/ceres_constraint_3_cont_fix_goal.hpp"
 #include "local_planner_optimizer/ceres_constraint_3_cont_path_length_segment.hpp"
 
-// #include "local_planner_optimizer/ceres_constraint_4_cont_dist_to_obstacle_segment.hpp"
-#include "local_planner_optimizer/experimental_ceres_constraint_4_cont_dist_to_obstacle_segment.hpp"
+#include "local_planner_optimizer/ceres_constraint_4_cont_dist_to_obstacle_segment.hpp"
 #include "local_planner_optimizer/ceres_constraint_4_cont_fix_goal.hpp"
 #include "local_planner_optimizer/ceres_constraint_4_cont_path_length_segment.hpp"
 #include "local_planner_optimizer/ceres_constraint_4_cont_smoothness.hpp"

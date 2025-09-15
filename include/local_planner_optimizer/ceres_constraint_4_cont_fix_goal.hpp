@@ -20,7 +20,7 @@
 
 #include <ceres/ceres.h>
 
-#define t_final 10.0
+#define t_final 1.0
 
 using ceres::AutoDiffCostFunction;
 using ceres::CostFunction;
@@ -42,8 +42,10 @@ public:
         T y_fin = stateCoeff[5] * ceres::pow(t_fin, 5) + stateCoeff[6] * ceres::pow(t_fin, 4) + stateCoeff[7] * ceres::pow(t_fin, 3) + stateCoeff[8] * ceres::pow(t_fin, 2) + stateCoeff[9] * t_fin + stateCoeffConstant[1];
         T z_fin = stateCoeff[10] * ceres::pow(t_fin, 5) + stateCoeff[11] * ceres::pow(t_fin, 4) + stateCoeff[12] * ceres::pow(t_fin, 3) + stateCoeff[13] * ceres::pow(t_fin, 2) + stateCoeff[14] * t_fin + stateCoeffConstant[2];
 
-        residual[0] = weight_ * (ceres::pow((x_fin-T(local_goal_.x)),2) + ceres::pow((y_fin-T(local_goal_.y)),2) + ceres::pow((z_fin-T(local_goal_.z)),2));
-
+        residual[0] = weight_ * (x_fin - T(local_goal_.x));
+        residual[1] = weight_ * (y_fin - T(local_goal_.y));
+        residual[2] = weight_ * (z_fin - T(local_goal_.z));
+        
         return true;
     }
 

@@ -1,5 +1,5 @@
-#ifndef EXPER_CERES_CONSTRAINTS_4_CONT_DIST_TO_OBSTACLE_SEGMENT
-#define EXPER_CERES_CONSTRAINTS_4_CONT_DIST_TO_OBSTACLE_SEGMENT
+#ifndef CERES_CONSTRAINTS_4_CONT_DIST_TO_OBSTACLE_SEGMENT
+#define CERES_CONSTRAINTS_4_CONT_DIST_TO_OBSTACLE_SEGMENT
 
 #include <iostream>
 #include <fstream>
@@ -11,7 +11,6 @@
 #include "utils/metrics.hpp"
 #include <ros/ros.h>
 #include <Eigen/Dense>
-#include <memory>
 #include <mutex>
 
 
@@ -21,9 +20,6 @@
 #include "Grid3D/local_grid3d.hpp"
 
 #include <ceres/ceres.h>
-
-#include <voxblox_ros/conversions.h>
-#include <voxblox/core/esdf_map.h>
 
 
 using ceres::SizedCostFunction;
@@ -35,126 +31,111 @@ using ceres::Solver;
 
 
 class CeresESDFUpdate : public ceres::EvaluationCallback {
-public:
-    CeresESDFUpdate(parameterBlockContinuousPath& coeff_state_vector,
-                    parameterBlockContinuousPathConstant& coeff_state_vector_const,
-                    int esdf_seg,
-                    double t_max_esdf_seg,
-                    torch::jit::script::Module& loaded_sdf,
-                    double origin_x,
-                    double origin_y,
-                    double origin_z,
-                    float resolution,
-                    std::shared_ptr<voxblox::EsdfMap>& esdf_map,
-                    bool use_voxfield)
-        : coeff_state_vector_(coeff_state_vector),
-          coeff_state_vector_const_(coeff_state_vector_const),
-          esdf_seg_(esdf_seg),
-          t_max_esdf_seg_(t_max_esdf_seg),
-          loaded_sdf_(loaded_sdf),
-          origin_x_(origin_x),
-          origin_y_(origin_y),
-          origin_z_(origin_z),
-          resolution_(resolution),
-          esdf_map_(esdf_map),
-          use_voxfield_(use_voxfield)
-    {
-        residuals_ = Eigen::VectorXd::Zero(esdf_seg_ - 2);
-        jacobians_ = Eigen::MatrixXd::Zero(esdf_seg_ - 2, 3);
-        PrepareForEvaluation(true, true);
-        std::cout << "Evaluation Callback Created(using "
-                  << (use_voxfield_ ? "Voxfield ESDF" : "Neural Network ESDF")
-                  << ")" << std::endl;
-    }
-
-    void PrepareForEvaluation(bool evaluate_jacobians, bool new_evaluation_point) final {
-        int num_points = esdf_seg_ - 2;
-        Eigen::VectorXd local_residuals(num_points);
-        Eigen::MatrixXd local_jacobians(num_points, 3);
-
-        for (int i = 0; i < num_points; ++i) {
-            double t_esdf_act = t_max_esdf_seg_ * (i + 1) / esdf_seg_;
-
-            Eigen::Vector3d coord;
-            coord[0] = (coeff_state_vector_.parameter[0] * std::pow(t_esdf_act, 5)
-                        + coeff_state_vector_.parameter[1] * std::pow(t_esdf_act, 4)
-                        + coeff_state_vector_.parameter[2] * std::pow(t_esdf_act, 3)
-                        + coeff_state_vector_.parameter[3] * std::pow(t_esdf_act, 2)
-                        + coeff_state_vector_.parameter[4] * t_esdf_act
-                        + coeff_state_vector_const_.parameter[0]) * resolution_ + origin_x_;
-            coord[1] = (coeff_state_vector_.parameter[5] * std::pow(t_esdf_act, 5)
-                        + coeff_state_vector_.parameter[6] * std::pow(t_esdf_act, 4)
-                        + coeff_state_vector_.parameter[7] * std::pow(t_esdf_act, 3)
-                        + coeff_state_vector_.parameter[8] * std::pow(t_esdf_act, 2)
-                        + coeff_state_vector_.parameter[9] * t_esdf_act
-                        + coeff_state_vector_const_.parameter[1]) * resolution_ + origin_y_;
-            coord[2] = (coeff_state_vector_.parameter[10] * std::pow(t_esdf_act, 5)
-                        + coeff_state_vector_.parameter[11] * std::pow(t_esdf_act, 4)
-                        + coeff_state_vector_.parameter[12] * std::pow(t_esdf_act, 3)
-                        + coeff_state_vector_.parameter[13] * std::pow(t_esdf_act, 2)
-                        + coeff_state_vector_.parameter[14] * t_esdf_act
-                        + coeff_state_vector_const_.parameter[2]) * resolution_ + origin_z_;
-
-            double dist = 0.0;
-            Eigen::Vector3d grad = Eigen::Vector3d::Zero();
-
-            if (use_voxfield_ && esdf_map_) {
-                // --- Query ESDF distance with interpolation ---
-                bool valid = esdf_map_->getDistanceAtPosition(coord, true, &dist);
-                if (!valid) dist = 0.05;  // fallback for unknown space
-
-                // --- Approximate gradient via central finite differences ---
-                const double eps = 0.05;
-                for (int d = 0; d < 3; ++d) {
-                    Eigen::Vector3d plus = coord;
-                    Eigen::Vector3d minus = coord;
-                    plus[d] += eps;
-                    minus[d] -= eps;
-
-                    double dist_plus = 0.0, dist_minus = 0.0;
-                    esdf_map_->getDistanceAtPosition(plus, true, &dist_plus);
-                    esdf_map_->getDistanceAtPosition(minus, true, &dist_minus);
-
-                    grad[d] = (dist_plus - dist_minus) / (2.0 * eps);
-                }
-            } else {
-                // --- Fallback: neural network evaluation ---
-                torch::Tensor coord_tensor = torch::from_blob(coord.data(), {1, 3}, torch::kFloat64)
-                                                .clone()
-                                                .to(torch::kFloat32);
-                coord_tensor.set_requires_grad(true);
-                torch::Tensor output_tensor = loaded_sdf_.forward({coord_tensor}).toTensor();
-                output_tensor.backward();
-                auto grad_tensor = coord_tensor.grad();
-                dist = output_tensor.item<float>();
-                grad = Eigen::Map<Eigen::Vector3f>(grad_tensor.data_ptr<float>(), 3).cast<double>();
-            }
-
-            local_residuals(i) = dist;
-            local_jacobians.row(i) = grad;
+    public:
+        CeresESDFUpdate(parameterBlockContinuousPath& coeff_state_vector,
+                        parameterBlockContinuousPathConstant& coeff_state_vector_const,
+                        int esdf_seg,
+                        double t_max_esdf_seg,
+                        torch::jit::script::Module& loaded_sdf,
+                        double origin_x,
+                        double origin_y,
+                        double origin_z,
+                        float resolution)
+            : coeff_state_vector_(coeff_state_vector),
+            coeff_state_vector_const_(coeff_state_vector_const),
+            esdf_seg_(esdf_seg),
+            t_max_esdf_seg_(t_max_esdf_seg),
+            loaded_sdf_(loaded_sdf),
+            origin_x_(origin_x),
+            origin_y_(origin_y),
+            origin_z_(origin_z),
+            resolution_(resolution)
+        {
+            residuals_ = Eigen::VectorXd::Zero(esdf_seg_ - 2);
+            jacobians_ = Eigen::MatrixXd::Zero(esdf_seg_ - 2, 3);
+            PrepareForEvaluation(true, true);
+            std::cout << "Evaluation Callback Created" << std::endl;
         }
 
-        residuals_ = local_residuals;
-        jacobians_ = local_jacobians;
-    }
+        void PrepareForEvaluation(bool evaluate_jacobians, bool new_evaluation_point) final {
+            int num_points = esdf_seg_ - 2;
+            torch::Tensor coordinates_tensor = torch::empty({num_points, 3}, torch::kFloat32);
+            auto accessor = coordinates_tensor.accessor<float, 2>();
 
-    const Eigen::VectorXd& residuals() const { return residuals_; }
-    const Eigen::MatrixXd& jacobians() const { return jacobians_; }
+            for (int i = 0; i < num_points; ++i) {
+                double t_esdf_act = t_max_esdf_seg_ * (i + 1) / esdf_seg_;
 
-private:
-    parameterBlockContinuousPath& coeff_state_vector_;
-    parameterBlockContinuousPathConstant& coeff_state_vector_const_;
-    int esdf_seg_;
-    double t_max_esdf_seg_, origin_x_, origin_y_, origin_z_;
-    float resolution_;
-    torch::jit::script::Module& loaded_sdf_;
-    Eigen::VectorXd residuals_;
-    Eigen::MatrixXd jacobians_;
-    std::shared_ptr<voxblox::EsdfMap> esdf_map_;
-    bool use_voxfield_;
+                accessor[i][0] = (coeff_state_vector_.parameter[0] * std::pow(t_esdf_act, 5)
+                            + coeff_state_vector_.parameter[1] * std::pow(t_esdf_act, 4)
+                            + coeff_state_vector_.parameter[2] * std::pow(t_esdf_act, 3)
+                            + coeff_state_vector_.parameter[3] * std::pow(t_esdf_act, 2)
+                            + coeff_state_vector_.parameter[4] * t_esdf_act
+                            + coeff_state_vector_const_.parameter[0]) * resolution_ + origin_x_;
+                accessor[i][1] = (coeff_state_vector_.parameter[5] * std::pow(t_esdf_act, 5)
+                            + coeff_state_vector_.parameter[6] * std::pow(t_esdf_act, 4)
+                            + coeff_state_vector_.parameter[7] * std::pow(t_esdf_act, 3)
+                            + coeff_state_vector_.parameter[8] * std::pow(t_esdf_act, 2)
+                            + coeff_state_vector_.parameter[9] * t_esdf_act 
+                            + coeff_state_vector_const_.parameter[1]) * resolution_ + origin_y_;
+                accessor[i][2] = (coeff_state_vector_.parameter[10] * std::pow(t_esdf_act, 5)
+                            + coeff_state_vector_.parameter[11] * std::pow(t_esdf_act, 4)
+                            + coeff_state_vector_.parameter[12] * std::pow(t_esdf_act, 3)
+                            + coeff_state_vector_.parameter[13] * std::pow(t_esdf_act, 2)
+                            + coeff_state_vector_.parameter[14] * t_esdf_act 
+                            + coeff_state_vector_const_.parameter[2]) * resolution_ + origin_z_;
+            }
+
+            coordinates_tensor.set_requires_grad(true);
+
+            torch::Tensor output_tensor, grad_outputs, input_gradients;
+            auto start = std::chrono::high_resolution_clock::now();
+            output_tensor = loaded_sdf_.forward({coordinates_tensor}).toTensor();
+            grad_outputs = torch::ones_like(output_tensor);
+            output_tensor.backward(grad_outputs);
+            input_gradients = coordinates_tensor.grad();
+            auto end = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double, std::milli> duration = end - start;
+
+            output_tensor = output_tensor.contiguous();
+            input_gradients = input_gradients.contiguous();
+
+            TORCH_CHECK(output_tensor.sizes()[0] == num_points, "Output tensor size mismatch");
+            TORCH_CHECK(input_gradients.sizes()[0] == num_points && input_gradients.sizes()[1] == 3,
+                        "Input gradients size mismatch");
+
+            float* output_ptr = output_tensor.data_ptr<float>();
+            float* grad_ptr = input_gradients.data_ptr<float>();
+
+            Eigen::VectorXd local_residuals(num_points);
+            Eigen::MatrixXd local_jacobians(num_points, 3);
+
+
+            for (int i = 0; i < num_points; ++i) {
+                local_residuals(i) = output_ptr[i];
+                local_jacobians(i, 0) = grad_ptr[3 * i + 0];
+                local_jacobians(i, 1) = grad_ptr[3 * i + 1];
+                local_jacobians(i, 2) = grad_ptr[3 * i + 2];
+            }
+
+            residuals_ = local_residuals;
+            jacobians_ = local_jacobians;
+        }
+
+        
+
+        const Eigen::VectorXd& residuals() const { return residuals_; }
+        const Eigen::MatrixXd& jacobians() const { return jacobians_; }
+
+    private:
+        parameterBlockContinuousPath& coeff_state_vector_;
+        parameterBlockContinuousPathConstant& coeff_state_vector_const_;
+        int esdf_seg_;
+        double t_max_esdf_seg_, origin_x_, origin_y_, origin_z_;
+        float resolution_;
+        torch::jit::script::Module& loaded_sdf_;
+        Eigen::VectorXd residuals_;
+        Eigen::MatrixXd jacobians_;
 };
-
-
 
 class Ceres4DistanceFunctionSegment : public SizedCostFunction<1, 3>
 {

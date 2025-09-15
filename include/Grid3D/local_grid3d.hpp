@@ -441,7 +441,7 @@ protected:
 		maxX = 3.0; // distancia a cada lado del dron (en x)
         maxY = 3.0; // distancia a cada lado del dron (en y)
         maxZ = 1.6; // distancia a cada lado del dron (en z)
-        res = 0.05;
+        res = 0.2;
 
 
 		m_maxX = (float)(maxX);

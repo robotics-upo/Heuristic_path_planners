@@ -667,16 +667,21 @@ namespace Ceresopt
         coeff_state_vector_constant.parameter[2] = coeff_z[5];
 
         // Declare Ceres optimization problem
-        int esdf_seg = 20;
-        double t_max_esdf_seg = 10.0;
+        int path_length_seg = 5; // Segments for path length calculation
+        int esdf_samp = 5; // Samples for ESDF calculation
+        //int smoothness_samp = 1; // Samples for smoothness calculation (if samples = 1, take absolute value of coeffs)
+
+        double t_max_seg = 1.0; // t_max for path length calculation (TODO -- MERGE WITH ALL T)
+        double t_max_esdf_seg = 1.0; // t_max por esdf calculation (TODO -- MERGE WITH ALL T)
+
         
-        CeresESDFUpdate evaluation_callback(coeff_state_vector, coeff_state_vector_constant, esdf_seg, t_max_esdf_seg, loaded_sdf, origin_x, origin_y, origin_z, resolution_, esdf_map_, use_voxfield);
+        CeresESDFUpdate evaluation_callback(coeff_state_vector, coeff_state_vector_constant, esdf_samp, t_max_esdf_seg, loaded_sdf, origin_x, origin_y, origin_z, resolution_, esdf_map_, use_voxfield);
         ceres::Problem problem;
         ceres::Solver::Options options;
         options.linear_solver_type = ceres::DENSE_QR;
         options.trust_region_strategy_type = ceres::LEVENBERG_MARQUARDT;
         options.minimizer_progress_to_stdout = false;
-        options.max_num_iterations = 50;
+        options.max_num_iterations = 30;
         options.num_threads = 12;
         options.use_nonmonotonic_steps = true;
         options.evaluation_callback = &evaluation_callback;
@@ -688,47 +693,50 @@ namespace Ceresopt
         std::cout << "Created Ceres Problem" << std::endl;
 
         // Cost function weights
-
-        double weight_path_length = 20.0;
-        double weight_esdf = 10000.0;
-        double weight_smoothness = 1.0;
-        double weight_fix_goal = 20.0;
+        double weight_path_length = 1.0;
+        double weight_esdf = 3.0; 
+        double weight_smoothness = 0.1;
+        double weight_fix_goal = 1e4;
 
         // 1 - Path length cost function
-
-        int path_length_seg = 10;
-        double t_max_seg = 10.0;
 
         for(int i = 0; i < path_length_seg; i++)
         {
             double t0 = t_max_seg * i / path_length_seg;
             double t1 = t_max_seg * (i+1) / path_length_seg;
 
-            ceres::CostFunction* path_length_cont_function_seg = new AutoDiffCostFunction<Ceres4_PathLengthContSegmentFunctor, 1, 15, 3>(new Ceres4_PathLengthContSegmentFunctor(weight_path_length, t0, t1));
+            ceres::CostFunction* path_length_cont_function_seg = new AutoDiffCostFunction<Ceres4_PathLengthContSegmentFunctor, 3, 15, 3>(new Ceres4_PathLengthContSegmentFunctor(weight_path_length, t0, t1));
         
             problem.AddResidualBlock(path_length_cont_function_seg, nullptr, coeff_state_vector.parameter, coeff_state_vector_constant.parameter);
         }
 
         // 2 - ESDF cost function
 
-        for(int i = 1; i < esdf_seg - 1; i++)
+        for(int i = 0; i < esdf_samp - 1; i++)
         {
-            double t_esdf = t_max_esdf_seg * i / esdf_seg;
+            double t_esdf = t_max_esdf_seg * (i + 1) / (esdf_samp + 1);
 
-            ceres::CostFunction* esdf_cont_function_seg = new AutoDiffCostFunction<Ceres4_ObstacleDistanceCostContSegmentFunctor, 1, 15, 3>(new Ceres4_ObstacleDistanceCostContSegmentFunctor(evaluation_callback, i-1, t_esdf, esdf_seg, weight_esdf));
+            ceres::CostFunction* esdf_cont_function_seg = new AutoDiffCostFunction<Ceres4_ObstacleDistanceCostContSegmentFunctor, 1, 15, 3>(new Ceres4_ObstacleDistanceCostContSegmentFunctor(evaluation_callback, i, t_esdf, esdf_samp, weight_esdf));
 
             problem.AddResidualBlock(esdf_cont_function_seg, nullptr, coeff_state_vector.parameter, coeff_state_vector_constant.parameter);
         }
 
-        // // 3 - Smoothness cost function (by minimizing coeffs)
+        // 3 - Smoothness cost function (by minimizing coeffs)
 
-        // ceres::CostFunction* smoothness_cont_function = new AutoDiffCostFunction<Ceres4_SmoothnessContFunctor, 1, 15>(new Ceres4_SmoothnessContFunctor(weight_smoothness));
+        // for(int i = 0; i < smoothness_samp; i++)
+        // {
+        //     ceres::CostFunction* smoothness_cont_function = new AutoDiffCostFunction<Ceres4_SmoothnessContFunctor, 1, 15>(new Ceres4_SmoothnessContFunctor(weight_smoothness, smoothness_samp, i));
     
-        // problem.AddResidualBlock(smoothness_cont_function, nullptr, coeff_state_vector.parameter);
+        //     problem.AddResidualBlock(smoothness_cont_function, nullptr, coeff_state_vector.parameter);
+        // }
+             ceres::CostFunction* smoothness_cont_function = new AutoDiffCostFunction<Ceres4_SmoothnessContFunctor, 12, 15>(new Ceres4_SmoothnessContFunctor(weight_smoothness));
+    
+             problem.AddResidualBlock(smoothness_cont_function, nullptr, coeff_state_vector.parameter);
+
 
         // 4 - Fixed local goal function (high weight needed)
 
-        ceres::CostFunction* fixed_goal_cont_function = new AutoDiffCostFunction<Ceres4_FixGoalContFunctor, 1, 15, 3>(new Ceres4_FixGoalContFunctor(weight_fix_goal, local_goal));
+        ceres::CostFunction* fixed_goal_cont_function = new AutoDiffCostFunction<Ceres4_FixGoalContFunctor, 3, 15, 3>(new Ceres4_FixGoalContFunctor(weight_fix_goal, local_goal));
         
         problem.AddResidualBlock(fixed_goal_cont_function, nullptr, coeff_state_vector.parameter, coeff_state_vector_constant.parameter);
 
@@ -741,20 +749,20 @@ namespace Ceresopt
         ceres::Solver::Summary summary;
 
         // // Test 1
-        // ceres::Problem::EvaluateOptions eval_options;
-        // eval_options.apply_loss_function = false;  // Evaluar sin la función de pérdida
+        ceres::Problem::EvaluateOptions eval_options;
+        eval_options.apply_loss_function = false;  // Evaluar sin la función de pérdida
 
-        // double total_cost = 0.0;
-        // std::vector<double> test_residuals;
+        double total_cost = 0.0;
+        std::vector<double> test_residuals;
 
-        // problem.Evaluate(eval_options, &total_cost, &test_residuals, nullptr, nullptr);
+        problem.Evaluate(eval_options, &total_cost, &test_residuals, nullptr, nullptr);
 
         // std::cout << "Costo antes de la optimización: " << total_cost << std::endl;
 
         // for (size_t i = 0; i < test_residuals.size(); ++i) {
         //     std::cout << "Residual " << i << ": " << test_residuals[i] << std::endl;
         // }
-
+        //
 
         // Solve
 
@@ -775,15 +783,22 @@ namespace Ceresopt
         optimized_coeffs.y_params.resize(6);
         optimized_coeffs.z_params.resize(6);
 
-        // Test 2
-        // total_cost = 0.0;
-        // problem.Evaluate(eval_options, &total_cost, &test_residuals, nullptr, nullptr);
+        //Test 2
+        total_cost = 0.0;
+        problem.Evaluate(eval_options, &total_cost, &test_residuals, nullptr, nullptr);
 
-        // std::cout << "Costo total después de la optimización: " << total_cost << std::endl;
+        //std::cout << "Costo total después de la optimización: " << total_cost << std::endl;
 
         // for (size_t i = 0; i < test_residuals.size(); ++i) {
         //     std::cout << "Residual " << i << ": " << test_residuals[i] << std::endl;
         // }
+        //
+        int test_residuals_size = test_residuals.size();
+        double dist_to_goal_x = test_residuals[test_residuals_size-3] * resolution_ / weight_fix_goal;
+        double dist_to_goal_y = test_residuals[test_residuals_size-2] * resolution_ / weight_fix_goal;
+        double dist_to_goal_z = test_residuals[test_residuals_size-1] * resolution_ / weight_fix_goal;
+        std::cout << "Dist to goal: " << sqrt(dist_to_goal_x * dist_to_goal_x + dist_to_goal_y * dist_to_goal_y + dist_to_goal_z * dist_to_goal_z) << std::endl;
+        
 
         for (int i = 0; i < 5; i++) {
             optimized_coeffs.x_params[i] = coeff_state_vector.parameter[i];
@@ -991,7 +1006,7 @@ namespace Ceresopt
         // Cost function weights
 
         double weight_distance_to_wp = 10.0;
-        double weight_smoothness = 5.0;
+        double weight_smoothness = 1.0;
 
         // 1. Cost Function - Distance to waypoints
 
@@ -1005,7 +1020,7 @@ namespace Ceresopt
 
         // 2. Cost Function - Smoothness
 
-        ceres::CostFunction* smoothness_function = new AutoDiffCostFunction<SmoothnessContInitG5Functor, 1, 15>(new SmoothnessContInitG5Functor(weight_smoothness));
+        ceres::CostFunction* smoothness_function = new AutoDiffCostFunction<SmoothnessContInitG5Functor, 12, 15>(new SmoothnessContInitG5Functor(weight_smoothness));
     
         problem.AddResidualBlock(smoothness_function, nullptr, coeff_state_vector.parameter);
 
@@ -1019,7 +1034,7 @@ namespace Ceresopt
         //options.linear_solver_type = ceres::DENSE_QR;
         options.linear_solver_type = ceres::DENSE_SCHUR;
         options.minimizer_progress_to_stdout = false;
-        options.max_num_iterations = 50;
+        options.max_num_iterations = 30;
         options.num_threads = 12;
         options.use_nonmonotonic_steps = true;
         

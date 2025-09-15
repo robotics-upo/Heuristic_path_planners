@@ -65,7 +65,7 @@
     //      0       STRAIGHT LINE APPROXIMATION
     //      1       GLOBAL PATH APPROXIMATION
 #define MAX_LOCAL_PATH 6
-#define USING_VOXFIELD_PERFECT_ESDF 1
+#define USING_VOXFIELD_PERFECT_ESDF 0
     //      0       NEURAL ESDF
     //      1       VOXFIELD PERFECT ESDF (FOR CERES_MODE 4)
 
@@ -243,7 +243,7 @@ private:
             // 2. Update local map with the neural network information around the drone
             
             if(ENVIRONMENT_REPRESENTATION == 0) {
-                if(CERES_MODE == 4){
+                if(USING_CERES == 1 && CERES_MODE == 4){
                     if(first_iteration_ == 1){
                     Planners::utils::bypassLocalWorldCosts(*m_local_grid3d_, *algorithm_, drone_x_, drone_y_, drone_z_, loaded_sdf_);
                     first_iteration_ = 0;
@@ -463,7 +463,7 @@ private:
             // Agregar el punto desplazado al nuevo vector
             global_path_local.push_back(newpoint);
         }
-        std::cout << "Global path (local reference): " << global_path_local << std::endl;
+        // std::cout << "Global path (local reference): " << global_path_local << std::endl;
 
         // 2.2 - Find closest waypoint to the drone (which is supposed to be the "current" waypoint)
         double min_dist = std::numeric_limits<double>::infinity();
@@ -485,7 +485,7 @@ private:
                 closest_index = i;
             }
         }
-        std::cout << "Closest waypoint: " << global_path_local[closest_index] << std::endl;
+        //std::cout << "Closest waypoint: " << global_path_local[closest_index] << std::endl;
 
         // 2.3 - Find furthest next waypoint that is still inside the local map (the drone will treat this waypoint as the local goal
         // 2.3b - Build a vector with the local part of the global path (that will be used as the first iteration of the optimizer when NOT using preplanning)
@@ -536,7 +536,7 @@ private:
         // 4 - Use path planner to find local waypoints (if planning before the Ceres optimizer)
         int planning_solved = 0;
         Planners::utils::CoordinateList local_path;
-        if(USING_PREPLANNING == 1 && CERES_MODE != 4){
+        if(USING_PREPLANNING == 1 && (USING_CERES == 0 || CERES_MODE != 4)){
             Planners::utils::Vec3i discrete_start, discrete_goal;
             discrete_start.x = drone_local_x;
             discrete_start.y = drone_local_y;
@@ -569,6 +569,26 @@ private:
                 local_path.pop_back(); // Delete last coordinate (duplicate)
                 std::reverse(local_path.begin(), local_path.end());
                 planning_solved = 1;
+
+                if (std::get<bool>(local_path_data["solved"])) {
+                    local_path = std::get<Planners::utils::CoordinateList>(local_path_data["path"]);
+                    local_path.pop_back(); // Delete last coordinate (duplicate)
+                    std::reverse(local_path.begin(), local_path.end());
+                    planning_solved = 1;
+
+                    //std::cout << "Local path: " << local_path << std::endl;
+
+                    std::vector<double> distances;
+                    for (const auto &it : local_path) {
+                        double cost = m_local_grid3d_->getCellCost(it.x * resolution_, it.y * resolution_, it.z * resolution_);
+                        distances.push_back(cost);
+                    }
+                    std::cout << "Distances:";
+                    for (const auto &d : distances) {
+                        std::cout << " " << d;
+                    }
+                    std::cout << std::endl;
+                }
             }
         }
 
@@ -676,7 +696,7 @@ private:
                 if(CONTINUOUS_FUNCTION_INITIAL_PARAMETERS == 0) // STRAIGHT LINE APPROXIMATION
                 {
                     double x_coeff_1, y_coeff_1, z_coeff_1;
-                    double T_FIN_EXPECTED = 10.0;
+                    double T_FIN_EXPECTED = 1.0;
 
                     x_coeff_1 = (local_goal.x - drone_local_x) / T_FIN_EXPECTED;
                     y_coeff_1 = (local_goal.y - drone_local_y) / T_FIN_EXPECTED;
@@ -689,7 +709,7 @@ private:
                 else if(CONTINUOUS_FUNCTION_INITIAL_PARAMETERS == 1) // GLOBAL PATH APPROXIMATION
                 {
                     double x_coeff_1, y_coeff_1, z_coeff_1;
-                    double T_FIN_EXPECTED = 10.0;
+                    double T_FIN_EXPECTED = 1.0;
                     Eigen::VectorXd init_coeff_x(4), init_coeff_y(4), init_coeff_z(4);
 
                     x_coeff_1 = (local_goal.x - drone_local_x) / T_FIN_EXPECTED;
@@ -712,7 +732,7 @@ private:
 
                 // Print initial approximation
 
-                double T_MAX_INI = 10.0;
+                double T_MAX_INI = 1.0;
                 int N_DIVISIONS_INI = 3;
 
                 for(int i=0; i < N_DIVISIONS_INI + 1; i++)
@@ -750,7 +770,7 @@ private:
                 std::cout << "Coeficientes opt. para z(t): " << opt_local_path_function.z_params << std::endl;
 
                 // 3b - Print in RViz
-                double T_MAX = 10.0;
+                double T_MAX = 1.0;
                 int N_DIVISIONS = 20;
                 Planners::utils::CoordinateList local_path_real;
 
@@ -797,7 +817,7 @@ private:
                 // STRAIGHT LINE APPROXIMATION
 
                 double x_coeff_1, y_coeff_1, z_coeff_1;
-                double T_FIN_EXPECTED = 10.0;
+                double T_FIN_EXPECTED = 1.0;
 
                 x_coeff_1 = (local_goal.x - drone_local_x) / T_FIN_EXPECTED;
                 y_coeff_1 = (local_goal.y - drone_local_y) / T_FIN_EXPECTED;
@@ -809,7 +829,7 @@ private:
 
                 // Print initial approximation
 
-                double T_MAX_INI = 10.0;
+                double T_MAX_INI = 1.0;
                 int N_DIVISIONS_INI = 3;
 
                 for(int i=0; i < N_DIVISIONS_INI + 1; i++)
@@ -876,7 +896,7 @@ private:
                 std::cout << "Coeficientes opt. para z(t): " << opt_local_path_function.z_params << std::endl;
 
                 // 3b - Print in RViz
-                double T_MAX = 10.0;
+                double T_MAX = 1.0;
                 int N_DIVISIONS = 20;
                 Planners::utils::CoordinateList local_path_real;
 
@@ -923,7 +943,7 @@ private:
                 // // STRAIGHT LINE APPROXIMATION
 
                 // double x_coeff_1, y_coeff_1, z_coeff_1;
-                // double T_FIN_EXPECTED = 10.0;
+                // double T_FIN_EXPECTED = 1.0;
 
                 // x_coeff_1 = (local_goal.x - drone_local_x) / T_FIN_EXPECTED;
                 // y_coeff_1 = (local_goal.y - drone_local_y) / T_FIN_EXPECTED;
@@ -936,7 +956,7 @@ private:
                 if(CONTINUOUS_FUNCTION_INITIAL_PARAMETERS == 0) // STRAIGHT LINE APPROXIMATION
                 {
                     double x_coeff_1, y_coeff_1, z_coeff_1;
-                    double T_FIN_EXPECTED = 10.0;
+                    double T_FIN_EXPECTED = 1.0;
 
                     x_coeff_1 = (local_goal.x - drone_local_x) / T_FIN_EXPECTED;
                     y_coeff_1 = (local_goal.y - drone_local_y) / T_FIN_EXPECTED;
@@ -949,7 +969,7 @@ private:
                 else if(CONTINUOUS_FUNCTION_INITIAL_PARAMETERS == 1) // GLOBAL PATH APPROXIMATION
                 {
                     double x_coeff_1, y_coeff_1, z_coeff_1;
-                    double T_FIN_EXPECTED = 10.0;
+                    double T_FIN_EXPECTED = 1.0;
                     Eigen::VectorXd init_coeff_x(6), init_coeff_y(6), init_coeff_z(6);
 
                     x_coeff_1 = (local_goal.x - drone_local_x) / T_FIN_EXPECTED;
@@ -971,8 +991,8 @@ private:
 
                 // Print initial approximation
 
-                double T_MAX_INI = 10.0;
-                int N_DIVISIONS_INI = 3;
+                double T_MAX_INI = 1.0;
+                int N_DIVISIONS_INI = 20;
 
                 for(int i=0; i < N_DIVISIONS_INI + 1; i++)
                 {
@@ -1011,7 +1031,7 @@ private:
 
                 // 3b - Print in RViz (AUN NO CONSIDERO SI LA RESOLUCIÓN DEL GLOBAL Y LOCAL NO SON LO MISMO)
 
-                double T_MAX = 10.0;
+                double T_MAX = 1.0;
                 int N_DIVISIONS = 20;
                 Planners::utils::CoordinateList local_path_real;
 

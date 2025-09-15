@@ -43,7 +43,10 @@ public:
         T y1 = stateCoeff[5] * ceres::pow(t1_, 5) + stateCoeff[6] * ceres::pow(t1_, 4) + stateCoeff[7] * ceres::pow(t1_, 3) + stateCoeff[8] * ceres::pow(t1_, 2) + stateCoeff[9] * t1_ + stateCoeffConstant[1];
         T z1 = stateCoeff[10] * ceres::pow(t1_, 5) + stateCoeff[11] * ceres::pow(t1_, 4) + stateCoeff[12] * ceres::pow(t1_, 3) + stateCoeff[13] * ceres::pow(t1_, 2) + stateCoeff[14] * t1_ + stateCoeffConstant[2];
         
-        residual[0] = weight_ * (ceres::pow((x1-x0),2) + ceres::pow((y1-y0),2) + ceres::pow((z1-z0),2));
+        //residual[0] = weight_ * ceres::sqrt(ceres::pow((x1-x0),2) + ceres::pow((y1-y0),2) + ceres::pow((z1-z0),2));
+        residual[0] = weight_ * (x1 - x0);
+        residual[1] = weight_ * (y1 - y0);
+        residual[2] = weight_ * (z1 - z0);
 
         return true;
     }
