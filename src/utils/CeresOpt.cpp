@@ -668,7 +668,7 @@ namespace Ceresopt
 
         // Declare Ceres optimization problem
         int path_length_seg = 5; // Segments for path length calculation
-        int esdf_samp = 5; // Samples for ESDF calculation
+        int esdf_samp = 10; // Samples for ESDF calculation
         //int smoothness_samp = 1; // Samples for smoothness calculation (if samples = 1, take absolute value of coeffs)
 
         double t_max_seg = 1.0; // t_max for path length calculation (TODO -- MERGE WITH ALL T)
@@ -681,19 +681,24 @@ namespace Ceresopt
         options.linear_solver_type = ceres::DENSE_QR;
         options.trust_region_strategy_type = ceres::LEVENBERG_MARQUARDT;
         options.minimizer_progress_to_stdout = false;
-        options.max_num_iterations = 30;
+        options.function_tolerance  = 1e-4;
+        options.gradient_tolerance  = 1e-6;
+        options.parameter_tolerance = 1e-6;
+        options.max_solver_time_in_seconds = 250e-3;
+
+        options.max_num_iterations = 50;
         options.num_threads = 12;
         options.use_nonmonotonic_steps = true;
         options.evaluation_callback = &evaluation_callback;
 
 
 
-        std::cout << "Configured options" << std::endl;
+        // std::cout << "Configured options" << std::endl;
 
-        std::cout << "Created Ceres Problem" << std::endl;
+        // std::cout << "Created Ceres Problem" << std::endl;
 
         // Cost function weights
-        double weight_path_length = 1.0;
+        double weight_path_length = 10.0;
         double weight_esdf = 3.0; 
         double weight_smoothness = 0.1;
         double weight_fix_goal = 1e4;
@@ -729,9 +734,9 @@ namespace Ceresopt
     
         //     problem.AddResidualBlock(smoothness_cont_function, nullptr, coeff_state_vector.parameter);
         // }
-             ceres::CostFunction* smoothness_cont_function = new AutoDiffCostFunction<Ceres4_SmoothnessContFunctor, 12, 15>(new Ceres4_SmoothnessContFunctor(weight_smoothness));
-    
-             problem.AddResidualBlock(smoothness_cont_function, nullptr, coeff_state_vector.parameter);
+        ceres::CostFunction* smoothness_cont_function = new AutoDiffCostFunction<Ceres4_SmoothnessContFunctor, 12, 15>(new Ceres4_SmoothnessContFunctor(weight_smoothness));
+
+        problem.AddResidualBlock(smoothness_cont_function, nullptr, coeff_state_vector.parameter);
 
 
         // 4 - Fixed local goal function (high weight needed)
@@ -749,6 +754,168 @@ namespace Ceresopt
         ceres::Solver::Summary summary;
 
         // // Test 1
+        // ceres::Problem::EvaluateOptions eval_options;
+        // eval_options.apply_loss_function = false;  // Evaluar sin la función de pérdida
+
+        // double total_cost = 0.0;
+        // std::vector<double> test_residuals;
+
+        // problem.Evaluate(eval_options, &total_cost, &test_residuals, nullptr, nullptr);
+
+        // std::cout << "Costo antes de la optimización: " << total_cost << std::endl;
+
+        // for (size_t i = 0; i < test_residuals.size(); ++i) {
+        //     std::cout << "Residual " << i << ": " << test_residuals[i] << std::endl;
+        // }
+        //
+
+        // Solve
+
+        auto start_opt = std::chrono::high_resolution_clock::now();
+        //std::cout << "Starting solver" << std::endl;
+        ceres::Solve(options, &problem, &summary);
+        //std::cout << "Exiting solver" << std::endl;
+        auto end_opt = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> opt_duration = end_opt - start_opt;
+        std::cout << summary.BriefReport() << "\n";
+        printf("TIEMPO DE OPTIMIZACIÓN (MONOMIAL): %.2f ms\n", opt_duration.count());
+
+        // Building the output
+        // std::cout << "Building output" << std::endl;
+        Planners::utils::OptimizedContinuousFunction optimized_coeffs;
+
+        // Resize
+        optimized_coeffs.x_params.resize(6);
+        optimized_coeffs.y_params.resize(6);
+        optimized_coeffs.z_params.resize(6);
+
+        // //Test 2
+        // total_cost = 0.0;
+        // problem.Evaluate(eval_options, &total_cost, &test_residuals, nullptr, nullptr);
+
+        // //std::cout << "Costo total después de la optimización: " << total_cost << std::endl;
+
+        // for (size_t i = 0; i < test_residuals.size(); ++i) {
+        //     std::cout << "Residual " << i << ": " << test_residuals[i] << std::endl;
+        // }
+        
+        // int test_residuals_size = test_residuals.size();
+        // double dist_to_goal_x = test_residuals[test_residuals_size-3] * resolution_ / weight_fix_goal;
+        // double dist_to_goal_y = test_residuals[test_residuals_size-2] * resolution_ / weight_fix_goal;
+        // double dist_to_goal_z = test_residuals[test_residuals_size-1] * resolution_ / weight_fix_goal;
+        // std::cout << "Dist to goal: " << sqrt(dist_to_goal_x * dist_to_goal_x + dist_to_goal_y * dist_to_goal_y + dist_to_goal_z * dist_to_goal_z) << std::endl;
+        
+
+        for (int i = 0; i < 5; i++) {
+            optimized_coeffs.x_params[i] = coeff_state_vector.parameter[i];
+            optimized_coeffs.y_params[i] = coeff_state_vector.parameter[i + 5];
+            optimized_coeffs.z_params[i] = coeff_state_vector.parameter[i + 10];
+        }
+        optimized_coeffs.x_params[5] = coeff_state_vector_constant.parameter[0];
+        optimized_coeffs.y_params[5] = coeff_state_vector_constant.parameter[1];
+        optimized_coeffs.z_params[5] = coeff_state_vector_constant.parameter[2];
+
+        //std::cout << "Returning to main function" << std::endl;
+
+        return optimized_coeffs;
+    }
+
+    Planners::utils::OptimizedContinuousFunction ceresOptimizerChebyshevContinuousPath(Eigen::VectorXd coeff_x, Eigen::VectorXd coeff_y, Eigen::VectorXd coeff_z, double origin_x, double origin_y, double origin_z, Planners::utils::Vec3i local_start, Planners::utils::Vec3i local_goal, Local_Grid3d &_grid, torch::jit::script::Module& loaded_sdf, float resolution_, std::shared_ptr<voxblox::EsdfMap>& esdf_map_, bool use_voxfield)
+    {
+
+        // Convert function coeffs to state block (excluding the last one, that's fixed by the starting point)
+        parameterBlockChebyshev coeff_state_vector;
+        for (int i = 0; i < 6; i++) {
+            coeff_state_vector.parameter[i] = coeff_x[i];
+            coeff_state_vector.parameter[i + 6] = coeff_y[i];
+            coeff_state_vector.parameter[i + 12] = coeff_z[i];
+        }
+
+        // Declare Ceres optimization problem
+        //int path_length_seg = 5; // Segments for path length calculation
+        int esdf_samp = 30; // Samples for ESDF calculation
+        
+        CeresESDFUpdateChebyshev evaluation_callback_cheb(coeff_state_vector, esdf_samp, loaded_sdf, origin_x, origin_y, origin_z, resolution_, esdf_map_, use_voxfield);
+        ceres::Problem problem;
+        ceres::Solver::Options options;
+        options.linear_solver_type = ceres::DENSE_QR;
+        //options.trust_region_strategy_type = ceres::LEVENBERG_MARQUARDT;
+        options.trust_region_strategy_type = ceres::DOGLEG;
+        // options.function_tolerance  = 1e-4;
+        // options.gradient_tolerance  = 1e-6;
+        // options.parameter_tolerance = 1e-6;
+        options.max_solver_time_in_seconds = 300e-3;
+        options.minimizer_progress_to_stdout = false;
+        options.max_num_iterations = 50;
+        options.num_threads = 12;
+        options.use_nonmonotonic_steps = true;
+        options.evaluation_callback = &evaluation_callback_cheb;
+
+        ceres::Solver::Summary summary;
+
+        //std::cout << "Configured options" << std::endl;
+
+        //std::cout << "Created Ceres Problem" << std::endl;
+
+        // Cost function weights
+        double weight_path_length = 100.0;
+        double weight_esdf = 50.0; 
+        double weight_smoothness = 10.0;
+        double weight_fix_goal = 1e4;
+        double weight_limit_gradients = 1e4;
+
+        // 1 - Path length cost function
+
+        // for(int i = 0; i < path_length_seg; i++)
+        // {
+        //     double s0 = 2.0 * i / path_length_seg - 1.0;
+        //     double s1 = 2.0 * (i+1) / path_length_seg - 1.0;
+
+        //     ceres::CostFunction* path_length_cont_function_seg = new AutoDiffCostFunction<Ceres5_PathLengthContSegmentFunctor, 3, 18>(new Ceres5_PathLengthContSegmentFunctor(weight_path_length, s0, s1));
+        
+        //     problem.AddResidualBlock(path_length_cont_function_seg, nullptr, coeff_state_vector.parameter);
+        // }
+
+        ceres::CostFunction* path_length_cont_function_seg = new AutoDiffCostFunction<Ceres5_PathLengthGaussLegendreFunctor, 1, 18>(new Ceres5_PathLengthGaussLegendreFunctor(weight_path_length));
+        
+        problem.AddResidualBlock(path_length_cont_function_seg, nullptr, coeff_state_vector.parameter);
+
+        // 2 - ESDF cost function
+
+        double weighted_weight_esdf = weight_esdf / esdf_samp;
+
+        for(int i = 0; i < esdf_samp; i++)
+        {
+            double s_esdf = 2.0 * (i + 1.0) / (esdf_samp + 1.0) - 1.0;
+
+            ceres::CostFunction* esdf_cont_function_seg = new AutoDiffCostFunction<Ceres5_ObstacleDistanceCostContSegmentFunctor, 1, 18>(new Ceres5_ObstacleDistanceCostContSegmentFunctor(evaluation_callback_cheb, i, s_esdf, esdf_samp, weight_esdf));
+
+            problem.AddResidualBlock(esdf_cont_function_seg, nullptr, coeff_state_vector.parameter);
+        }
+
+        // 3 - Smoothness cost function (by minimizing coeffs)
+
+
+        ceres::CostFunction* smoothness_cont_function = new AutoDiffCostFunction<Ceres5_SmoothnessContFunctor, 12, 18>(new Ceres5_SmoothnessContFunctor(weight_smoothness));
+
+        problem.AddResidualBlock(smoothness_cont_function, nullptr, coeff_state_vector.parameter);
+
+
+        // 4 - Fixed local start and goal function (hard restriction)
+
+        ceres::CostFunction* fixed_startgoal_cont_function = new AutoDiffCostFunction<Ceres5_FixStartGoalContFunctor, 6, 18>(new Ceres5_FixStartGoalContFunctor(weight_fix_goal, local_start, local_goal));
+        
+        problem.AddResidualBlock(fixed_startgoal_cont_function, nullptr, coeff_state_vector.parameter);
+        
+
+        // 5 - Reduce start and goal gradients (semi-hard restriction)
+
+        ceres::CostFunction* reduce_gradients_cont_function = new AutoDiffCostFunction<Ceres5_ReduceGradientsContFunctor, 6, 18>(new Ceres5_ReduceGradientsContFunctor(weight_limit_gradients));
+        
+        problem.AddResidualBlock(reduce_gradients_cont_function, nullptr, coeff_state_vector.parameter);
+
+
+        // Test 1
         ceres::Problem::EvaluateOptions eval_options;
         eval_options.apply_loss_function = false;  // Evaluar sin la función de pérdida
 
@@ -757,12 +924,139 @@ namespace Ceresopt
 
         problem.Evaluate(eval_options, &total_cost, &test_residuals, nullptr, nullptr);
 
-        // std::cout << "Costo antes de la optimización: " << total_cost << std::endl;
 
-        // for (size_t i = 0; i < test_residuals.size(); ++i) {
-        //     std::cout << "Residual " << i << ": " << test_residuals[i] << std::endl;
-        // }
-        //
+        // Solve
+
+        auto start_opt = std::chrono::high_resolution_clock::now();
+        //std::cout << "Starting solver" << std::endl;
+        ceres::Solve(options, &problem, &summary);
+        //std::cout << "Exiting solver" << std::endl;
+        auto end_opt = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> opt_duration = end_opt - start_opt;
+
+        std::cout << summary.BriefReport() << "\n";
+        //std::cout << "Número de iteraciones: " 
+        //        << summary.iterations.size() << std::endl;
+        printf("TIEMPO DE OPTIMIZACIÓN (CHEBYSHEV): %.2f ms\n", opt_duration.count());
+
+        // Building the output
+        //std::cout << "Building output" << std::endl;
+        Planners::utils::OptimizedContinuousFunction optimized_coeffs;
+
+        // Resize
+        optimized_coeffs.x_params.resize(6);
+        optimized_coeffs.y_params.resize(6);
+        optimized_coeffs.z_params.resize(6);
+
+        //Test 2
+        total_cost = 0.0;
+        test_residuals.clear();
+        problem.Evaluate(eval_options, &total_cost, &test_residuals, nullptr, nullptr);
+
+        //Imprimir cada residual
+        std::cout << "Residuals:" << std::endl;
+        for (size_t i = 0; i < test_residuals.size(); ++i) {
+            std::cout << "Residual[" << i << "] = " << test_residuals[i] << std::endl;
+        }
+
+        // int test_residuals_size = test_residuals.size();
+        // double dist_to_goal_x = test_residuals[test_residuals_size-3] * resolution_ / weight_fix_goal;
+        // double dist_to_goal_y = test_residuals[test_residuals_size-2] * resolution_ / weight_fix_goal;
+        // double dist_to_goal_z = test_residuals[test_residuals_size-1] * resolution_ / weight_fix_goal;
+        // std::cout << "Dist to goal: " << sqrt(dist_to_goal_x * dist_to_goal_x + dist_to_goal_y * dist_to_goal_y + dist_to_goal_z * dist_to_goal_z) << std::endl;
+        
+
+        for (int i = 0; i < 6; i++) {
+            optimized_coeffs.x_params[i] = coeff_state_vector.parameter[i];
+            optimized_coeffs.y_params[i] = coeff_state_vector.parameter[i + 6];
+            optimized_coeffs.z_params[i] = coeff_state_vector.parameter[i + 12];
+        }
+
+        // std::cout << "Returning to main function" << std::endl;
+
+        return optimized_coeffs;
+    }
+
+    Planners::utils::OptimizedContinuousFunction ceresOptimizerReducedChebyshevContinuousPath(Eigen::VectorXd coeff_x, Eigen::VectorXd coeff_y, Eigen::VectorXd coeff_z, double origin_x, double origin_y, double origin_z, Planners::utils::Vec3i local_start, Planners::utils::Vec3i local_goal, Local_Grid3d &_grid, torch::jit::script::Module& loaded_sdf, float resolution_, std::shared_ptr<voxblox::EsdfMap>& esdf_map_, bool use_voxfield)
+    {
+
+        // Convert function coeffs to state block (excluding the last one, that's fixed by the starting point)
+        parameterBlockReducedChebyshev coeff_state_vector;
+        for (int i = 0; i < 4; i++) {
+            coeff_state_vector.parameter[i] = coeff_x[i];
+            coeff_state_vector.parameter[i + 4] = coeff_y[i];
+            coeff_state_vector.parameter[i + 8] = coeff_z[i];
+        }
+
+        // Declare Ceres optimization problem
+        int path_length_seg = 5; // Segments for path length calculation
+        int esdf_samp = 10; // Samples for ESDF calculation
+        
+        CeresESDFUpdateReducedChebyshev evaluation_callback_reduced_cheb(coeff_state_vector, esdf_samp, loaded_sdf, origin_x, origin_y, origin_z, local_start, local_goal, resolution_, esdf_map_, use_voxfield);
+        ceres::Problem problem;
+        ceres::Solver::Options options;
+        options.linear_solver_type = ceres::DENSE_QR;
+        options.trust_region_strategy_type = ceres::LEVENBERG_MARQUARDT;
+        options.minimizer_progress_to_stdout = false;
+        options.max_num_iterations = 50;
+        options.num_threads = 12;
+        options.use_nonmonotonic_steps = true;
+        options.evaluation_callback = &evaluation_callback_reduced_cheb;
+
+
+
+        std::cout << "Configured options" << std::endl;
+
+        std::cout << "Created Ceres Problem" << std::endl;
+
+        // Cost function weights
+        double weight_path_length = 0.1;
+        double weight_esdf = 10.0; 
+        double weight_smoothness = 10.0;
+
+        // 1 - Path length cost function
+
+        for(int i = 0; i < path_length_seg; i++)
+        {
+            double s0 = 2.0 * i / path_length_seg - 1.0;
+            double s1 = 2.0 * (i+1) / path_length_seg - 1.0;
+
+            ceres::CostFunction* path_length_cont_function_seg = new AutoDiffCostFunction<Ceres6_PathLengthContSegmentFunctor, 3, 12>(new Ceres6_PathLengthContSegmentFunctor(weight_path_length, s0, s1, local_start, local_goal));
+        
+            problem.AddResidualBlock(path_length_cont_function_seg, nullptr, coeff_state_vector.parameter);
+        }
+
+        // 2 - ESDF cost function
+
+        for(int i = 0; i < esdf_samp; i++)
+        {
+            double s_esdf = 2.0 * (i + 1.0) / (esdf_samp + 1.0) - 1.0;
+
+            ceres::CostFunction* esdf_cont_function_seg = new AutoDiffCostFunction<Ceres6_ObstacleDistanceCostContSegmentFunctor, 1, 12>(new Ceres6_ObstacleDistanceCostContSegmentFunctor(evaluation_callback_reduced_cheb, i, s_esdf, esdf_samp, local_start, local_goal, weight_esdf));
+
+            problem.AddResidualBlock(esdf_cont_function_seg, nullptr, coeff_state_vector.parameter);
+        }
+
+        // 3 - Smoothness cost function (by minimizing coeffs)
+
+
+        ceres::CostFunction* smoothness_cont_function = new AutoDiffCostFunction<Ceres6_SmoothnessContFunctor, 12, 12>(new Ceres6_SmoothnessContFunctor(weight_smoothness, local_start, local_goal));
+
+        problem.AddResidualBlock(smoothness_cont_function, nullptr, coeff_state_vector.parameter);
+
+
+
+        ceres::Solver::Summary summary;
+
+        // Test 1
+        ceres::Problem::EvaluateOptions eval_options;
+        eval_options.apply_loss_function = false;  // Evaluar sin la función de pérdida
+
+        double total_cost = 0.0;
+        std::vector<double> test_residuals;
+
+        problem.Evaluate(eval_options, &total_cost, &test_residuals, nullptr, nullptr);
+
 
         // Solve
 
@@ -779,35 +1073,33 @@ namespace Ceresopt
         Planners::utils::OptimizedContinuousFunction optimized_coeffs;
 
         // Resize
-        optimized_coeffs.x_params.resize(6);
-        optimized_coeffs.y_params.resize(6);
-        optimized_coeffs.z_params.resize(6);
+        optimized_coeffs.x_params.resize(4);
+        optimized_coeffs.y_params.resize(4);
+        optimized_coeffs.z_params.resize(4);
 
         //Test 2
         total_cost = 0.0;
+        test_residuals.clear();
         problem.Evaluate(eval_options, &total_cost, &test_residuals, nullptr, nullptr);
 
-        //std::cout << "Costo total después de la optimización: " << total_cost << std::endl;
+        // Imprimir cada residual
+        std::cout << "Residuals:" << std::endl;
+        for (size_t i = 0; i < test_residuals.size(); ++i) {
+            std::cout << "Residual[" << i << "] = " << test_residuals[i] << std::endl;
+        }
 
-        // for (size_t i = 0; i < test_residuals.size(); ++i) {
-        //     std::cout << "Residual " << i << ": " << test_residuals[i] << std::endl;
-        // }
-        //
-        int test_residuals_size = test_residuals.size();
-        double dist_to_goal_x = test_residuals[test_residuals_size-3] * resolution_ / weight_fix_goal;
-        double dist_to_goal_y = test_residuals[test_residuals_size-2] * resolution_ / weight_fix_goal;
-        double dist_to_goal_z = test_residuals[test_residuals_size-1] * resolution_ / weight_fix_goal;
-        std::cout << "Dist to goal: " << sqrt(dist_to_goal_x * dist_to_goal_x + dist_to_goal_y * dist_to_goal_y + dist_to_goal_z * dist_to_goal_z) << std::endl;
+        // int test_residuals_size = test_residuals.size();
+        // double dist_to_goal_x = test_residuals[test_residuals_size-3] * resolution_ / weight_fix_goal;
+        // double dist_to_goal_y = test_residuals[test_residuals_size-2] * resolution_ / weight_fix_goal;
+        // double dist_to_goal_z = test_residuals[test_residuals_size-1] * resolution_ / weight_fix_goal;
+        // std::cout << "Dist to goal: " << sqrt(dist_to_goal_x * dist_to_goal_x + dist_to_goal_y * dist_to_goal_y + dist_to_goal_z * dist_to_goal_z) << std::endl;
         
 
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 4; i++) {
             optimized_coeffs.x_params[i] = coeff_state_vector.parameter[i];
-            optimized_coeffs.y_params[i] = coeff_state_vector.parameter[i + 5];
-            optimized_coeffs.z_params[i] = coeff_state_vector.parameter[i + 10];
+            optimized_coeffs.y_params[i] = coeff_state_vector.parameter[i + 4];
+            optimized_coeffs.z_params[i] = coeff_state_vector.parameter[i + 8];
         }
-        optimized_coeffs.x_params[5] = coeff_state_vector_constant.parameter[0];
-        optimized_coeffs.y_params[5] = coeff_state_vector_constant.parameter[1];
-        optimized_coeffs.z_params[5] = coeff_state_vector_constant.parameter[2];
 
         std::cout << "Returning to main function" << std::endl;
 
@@ -819,7 +1111,7 @@ namespace Ceresopt
         // Estimation of t_n for each point in the local global path
 
         double wp_distance_total;
-        Planners::utils::Vec3i local_start;
+        //Planners::utils::Vec3i local_start;
         std::vector<double> dist_list;
         std::vector<double> t_list;
 
@@ -942,12 +1234,12 @@ namespace Ceresopt
 
     }
 
-    Planners::utils::OptimizedContinuousFunction ceresOptimizerContinuousPathInitG5(Eigen::VectorXd init_coeff_x, Eigen::VectorXd init_coeff_y, Eigen::VectorXd init_coeff_z, Planners::utils::CoordinateList global_path_local_section, double t_last)
+    Planners::utils::OptimizedContinuousFunction ceresOptimizerContinuousPathInitG5(Eigen::VectorXd init_coeff_x, Eigen::VectorXd init_coeff_y, Eigen::VectorXd init_coeff_z, Planners::utils::CoordinateList global_path_local_section, Planners::utils::Vec3i local_goal)
     {
         // Estimation of t_n for each point in the local global path
 
         double wp_distance_total;
-        Planners::utils::Vec3i local_start;
+        //Planners::utils::Vec3i local_start;
         std::vector<double> dist_list;
         std::vector<double> t_list;
 
@@ -955,7 +1247,7 @@ namespace Ceresopt
         {
             if(i == 0)
             {
-                double dist = sqrt((global_path_local_section[0].x - init_coeff_x[5]) * (global_path_local_section[0].x - init_coeff_x[5]) + (global_path_local_section[0].y - init_coeff_y[5]) * (global_path_local_section[0].y - init_coeff_y[5]) + (global_path_local_section[0].z - init_coeff_z[5]) * (global_path_local_section[0].z - init_coeff_z[5]));
+                double dist = sqrt((global_path_local_section[0].x - init_coeff_x[3]) * (global_path_local_section[0].x - init_coeff_x[3]) + (global_path_local_section[0].y - init_coeff_y[3]) * (global_path_local_section[0].y - init_coeff_y[3]) + (global_path_local_section[0].z - init_coeff_z[3]) * (global_path_local_section[0].z - init_coeff_z[3]));
                 dist_list.push_back(dist);
                 wp_distance_total += dist;
             }
@@ -971,16 +1263,16 @@ namespace Ceresopt
         {
             if(i == 0)
             {
-                double t_i = dist_list[0] * t_last / wp_distance_total;
+                double t_i = dist_list[0] / wp_distance_total;
                 t_list.push_back(t_i);
             }
             else if(i == global_path_local_section.size() - 1)
             {
-                t_list.push_back(t_last);
+                t_list.push_back(1.0);
             }
             else
             {
-                double t_i = (dist_list[i] * t_last / wp_distance_total) + t_list[i-1];
+                double t_i = (dist_list[i] / wp_distance_total) + t_list[i-1];
                 t_list.push_back(t_i);
             }
         }
@@ -1001,12 +1293,13 @@ namespace Ceresopt
 
         ceres::Problem problem;
 
-        std::cout << "Created Ceres Problem" << std::endl;
+        //std::cout << "Created Ceres Problem" << std::endl;
 
         // Cost function weights
 
-        double weight_distance_to_wp = 10.0;
+        double weight_distance_to_wp = 1e3;
         double weight_smoothness = 1.0;
+        //double weight_fix_goal = 1e4;
 
         // 1. Cost Function - Distance to waypoints
 
@@ -1016,7 +1309,15 @@ namespace Ceresopt
                                                         (new DistanceToWPG5Functor(weight_distance_to_wp, global_path_local_section[i], t_list[i]));
 
             problem.AddResidualBlock(distance_to_wp, nullptr, coeff_state_vector.parameter, coeff_state_vector_constant.parameter);
+
         }
+
+
+        //int f_segments = 50;
+
+        //ceres::CostFunction* distance_to_wp = new AutoDiffCostFunction<DistanceToWPG5Functor, 1, 15, 3>(new DistanceToWPG5Functor(weight_distance_to_wp, global_path_local_section, f_segments));
+
+        //problem.AddResidualBlock(distance_to_wp, nullptr, coeff_state_vector.parameter, coeff_state_vector_constant.parameter);
 
         // 2. Cost Function - Smoothness
 
@@ -1024,9 +1325,17 @@ namespace Ceresopt
     
         problem.AddResidualBlock(smoothness_function, nullptr, coeff_state_vector.parameter);
 
+        // 3. Cost Function - Fix Goal
+
+        //ceres::CostFunction* fixed_goal_function = new AutoDiffCostFunction<FixGoalInitG5Functor, 3, 15, 3>(new FixGoalInitG5Functor(weight_fix_goal, local_goal));
+        
+        //problem.AddResidualBlock(fixed_goal_function, nullptr, coeff_state_vector.parameter, coeff_state_vector_constant.parameter);
+
+
 
         // Freeze independent coeffs
         problem.SetParameterBlockConstant(coeff_state_vector_constant.parameter);
+        
 
 
         // Solve problem
@@ -1034,7 +1343,8 @@ namespace Ceresopt
         //options.linear_solver_type = ceres::DENSE_QR;
         options.linear_solver_type = ceres::DENSE_SCHUR;
         options.minimizer_progress_to_stdout = false;
-        options.max_num_iterations = 30;
+        //options.max_solver_time_in_seconds = 50e-3;
+        options.max_num_iterations = 50;
         options.num_threads = 12;
         options.use_nonmonotonic_steps = true;
         
@@ -1044,6 +1354,19 @@ namespace Ceresopt
         ceres::Solve(options, &problem, &summary);
         auto end_opt = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double, std::milli> opt_duration = end_opt - start_opt;
+
+        //Test
+        ceres::Problem::EvaluateOptions eval_options;
+        eval_options.apply_loss_function = false; 
+        std::vector<double> test_residuals;
+        double total_cost = 0.0;
+        problem.Evaluate(eval_options, &total_cost, &test_residuals, nullptr, nullptr);
+
+        //std::cout << "Costo total después de la optimización: " << total_cost << std::endl;
+
+        for (size_t i = 0; i < test_residuals.size(); ++i) {
+            std::cout << "Residual " << i << ": " << test_residuals[i] << std::endl;
+        }
 
         // Building the output
         Planners::utils::OptimizedContinuousFunction optimized_coeffs;
@@ -1062,9 +1385,95 @@ namespace Ceresopt
         optimized_coeffs.y_params[5] = coeff_state_vector_constant.parameter[1];
         optimized_coeffs.z_params[5] = coeff_state_vector_constant.parameter[2];
 
+        //std::cout << "Returning to main function" << std::endl;
+
+        return optimized_coeffs;
+    }
+
+    Planners::utils::OptimizedContinuousFunction ceresOptimizerContinuousPathInitChebyshev(Eigen::VectorXd init_coeff_x, Eigen::VectorXd init_coeff_y, Eigen::VectorXd init_coeff_z, Planners::utils::CoordinateList global_path_local_section, Planners::utils::Vec3i local_start, Planners::utils::Vec3i local_goal)
+    {
+        // Optimization
+
+        parameterBlockChebyshev coeff_state_vector;
+        for (int i = 0; i < 6; i++) {
+            coeff_state_vector.parameter[i] = init_coeff_x[i];
+            coeff_state_vector.parameter[i + 6] = init_coeff_y[i];
+            coeff_state_vector.parameter[i + 12] = init_coeff_z[i];
+        }
+
+        ceres::Problem problem;
+
+        std::cout << "Created Ceres Problem" << std::endl;
+
+        // Cost function weights
+
+        double weight_distance_to_wp = 100.0;
+        double weight_smoothness = 1.0;
+        double weight_fix_start_goal = 1e4;
+        double weight_limit_gradients = 1e4;
+
+        // 1. Cost Function - Distance to waypoints
+
+        int f_segments = 50; // Segmentation of the function
+
+        ceres::CostFunction* distance_to_wp = new AutoDiffCostFunction<DistanceToWPChebyshevFunctor, 1, 18>(new DistanceToWPChebyshevFunctor(weight_distance_to_wp, global_path_local_section, f_segments));
+
+        problem.AddResidualBlock(distance_to_wp, nullptr, coeff_state_vector.parameter);
+
+        // 2. Cost Function - Smoothness
+
+        ceres::CostFunction* smoothness_function = new AutoDiffCostFunction<SmoothnessContInitChebyshevFunctor, 12, 18>(new SmoothnessContInitChebyshevFunctor(weight_smoothness));
+    
+        problem.AddResidualBlock(smoothness_function, nullptr, coeff_state_vector.parameter);
+
+        // 3. Cost Function - Fix start and goal
+
+        ceres::CostFunction* fix_start_goal_function = new AutoDiffCostFunction<FixStartGoalChebyshevFunctor, 6, 18>(new FixStartGoalChebyshevFunctor(weight_fix_start_goal, local_start, local_goal));
+    
+        problem.AddResidualBlock(fix_start_goal_function, nullptr, coeff_state_vector.parameter);
+
+        // 4 - Reduce start and goal gradients (semi-hard restriction)
+
+        //ceres::CostFunction* reduce_gradients_cont_function = new AutoDiffCostFunction<ReduceGradientsContInitChebyshevFunctor, 6, 18>(new ReduceGradientsContInitChebyshevFunctor(weight_limit_gradients));
+        
+        //problem.AddResidualBlock(reduce_gradients_cont_function, nullptr, coeff_state_vector.parameter);
+
+
+        // Solve problem
+        ceres::Solver::Options options;
+        //options.linear_solver_type = ceres::DENSE_QR;
+        options.linear_solver_type = ceres::DENSE_SCHUR;
+        options.minimizer_progress_to_stdout = false;
+        options.max_solver_time_in_seconds = 50e-3;
+        options.max_num_iterations = 50;
+        options.num_threads = 12;
+        options.use_nonmonotonic_steps = true;
+        
+        ceres::Solver::Summary summary;
+
+        auto start_opt = std::chrono::high_resolution_clock::now();
+        ceres::Solve(options, &problem, &summary);
+        auto end_opt = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> opt_duration = end_opt - start_opt;
+
+        // Building the output
+        Planners::utils::OptimizedContinuousFunction optimized_coeffs;
+
+        // Resize
+        optimized_coeffs.x_params.resize(6);
+        optimized_coeffs.y_params.resize(6);
+        optimized_coeffs.z_params.resize(6);
+
+        for (int i = 0; i < 6; i++) {
+            optimized_coeffs.x_params[i] = coeff_state_vector.parameter[i];
+            optimized_coeffs.y_params[i] = coeff_state_vector.parameter[i + 6];
+            optimized_coeffs.z_params[i] = coeff_state_vector.parameter[i + 12];
+        }
+
         std::cout << "Returning to main function" << std::endl;
 
         return optimized_coeffs;
     }
+
 }
 

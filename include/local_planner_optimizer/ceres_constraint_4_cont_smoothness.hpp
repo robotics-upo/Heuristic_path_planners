@@ -11,6 +11,7 @@
 #include "utils/metrics.hpp"
 #include <ros/ros.h>
 #include <Eigen/Dense>
+#include <chrono>
 
 
 #include <heuristic_planners/Vec3i.h>
@@ -34,6 +35,8 @@ public:
     template <typename T>
     bool operator()(const T* const stateCoeff, T* residual) const {
 
+        auto t0 = std::chrono::high_resolution_clock::now();
+
         residual[0] = weight_ * stateCoeff[0];
         residual[1] = weight_ * stateCoeff[1];
         residual[2] = weight_ * stateCoeff[2];
@@ -45,7 +48,11 @@ public:
         residual[8] = weight_ * stateCoeff[10];
         residual[9] = weight_ * stateCoeff[11];
         residual[10] = weight_ * stateCoeff[12];
-        residual[11] = weight_ * stateCoeff[13];        
+        residual[11] = weight_ * stateCoeff[13];
+
+        auto t1 = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> dt = t1 - t0;
+        //Planners::utils::safe_log("Cost Function - Smoothness", dt.count());        
 
         return true;
     }

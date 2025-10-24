@@ -11,6 +11,7 @@
 #include "utils/metrics.hpp"
 #include <ros/ros.h>
 #include <Eigen/Dense>
+#include <chrono>
 
 
 #include <heuristic_planners/Vec3i.h>
@@ -35,6 +36,8 @@ public:
     template <typename T>
     bool operator()(const T* const stateCoeff, const T* const stateCoeffConstant, T* residual) const {
 
+        auto t0 = std::chrono::high_resolution_clock::now();
+
         T x0 = stateCoeff[0] * ceres::pow(t0_, 5) + stateCoeff[1] * ceres::pow(t0_, 4) + stateCoeff[2] * ceres::pow(t0_, 3) + stateCoeff[3] * ceres::pow(t0_, 2) + stateCoeff[4] * t0_ + stateCoeffConstant[0];
         T y0 = stateCoeff[5] * ceres::pow(t0_, 5) + stateCoeff[6] * ceres::pow(t0_, 4) + stateCoeff[7] * ceres::pow(t0_, 3) + stateCoeff[8] * ceres::pow(t0_, 2) + stateCoeff[9] * t0_ + stateCoeffConstant[1];
         T z0 = stateCoeff[10] * ceres::pow(t0_, 5) + stateCoeff[11] * ceres::pow(t0_, 4) + stateCoeff[12] * ceres::pow(t0_, 3) + stateCoeff[13] * ceres::pow(t0_, 2) + stateCoeff[14] * t0_ + stateCoeffConstant[2];
@@ -47,6 +50,10 @@ public:
         residual[0] = weight_ * (x1 - x0);
         residual[1] = weight_ * (y1 - y0);
         residual[2] = weight_ * (z1 - z0);
+
+        auto t1 = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> dt = t1 - t0;
+        //Planners::utils::safe_log("Cost Function - Path Length", dt.count());
 
         return true;
     }

@@ -13,6 +13,7 @@
 #include <Eigen/Dense>
 #include <memory>
 #include <mutex>
+#include <chrono>
 
 
 #include <heuristic_planners/Vec3i.h>
@@ -62,19 +63,96 @@ public:
         residuals_ = Eigen::VectorXd::Zero(esdf_samp_);
         jacobians_ = Eigen::MatrixXd::Zero(esdf_samp_, 3);
         PrepareForEvaluation(true, true);
-        std::cout << "Evaluation Callback Created(using "
-                  << (use_voxfield_ ? "Voxfield ESDF" : "Neural Network ESDF")
-                  << ")" << std::endl;
+        // std::cout << "Evaluation Callback Created(using "
+        //           << (use_voxfield_ ? "Voxfield ESDF" : "Neural Network ESDF")
+        //           << ")" << std::endl;
     }
 
+    // void PrepareForEvaluation(bool evaluate_jacobians, bool new_evaluation_point) final {
+    //     int num_points = esdf_samp_;
+    //     Eigen::VectorXd local_residuals(esdf_samp_);
+    //     Eigen::MatrixXd local_jacobians(esdf_samp_, 3);
+    //     // std::vector<double> grad_norms;
+    //     // grad_norms.reserve(esdf_samp_);
+
+    //     for (int i = 0; i < esdf_samp_; ++i) {
+    //         double t_esdf_act = t_max_esdf_seg_ * (i + 1) / (esdf_samp_ + 1);
+
+    //         Eigen::Vector3d coord;
+    //         coord[0] = (coeff_state_vector_.parameter[0] * std::pow(t_esdf_act, 5)
+    //                     + coeff_state_vector_.parameter[1] * std::pow(t_esdf_act, 4)
+    //                     + coeff_state_vector_.parameter[2] * std::pow(t_esdf_act, 3)
+    //                     + coeff_state_vector_.parameter[3] * std::pow(t_esdf_act, 2)
+    //                     + coeff_state_vector_.parameter[4] * t_esdf_act
+    //                     + coeff_state_vector_const_.parameter[0]) * resolution_ + origin_x_;
+    //         coord[1] = (coeff_state_vector_.parameter[5] * std::pow(t_esdf_act, 5)
+    //                     + coeff_state_vector_.parameter[6] * std::pow(t_esdf_act, 4)
+    //                     + coeff_state_vector_.parameter[7] * std::pow(t_esdf_act, 3)
+    //                     + coeff_state_vector_.parameter[8] * std::pow(t_esdf_act, 2)
+    //                     + coeff_state_vector_.parameter[9] * t_esdf_act
+    //                     + coeff_state_vector_const_.parameter[1]) * resolution_ + origin_y_;
+    //         coord[2] = (coeff_state_vector_.parameter[10] * std::pow(t_esdf_act, 5)
+    //                     + coeff_state_vector_.parameter[11] * std::pow(t_esdf_act, 4)
+    //                     + coeff_state_vector_.parameter[12] * std::pow(t_esdf_act, 3)
+    //                     + coeff_state_vector_.parameter[13] * std::pow(t_esdf_act, 2)
+    //                     + coeff_state_vector_.parameter[14] * t_esdf_act
+    //                     + coeff_state_vector_const_.parameter[2]) * resolution_ + origin_z_;
+
+    //         double dist = 0.0;
+    //         Eigen::Vector3d grad = Eigen::Vector3d::Zero();
+
+    //         if (use_voxfield_ && esdf_map_) {
+    //             // --- Query ESDF distance with interpolation ---
+    //             bool valid = esdf_map_->getDistanceAtPosition(coord, true, &dist);
+    //             if (!valid) dist = 0.05;  // fallback for unknown space
+
+    //             // --- Approximate gradient via central finite differences ---
+    //             const double eps = 0.05;
+    //             for (int d = 0; d < 3; ++d) {
+    //                 Eigen::Vector3d plus = coord;
+    //                 Eigen::Vector3d minus = coord;
+    //                 plus[d] += eps;
+    //                 minus[d] -= eps;
+
+    //                 double dist_plus = 0.0, dist_minus = 0.0;
+    //                 esdf_map_->getDistanceAtPosition(plus, true, &dist_plus);
+    //                 esdf_map_->getDistanceAtPosition(minus, true, &dist_minus);
+
+    //                 grad[d] = (dist_plus - dist_minus) / (2.0 * eps);
+    //             }
+    //         } else {
+    //             // --- Fallback: neural network evaluation ---
+    //             torch::Tensor coord_tensor = torch::from_blob(coord.data(), {1, 3}, torch::kFloat64)
+    //                                             .clone()
+    //                                             .to(torch::kFloat32);
+    //             coord_tensor.set_requires_grad(true);
+    //             torch::Tensor output_tensor = loaded_sdf_.forward({coord_tensor}).toTensor();
+    //             output_tensor.backward();
+    //             auto grad_tensor = coord_tensor.grad();
+    //             dist = output_tensor.item<float>();
+    //             grad = Eigen::Map<Eigen::Vector3f>(grad_tensor.data_ptr<float>(), 3).cast<double>();
+    //         }
+
+    //         local_residuals(i) = dist;
+    //         local_jacobians.row(i) = grad;
+    //     }
+    //     //std::cout << "Distances: " << local_residuals.transpose() << std::endl;
+
+    //     residuals_ = local_residuals;
+    //     jacobians_ = local_jacobians;
+    // }
+
     void PrepareForEvaluation(bool evaluate_jacobians, bool new_evaluation_point) final {
+
+        auto t0 = std::chrono::high_resolution_clock::now();
         int num_points = esdf_samp_;
         Eigen::VectorXd local_residuals(esdf_samp_);
         Eigen::MatrixXd local_jacobians(esdf_samp_, 3);
-        // std::vector<double> grad_norms;
-        // grad_norms.reserve(esdf_samp_);
 
-        for (int i = 0; i < esdf_samp_; ++i) {
+        // ---- Precomputar coordenadas ----
+        std::vector<Eigen::Vector3d> coords;
+        coords.reserve(num_points);
+        for (int i = 0; i < num_points; ++i) {
             double t_esdf_act = t_max_esdf_seg_ * (i + 1) / (esdf_samp_ + 1);
 
             Eigen::Vector3d coord;
@@ -96,64 +174,71 @@ public:
                         + coeff_state_vector_.parameter[13] * std::pow(t_esdf_act, 2)
                         + coeff_state_vector_.parameter[14] * t_esdf_act
                         + coeff_state_vector_const_.parameter[2]) * resolution_ + origin_z_;
+            coords.push_back(coord);
+        }
 
-            double dist = 0.0;
-            Eigen::Vector3d grad = Eigen::Vector3d::Zero();
-
-            if (use_voxfield_ && esdf_map_) {
-                // --- Query ESDF distance with interpolation ---
+        if (use_voxfield_ && esdf_map_) {
+            // ---- Caso Voxfield: igual que antes ----
+            const double eps = 0.05;
+            for (int i = 0; i < num_points; ++i) {
+                const Eigen::Vector3d& coord = coords[i];
+                double dist = 0.0;
                 bool valid = esdf_map_->getDistanceAtPosition(coord, true, &dist);
-                if (!valid) dist = 0.05;  // fallback for unknown space
+                if (!valid) dist = 0.05;
 
-                // --- Approximate gradient via central finite differences ---
-                const double eps = 0.05;
+                Eigen::Vector3d grad = Eigen::Vector3d::Zero();
                 for (int d = 0; d < 3; ++d) {
-                    Eigen::Vector3d plus = coord;
-                    Eigen::Vector3d minus = coord;
+                    Eigen::Vector3d plus = coord, minus = coord;
                     plus[d] += eps;
                     minus[d] -= eps;
-
-                    double dist_plus = 0.0, dist_minus = 0.0;
-                    esdf_map_->getDistanceAtPosition(plus, true, &dist_plus);
-                    esdf_map_->getDistanceAtPosition(minus, true, &dist_minus);
-
-                    grad[d] = (dist_plus - dist_minus) / (2.0 * eps);
+                    double dp = 0.0, dm = 0.0;
+                    esdf_map_->getDistanceAtPosition(plus, true, &dp);
+                    esdf_map_->getDistanceAtPosition(minus, true, &dm);
+                    grad[d] = (dp - dm) / (2.0 * eps);
                 }
-            } else {
-                // --- Fallback: neural network evaluation ---
-                torch::Tensor coord_tensor = torch::from_blob(coord.data(), {1, 3}, torch::kFloat64)
-                                                .clone()
-                                                .to(torch::kFloat32);
-                coord_tensor.set_requires_grad(true);
-                torch::Tensor output_tensor = loaded_sdf_.forward({coord_tensor}).toTensor();
-                output_tensor.backward();
-                auto grad_tensor = coord_tensor.grad();
-                dist = output_tensor.item<float>();
-                grad = Eigen::Map<Eigen::Vector3f>(grad_tensor.data_ptr<float>(), 3).cast<double>();
+
+                local_residuals(i) = dist;
+                local_jacobians.row(i) = grad;
             }
+        } else {
+            // ---- Evaluación batch en la red neuronal ----
+            torch::Tensor coords_tensor = torch::empty({num_points, 3}, torch::kFloat32);
+            for (int i = 0; i < num_points; ++i)
+                coords_tensor[i] = torch::tensor({(float)coords[i][0],
+                                                (float)coords[i][1],
+                                                (float)coords[i][2]});
+            coords_tensor.set_requires_grad(true);
 
-            local_residuals(i) = dist;
-            local_jacobians.row(i) = grad;
+            // Forward de todos los puntos a la vez
+            torch::Tensor output_tensor = loaded_sdf_.forward({coords_tensor}).toTensor();
+            if (output_tensor.dim() == 2 && output_tensor.size(1) == 1)
+                output_tensor = output_tensor.squeeze(1);
 
-            // // Save grad module and print them all when they're ready
-            // grad_norms.push_back(grad.norm());
+            // Gradiente respecto a las coordenadas de entrada
+            torch::Tensor grad_tensor = torch::autograd::grad({output_tensor.sum()}, {coords_tensor})[0];
 
-            // // Cuando llegamos al último índice, imprimimos todo
-            // if (i == num_points - 1) {
-            //     std::cout << "Norma y vectores de gradiente por punto:" << std::endl;
-            //     for (int j = 0; j < num_points; ++j) {
-            //         double norm = local_jacobians.row(j).norm();
-            //         Eigen::Vector3d grad_vec = local_jacobians.row(j);
+            // Pasar a CPU y copiar en Eigen
+            auto dist_cpu = output_tensor.to(torch::kCPU);
+            auto grad_cpu = grad_tensor.to(torch::kCPU);
+            auto dist_acc = dist_cpu.accessor<float,1>();
+            auto grad_acc = grad_cpu.accessor<float,2>();
 
-            //         std::cout << norm << "  " << grad_vec.transpose() << std::endl;
-            //     }
-            // }
+            for (int i = 0; i < num_points; ++i) {
+                local_residuals(i) = dist_acc[i];
+                local_jacobians(i,0) = grad_acc[i][0];
+                local_jacobians(i,1) = grad_acc[i][1];
+                local_jacobians(i,2) = grad_acc[i][2];
+            }
         }
-        std::cout << "Distances: " << local_residuals.transpose() << std::endl;
 
         residuals_ = local_residuals;
         jacobians_ = local_jacobians;
+
+        auto t1 = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> dt = t1 - t0;
+        //Planners::utils::safe_log("Evaluation callback", dt.count());
     }
+
 
     const Eigen::VectorXd& residuals() const { return residuals_; }
     const Eigen::MatrixXd& jacobians() const { return jacobians_; }
@@ -219,6 +304,8 @@ class Ceres4_ObstacleDistanceCostContSegmentFunctor
     {   
         T p[3], dist;
 
+        auto t0 = std::chrono::high_resolution_clock::now();
+
         p[0] = stateCoeff[0] * ceres::pow(t_act_, 5) + stateCoeff[1] * ceres::pow(t_act_, 4) + stateCoeff[2] * ceres::pow(t_act_, 3) + stateCoeff[3] * ceres::pow(t_act_, 2) + stateCoeff[4] * t_act_ + stateCoeffConstant[0];
         p[1] = stateCoeff[5] * ceres::pow(t_act_, 5) + stateCoeff[6] * ceres::pow(t_act_, 4) + stateCoeff[7] * ceres::pow(t_act_, 3) + stateCoeff[8] * ceres::pow(t_act_, 2) + stateCoeff[9] * t_act_ + stateCoeffConstant[1];
         p[2] = stateCoeff[10] * ceres::pow(t_act_, 5) + stateCoeff[11] * ceres::pow(t_act_, 4) + stateCoeff[12] * ceres::pow(t_act_, 3) + stateCoeff[13] * ceres::pow(t_act_, 2) + stateCoeff[14] * t_act_ + stateCoeffConstant[2];
@@ -230,6 +317,10 @@ class Ceres4_ObstacleDistanceCostContSegmentFunctor
         // Compute weight
         // residual[0] = T(weight_) / T(esdf_samp_) * exp(T(-4) * (dist - T(1.5)));
         residual[0] = T(weight_) / T(esdf_samp_) * exp(T(-4) * (dist - T(1.5)));
+
+        auto t1 = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> dt = t1 - t0;
+        //Planners::utils::safe_log("Cost Function - Distance to obstacle", dt.count());
 
 
 

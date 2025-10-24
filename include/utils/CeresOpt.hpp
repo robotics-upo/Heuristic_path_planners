@@ -56,13 +56,28 @@
 #include "local_planner_optimizer/ceres_constraint_4_cont_fix_goal.hpp"
 #include "local_planner_optimizer/ceres_constraint_4_cont_path_length_segment.hpp"
 #include "local_planner_optimizer/ceres_constraint_4_cont_smoothness.hpp"
+#include "local_planner_optimizer/ceres_constraint_cont_init_distance_to_wp_g5.hpp"
+#include "local_planner_optimizer/ceres_constraint_cont_init_smoothness_g5.hpp"
+#include "local_planner_optimizer/ceres_constraint_cont_init_fix_goal_g5.hpp"
+
+#include "local_planner_optimizer/ceres_constraint_5_cont_dist_to_obstacle_segment.hpp"
+#include "local_planner_optimizer/ceres_constraint_5_cont_fix_startgoal.hpp"
+#include "local_planner_optimizer/ceres_constraint_5_cont_path_length_segment.hpp"
+#include "local_planner_optimizer/ceres_constraint_5_cont_smoothness.hpp"
+#include "local_planner_optimizer/ceres_constraint_5_cont_limit_gradients.hpp"
+#include "local_planner_optimizer/ceres_constraint_cont_init_chebyshev_distance_to_wp.hpp"
+#include "local_planner_optimizer/ceres_constraint_cont_init_chebyshev_smoothness.hpp"
+#include "local_planner_optimizer/ceres_constraint_cont_init_chebyshev_fix.hpp"
+#include "local_planner_optimizer/ceres_constraint_cont_init_chebyshev_limit_gradients.hpp"
+
+#include "local_planner_optimizer/ceres_constraint_6_cont_dist_to_obstacle_segment.hpp"
+#include "local_planner_optimizer/ceres_constraint_6_cont_path_length_segment.hpp"
+#include "local_planner_optimizer/ceres_constraint_6_cont_smoothness.hpp"
 
 
 #include "local_planner_optimizer/ceres_constraint_cont_init_distance_to_wp.hpp"
 #include "local_planner_optimizer/ceres_constraint_cont_init_smoothness.hpp"
 
-#include "local_planner_optimizer/ceres_constraint_cont_init_distance_to_wp_g5.hpp"
-#include "local_planner_optimizer/ceres_constraint_cont_init_smoothness_g5.hpp"
 
 // Deprecated
 #include "local_planner_optimizer/ceres_constraint_cont_path_length.hpp"
@@ -92,9 +107,11 @@ namespace Ceresopt{
     Planners::utils::OptimizedContinuousFunction ceresOptimizerContinuousPath(Eigen::VectorXd coeff_x, Eigen::VectorXd coeff_y, Eigen::VectorXd coeff_z, Planners::utils::Vec3i local_goal, Local_Grid3d &_grid, float resolution_);
     Planners::utils::OptimizedContinuousFunction ceresOptimizerContinuousPathInit(Eigen::VectorXd init_coeff_x, Eigen::VectorXd init_coeff_y, Eigen::VectorXd init_coeff_z, Planners::utils::CoordinateList global_path_local_section, double t_last);
     Planners::utils::OptimizedContinuousFunction ceresOptimizerEvCallbackContinuousPath(Eigen::VectorXd coeff_x, Eigen::VectorXd coeff_y, Eigen::VectorXd coeff_z, double origin_x, double origin_y, double origin_z, Planners::utils::Vec3i local_goal, Local_Grid3d &_grid, torch::jit::script::Module& loaded_sdf, float resolution_, std::shared_ptr<voxblox::EsdfMap>& esdf_map_, bool use_voxfield);
-    Planners::utils::OptimizedContinuousFunction ceresOptimizerContinuousPathInitG5(Eigen::VectorXd init_coeff_x, Eigen::VectorXd init_coeff_y, Eigen::VectorXd init_coeff_z, Planners::utils::CoordinateList global_path_local_section, double t_last);
+    Planners::utils::OptimizedContinuousFunction ceresOptimizerChebyshevContinuousPath(Eigen::VectorXd coeff_x, Eigen::VectorXd coeff_y, Eigen::VectorXd coeff_z, double origin_x, double origin_y, double origin_z, Planners::utils::Vec3i local_start, Planners::utils::Vec3i local_goal, Local_Grid3d &_grid, torch::jit::script::Module& loaded_sdf, float resolution_, std::shared_ptr<voxblox::EsdfMap>& esdf_map_, bool use_voxfield);
+    Planners::utils::OptimizedContinuousFunction ceresOptimizerReducedChebyshevContinuousPath(Eigen::VectorXd coeff_x, Eigen::VectorXd coeff_y, Eigen::VectorXd coeff_z, double origin_x, double origin_y, double origin_z, Planners::utils::Vec3i local_start, Planners::utils::Vec3i local_goal, Local_Grid3d &_grid, torch::jit::script::Module& loaded_sdf, float resolution_, std::shared_ptr<voxblox::EsdfMap>& esdf_map_, bool use_voxfield);
+    Planners::utils::OptimizedContinuousFunction ceresOptimizerContinuousPathInitG5(Eigen::VectorXd init_coeff_x, Eigen::VectorXd init_coeff_y, Eigen::VectorXd init_coeff_z, Planners::utils::CoordinateList global_path_local_section, Planners::utils::Vec3i local_goal);
     Planners::utils::OptimizedContinuousFunction ceresOptimizerTestContinuousPath(Eigen::VectorXd coeff_x, Eigen::VectorXd coeff_y, Eigen::VectorXd coeff_z, Planners::utils::Vec3i local_goal, float resolution_, const std::vector<Eigen::Vector3d>& obstacle_point_cloud);
-
+    Planners::utils::OptimizedContinuousFunction ceresOptimizerContinuousPathInitChebyshev(Eigen::VectorXd init_coeff_x, Eigen::VectorXd init_coeff_y, Eigen::VectorXd init_coeff_z, Planners::utils::CoordinateList global_path_local_section, Planners::utils::Vec3i local_start, Planners::utils::Vec3i local_goal);
     
 }
 

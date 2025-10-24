@@ -18,6 +18,7 @@
 #include <variant>
 #include <cmath>
 #include <memory>
+#include <mutex>
 #ifdef ROS
 #include <Eigen/Dense>
 #endif
@@ -51,6 +52,14 @@ namespace Planners
         //i.e discards the decimal part
         static constexpr int const dd_2D_{static_cast<int>( dist_scale_factor_ * 1.41421356237 )}; //sqrt(2)
         static constexpr int const dd_3D_{static_cast<int>( dist_scale_factor_ * 1.73205080757 )}; //sqrt(3)
+
+
+        inline std::mutex cout_mutex;
+
+        inline void safe_log(const std::string& tag, double ms) {
+            std::lock_guard<std::mutex> lock(cout_mutex);
+            std::cout << "[T] - " << tag << ": " << ms << " ms" << std::endl;
+        }
 
         /**
          * @brief 

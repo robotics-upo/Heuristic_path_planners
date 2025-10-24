@@ -54,20 +54,27 @@
     //      1       FIESTA
 
 #define USING_PREPLANNING 0 // For CERES_MODE = 0 or 1 // CAN'T BE USED WITH CERES EVALUATION CALLBACK
+
 #define USING_CERES 1
-#define CERES_MODE 4
+
+#define CERES_MODE 5
     //      0       CERES PATH PLANNER (USING WP)
     //      1       CERES TRAJECTORY PLANNER (USING WP)
     //      2       CERES PATH PLANNER (USING CONTINUOUS FUNCTION)
     //      3       TEST - CERES PATH PLANNER (USING CONTINUOUS FUNCTION) WITH SIMPLE DISTANCE FUNCTION
-    //      4       CERES PATH PLANNER (USING CONTINUOUS FUNCTION) - EVALUATION CALLBACK VERSION
-#define CONTINUOUS_FUNCTION_INITIAL_PARAMETERS 1
-    //      0       STRAIGHT LINE APPROXIMATION
-    //      1       GLOBAL PATH APPROXIMATION
+    //      4       CERES PATH PLANNER - CONTINUOUS FUNCTION - MONOMIAL - EVALUATION CALLBACK VERSION
+    //      5       CERES PATH PLANNER - CONTINUOUS FUNCTION - CHEBYSHEV - EVALUATION CALLBACK VERSION
+    //      6       CERES PATH PLANNER - CONTINUOUS FUNCTION - REDUCED STATES CHEBYSHEV - EVALUATION CALLBACK VERSION
+
+#define USE_INITIAL_OPTIMIZER 0 // For CERES_MODE = 2, 4 and 5
+    //      0       NO
+    //      1       YES
+
 #define MAX_LOCAL_PATH 6
+
 #define USING_VOXFIELD_PERFECT_ESDF 0
     //      0       NEURAL ESDF
-    //      1       VOXFIELD PERFECT ESDF (FOR CERES_MODE 4)
+    //      1       VOXFIELD PERFECT ESDF (FOR CERES_MODE >4)
 
 
 
@@ -243,7 +250,7 @@ private:
             // 2. Update local map with the neural network information around the drone
             
             if(ENVIRONMENT_REPRESENTATION == 0) {
-                if(USING_CERES == 1 && CERES_MODE == 4){
+                if(USING_CERES == 1 && CERES_MODE >= 4){
                     if(first_iteration_ == 1){
                     Planners::utils::bypassLocalWorldCosts(*m_local_grid3d_, *algorithm_, drone_x_, drone_y_, drone_z_, loaded_sdf_);
                     first_iteration_ = 0;
@@ -536,7 +543,7 @@ private:
         // 4 - Use path planner to find local waypoints (if planning before the Ceres optimizer)
         int planning_solved = 0;
         Planners::utils::CoordinateList local_path;
-        if(USING_PREPLANNING == 1 && (USING_CERES == 0 || CERES_MODE != 4)){
+        if(USING_PREPLANNING == 1 && (USING_CERES == 0 || (USING_CERES == 1 && CERES_MODE < 4))){
             Planners::utils::Vec3i discrete_start, discrete_goal;
             discrete_start.x = drone_local_x;
             discrete_start.y = drone_local_y;
@@ -693,7 +700,7 @@ private:
 
                 Eigen::VectorXd coeff_x(4), coeff_y(4), coeff_z(4);
 
-                if(CONTINUOUS_FUNCTION_INITIAL_PARAMETERS == 0) // STRAIGHT LINE APPROXIMATION
+                if(USE_INITIAL_OPTIMIZER == 0) // STRAIGHT LINE APPROXIMATION
                 {
                     double x_coeff_1, y_coeff_1, z_coeff_1;
                     double T_FIN_EXPECTED = 1.0;
@@ -706,7 +713,7 @@ private:
                     coeff_y << 0, 0, y_coeff_1, drone_local_y;
                     coeff_z << 0, 0, z_coeff_1, drone_local_z;
                 }
-                else if(CONTINUOUS_FUNCTION_INITIAL_PARAMETERS == 1) // GLOBAL PATH APPROXIMATION
+                else if(USE_INITIAL_OPTIMIZER == 1) // GLOBAL PATH APPROXIMATION
                 {
                     double x_coeff_1, y_coeff_1, z_coeff_1;
                     double T_FIN_EXPECTED = 1.0;
@@ -940,48 +947,35 @@ private:
 
                 Eigen::VectorXd coeff_x(6), coeff_y(6), coeff_z(6);
 
-                // // STRAIGHT LINE APPROXIMATION
+                auto ini_ceres_start = std::chrono::high_resolution_clock::now();
 
-                // double x_coeff_1, y_coeff_1, z_coeff_1;
-                // double T_FIN_EXPECTED = 1.0;
-
-                // x_coeff_1 = (local_goal.x - drone_local_x) / T_FIN_EXPECTED;
-                // y_coeff_1 = (local_goal.y - drone_local_y) / T_FIN_EXPECTED;
-                // z_coeff_1 = (local_goal.z - drone_local_z) / T_FIN_EXPECTED;
-
-                // coeff_x << 0, 0, x_coeff_1, drone_local_x;
-                // coeff_y << 0, 0, y_coeff_1, drone_local_y;
-                // coeff_z << 0, 0, z_coeff_1, drone_local_z;
-
-                if(CONTINUOUS_FUNCTION_INITIAL_PARAMETERS == 0) // STRAIGHT LINE APPROXIMATION
+                if(USE_INITIAL_OPTIMIZER == 0) // STRAIGHT LINE APPROXIMATION
                 {
                     double x_coeff_1, y_coeff_1, z_coeff_1;
-                    double T_FIN_EXPECTED = 1.0;
 
-                    x_coeff_1 = (local_goal.x - drone_local_x) / T_FIN_EXPECTED;
-                    y_coeff_1 = (local_goal.y - drone_local_y) / T_FIN_EXPECTED;
-                    z_coeff_1 = (local_goal.z - drone_local_z) / T_FIN_EXPECTED;
+                    x_coeff_1 = (local_goal.x - drone_local_x);
+                    y_coeff_1 = (local_goal.y - drone_local_y);
+                    z_coeff_1 = (local_goal.z - drone_local_z);
 
                     coeff_x << 0, 0, 0, 0, x_coeff_1, drone_local_x;
                     coeff_y << 0, 0, 0, 0, y_coeff_1, drone_local_y;
                     coeff_z << 0, 0, 0, 0, z_coeff_1, drone_local_z;
                 }
-                else if(CONTINUOUS_FUNCTION_INITIAL_PARAMETERS == 1) // GLOBAL PATH APPROXIMATION
+                else if(USE_INITIAL_OPTIMIZER == 1) // GLOBAL PATH APPROXIMATION
                 {
                     double x_coeff_1, y_coeff_1, z_coeff_1;
-                    double T_FIN_EXPECTED = 1.0;
                     Eigen::VectorXd init_coeff_x(6), init_coeff_y(6), init_coeff_z(6);
 
-                    x_coeff_1 = (local_goal.x - drone_local_x) / T_FIN_EXPECTED;
-                    y_coeff_1 = (local_goal.y - drone_local_y) / T_FIN_EXPECTED;
-                    z_coeff_1 = (local_goal.z - drone_local_z) / T_FIN_EXPECTED;
+                    x_coeff_1 = (local_goal.x - drone_local_x);
+                    y_coeff_1 = (local_goal.y - drone_local_y);
+                    z_coeff_1 = (local_goal.z - drone_local_z);
 
                     init_coeff_x << 0, 0, 0, 0, x_coeff_1, drone_local_x;
                     init_coeff_y << 0, 0, 0, 0, y_coeff_1, drone_local_y;
                     init_coeff_z << 0, 0, 0, 0, z_coeff_1, drone_local_z;
 
                     Planners::utils::OptimizedContinuousFunction initial_coeff_values;
-                    initial_coeff_values = Ceresopt::ceresOptimizerContinuousPathInitG5(init_coeff_x, init_coeff_y, init_coeff_z, global_path_local_section, T_FIN_EXPECTED);
+                    initial_coeff_values = Ceresopt::ceresOptimizerContinuousPathInitG5(init_coeff_x, init_coeff_y, init_coeff_z, global_path_local_section, local_goal);
 
                     coeff_x = Eigen::VectorXd::Map(initial_coeff_values.x_params.data(), 6);
                     coeff_y = Eigen::VectorXd::Map(initial_coeff_values.y_params.data(), 6);
@@ -989,14 +983,15 @@ private:
 
                 }
 
+                auto ini_ceres_stop = std::chrono::high_resolution_clock::now();
+
                 // Print initial approximation
 
-                double T_MAX_INI = 1.0;
                 int N_DIVISIONS_INI = 20;
 
                 for(int i=0; i < N_DIVISIONS_INI + 1; i++)
                 {
-                    double t_act = T_MAX_INI * i / N_DIVISIONS_INI;
+                    double t_act = i / N_DIVISIONS_INI;
                     Planners::utils::Vec3i global_wp_point;
                     global_wp_point.x = coeff_x(0) * std::pow(t_act, 5) + coeff_x(1) * std::pow(t_act, 4) + coeff_x(2) * std::pow(t_act, 3) + coeff_x(3) * std::pow(t_act, 2) + coeff_x(4) * t_act + coeff_x(5) + origen_local_x;
                     global_wp_point.y = coeff_y(0) * std::pow(t_act, 5) + coeff_y(1) * std::pow(t_act, 4) + coeff_y(2) * std::pow(t_act, 3) + coeff_y(3) * std::pow(t_act, 2) + coeff_y(4) * t_act + coeff_y(5) + origen_local_y;
@@ -1021,6 +1016,326 @@ private:
                 opt_local_path_function = Ceresopt::ceresOptimizerEvCallbackContinuousPath(coeff_x, coeff_y, coeff_z, origen_local_x_cont, origen_local_y_cont, origen_local_z_cont, local_goal, *m_local_grid3d_, loaded_sdf_, resolution_, esdf_map_, USING_VOXFIELD_PERFECT_ESDF);
                 auto ceres_stop = std::chrono::high_resolution_clock::now();
                 std::chrono::duration<double, std::milli> ceres_duration = ceres_stop - ceres_start;
+                std::chrono::duration<double, std::milli> ini_ceres_duration = ini_ceres_stop - ini_ceres_start;
+                printf("TIEMPO TOTAL DEL OPTIMIZADOR INICIAL: %.2f ms\n", ini_ceres_duration.count());
+                printf("TIEMPO TOTAL DEL OPTIMIZADOR FINAL: %.2f ms\n", ceres_duration.count());
+
+                // 3 - Print the results
+
+                // std::cout << "Coeficientes opt. para x(t): " << opt_local_path_function.x_params << std::endl;
+                // std::cout << "Coeficientes opt. para y(t): " << opt_local_path_function.y_params << std::endl;
+                // std::cout << "Coeficientes opt. para z(t): " << opt_local_path_function.z_params << std::endl;
+
+                // 3b - Print in RViz (AUN NO CONSIDERO SI LA RESOLUCIÓN DEL GLOBAL Y LOCAL NO SON LO MISMO)
+
+                int N_DIVISIONS = 20;
+                Planners::utils::CoordinateList local_path_real;
+
+                for(int i=0; i < N_DIVISIONS + 1; i++)
+                {
+                    double t_act = i / N_DIVISIONS;
+                    Planners::utils::Vec3i global_wp_point;
+                    global_wp_point.x = opt_local_path_function.x_params[0] * std::pow(t_act, 5) + opt_local_path_function.x_params[1] * std::pow(t_act, 4) + opt_local_path_function.x_params[2] * std::pow(t_act, 3) + opt_local_path_function.x_params[3] * std::pow(t_act, 2) + opt_local_path_function.x_params[4] * t_act + opt_local_path_function.x_params[5] + origen_local_x;
+                    global_wp_point.y = opt_local_path_function.y_params[0] * std::pow(t_act, 5) + opt_local_path_function.y_params[1] * std::pow(t_act, 4) + opt_local_path_function.y_params[2] * std::pow(t_act, 3) + opt_local_path_function.y_params[3] * std::pow(t_act, 2) + opt_local_path_function.y_params[4] * t_act + opt_local_path_function.y_params[5] + origen_local_y;
+                    global_wp_point.z = opt_local_path_function.z_params[0] * std::pow(t_act, 5) + opt_local_path_function.z_params[1] * std::pow(t_act, 4) + opt_local_path_function.z_params[2] * std::pow(t_act, 3) + opt_local_path_function.z_params[3] * std::pow(t_act, 2) + opt_local_path_function.z_params[4] * t_act + opt_local_path_function.z_params[5] + origen_local_z;
+
+                    local_path_line_markers_.points.push_back(Planners::utils::continousPoint(global_wp_point, resolution_));
+                    local_path_points_markers_.points.push_back(Planners::utils::continousPoint(global_wp_point, resolution_));
+
+                    local_path_real.push_back(global_wp_point);
+                }
+                publishMarker(local_path_line_markers_, local_line_markers_pub_);
+                publishMarker(local_path_points_markers_, local_point_markers_pub_);
+
+                local_path_line_markers_.points.clear();
+                local_path_points_markers_.points.clear();
+
+
+
+
+
+
+                // std::cout << "Global Path (in meters): [";
+                // for (size_t i = 0; i < local_path_real.size(); ++i) {
+                //     const auto &wp = local_path_real[i];
+                //     float x_aux = wp.x * resolution_;
+                //     float y_aux = wp.y * resolution_;
+                //     float z_aux = wp.z * resolution_;
+                //     std::cout << "(" << x_aux << "," << y_aux << "," << z_aux << ")";
+                    
+                //     if (i < local_path_real.size() - 1) {
+                //         std::cout << ", ";
+                //     }
+                // }
+                // std::cout << "]" << std::endl;
+
+            }
+            else if(CERES_MODE == 5){ // CHEBYSHEV
+                // Independent parameter s[-1, 1]
+
+                Planners::utils::Vec3i local_start;
+                local_start.x = drone_local_x;
+                local_start.y = drone_local_y;
+                local_start.z = drone_local_z;
+
+                // 1 - Initial planner
+
+                Eigen::VectorXd coeff_x(6), coeff_y(6), coeff_z(6);
+                double a_x, a_y, a_z, b_x, b_y, b_z;
+                Eigen::VectorXd init_coeff_x(6), init_coeff_y(6), init_coeff_z(6);
+
+                a_x = 0.5 * (local_goal.x + local_start.x);
+                b_x = 0.5 * (local_goal.x - local_start.x);
+                a_y = 0.5 * (local_goal.y + local_start.y);
+                b_y = 0.5 * (local_goal.y - local_start.y);
+                a_z = 0.5 * (local_goal.z + local_start.z);
+                b_z = 0.5 * (local_goal.z - local_start.z);
+
+                init_coeff_x << 0.0, 0.0, 0.0, 0.0, b_x, a_x;
+                init_coeff_y << 0.0, 0.0, 0.0, 0.0, b_y, a_y;
+                init_coeff_z << 0.0, 0.0, 0.0, 0.0, b_z, a_z;
+
+                auto ini_ceres_start = std::chrono::high_resolution_clock::now();
+                if(USE_INITIAL_OPTIMIZER == 0)
+                {
+                    coeff_x = init_coeff_x;
+                    coeff_y = init_coeff_y;
+                    coeff_z = init_coeff_z;
+                }
+                else if(USE_INITIAL_OPTIMIZER == 1)
+                {
+                    Planners::utils::OptimizedContinuousFunction initial_coeff_values;
+                    initial_coeff_values = Ceresopt::ceresOptimizerContinuousPathInitChebyshev(init_coeff_x, init_coeff_y, init_coeff_z, global_path_local_section, local_start, local_goal);
+
+                    coeff_x = Eigen::VectorXd::Map(initial_coeff_values.x_params.data(), 6);
+                    coeff_y = Eigen::VectorXd::Map(initial_coeff_values.y_params.data(), 6);
+                    coeff_z = Eigen::VectorXd::Map(initial_coeff_values.z_params.data(), 6);
+
+                }
+                auto ini_ceres_stop = std::chrono::high_resolution_clock::now();
+
+
+                // Print initial approximation (using Horner algorithm)
+
+                int N_DIVISIONS_INI = 20.0;
+                double p0x = coeff_x(5) - coeff_x(3) + coeff_x(1);
+                double p1x = coeff_x(4) - 3.0*coeff_x(2) + 5.0*coeff_x(0);
+                double p2x = 2.0*coeff_x(3) - 8.0*coeff_x(1);
+                double p3x = 4.0*coeff_x(2) - 20.0*coeff_x(0);
+                double p4x = 8.0*coeff_x(1);
+                double p5x = 16.0*coeff_x(0);
+                double p0y = coeff_y(5) - coeff_y(3) + coeff_y(1);
+                double p1y = coeff_y(4) - 3.0*coeff_y(2) + 5.0*coeff_y(0);
+                double p2y = 2.0*coeff_y(3) - 8.0*coeff_y(1);
+                double p3y = 4.0*coeff_y(2) - 20.0*coeff_y(0);
+                double p4y = 8.0*coeff_y(1);
+                double p5y = 16.0*coeff_y(0);
+                double p0z = coeff_z(5) - coeff_z(3) + coeff_z(1);
+                double p1z = coeff_z(4) - 3.0*coeff_z(2) + 5.0*coeff_z(0);
+                double p2z = 2.0*coeff_z(3) - 8.0*coeff_z(1);
+                double p3z = 4.0*coeff_z(2) - 20.0*coeff_z(0);
+                double p4z = 8.0*coeff_z(1);
+                double p5z = 16.0*coeff_z(0);
+
+                for(int i=0; i < N_DIVISIONS_INI + 1; i++)
+                {
+                    double s_act = 2.0 * i / N_DIVISIONS_INI - 1.0;
+                    Planners::utils::Vec3i global_wp_point;
+                    global_wp_point.x = p0x + s_act*(p1x + s_act*(p2x + s_act*(p3x + s_act*(p4x + s_act*p5x)))) + origen_local_x;
+                    global_wp_point.y = p0y + s_act*(p1y + s_act*(p2y + s_act*(p3y + s_act*(p4y + s_act*p5y)))) + origen_local_y;
+                    global_wp_point.z = p0z + s_act*(p1z + s_act*(p2z + s_act*(p3z + s_act*(p4z + s_act*p5z)))) + origen_local_z;
+                    ini_local_path_line_markers_.points.push_back(Planners::utils::continousPoint(global_wp_point, resolution_));
+                    ini_local_path_points_markers_.points.push_back(Planners::utils::continousPoint(global_wp_point, resolution_));
+                }
+
+                publishMarker(ini_local_path_line_markers_, ini_local_line_markers_pub_);
+                publishMarker(ini_local_path_points_markers_, ini_local_point_markers_pub_);
+
+                ini_local_path_line_markers_.points.clear();
+                ini_local_path_points_markers_.points.clear();
+                
+
+
+                // 2 - Ceres optimization
+
+                Planners::utils::OptimizedContinuousFunction opt_local_path_function;
+                auto ceres_start = std::chrono::high_resolution_clock::now();
+                opt_local_path_function = Ceresopt::ceresOptimizerChebyshevContinuousPath(coeff_x, coeff_y, coeff_z, origen_local_x_cont, origen_local_y_cont, origen_local_z_cont, local_start, local_goal, *m_local_grid3d_, loaded_sdf_, resolution_, esdf_map_, USING_VOXFIELD_PERFECT_ESDF);
+                auto ceres_stop = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double, std::milli> ceres_duration = ceres_stop - ceres_start;
+                std::chrono::duration<double, std::milli> ini_ceres_duration = ini_ceres_stop - ini_ceres_start;
+                printf("TIEMPO TOTAL DEL OPTIMIZADOR INICIAL: %.2f ms\n", ini_ceres_duration.count());
+                printf("TIEMPO TOTAL DEL OPTIMIZADOR FINAL: %.2f ms\n", ceres_duration.count());
+
+                // 3 - Print the results
+
+                // std::cout << "Coeficientes opt. para x(t): " << opt_local_path_function.x_params << std::endl;
+                // std::cout << "Coeficientes opt. para y(t): " << opt_local_path_function.y_params << std::endl;
+                // std::cout << "Coeficientes opt. para z(t): " << opt_local_path_function.z_params << std::endl;
+
+                // 3b - Print in RViz (AUN NO CONSIDERO SI LA RESOLUCIÓN DEL GLOBAL Y LOCAL NO SON LO MISMO)
+
+                Planners::utils::CoordinateList local_path_real;
+
+                int N_DIVISIONS = 20.0;
+                p0x = opt_local_path_function.x_params[5] - opt_local_path_function.x_params[3] + opt_local_path_function.x_params[1];
+                p1x = opt_local_path_function.x_params[4] - 3.0*opt_local_path_function.x_params[2] + 5.0*opt_local_path_function.x_params[0];
+                p2x = 2.0*opt_local_path_function.x_params[3] - 8.0*opt_local_path_function.x_params[1];
+                p3x = 4.0*opt_local_path_function.x_params[2] - 20.0*opt_local_path_function.x_params[0];
+                p4x = 8.0*opt_local_path_function.x_params[1];
+                p5x = 16.0*opt_local_path_function.x_params[0];
+                p0y = opt_local_path_function.y_params[5] - opt_local_path_function.y_params[3] + opt_local_path_function.y_params[1];
+                p1y = opt_local_path_function.y_params[4] - 3.0*opt_local_path_function.y_params[2] + 5.0*opt_local_path_function.y_params[0];
+                p2y = 2.0*opt_local_path_function.y_params[3] - 8.0*opt_local_path_function.y_params[1];
+                p3y = 4.0*opt_local_path_function.y_params[2] - 20.0*opt_local_path_function.y_params[0];
+                p4y = 8.0*opt_local_path_function.y_params[1];
+                p5y = 16.0*opt_local_path_function.y_params[0];
+                p0z = opt_local_path_function.z_params[5] - opt_local_path_function.z_params[3] + opt_local_path_function.z_params[1];
+                p1z = opt_local_path_function.z_params[4] - 3.0*opt_local_path_function.z_params[2] + 5.0*opt_local_path_function.z_params[0];
+                p2z = 2.0*opt_local_path_function.z_params[3] - 8.0*opt_local_path_function.z_params[1];
+                p3z = 4.0*opt_local_path_function.z_params[2] - 20.0*opt_local_path_function.z_params[0];
+                p4z = 8.0*opt_local_path_function.z_params[1];
+                p5z = 16.0*opt_local_path_function.z_params[0];
+
+                for(int i=0; i < N_DIVISIONS + 1; i++)
+                {
+                    double s_act = 2.0 * i / N_DIVISIONS - 1.0;
+                    Planners::utils::Vec3i global_wp_point;
+                    global_wp_point.x = p0x + s_act*(p1x + s_act*(p2x + s_act*(p3x + s_act*(p4x + s_act*p5x)))) + origen_local_x;
+                    global_wp_point.y = p0y + s_act*(p1y + s_act*(p2y + s_act*(p3y + s_act*(p4y + s_act*p5y)))) + origen_local_y;
+                    global_wp_point.z = p0z + s_act*(p1z + s_act*(p2z + s_act*(p3z + s_act*(p4z + s_act*p5z)))) + origen_local_z;
+
+                    local_path_line_markers_.points.push_back(Planners::utils::continousPoint(global_wp_point, resolution_));
+                    local_path_points_markers_.points.push_back(Planners::utils::continousPoint(global_wp_point, resolution_));
+
+                    local_path_real.push_back(global_wp_point);
+                }
+                publishMarker(local_path_line_markers_, local_line_markers_pub_);
+                publishMarker(local_path_points_markers_, local_point_markers_pub_);
+
+                local_path_line_markers_.points.clear();
+                local_path_points_markers_.points.clear();
+
+                // std::cout << "Global Path (in meters): [";
+                // for (size_t i = 0; i < local_path_real.size(); ++i) {
+                //     const auto &wp = local_path_real[i];
+                //     float x_aux = wp.x * resolution_;
+                //     float y_aux = wp.y * resolution_;
+                //     float z_aux = wp.z * resolution_;
+                //     std::cout << "(" << x_aux << "," << y_aux << "," << z_aux << ")";
+                    
+                //     if (i < local_path_real.size() - 1) {
+                //         std::cout << ", ";
+                //     }
+                // }
+                // std::cout << "]" << std::endl;
+
+
+
+            }
+            else if(CERES_MODE == 6){ // REDUCED CHEBYSHEV (Grade 5, mathematical implementation of fixed start and goal)
+                // Independent parameter s[-1, 1]
+
+                Planners::utils::Vec3i local_start;
+                local_start.x = drone_local_x;
+                local_start.y = drone_local_y;
+                local_start.z = drone_local_z;
+
+                // 1 - Initial planner
+
+                Eigen::VectorXd coeff_x(4), coeff_y(4), coeff_z(4);
+                double a_x, a_y, a_z, b_x, b_y, b_z;
+                Eigen::VectorXd init_coeff_x(4), init_coeff_y(4), init_coeff_z(4);
+
+                a_x = 0.5 * (local_goal.x + local_start.x);
+                b_x = 0.5 * (local_goal.x - local_start.x);
+                a_y = 0.5 * (local_goal.y + local_start.y);
+                b_y = 0.5 * (local_goal.y - local_start.y);
+                a_z = 0.5 * (local_goal.z + local_start.z);
+                b_z = 0.5 * (local_goal.z - local_start.z);
+
+                init_coeff_x << 0.0, 0.0, b_x, a_x;
+                init_coeff_y << 0.0, 0.0, b_y, a_y;
+                init_coeff_z << 0.0, 0.0, b_z, a_z;
+
+                if(USE_INITIAL_OPTIMIZER == 0)
+                {
+                    coeff_x = init_coeff_x;
+                    coeff_y = init_coeff_y;
+                    coeff_z = init_coeff_z;
+                }
+                else if(USE_INITIAL_OPTIMIZER == 1) //NOT IMPLEMENTED
+                {
+                    // Planners::utils::OptimizedContinuousFunction initial_coeff_values;
+                    // initial_coeff_values = Ceresopt::ceresOptimizerContinuousPathInitReducedChebyshev(init_coeff_x, init_coeff_y, init_coeff_z, global_path_local_section, local_start, local_goal);
+
+                    // coeff_x = Eigen::VectorXd::Map(initial_coeff_values.x_params.data(), 4);
+                    // coeff_y = Eigen::VectorXd::Map(initial_coeff_values.y_params.data(), 4);
+                    // coeff_z = Eigen::VectorXd::Map(initial_coeff_values.z_params.data(), 4);
+                    coeff_x = init_coeff_x;
+                    coeff_y = init_coeff_y;
+                    coeff_z = init_coeff_z;
+
+                }
+
+                // Eigen::VectorXd print_init_coeff_x(6), print_init_coeff_y(6), print_init_coeff_z(6);
+
+                // print_init_coeff_x << 
+
+                // std::cout << "Coeficientes iniciales para x(t): " << print_init_coeff_x << std::endl;
+                // std::cout << "Coeficientes iniciales para y(t): " << print_init_coeff_y << std::endl;
+                // std::cout << "Coeficientes iniciales para z(t): " << print_init_coeff_z << std::endl;
+
+
+                // Print initial approximation (using Horner algorithm)
+
+                int N_DIVISIONS_INI = 20.0;
+                double p0x = 0.5*(local_goal.x + local_start.x) - coeff_x(1);
+                double p1x = 2.5*(local_goal.x - local_start.x) - 8.0*coeff_x(0) - 4.0*coeff_x(2);
+                double p2x = -4.0*(local_goal.x + local_start.x) + 10.0*coeff_x(1) + 8.0*coeff_x(3);
+                double p3x = -10.0*(local_goal.x - local_start.x) + 24.0*coeff_x(0) + 20.0*coeff_x(2);
+                double p4x = 4.0*(local_goal.x + local_start.x) - 8.0*coeff_x(1) - 8.0*coeff_x(3);
+                double p5x = 8.0*(local_goal.x - local_start.x) - 16.0*coeff_x(0) - 16.0*coeff_x(2);
+                double p0y = 0.5*(local_goal.y + local_start.y) - coeff_y(1);
+                double p1y = 2.5*(local_goal.y - local_start.y) - 8.0*coeff_y(0) - 4.0*coeff_y(2);
+                double p2y = -4.0*(local_goal.y + local_start.y) + 10.0*coeff_y(1) + 8.0*coeff_y(3);
+                double p3y = -10.0*(local_goal.y - local_start.y) + 24.0*coeff_y(0) + 20.0*coeff_y(2);
+                double p4y = 4.0*(local_goal.y + local_start.y) - 8.0*coeff_y(1) - 8.0*coeff_y(3);
+                double p5y = 8.0*(local_goal.y - local_start.y) - 16.0*coeff_y(0) - 16.0*coeff_y(2);
+                double p0z = 0.5*(local_goal.z + local_start.z) - coeff_z(1);
+                double p1z = 2.5*(local_goal.z - local_start.z) - 8.0*coeff_z(0) - 4.0*coeff_z(2);
+                double p2z = -4.0*(local_goal.z + local_start.z) + 10.0*coeff_z(1) + 8.0*coeff_z(3);
+                double p3z = -10.0*(local_goal.z - local_start.z) + 24.0*coeff_z(0) + 20.0*coeff_z(2);
+                double p4z = 4.0*(local_goal.z + local_start.z) - 8.0*coeff_z(1) - 8.0*coeff_z(3);
+                double p5z = 8.0*(local_goal.z - local_start.z) - 16.0*coeff_z(0) - 16.0*coeff_z(2);
+
+                for(int i=0; i < N_DIVISIONS_INI + 1; i++)
+                {
+                    double s_act = 2.0 * i / N_DIVISIONS_INI - 1.0;
+                    Planners::utils::Vec3i global_wp_point;
+                    global_wp_point.x = p0x + s_act*(p1x + s_act*(p2x + s_act*(p3x + s_act*(p4x + s_act*p5x)))) + origen_local_x;
+                    global_wp_point.y = p0y + s_act*(p1y + s_act*(p2y + s_act*(p3y + s_act*(p4y + s_act*p5y)))) + origen_local_y;
+                    global_wp_point.z = p0z + s_act*(p1z + s_act*(p2z + s_act*(p3z + s_act*(p4z + s_act*p5z)))) + origen_local_z;
+                    ini_local_path_line_markers_.points.push_back(Planners::utils::continousPoint(global_wp_point, resolution_));
+                    ini_local_path_points_markers_.points.push_back(Planners::utils::continousPoint(global_wp_point, resolution_));
+                    std::cout << "Initial solution point: " << global_wp_point.x - origen_local_x << ", " << global_wp_point.y - origen_local_y << ", " << global_wp_point.z - origen_local_z << std::endl;
+                }
+
+                publishMarker(ini_local_path_line_markers_, ini_local_line_markers_pub_);
+                publishMarker(ini_local_path_points_markers_, ini_local_point_markers_pub_);
+
+                ini_local_path_line_markers_.points.clear();
+                ini_local_path_points_markers_.points.clear();
+                
+
+
+                // 2 - Ceres optimization
+
+                Planners::utils::OptimizedContinuousFunction opt_local_path_function;
+                auto ceres_start = std::chrono::high_resolution_clock::now();
+                opt_local_path_function = Ceresopt::ceresOptimizerReducedChebyshevContinuousPath(coeff_x, coeff_y, coeff_z, origen_local_x_cont, origen_local_y_cont, origen_local_z_cont, local_start, local_goal, *m_local_grid3d_, loaded_sdf_, resolution_, esdf_map_, USING_VOXFIELD_PERFECT_ESDF);
+                auto ceres_stop = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double, std::milli> ceres_duration = ceres_stop - ceres_start;
                 printf("TIEMPO TOTAL DEL OPTIMIZADOR: %.2f ms\n", ceres_duration.count());
 
                 // 3 - Print the results
@@ -1031,22 +1346,45 @@ private:
 
                 // 3b - Print in RViz (AUN NO CONSIDERO SI LA RESOLUCIÓN DEL GLOBAL Y LOCAL NO SON LO MISMO)
 
-                double T_MAX = 1.0;
-                int N_DIVISIONS = 20;
                 Planners::utils::CoordinateList local_path_real;
+
+                int N_DIVISIONS = 20.0;
+                p0x = 0.5*(local_goal.x + local_start.x) - opt_local_path_function.x_params[1];
+                p1x = 2.5*(local_goal.x - local_start.x) - 8.0*opt_local_path_function.x_params[0] - 4.0*opt_local_path_function.x_params[2];
+                p2x = -4.0*(local_goal.x + local_start.x) + 10.0*opt_local_path_function.x_params[1] + 8.0*opt_local_path_function.x_params[3];
+                p3x = -10.0*(local_goal.x - local_start.x) + 24.0*opt_local_path_function.x_params[0] + 20.0*opt_local_path_function.x_params[2];
+                p4x = 4.0*(local_goal.x + local_start.x) - 8.0*opt_local_path_function.x_params[1] - 8.0*opt_local_path_function.x_params[3];
+                p5x = 8.0*(local_goal.x - local_start.x) - 16.0*opt_local_path_function.x_params[0] - 16.0*opt_local_path_function.x_params[2];
+                p0y = 0.5*(local_goal.y + local_start.y) - opt_local_path_function.y_params[1];
+                p1y = 2.5*(local_goal.y - local_start.y) - 8.0*opt_local_path_function.y_params[0] - 4.0*opt_local_path_function.y_params[2];
+                p2y = -4.0*(local_goal.y + local_start.y) + 10.0*opt_local_path_function.y_params[1] + 8.0*opt_local_path_function.y_params[3];
+                p3y = -10.0*(local_goal.y - local_start.y) + 24.0*opt_local_path_function.y_params[0] + 20.0*opt_local_path_function.y_params[2];
+                p4y = 4.0*(local_goal.y + local_start.y) - 8.0*opt_local_path_function.y_params[1] - 8.0*opt_local_path_function.y_params[3];
+                p5y = 8.0*(local_goal.y - local_start.y) - 16.0*opt_local_path_function.y_params[0] - 16.0*opt_local_path_function.y_params[2];
+                p0z = 0.5*(local_goal.z + local_start.z) - opt_local_path_function.z_params[1];
+                p1z = 2.5*(local_goal.z - local_start.z) - 8.0*opt_local_path_function.z_params[0] - 4.0*opt_local_path_function.z_params[2];
+                p2z = -4.0*(local_goal.z + local_start.z) + 10.0*opt_local_path_function.z_params[1] + 8.0*opt_local_path_function.z_params[3];
+                p3z = -10.0*(local_goal.z - local_start.z) + 24.0*opt_local_path_function.z_params[0] + 20.0*opt_local_path_function.z_params[2];
+                p4z = 4.0*(local_goal.z + local_start.z) - 8.0*opt_local_path_function.z_params[1] - 8.0*opt_local_path_function.z_params[3];
+                p5z = 8.0*(local_goal.z - local_start.z) - 16.0*opt_local_path_function.z_params[0] - 16.0*opt_local_path_function.z_params[2];
+
 
                 for(int i=0; i < N_DIVISIONS + 1; i++)
                 {
-                    double t_act = T_MAX * i / N_DIVISIONS;
+                    double s_act = 2.0 * i / N_DIVISIONS - 1.0;
                     Planners::utils::Vec3i global_wp_point;
-                    global_wp_point.x = opt_local_path_function.x_params[0] * std::pow(t_act, 5) + opt_local_path_function.x_params[1] * std::pow(t_act, 4) + opt_local_path_function.x_params[2] * std::pow(t_act, 3) + opt_local_path_function.x_params[3] * std::pow(t_act, 2) + opt_local_path_function.x_params[4] * t_act + opt_local_path_function.x_params[5] + origen_local_x;
-                    global_wp_point.y = opt_local_path_function.y_params[0] * std::pow(t_act, 5) + opt_local_path_function.y_params[1] * std::pow(t_act, 4) + opt_local_path_function.y_params[2] * std::pow(t_act, 3) + opt_local_path_function.y_params[3] * std::pow(t_act, 2) + opt_local_path_function.y_params[4] * t_act + opt_local_path_function.y_params[5] + origen_local_y;
-                    global_wp_point.z = opt_local_path_function.z_params[0] * std::pow(t_act, 5) + opt_local_path_function.z_params[1] * std::pow(t_act, 4) + opt_local_path_function.z_params[2] * std::pow(t_act, 3) + opt_local_path_function.z_params[3] * std::pow(t_act, 2) + opt_local_path_function.z_params[4] * t_act + opt_local_path_function.z_params[5] + origen_local_z;
+                    global_wp_point.x = p0x + s_act*(p1x + s_act*(p2x + s_act*(p3x + s_act*(p4x + s_act*p5x)))) + origen_local_x;
+                    global_wp_point.y = p0y + s_act*(p1y + s_act*(p2y + s_act*(p3y + s_act*(p4y + s_act*p5y)))) + origen_local_y;
+                    global_wp_point.z = p0z + s_act*(p1z + s_act*(p2z + s_act*(p3z + s_act*(p4z + s_act*p5z)))) + origen_local_z;
 
                     local_path_line_markers_.points.push_back(Planners::utils::continousPoint(global_wp_point, resolution_));
                     local_path_points_markers_.points.push_back(Planners::utils::continousPoint(global_wp_point, resolution_));
 
                     local_path_real.push_back(global_wp_point);
+
+                    if (i==0) std::cout << "Optimized solution first point: " << global_wp_point.x - origen_local_x << ", " << global_wp_point.y - origen_local_y << ", " << global_wp_point.z - origen_local_z << std::endl;
+                    if (i==N_DIVISIONS) std::cout << "Optimized solution last point: " << global_wp_point.x - origen_local_x << ", " << global_wp_point.y - origen_local_y << ", " << global_wp_point.z - origen_local_z << std::endl;
+
                 }
                 publishMarker(local_path_line_markers_, local_line_markers_pub_);
                 publishMarker(local_path_points_markers_, local_point_markers_pub_);
@@ -1067,6 +1405,8 @@ private:
                     }
                 }
                 std::cout << "]" << std::endl;
+
+
 
             }
 

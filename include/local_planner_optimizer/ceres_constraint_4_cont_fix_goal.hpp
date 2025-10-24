@@ -11,6 +11,7 @@
 #include "utils/metrics.hpp"
 #include <ros/ros.h>
 #include <Eigen/Dense>
+#include <chrono>
 
 
 #include <heuristic_planners/Vec3i.h>
@@ -36,6 +37,8 @@ public:
     template <typename T>
     bool operator()(const T* const stateCoeff, const T* const stateCoeffConstant, T* residual) const {
 
+        auto t0 = std::chrono::high_resolution_clock::now();
+
         T t_fin = T(t_final);
 
         T x_fin = stateCoeff[0] * ceres::pow(t_fin, 5) + stateCoeff[1] * ceres::pow(t_fin, 4) + stateCoeff[2] * ceres::pow(t_fin, 3) + stateCoeff[3] * ceres::pow(t_fin, 2) + stateCoeff[4] * t_fin + stateCoeffConstant[0];
@@ -45,6 +48,10 @@ public:
         residual[0] = weight_ * (x_fin - T(local_goal_.x));
         residual[1] = weight_ * (y_fin - T(local_goal_.y));
         residual[2] = weight_ * (z_fin - T(local_goal_.z));
+
+        auto t1 = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> dt = t1 - t0;
+        //Planners::utils::safe_log("Cost Function - Fix Goal", dt.count());
         
         return true;
     }

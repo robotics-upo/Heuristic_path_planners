@@ -17,4 +17,12 @@ struct parameterBlockContinuousPathConstant{
     double parameter[3];
 };
 
+struct parameterBlockChebyshev{
+    double parameter[18];
+};
+
+struct parameterBlockReducedChebyshev{
+    double parameter[12];
+};
+
 #endif
