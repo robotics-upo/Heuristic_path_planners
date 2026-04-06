@@ -64,6 +64,8 @@ if(BUILD_ROS_SUPPORT)
     sensor_msgs
     voxblox_ros
     voxblox_msgs
+    tf2_ros
+    tf2_geometry_msgs
   )
   #Eigen is used to calculate metrics parameters
   find_package (Eigen3 REQUIRED NO_MODULE)
@@ -120,8 +122,7 @@ generate_messages(
 catkin_package(
  INCLUDE_DIRS include
  LIBRARIES AlgorithmBase AStar AStarM1 AStarM2 AStarSIREN ThetaStar ThetaStarM1 ThetaStarM2 ThetaStarSIREN LazyThetaStar LazyThetaStarM1 LazyThetaStarM1Mod LazyThetaStarM2 LazyThetaStarSIREN
- # 
- CATKIN_DEPENDS std_msgs visualization_msgs geometry_msgs nav_msgs rospy roscpp message_runtime costmap_2d sensor_msgs voxblox_ros voxblox_msgs pcl_ros pcl_conversions
+ CATKIN_DEPENDS std_msgs visualization_msgs geometry_msgs nav_msgs rospy roscpp message_runtime costmap_2d sensor_msgs voxblox_ros voxblox_msgs pcl_ros pcl_conversions tf2_ros tf2_geometry_msgs
 #  DEPENDS system_lib
 )
 endif()

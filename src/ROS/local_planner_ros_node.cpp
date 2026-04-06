@@ -37,6 +37,10 @@
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_listener.h>
 
+#include <tf2_ros/transform_listener.h>
+#include <tf2_ros/buffer.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+
 #include <heuristic_planners/GetPath.h>
 #include <heuristic_planners/SetAlgorithm.h>
 #include <heuristic_planners/Vec3i.h>
@@ -48,6 +52,8 @@
 #include <voxblox/core/layer.h>
 #include <voxblox/core/voxel.h>
 #include <voxblox/core/common.h>
+
+#include <std_srvs/Empty.h>
 
 #define ENVIRONMENT_REPRESENTATION 0
     //      0       HIO-ESDF
@@ -87,12 +93,14 @@ class HeuristicLocalPlannerROS
 {
 
 public:
-    HeuristicLocalPlannerROS()
+    HeuristicLocalPlannerROS(): tf2_buffer_(), tf2_listener_(tf2_buffer_)
     {
 
         std::string algorithm_name;
         lnh_.param("algorithm", algorithm_name, (std::string)"astar");
         lnh_.param("heuristic", heuristic_, (std::string)"euclidean");
+        lnh_.param("world_frame", world_frame_, std::string("world"));
+        lnh_.param("map_frame", map_frame_, std::string("map"));
         
         configureAlgorithm(algorithm_name, heuristic_);
 
@@ -125,6 +133,9 @@ public:
         networkReceivedFlag_ = 1;
         globalPathReceived_ = 0;
         timed_local_path_ = lnh_.createTimer(ros::Duration(1), &HeuristicLocalPlannerROS::localtimedCallback, this);
+
+        // Client to trigger model save in HIO-SDF
+        save_model_client_ = lnh_.serviceClient<std_srvs::Empty>("/hio_sdf/save_model");
     }
 
     void plan(){
@@ -213,11 +224,25 @@ private:
     }
 
     void globalPositionCallback(const geometry_msgs::PoseStamped::ConstPtr& msg){
-        double drone_x = resolution_ * std::round(msg->pose.position.x / resolution_);
-        double drone_y = resolution_ * std::round(msg->pose.position.y / resolution_);
-        double drone_z = resolution_ * std::round(msg->pose.position.z / resolution_);
+        // Transform drone position from world frame to map frame
+        geometry_msgs::PointStamped point_in_world, point_in_map;
+        point_in_world.header = msg->header;
+        point_in_world.header.frame_id = world_frame_;  // Ensure correct frame
+        point_in_world.point = msg->pose.position;
 
-        // Store as class members
+        try {
+            tf2_buffer_.transform(point_in_world, point_in_map, map_frame_, ros::Duration(1.0));
+        } catch (tf2::TransformException& ex) {
+            ROS_WARN_THROTTLE(2.0, "Local planner TF2 transform failed: %s", ex.what());
+            // Fall back to raw world coordinates if TF not available
+            point_in_map.point = msg->pose.position;
+        }
+
+        double drone_x = resolution_ * std::round(point_in_map.point.x / resolution_);
+        double drone_y = resolution_ * std::round(point_in_map.point.y / resolution_);
+        double drone_z = resolution_ * std::round(point_in_map.point.z / resolution_);
+
+        // Store as class members (now in map frame)
         this->drone_x_ = drone_x;
         this->drone_y_ = drone_y;
         this->drone_z_ = drone_z;
@@ -239,6 +264,17 @@ private:
             // 1. Update Neural Network State (if new state available and using HIO-SDF)
 
             if(ENVIRONMENT_REPRESENTATION == 0){
+                // Trigger model save on the HIO-SDF node
+                // (Deprecated: Python node now saves model autonomously and publishes to /net_update)
+                /*
+                std_srvs::Empty srv;
+                if (save_model_client_.call(srv)) {
+                    ROS_INFO("Triggered model export successfully.");
+                } else {
+                    ROS_WARN("Failed to call service to save HIO-SDF model.");
+                }
+                */
+
                 if(networkReceivedFlag_ == 1)
                 {
                     printf("Importing new neural network state\n");
@@ -266,7 +302,7 @@ private:
 
             auto loop_end = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double, std::milli> loop_duration = loop_end - loop_start;
-            printf("TIEMPO DE LOOP: %.2f ms\n", loop_duration.count());
+            printf("ELAPSED TIME - FULL LOOP: %.2f ms\n", loop_duration.count());
 
         }
     }
@@ -425,7 +461,7 @@ private:
         if(m_local_grid3d_->m_grid[(m_local_grid3d_->m_gridSize-1)/2].dist > 0)
         {
             ROS_INFO("Starting point is FREE");
-            std::cout << "Point index queried: " << (m_local_grid3d_->m_gridSize-1)/2 <<" |  Value of dist: " << m_local_grid3d_->m_grid[(m_local_grid3d_->m_gridSize-1)/2].dist << std::endl;
+            //std::cout << "Point index queried: " << (m_local_grid3d_->m_gridSize-1)/2 <<" |  Value of dist: " << m_local_grid3d_->m_grid[(m_local_grid3d_->m_gridSize-1)/2].dist << std::endl;
         }
         else
         {
@@ -434,7 +470,7 @@ private:
             exit(EXIT_FAILURE);
         }
 
-        // 2. Calculate local goal from global goal -> Check furthest global goal in the local windows
+        // 2. Calculate local goal from global goal -> Check furthest global goal in the local window
         Planners::utils::CoordinateList global_path_local;
 
         // 2.1 - Convert waypoints to local reference
@@ -494,7 +530,7 @@ private:
         }
         //std::cout << "Closest waypoint: " << global_path_local[closest_index] << std::endl;
 
-        // 2.3 - Find furthest next waypoint that is still inside the local map (the drone will treat this waypoint as the local goal
+        // 2.3 - Find furthest next waypoint that is still inside the local map (the drone will treat this waypoint as the local goal)
         // 2.3b - Build a vector with the local part of the global path (that will be used as the first iteration of the optimizer when NOT using preplanning)
         bool points_in_range = true;
         int it = closest_index;
@@ -518,25 +554,133 @@ private:
                 local_goal_candidate.x = global_path_local[it].x;
                 local_goal_candidate.y = global_path_local[it].y;
                 local_goal_candidate.z = global_path_local[it].z;
-                // 3 - Check if local goal accessible. If not, it can't be the local goal
-                if(algorithm_->detectCollision(local_goal_candidate)){ // And if not occupied, set local goal
-                    //std::cout << "Collision detected in point: " << local_goal_candidate. x << " " << local_goal_candidate.y << " " <<  local_goal_candidate.z << std::endl;
-                }
-                else{
-                    local_goal = local_goal_candidate;
-                    //ROS_INFO("No collision detected");
+                
+                if (ENVIRONMENT_REPRESENTATION == 0) {
+                    local_goal = local_goal_candidate; // We refine this below
+                } else {
+                    if(!algorithm_->detectCollision(local_goal_candidate)){
+                        local_goal = local_goal_candidate;
+                    }
                 }
                 global_path_local_section.push_back(local_goal_candidate);
                 it++;
             }
             else
             {
-                //local_goal.x = global_path_local[it - 1].x;
-                //local_goal.y = global_path_local[it - 1].y;
-                //local_goal.z = global_path_local[it - 1].z;
                 points_in_range = false;
             }
+        }
+        
+        if (ENVIRONMENT_REPRESENTATION == 0) 
+        {
+            Planners::utils::Vec3i raw_local_goal = local_goal;
+            int max_search_radius = 20; // 20 cells = 1.0m (if res=0.05)
+            float TARGET_SDF = 1.3f;
             
+            auto start_time = std::chrono::high_resolution_clock::now();
+
+            std::vector<Planners::utils::Vec3i> offsets;
+            std::vector<std::vector<float>> coords_vec;
+            std::vector<int> radii;
+
+            // Gather ALL candidates inside the max_search_radius
+            for(int dx = -max_search_radius; dx <= max_search_radius; dx += 2) {
+                for(int dy = -max_search_radius; dy <= max_search_radius; dy += 2) {
+                    for(int dz = -max_search_radius; dz <= max_search_radius; dz += 2) {
+                        Planners::utils::Vec3i p;
+                        p.x = raw_local_goal.x + dx;
+                        p.y = raw_local_goal.y + dy;
+                        p.z = raw_local_goal.z + dz;
+
+                        if (0 <= p.x && p.x < m_local_grid3d_->m_gridSizeX && 
+                            0 <= p.y && p.y < m_local_grid3d_->m_gridSizeY &&
+                            0 <= p.z && p.z < m_local_grid3d_->m_gridSizeZ) 
+                        {
+                            offsets.push_back(p);
+                            radii.push_back(std::max({std::abs(dx), std::abs(dy), std::abs(dz)}));
+                            float xc = drone_x_ + (p.x - (m_local_grid3d_->m_gridSizeX - 1) / 2.0f) * resolution_;
+                            float yc = drone_y_ + (p.y - (m_local_grid3d_->m_gridSizeY - 1) / 2.0f) * resolution_;
+                            float zc = drone_z_ + (p.z - (m_local_grid3d_->m_gridSizeZ - 1) / 2.0f) * resolution_;
+                            coords_vec.push_back({xc, yc, zc});
+                        }
+                    }
+                }
+            }
+
+            int num_points = coords_vec.size();
+            bool found_safe = false;
+            float global_max_d = -1000.0f;
+            Planners::utils::Vec3i fallback_point = raw_local_goal;
+
+            if (num_points > 0) {
+                torch::Tensor coords_tensor = torch::zeros({num_points, 3}, torch::kFloat);
+                for (int i = 0; i < num_points; ++i) {
+                    coords_tensor[i][0] = coords_vec[i][0];
+                    coords_tensor[i][1] = coords_vec[i][1];
+                    coords_tensor[i][2] = coords_vec[i][2];
+                }
+
+                torch::Tensor dists;
+                try {
+                    dists = loaded_sdf_.forward({coords_tensor}).toTensor();
+                } catch (...) {
+                    ROS_WARN("NN goal search forward pass failed.");
+                }
+
+                if (dists.defined() && dists.sizes()[0] == num_points) {
+                    // Fast accessor mapping (flattening dynamically handles [N, 1] or [N] shapes from the network)
+                    auto dists_flat = dists.view({-1});
+                    auto dists_accessor = dists_flat.accessor<float, 1>();
+                    
+                    // Iterate logical search by expanding shells
+                    for (int rad = 0; rad <= max_search_radius && !found_safe; rad += 2) {
+                        float min_dev = 1e9;
+                        Planners::utils::Vec3i best_point = raw_local_goal;
+
+                        // Check points only in the current shell layer
+                        for (int i = 0; i < num_points; ++i) {
+                            float dist_val = dists_accessor[i];
+                            
+                            // Keep track of the absolute highest SDF anywhere
+                            if (dist_val > global_max_d) {
+                                global_max_d = dist_val;
+                                fallback_point = offsets[i];
+                            }
+
+                            if (radii[i] == rad) {
+                                if (dist_val >= TARGET_SDF) {
+                                    found_safe = true;
+                                    double dev = std::pow(offsets[i].x - raw_local_goal.x, 2) + 
+                                                 std::pow(offsets[i].y - raw_local_goal.y, 2) + 
+                                                 std::pow(offsets[i].z - raw_local_goal.z, 2);
+                                    if (dev < min_dev) {
+                                        min_dev = dev;
+                                        best_point = offsets[i];
+                                    }
+                                }
+                            }
+                        }
+
+                        if (found_safe) {
+                            local_goal = best_point;
+                            if (rad == 0) {
+                                std::cout << "Local goal inherently safe (SDF=" << global_max_d << ")" << std::endl;
+                            } else {
+                                std::cout << "Found safe local goal at Radius " << rad << " with SDF >= " << TARGET_SDF << std::endl;
+                            }
+                        }
+                    }
+                }
+            }
+
+            auto stop_time = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double, std::milli> dur = stop_time - start_time;
+            std::cout << "Batched Layered goal BFS (" << num_points << " pts) took " << dur.count() << " ms" << std::endl;
+
+            if (!found_safe) {
+                local_goal = fallback_point;
+                ROS_WARN("No entirely safe goal found (>=%.2f). Using best available SDF=%.2f", TARGET_SDF, global_max_d);
+            }
         }
         std::cout << "Local goal found: " << local_goal << std::endl;
 
@@ -1017,8 +1161,8 @@ private:
                 auto ceres_stop = std::chrono::high_resolution_clock::now();
                 std::chrono::duration<double, std::milli> ceres_duration = ceres_stop - ceres_start;
                 std::chrono::duration<double, std::milli> ini_ceres_duration = ini_ceres_stop - ini_ceres_start;
-                printf("TIEMPO TOTAL DEL OPTIMIZADOR INICIAL: %.2f ms\n", ini_ceres_duration.count());
-                printf("TIEMPO TOTAL DEL OPTIMIZADOR FINAL: %.2f ms\n", ceres_duration.count());
+                printf("ELAPSED TIME - INITIAL OPTIMIZER: %.2f ms\n", ini_ceres_duration.count());
+                printf("ELAPSED TIME - MAIN OPTIMIZER: %.2f ms\n", ceres_duration.count());
 
                 // 3 - Print the results
 
@@ -1115,7 +1259,7 @@ private:
                 auto ini_ceres_stop = std::chrono::high_resolution_clock::now();
 
 
-                // Print initial approximation (using Horner algorithm)
+                // Print initial approximation (using Horner's algorithm)
 
                 int N_DIVISIONS_INI = 20.0;
                 double p0x = coeff_x(5) - coeff_x(3) + coeff_x(1);
@@ -1164,8 +1308,8 @@ private:
                 auto ceres_stop = std::chrono::high_resolution_clock::now();
                 std::chrono::duration<double, std::milli> ceres_duration = ceres_stop - ceres_start;
                 std::chrono::duration<double, std::milli> ini_ceres_duration = ini_ceres_stop - ini_ceres_start;
-                printf("TIEMPO TOTAL DEL OPTIMIZADOR INICIAL: %.2f ms\n", ini_ceres_duration.count());
-                printf("TIEMPO TOTAL DEL OPTIMIZADOR FINAL: %.2f ms\n", ceres_duration.count());
+                printf("ELAPSED TIME - INITIAL OPTIMIZER: %.2f ms\n", ini_ceres_duration.count());
+                printf("ELAPSED TIME - MAIN OPTIMIZER: %.2f ms\n", ceres_duration.count());
 
                 // 3 - Print the results
 
@@ -1778,6 +1922,7 @@ private:
     ros::Subscriber pointcloud_local_sub_, occupancy_grid_local_sub_, path_local_sub_, voxblox_map_sub_;
     //TODO Fix point markers
     ros::Publisher local_line_markers_pub_, local_point_markers_pub_, local_velocity_markers_pub_, ini_local_line_markers_pub_, ini_local_point_markers_pub_, obstacle_pc_point_markers_pub_,  cloud_test;
+    ros::ServiceClient save_model_client_;
 
     tf::TransformListener m_tfListener;
 
@@ -1867,6 +2012,12 @@ private:
     ros::Subscriber globalposition_local_sub_;
 
 
+    // TF2 for coordinate transforms between world and map frames
+    tf2_ros::Buffer tf2_buffer_;
+    tf2_ros::TransformListener tf2_listener_;
+    std::string world_frame_;
+    std::string map_frame_;
+
     // local pathplanner loop timer
     ros::Timer timed_local_path_;
 
@@ -1885,9 +2036,6 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "heuristic_local_planner_ros_node");
 
-        tf2_ros::Buffer tfBuffer;
-        tf2_ros::TransformListener tfListener(tfBuffer);
-    
     HeuristicLocalPlannerROS heuristic_local_planner_ros;
 
   	// f = boost::bind(&LocalPlanner::dynRecCb,&lcPlanner,  _1, _2);

@@ -36,13 +36,17 @@
 
 #include <nav_msgs/OccupancyGrid.h>
 
+#include <tf2_ros/transform_listener.h>
+#include <tf2_ros/buffer.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+
 #include <heuristic_planners/GetPath.h>
 #include <heuristic_planners/SetAlgorithm.h>
 #include <heuristic_planners/ShareWeights.h>
 #include <heuristic_planners/Vec3i.h>
 #include <heuristic_planners/CoordinateList.h>
 
-#define USING_PRETRAINED_MODELS 1
+#define USING_PRETRAINED_MODELS 0
 #define EXAMPLE_PATH 2
 
 #define grid_x_size 8
@@ -64,11 +68,13 @@ class HeuristicPlannerROS
 {
 
 public:
-    HeuristicPlannerROS(){
+    HeuristicPlannerROS(): tf_buffer_(), tf_listener_(tf_buffer_){
 
         std::string algorithm_name;
         lnh_.param("algorithm", algorithm_name, (std::string)"astar");
         lnh_.param("heuristic", heuristic_, (std::string)"euclidean");
+        lnh_.param("world_frame", world_frame_, std::string("world"));
+        lnh_.param("map_frame", map_frame_, std::string("map"));
         
         configureAlgorithm(algorithm_name, heuristic_);
         weights_client_  = lnh_.serviceClient<heuristic_planners::ShareWeights>("/weights");
@@ -87,6 +93,7 @@ public:
         point_markers_pub_ = lnh_.advertise<visualization_msgs::Marker>("path_points_markers", 1);
         global_path_pub_ = lnh_.advertise<heuristic_planners::CoordinateList>("global_path", 1);
 
+        ROS_INFO("TF2 transform: will convert coordinates from '%s' to '%s' for planning", world_frame_.c_str(), map_frame_.c_str());
     }
 
 private:
@@ -553,6 +560,7 @@ private:
                 ROS_ERROR("Weight loading service does not exist");
             }
         }
+#if USING_PRETRAINED_MODELS
         // ------- WORK IN PROGRESS ------ (CALCULATE GRID AROUND DRONE)
         // Calcula el número de puntos en cada dimensión
         int num_points_x = static_cast<int>(std::round(grid_x_size / grid_resolution));
@@ -592,21 +600,41 @@ private:
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double, std::milli> duration = end - start;
         std::cout << "Points queried: " << num_points <<" |  Time taken to query model: " << duration.count() << " ms" << std::endl;
+#endif
+
+        // ---------------------------------------------------------
+        // Transform service request coordinates from world frame to map frame
+        // The planner's internal grid lives in 'map' frame (Grid3d shifts OctoMap to origin)
+        // The user/drone operates in 'world' frame
+        geometry_msgs::Point start_in_map, goal_in_map;
+        if (!transformPoint(_req.start, world_frame_, map_frame_, start_in_map) ||
+            !transformPoint(_req.goal,  world_frame_, map_frame_, goal_in_map)) {
+            ROS_ERROR("Failed to transform coordinates from '%s' to '%s'. Is the TF available?",
+                      world_frame_.c_str(), map_frame_.c_str());
+            return false;
+        }
+        ROS_INFO("Original start (world): [%.2f, %.2f, %.2f] -> (map): [%.2f, %.2f, %.2f]",
+                 _req.start.x, _req.start.y, _req.start.z,
+                 start_in_map.x, start_in_map.y, start_in_map.z);
+        ROS_INFO("Original goal  (world): [%.2f, %.2f, %.2f] -> (map): [%.2f, %.2f, %.2f]",
+                 _req.goal.x, _req.goal.y, _req.goal.z,
+                 goal_in_map.x, goal_in_map.y, goal_in_map.z);
 
         // ---------------------------------------------------------
         //delete previous markers
         publishMarker(path_line_markers_, line_markers_pub_);
         publishMarker(path_points_markers_, point_markers_pub_);
         //Astar coordinate list is std::vector<vec3i>
-        const auto discrete_goal =  Planners::utils::discretePoint(_req.goal, resolution_);
-        const auto discrete_start = Planners::utils::discretePoint(_req.start, resolution_);
+        // Use the TRANSFORMED coordinates (in map frame) for planning
+        const auto discrete_goal =  Planners::utils::discretePoint(goal_in_map, resolution_);
+        const auto discrete_start = Planners::utils::discretePoint(start_in_map, resolution_);
 
         if( algorithm_->detectCollision(discrete_start) ){
-            std::cout << discrete_start << ": Start not valid" << std::endl;
+            std::cout << discrete_start << ": Start not valid (in map frame)" << std::endl;
             return false;
         }
         if( algorithm_->detectCollision(discrete_goal) ){
-            std::cout << discrete_goal << ": Goal not valid" << std::endl;
+            std::cout << discrete_goal << ": Goal not valid (in map frame)" << std::endl;
             return false;
         }
         std::vector<double> times;
@@ -975,6 +1003,35 @@ private:
     int input_map_{0};
     std::string heuristic_;
 
+    // TF2 for coordinate transforms between world and map frames
+    tf2_ros::Buffer tf_buffer_;
+    tf2_ros::TransformListener tf_listener_;
+    std::string world_frame_;
+    std::string map_frame_;
+
+    /**
+     * @brief Transform a geometry_msgs::Point from one frame to another using TF2
+     * @param input The input point
+     * @param from_frame Source frame
+     * @param to_frame Target frame
+     * @param output The transformed point (output)
+     * @return true if transform succeeded, false otherwise
+     */
+    bool transformPoint(const geometry_msgs::Point& input, const std::string& from_frame,
+                        const std::string& to_frame, geometry_msgs::Point& output) {
+        geometry_msgs::PointStamped stamped_in, stamped_out;
+        stamped_in.header.frame_id = from_frame;
+        stamped_in.header.stamp = ros::Time(0);  // Use latest available transform
+        stamped_in.point = input;
+        try {
+            tf_buffer_.transform(stamped_in, stamped_out, to_frame, ros::Duration(1.0));
+            output = stamped_out.point;
+            return true;
+        } catch (tf2::TransformException& ex) {
+            ROS_WARN("TF2 transform failed: %s", ex.what());
+            return false;
+        }
+    }
 };
 
 int main(int argc, char **argv)

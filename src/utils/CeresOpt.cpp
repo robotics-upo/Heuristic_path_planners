@@ -833,18 +833,17 @@ namespace Ceresopt
 
         // Declare Ceres optimization problem
         //int path_length_seg = 5; // Segments for path length calculation
-        int esdf_samp = 30; // Samples for ESDF calculation
+        int esdf_samp = 20; // Samples for ESDF calculation
         
         CeresESDFUpdateChebyshev evaluation_callback_cheb(coeff_state_vector, esdf_samp, loaded_sdf, origin_x, origin_y, origin_z, resolution_, esdf_map_, use_voxfield);
         ceres::Problem problem;
         ceres::Solver::Options options;
         options.linear_solver_type = ceres::DENSE_QR;
-        //options.trust_region_strategy_type = ceres::LEVENBERG_MARQUARDT;
-        options.trust_region_strategy_type = ceres::DOGLEG;
+        options.trust_region_strategy_type = ceres::LEVENBERG_MARQUARDT;
         // options.function_tolerance  = 1e-4;
         // options.gradient_tolerance  = 1e-6;
         // options.parameter_tolerance = 1e-6;
-        options.max_solver_time_in_seconds = 300e-3;
+        options.max_solver_time_in_seconds = 500e-3;
         options.minimizer_progress_to_stdout = false;
         options.max_num_iterations = 50;
         options.num_threads = 12;
@@ -853,32 +852,25 @@ namespace Ceresopt
 
         ceres::Solver::Summary summary;
 
-        //std::cout << "Configured options" << std::endl;
-
-        //std::cout << "Created Ceres Problem" << std::endl;
-
         // Cost function weights
-        double weight_path_length = 100.0;
-        double weight_esdf = 50.0; 
-        double weight_smoothness = 10.0;
-        double weight_fix_goal = 1e4;
-        double weight_limit_gradients = 1e4;
+        double weight_path_length = 20.0;
+        double weight_esdf = 2500.0; //50
+        double weight_smoothness = 2.0; //10
+        double weight_fix_goal = 2e4;
+        double weight_fix_initial_velocity = 2e4;
+        double weight_limit_goal_gradient = 2e4;
+
+        std::vector<std::pair<std::string, int>> cost_blocks;
+
 
         // 1 - Path length cost function
-
-        // for(int i = 0; i < path_length_seg; i++)
-        // {
-        //     double s0 = 2.0 * i / path_length_seg - 1.0;
-        //     double s1 = 2.0 * (i+1) / path_length_seg - 1.0;
-
-        //     ceres::CostFunction* path_length_cont_function_seg = new AutoDiffCostFunction<Ceres5_PathLengthContSegmentFunctor, 3, 18>(new Ceres5_PathLengthContSegmentFunctor(weight_path_length, s0, s1));
-        
-        //     problem.AddResidualBlock(path_length_cont_function_seg, nullptr, coeff_state_vector.parameter);
-        // }
 
         ceres::CostFunction* path_length_cont_function_seg = new AutoDiffCostFunction<Ceres5_PathLengthGaussLegendreFunctor, 1, 18>(new Ceres5_PathLengthGaussLegendreFunctor(weight_path_length));
         
         problem.AddResidualBlock(path_length_cont_function_seg, nullptr, coeff_state_vector.parameter);
+
+        cost_blocks.push_back({"Path length", 1});
+
 
         // 2 - ESDF cost function
 
@@ -891,14 +883,18 @@ namespace Ceresopt
             ceres::CostFunction* esdf_cont_function_seg = new AutoDiffCostFunction<Ceres5_ObstacleDistanceCostContSegmentFunctor, 1, 18>(new Ceres5_ObstacleDistanceCostContSegmentFunctor(evaluation_callback_cheb, i, s_esdf, esdf_samp, weight_esdf));
 
             problem.AddResidualBlock(esdf_cont_function_seg, nullptr, coeff_state_vector.parameter);
+
+            cost_blocks.push_back({"ESDF", 1});
         }
 
-        // 3 - Smoothness cost function (by minimizing coeffs)
 
+        // 3 - Smoothness cost function (by minimizing coeffs)
 
         ceres::CostFunction* smoothness_cont_function = new AutoDiffCostFunction<Ceres5_SmoothnessContFunctor, 12, 18>(new Ceres5_SmoothnessContFunctor(weight_smoothness));
 
         problem.AddResidualBlock(smoothness_cont_function, nullptr, coeff_state_vector.parameter);
+
+        cost_blocks.push_back({"Smoothness", 12});
 
 
         // 4 - Fixed local start and goal function (hard restriction)
@@ -906,13 +902,29 @@ namespace Ceresopt
         ceres::CostFunction* fixed_startgoal_cont_function = new AutoDiffCostFunction<Ceres5_FixStartGoalContFunctor, 6, 18>(new Ceres5_FixStartGoalContFunctor(weight_fix_goal, local_start, local_goal));
         
         problem.AddResidualBlock(fixed_startgoal_cont_function, nullptr, coeff_state_vector.parameter);
-        
 
-        // 5 - Reduce start and goal gradients (semi-hard restriction)
+        cost_blocks.push_back({"Fixed start/goal", 6});
 
-        ceres::CostFunction* reduce_gradients_cont_function = new AutoDiffCostFunction<Ceres5_ReduceGradientsContFunctor, 6, 18>(new Ceres5_ReduceGradientsContFunctor(weight_limit_gradients));
+
+        // 5 - Velocity continuity (fix initial velocity to current velocity) (hard restriction)
+
+        double vel_x_ini = 0.0;
+        double vel_y_ini = -4.0;
+        double vel_z_ini = 0.0;
+
+        ceres::CostFunction* fix_initial_velocity_cont_function = new AutoDiffCostFunction<Ceres5_FixInitialVelocityContFunctor, 1, 18>(new Ceres5_FixInitialVelocityContFunctor(weight_fix_initial_velocity, vel_x_ini, vel_y_ini, vel_z_ini));
         
-        problem.AddResidualBlock(reduce_gradients_cont_function, nullptr, coeff_state_vector.parameter);
+        problem.AddResidualBlock(fix_initial_velocity_cont_function, nullptr, coeff_state_vector.parameter);
+
+        cost_blocks.push_back({"Fix initial velocity", 1});
+
+        // 6 - Reduce goal velocity (semi-hard restriction)
+
+        ceres::CostFunction* reduce_goal_gradient_cont_function = new AutoDiffCostFunction<Ceres5_ReduceGoalGradientContFunctor, 3, 18>(new Ceres5_ReduceGoalGradientContFunctor(weight_limit_goal_gradient));
+        
+        problem.AddResidualBlock(reduce_goal_gradient_cont_function, nullptr, coeff_state_vector.parameter);
+
+        cost_blocks.push_back({"Reduce goal gradient", 3});
 
 
         // Test 1
@@ -953,11 +965,36 @@ namespace Ceresopt
         test_residuals.clear();
         problem.Evaluate(eval_options, &total_cost, &test_residuals, nullptr, nullptr);
 
-        //Imprimir cada residual
-        std::cout << "Residuals:" << std::endl;
-        for (size_t i = 0; i < test_residuals.size(); ++i) {
-            std::cout << "Residual[" << i << "] = " << test_residuals[i] << std::endl;
+        std::cout << "\n--- Residuals por bloque ---\n";
+
+        size_t index = 0;
+        std::map<std::string, double> grouped_squares;
+
+        for (auto& block : cost_blocks) {
+            const std::string& name = block.first;
+            int num_residuals = block.second;
+
+            double sum_sq = 0.0;
+            for (int i = 0; i < num_residuals; ++i) {
+                double r = test_residuals[index++];
+                sum_sq += 0.5 * r * r;
+            }
+            grouped_squares[name] += sum_sq; // acumular por tipo
         }
+
+        // Mostrar resultados agrupados
+        for (const auto& kv : grouped_squares) {
+            std::cout << kv.first << " residual = " << kv.second << std::endl;
+        }
+
+        std::cout << "Total cost (Ceres) = " << total_cost << std::endl;
+
+
+        // //Imprimir cada residual
+        // std::cout << "Residuals:" << std::endl;
+        // for (size_t i = 0; i < test_residuals.size(); ++i) {
+        //     std::cout << "Residual[" << i << "] = " << test_residuals[i] << std::endl;
+        // }
 
         // int test_residuals_size = test_residuals.size();
         // double dist_to_goal_x = test_residuals[test_residuals_size-3] * resolution_ / weight_fix_goal;

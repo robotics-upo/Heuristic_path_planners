@@ -80,10 +80,9 @@ public:
         };
 
         // 3. Integration
-        // s = 0.5 * (x + 1)
         T length = T(0);
         for (int i = 0; i < 5; ++i) {
-            T s = T(0.5) * (T(xi[i]) + T(1.0)); // nodo en [0,1]
+            T s = T(xi[i]);
 
             // Horner derivatives
             T dx = p1x + s*(2.0*p2x + s*(3.0*p3x + s*(4.0*p4x + s*(5.0*p5x))));
@@ -96,7 +95,6 @@ public:
             // Gauss–Legendre
             length += T(wi[i]) * integrand;
         }
-        length *= T(0.5);
 
         // 4. Residual
         residual[0] = weight_ * length;

@@ -293,7 +293,7 @@ public:
 			}
 		}
 
-		// Convert vector tu libtorch array and query the neural network
+		// Convert vector to libtorch array and query the neural network
         auto num_points = coordinates_vector.size();
         torch::Tensor coordinates_tensor = torch::zeros({static_cast<long>(num_points), 3}, torch::kFloat);
         for (size_t i = 0; i < num_points; ++i) {
