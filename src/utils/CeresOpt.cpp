@@ -843,9 +843,9 @@ namespace Ceresopt
         // options.function_tolerance  = 1e-4;
         // options.gradient_tolerance  = 1e-6;
         // options.parameter_tolerance = 1e-6;
-        options.max_solver_time_in_seconds = 500e-3;
+        options.max_solver_time_in_seconds = 250e-3;
         options.minimizer_progress_to_stdout = false;
-        options.max_num_iterations = 50;
+        //options.max_num_iterations = 50;
         options.num_threads = 12;
         options.use_nonmonotonic_steps = true;
         options.evaluation_callback = &evaluation_callback_cheb;
@@ -916,7 +916,7 @@ namespace Ceresopt
         
         problem.AddResidualBlock(fix_initial_velocity_cont_function, nullptr, coeff_state_vector.parameter);
 
-        cost_blocks.push_back({"Fix initial velocity", 1});
+        cost_blocks.push_back({"Velocity continuity", 1});
 
         // 6 - Reduce goal velocity (semi-hard restriction)
 
@@ -924,7 +924,7 @@ namespace Ceresopt
         
         problem.AddResidualBlock(reduce_goal_gradient_cont_function, nullptr, coeff_state_vector.parameter);
 
-        cost_blocks.push_back({"Reduce goal gradient", 3});
+        cost_blocks.push_back({"Reduce goal velocity", 3});
 
 
         // Test 1
@@ -947,9 +947,12 @@ namespace Ceresopt
         std::chrono::duration<double, std::milli> opt_duration = end_opt - start_opt;
 
         std::cout << summary.BriefReport() << "\n";
-        //std::cout << "Número de iteraciones: " 
+        //std::cout << "Número de iteraciones: "
         //        << summary.iterations.size() << std::endl;
         printf("TIEMPO DE OPTIMIZACIÓN (CHEBYSHEV): %.2f ms\n", opt_duration.count());
+
+        double min_sdf_dist = evaluation_callback_cheb.residuals().minCoeff();
+        ROS_INFO("[LocalPlanner] Min dist to obstacle: %.3f m", min_sdf_dist);
 
         // Building the output
         //std::cout << "Building output" << std::endl;

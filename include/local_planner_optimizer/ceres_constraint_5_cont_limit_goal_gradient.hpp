@@ -38,9 +38,6 @@ public:
         auto t0 = std::chrono::high_resolution_clock::now();
 
         // Residuals equal to first derivative in goal (s=1)
-        //residual[0] = weight_ * (25.0*stateCoeff[0] - 16.0*stateCoeff[1] + 9.0*stateCoeff[2] - 4.0*stateCoeff[3] + stateCoeff[4]);
-        //residual[1] = weight_ * (25.0*stateCoeff[6] - 16.0*stateCoeff[7] + 9.0*stateCoeff[8] - 4.0*stateCoeff[9] + stateCoeff[10]);
-        //residual[2] = weight_ * (25.0*stateCoeff[12] - 16.0*stateCoeff[13] + 9.0*stateCoeff[14] - 4.0*stateCoeff[15] + stateCoeff[16]);
         residual[0] = weight_ * (25.0*stateCoeff[0] + 16.0*stateCoeff[1] + 9.0*stateCoeff[2] + 4.0*stateCoeff[3] + stateCoeff[4]);
         residual[1] = weight_ * (25.0*stateCoeff[6] + 16.0*stateCoeff[7] + 9.0*stateCoeff[8] + 4.0*stateCoeff[9] + stateCoeff[10]);
         residual[2] = weight_ * (25.0*stateCoeff[12] + 16.0*stateCoeff[13] + 9.0*stateCoeff[14] + 4.0*stateCoeff[15] + stateCoeff[16]);

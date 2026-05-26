@@ -132,7 +132,7 @@ public:
         
         networkReceivedFlag_ = 1;
         globalPathReceived_ = 0;
-        timed_local_path_ = lnh_.createTimer(ros::Duration(1), &HeuristicLocalPlannerROS::localtimedCallback, this);
+        timed_local_path_ = lnh_.createTimer(ros::Duration(0), &HeuristicLocalPlannerROS::localtimedCallback, this, true);
 
         // Client to trigger model save in HIO-SDF
         save_model_client_ = lnh_.serviceClient<std_srvs::Empty>("/hio_sdf/save_model");
@@ -250,6 +250,7 @@ private:
 
     void localtimedCallback(const ros::TimerEvent& event)
     {
+        timed_local_path_ = lnh_.createTimer(ros::Duration(0), &HeuristicLocalPlannerROS::localtimedCallback, this, true);
         printf("-----TIMED CALLBACK------\n");
 
         // Only perform local planning if global path was received
@@ -489,9 +490,9 @@ private:
         origen_local_z_cont = drone_z_ - drone_local_z * resolution_;
 
 
-        std::cout << "drone_local: " << drone_local_x << ", " << drone_local_y << ", " << drone_local_z << std::endl;
-        std::cout << "origen_local (discrete): " << origen_local_x << ", " << origen_local_y << ", " << origen_local_z << std::endl;
-        std::cout << "origen_local (continuous): " << origen_local_x_cont << ", " << origen_local_y_cont << ", " << origen_local_z_cont << std::endl;
+        // std::cout << "drone_local: " << drone_local_x << ", " << drone_local_y << ", " << drone_local_z << std::endl;
+        // std::cout << "origen_local (discrete): " << origen_local_x << ", " << origen_local_y << ", " << origen_local_z << std::endl;
+        // std::cout << "origen_local (continuous): " << origen_local_x_cont << ", " << origen_local_y_cont << ", " << origen_local_z_cont << std::endl;
 
 
         double global_path_original_resolution = 0.2; // ORIGINAL GLOBAL PATH COORDINATES RESOLUTION
@@ -571,87 +572,101 @@ private:
             }
         }
         
-        if (ENVIRONMENT_REPRESENTATION == 0) 
+        if (ENVIRONMENT_REPRESENTATION == 0)
         {
             Planners::utils::Vec3i raw_local_goal = local_goal;
             int max_search_radius = 20; // 20 cells = 1.0m (if res=0.05)
             float TARGET_SDF = 1.3f;
-            
+
             auto start_time = std::chrono::high_resolution_clock::now();
 
-            std::vector<Planners::utils::Vec3i> offsets;
-            std::vector<std::vector<float>> coords_vec;
-            std::vector<int> radii;
-
-            // Gather ALL candidates inside the max_search_radius
-            for(int dx = -max_search_radius; dx <= max_search_radius; dx += 2) {
-                for(int dy = -max_search_radius; dy <= max_search_radius; dy += 2) {
-                    for(int dz = -max_search_radius; dz <= max_search_radius; dz += 2) {
-                        Planners::utils::Vec3i p;
-                        p.x = raw_local_goal.x + dx;
-                        p.y = raw_local_goal.y + dy;
-                        p.z = raw_local_goal.z + dz;
-
-                        if (0 <= p.x && p.x < m_local_grid3d_->m_gridSizeX && 
-                            0 <= p.y && p.y < m_local_grid3d_->m_gridSizeY &&
-                            0 <= p.z && p.z < m_local_grid3d_->m_gridSizeZ) 
-                        {
-                            offsets.push_back(p);
-                            radii.push_back(std::max({std::abs(dx), std::abs(dy), std::abs(dz)}));
-                            float xc = drone_x_ + (p.x - (m_local_grid3d_->m_gridSizeX - 1) / 2.0f) * resolution_;
-                            float yc = drone_y_ + (p.y - (m_local_grid3d_->m_gridSizeY - 1) / 2.0f) * resolution_;
-                            float zc = drone_z_ + (p.z - (m_local_grid3d_->m_gridSizeZ - 1) / 2.0f) * resolution_;
-                            coords_vec.push_back({xc, yc, zc});
-                        }
-                    }
-                }
-            }
-
-            int num_points = coords_vec.size();
             bool found_safe = false;
             float global_max_d = -1000.0f;
             Planners::utils::Vec3i fallback_point = raw_local_goal;
+            int num_points = 0;
 
-            if (num_points > 0) {
-                torch::Tensor coords_tensor = torch::zeros({num_points, 3}, torch::kFloat);
-                for (int i = 0; i < num_points; ++i) {
-                    coords_tensor[i][0] = coords_vec[i][0];
-                    coords_tensor[i][1] = coords_vec[i][1];
-                    coords_tensor[i][2] = coords_vec[i][2];
+            // A: Short-circuit — evaluate the raw goal point alone first.
+            // Avoids building and inferring the full batch in the common case (goal already safe).
+            float xc0 = drone_x_ + (raw_local_goal.x - (m_local_grid3d_->m_gridSizeX - 1) / 2.0f) * resolution_;
+            float yc0 = drone_y_ + (raw_local_goal.y - (m_local_grid3d_->m_gridSizeY - 1) / 2.0f) * resolution_;
+            float zc0 = drone_z_ + (raw_local_goal.z - (m_local_grid3d_->m_gridSizeZ - 1) / 2.0f) * resolution_;
+            try {
+                torch::Tensor single_pt = torch::tensor({{xc0, yc0, zc0}}, torch::kFloat);
+                global_max_d = loaded_sdf_.forward({single_pt}).toTensor().view({-1})[0].item<float>();
+            } catch (...) {}
+
+            if (global_max_d >= TARGET_SDF) {
+                found_safe = true;
+                local_goal = raw_local_goal;
+                std::cout << "Local goal inherently safe (SDF=" << global_max_d << ") - short-circuit" << std::endl;
+            } else {
+                // B: Flat buffer for coords — avoids vector<vector<float>> and element-wise tensor assignment.
+                std::vector<Planners::utils::Vec3i> offsets;
+                std::vector<float> flat_coords;
+                std::vector<int> radii;
+
+                for(int dx = -max_search_radius; dx <= max_search_radius; dx += 2) {
+                    for(int dy = -max_search_radius; dy <= max_search_radius; dy += 2) {
+                        for(int dz = -max_search_radius; dz <= max_search_radius; dz += 2) {
+                            Planners::utils::Vec3i p;
+                            p.x = raw_local_goal.x + dx;
+                            p.y = raw_local_goal.y + dy;
+                            p.z = raw_local_goal.z + dz;
+
+                            if (0 <= p.x && p.x < m_local_grid3d_->m_gridSizeX &&
+                                0 <= p.y && p.y < m_local_grid3d_->m_gridSizeY &&
+                                0 <= p.z && p.z < m_local_grid3d_->m_gridSizeZ)
+                            {
+                                offsets.push_back(p);
+                                radii.push_back(std::max({std::abs(dx), std::abs(dy), std::abs(dz)}));
+                                flat_coords.push_back(drone_x_ + (p.x - (m_local_grid3d_->m_gridSizeX - 1) / 2.0f) * resolution_);
+                                flat_coords.push_back(drone_y_ + (p.y - (m_local_grid3d_->m_gridSizeY - 1) / 2.0f) * resolution_);
+                                flat_coords.push_back(drone_z_ + (p.z - (m_local_grid3d_->m_gridSizeZ - 1) / 2.0f) * resolution_);
+                            }
+                        }
+                    }
                 }
 
-                torch::Tensor dists;
-                try {
-                    dists = loaded_sdf_.forward({coords_tensor}).toTensor();
-                } catch (...) {
-                    ROS_WARN("NN goal search forward pass failed.");
-                }
+                num_points = static_cast<int>(offsets.size());
 
-                if (dists.defined() && dists.sizes()[0] == num_points) {
-                    // Fast accessor mapping (flattening dynamically handles [N, 1] or [N] shapes from the network)
-                    auto dists_flat = dists.view({-1});
-                    auto dists_accessor = dists_flat.accessor<float, 1>();
-                    
-                    // Iterate logical search by expanding shells
-                    for (int rad = 0; rad <= max_search_radius && !found_safe; rad += 2) {
-                        float min_dev = 1e9;
-                        Planners::utils::Vec3i best_point = raw_local_goal;
+                if (num_points > 0) {
+                    // B: from_blob on flat contiguous buffer — single memcpy instead of N×3 indexed assignments.
+                    torch::Tensor coords_tensor = torch::from_blob(
+                        flat_coords.data(), {num_points, 3}, torch::kFloat).clone();
 
-                        // Check points only in the current shell layer
+                    torch::Tensor dists;
+                    try {
+                        dists = loaded_sdf_.forward({coords_tensor}).toTensor();
+                    } catch (...) {
+                        ROS_WARN("NN goal search forward pass failed.");
+                    }
+
+                    if (dists.defined() && dists.sizes()[0] == num_points) {
+                        auto dists_flat = dists.view({-1});
+                        auto dists_accessor = dists_flat.accessor<float, 1>();
+
+                        // C: Pre-group indices by Chebyshev radius in one O(N) pass.
+                        // Shell iteration is then O(N) total instead of O(N x R).
+                        std::vector<std::vector<int>> by_radius(max_search_radius + 1);
                         for (int i = 0; i < num_points; ++i) {
                             float dist_val = dists_accessor[i];
-                            
-                            // Keep track of the absolute highest SDF anywhere
                             if (dist_val > global_max_d) {
                                 global_max_d = dist_val;
                                 fallback_point = offsets[i];
                             }
+                            by_radius[radii[i]].push_back(i);
+                        }
 
-                            if (radii[i] == rad) {
+                        for (int rad = 0; rad <= max_search_radius && !found_safe; rad += 2) {
+                            float min_dev = 1e9;
+                            Planners::utils::Vec3i best_point = raw_local_goal;
+
+                            for (int i : by_radius[rad]) {
+                                float dist_val = dists_accessor[i];
                                 if (dist_val >= TARGET_SDF) {
                                     found_safe = true;
-                                    double dev = std::pow(offsets[i].x - raw_local_goal.x, 2) + 
-                                                 std::pow(offsets[i].y - raw_local_goal.y, 2) + 
+                                    double dev = std::pow(offsets[i].x - raw_local_goal.x, 2) +
+                                                 std::pow(offsets[i].y - raw_local_goal.y, 2) +
                                                  std::pow(offsets[i].z - raw_local_goal.z, 2);
                                     if (dev < min_dev) {
                                         min_dev = dev;
@@ -659,13 +674,9 @@ private:
                                     }
                                 }
                             }
-                        }
 
-                        if (found_safe) {
-                            local_goal = best_point;
-                            if (rad == 0) {
-                                std::cout << "Local goal inherently safe (SDF=" << global_max_d << ")" << std::endl;
-                            } else {
+                            if (found_safe) {
+                                local_goal = best_point;
                                 std::cout << "Found safe local goal at Radius " << rad << " with SDF >= " << TARGET_SDF << std::endl;
                             }
                         }
@@ -1593,8 +1604,6 @@ private:
 
         }
 
-        
-    
     }
 
     bool setAlgorithm(heuristic_planners::SetAlgorithmRequest &_req, heuristic_planners::SetAlgorithmResponse &rep){
@@ -2041,13 +2050,6 @@ int main(int argc, char **argv)
   	// f = boost::bind(&LocalPlanner::dynRecCb,&lcPlanner,  _1, _2);
   	// server.setCallback(f);
 
-	ros::Rate loop_rate(30);
-    while(ros::ok()){
-        ros::spinOnce();
-        // Call to Local Plan
-        // heuristic_local_planner_ros.plan();
-                
-        loop_rate.sleep();
-    }
+    ros::spin();
     return 0;
 }
