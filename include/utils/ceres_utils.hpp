@@ -25,4 +25,8 @@ struct parameterBlockReducedChebyshev{
     double parameter[12];
 };
 
+struct parameterBlockChebyshevTime{
+    double parameter[19];
+};
+
 #endif

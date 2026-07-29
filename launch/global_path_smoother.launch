@@ -1,0 +1,30 @@
+<launch>
+    <!--
+        global_path_smoother.launch
+        ============================
+        Suaviza un path global (lista de waypoints) ajustando un polinomio de
+        grado 5 en t ∈ [0,1] mediante Ceres Solver e imprime por pantalla
+        los coeficientes del polinomio y los waypoints muestreados del path
+        suavizado.
+
+        Todos los parámetros (waypoints, pesos, opciones del solver) se
+        configuran en:
+          config/global_path_smoother_waypoints.yaml
+
+        Uso:
+          roslaunch heuristic_planners global_path_smoother.launch
+    -->
+
+    <node pkg="heuristic_planners"
+          type="global_path_smoother_node"
+          name="global_path_smoother_node"
+          output="screen"
+          required="true">
+
+        <!-- Carga todos los parámetros desde el YAML de configuración -->
+        <rosparam file="$(find heuristic_planners)/config/global_path_smoother_waypoints.yaml"
+                  command="load"/>
+
+    </node>
+
+</launch>

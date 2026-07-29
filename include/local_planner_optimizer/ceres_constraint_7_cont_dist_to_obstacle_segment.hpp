@@ -1,5 +1,5 @@
-#ifndef CERES_CONSTRAINTS_5_CONT_DIST_TO_OBSTACLE_SEGMENT
-#define CERES_CONSTRAINTS_5_CONT_DIST_TO_OBSTACLE_SEGMENT
+#ifndef CERES_CONSTRAINTS_7_CONT_DIST_TO_OBSTACLE_SEGMENT
+#define CERES_CONSTRAINTS_7_CONT_DIST_TO_OBSTACLE_SEGMENT
 
 #include <iostream>
 #include <fstream>
@@ -13,7 +13,6 @@
 #include <Eigen/Dense>
 #include <memory>
 #include <mutex>
-#include <chrono>
 
 
 #include <heuristic_planners/Vec3i.h>
@@ -35,9 +34,9 @@ using ceres::Solve;
 using ceres::Solver;
 
 
-class CeresESDFUpdateChebyshev : public ceres::EvaluationCallback {
+class CeresESDFUpdateChebyshevTime : public ceres::EvaluationCallback {
 public:
-    CeresESDFUpdateChebyshev(parameterBlockChebyshev& coeff_state_vector,
+    CeresESDFUpdateChebyshevTime(parameterBlockChebyshevTime& coeff_state_vector,
                             int esdf_samp,
                             torch::jit::script::Module& loaded_sdf,
                             double origin_x,
@@ -59,19 +58,12 @@ public:
         residuals_ = Eigen::VectorXd::Zero(esdf_samp_);
         jacobians_ = Eigen::MatrixXd::Zero(esdf_samp_, 3);
         PrepareForEvaluation(true, true);
-        //std::cout << "[T] - Evaluation callback: " << dt.count() << std::endl;
-
-        // std::cout << "Evaluation Callback Created(using "
-        //           << (use_voxfield_ ? "Voxfield ESDF" : "Neural Network ESDF")
-        //           << ")" << std::endl;
     }
     void PrepareForEvaluation(bool evaluate_jacobians, bool new_evaluation_point) final {
         int num_points = esdf_samp_;
         Eigen::VectorXd local_residuals(esdf_samp_);
         Eigen::MatrixXd local_jacobians(esdf_samp_, 3);
-        //auto t0 = std::chrono::high_resolution_clock::now();
 
-        // ---- Coeficientes Chebyshev ----
         double p0x = coeff_state_vector_.parameter[5] - coeff_state_vector_.parameter[3] + coeff_state_vector_.parameter[1];
         double p1x = coeff_state_vector_.parameter[4] - 3.0*coeff_state_vector_.parameter[2] + 5.0*coeff_state_vector_.parameter[0];
         double p2x = 2.0*coeff_state_vector_.parameter[3] - 8.0*coeff_state_vector_.parameter[1];
@@ -91,7 +83,6 @@ public:
         double p4z = 8.0*coeff_state_vector_.parameter[13];
         double p5z = 16.0*coeff_state_vector_.parameter[12];
 
-        // ---- Generar coordenadas ----
         std::vector<Eigen::Vector3d> coords;
         coords.reserve(num_points);
         for (int i = 0; i < num_points; ++i) {
@@ -104,7 +95,6 @@ public:
         }
 
         if (use_voxfield_ && esdf_map_) {
-            // --- Caso Voxfield: igual que antes (sin cambios) ---
             const double eps = 0.05;
             for (int i = 0; i < num_points; ++i) {
                 const Eigen::Vector3d& coord = coords[i];
@@ -124,21 +114,17 @@ public:
                 local_jacobians.row(i) = grad;
             }
         } else {
-            // --- Evaluación batch en la red neuronal ---
             torch::Tensor coords_tensor = torch::empty({num_points, 3}, torch::kFloat32);
             for (int i = 0; i < num_points; ++i)
                 coords_tensor[i] = torch::tensor({(float)coords[i][0], (float)coords[i][1], (float)coords[i][2]});
             coords_tensor.set_requires_grad(true);
 
-            // Forward de todos los puntos a la vez
             torch::Tensor output_tensor = loaded_sdf_.forward({coords_tensor}).toTensor(); // [N, 1] o [N]
             if (output_tensor.dim() == 2 && output_tensor.size(1) == 1)
                 output_tensor = output_tensor.squeeze(1);
 
-            // Gradientes respecto a la entrada
             torch::Tensor grad_tensor = torch::autograd::grad({output_tensor.sum()}, {coords_tensor})[0];
 
-            // Copiar resultados a Eigen
             auto dist_cpu = output_tensor.to(torch::kCPU);
             auto grad_cpu = grad_tensor.to(torch::kCPU);
             auto dist_acc = dist_cpu.accessor<float,1>();
@@ -152,10 +138,6 @@ public:
             }
         }
 
-        //auto t1 = std::chrono::high_resolution_clock::now();
-        //std::chrono::duration<double, std::milli> dt = t1 - t0;
-        //Planners::utils::safe_log("Evaluation callback", dt.count());
-
         residuals_ = local_residuals;
         jacobians_ = local_jacobians;
     }
@@ -164,7 +146,7 @@ public:
     const Eigen::MatrixXd& jacobians() const { return jacobians_; }
 
 private:
-    parameterBlockChebyshev& coeff_state_vector_;
+    parameterBlockChebyshevTime& coeff_state_vector_;
     int esdf_samp_;
     double origin_x_, origin_y_, origin_z_;
     float resolution_;
@@ -177,51 +159,50 @@ private:
 
 
 
-class Ceres5DistanceFunctionSegment : public SizedCostFunction<1, 3>
+class Ceres7DistanceFunctionSegment : public SizedCostFunction<1, 3>
 {
     public:
-        Ceres5DistanceFunctionSegment(const CeresESDFUpdateChebyshev& evaluation_callback_cheb, int index): evaluation_callback_cheb_(evaluation_callback_cheb), index_(index)
+        Ceres7DistanceFunctionSegment(const CeresESDFUpdateChebyshevTime& evaluation_callback_cheb_time, int index): evaluation_callback_cheb_time_(evaluation_callback_cheb_time), index_(index)
         {}
 
-        virtual ~Ceres5DistanceFunctionSegment(void)
+        virtual ~Ceres7DistanceFunctionSegment(void)
         {}
 
         virtual bool Evaluate(double const* const* parameters, double* residuals, double** jacobians) const
         {
-            auto dist = evaluation_callback_cheb_.residuals()(index_);
+            auto dist = evaluation_callback_cheb_time_.residuals()(index_);
             residuals[0] = dist;
             if (jacobians != nullptr && jacobians[0] != nullptr)
                 {
-                    jacobians[0][0] = evaluation_callback_cheb_.jacobians()(index_, 0);
-                    jacobians[0][1] = evaluation_callback_cheb_.jacobians()(index_, 1);
-                    jacobians[0][2] = evaluation_callback_cheb_.jacobians()(index_, 2);
+                    jacobians[0][0] = evaluation_callback_cheb_time_.jacobians()(index_, 0);
+                    jacobians[0][1] = evaluation_callback_cheb_time_.jacobians()(index_, 1);
+                    jacobians[0][2] = evaluation_callback_cheb_time_.jacobians()(index_, 2);
                 }
 
             return true;
         }
 
-        const CeresESDFUpdateChebyshev& evaluation_callback_cheb_;
+        const CeresESDFUpdateChebyshevTime& evaluation_callback_cheb_time_;
         int index_;
     private:
 };
 
 
-class Ceres5_ObstacleDistanceCostContSegmentFunctor
+class Ceres7_ObstacleDistanceCostContSegmentFunctor
 {
  public:
-    Ceres5_ObstacleDistanceCostContSegmentFunctor(const CeresESDFUpdateChebyshev& evaluation_callback_cheb, int index, double s_act, int esdf_samp = 10, double weight = 1.0)
-      : evaluation_callback_cheb_(evaluation_callback_cheb), index_(index), s_act_(s_act), esdf_samp_(esdf_samp), weight_(weight), distanceFunctor_(new Ceres5DistanceFunctionSegment(evaluation_callback_cheb_, index_))
+    Ceres7_ObstacleDistanceCostContSegmentFunctor(const CeresESDFUpdateChebyshevTime& evaluation_callback_cheb_time, int index, double s_act, int esdf_samp = 10, double weight = 1.0)
+      : evaluation_callback_cheb_time_(evaluation_callback_cheb_time), index_(index), s_act_(s_act), esdf_samp_(esdf_samp), weight_(weight), distanceFunctor_(new Ceres7DistanceFunctionSegment(evaluation_callback_cheb_time_, index_))
     {
     }
 
-    virtual ~Ceres5_ObstacleDistanceCostContSegmentFunctor(void) 
+    virtual ~Ceres7_ObstacleDistanceCostContSegmentFunctor(void) 
     {
     }
 
     template <typename T>
     bool operator()(const T* const stateCoeff, T* residual) const
     {   
-        auto t0 = std::chrono::high_resolution_clock::now();
         T p[3], dist;
 
         T p0x = stateCoeff[5] - stateCoeff[3] + stateCoeff[1];
@@ -247,34 +228,22 @@ class Ceres5_ObstacleDistanceCostContSegmentFunctor
         p[1] = p0y + s_act_*(p1y + s_act_*(p2y + s_act_*(p3y + s_act_*(p4y + s_act_*p5y))));
         p[2] = p0z + s_act_*(p1z + s_act_*(p2z + s_act_*(p3z + s_act_*(p4z + s_act_*p5z))));
 
-        // Compute distance
         distanceFunctor_(p, &dist);
 
 
-        // Compute weight
-        // residual[0] = T(weight_) / T(esdf_samp_) * exp(T(-4) * (dist - T(1.5)));
         residual[0] = T(weight_) / T(esdf_samp_) * exp(T(-4.0) * (dist - T(1.5)));
-
-        auto t1 = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double, std::milli> dt = t1 - t0;
-        //Planners::utils::safe_log("Cost Function - Distance to obstacle", dt.count());
-        //std::cout << "[T] - Cost Function - Distance to obstacle: " << dt.count() << std::endl;
-
-
 
         return true;
     }
 
   private:
 
-    // Constraint weighting and t_act
     double weight_, s_act_;
 
     int esdf_samp_, index_;
 
-    const CeresESDFUpdateChebyshev& evaluation_callback_cheb_;
+    const CeresESDFUpdateChebyshevTime& evaluation_callback_cheb_time_;
 
-    // Distance funtion diferentiation
     ceres::CostFunctionToFunctor<1, 3> distanceFunctor_;
 };
 

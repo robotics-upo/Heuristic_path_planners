@@ -232,6 +232,19 @@ namespace Planners
             std::vector<double> x_params;
             std::vector<double> y_params;
             std::vector<double> z_params;
+            double min_dist_m      = -1.0;  // min ESDF value along optimised trajectory (m)
+            double path_length_m   = -1.0;  // arc length via Gauss-Legendre quadrature (m)
+            double traj_duration_s = -1.0;  // T_min: minimum feasible duration satisfying v/a/j limits (s)
+        };
+
+        struct OptimizedTimeContinuousFunction{
+            std::vector<double> x_params;
+            std::vector<double> y_params;
+            std::vector<double> z_params;
+            double T_param;
+            double min_dist_m      = -1.0;  // min ESDF value along optimised trajectory (m)
+            double path_length_m   = -1.0;  // arc length via Gauss-Legendre quadrature (m)
+            double traj_duration_s = -1.0;  // T_min: minimum feasible duration satisfying v/a/j limits (s)
         };
 
         /**

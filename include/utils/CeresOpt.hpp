@@ -66,6 +66,7 @@
 #include "local_planner_optimizer/ceres_constraint_5_cont_smoothness.hpp"
 #include "local_planner_optimizer/ceres_constraint_5_cont_fix_initial_velocity.hpp"
 #include "local_planner_optimizer/ceres_constraint_5_cont_limit_goal_gradient.hpp"
+#include "local_planner_optimizer/ceres_constraint_5_cont_dynamic_limits.hpp"
 #include "local_planner_optimizer/ceres_constraint_cont_init_chebyshev_distance_to_wp.hpp"
 #include "local_planner_optimizer/ceres_constraint_cont_init_chebyshev_smoothness.hpp"
 #include "local_planner_optimizer/ceres_constraint_cont_init_chebyshev_fix.hpp"
@@ -74,6 +75,15 @@
 #include "local_planner_optimizer/ceres_constraint_6_cont_dist_to_obstacle_segment.hpp"
 #include "local_planner_optimizer/ceres_constraint_6_cont_path_length_segment.hpp"
 #include "local_planner_optimizer/ceres_constraint_6_cont_smoothness.hpp"
+
+#include "local_planner_optimizer/ceres_constraint_7_cont_path_length.hpp"
+#include "local_planner_optimizer/ceres_constraint_7_cont_dist_to_obstacle_segment.hpp"
+#include "local_planner_optimizer/ceres_constraint_7_cont_smoothness.hpp"
+#include "local_planner_optimizer/ceres_constraint_7_cont_fix_startgoal.hpp"
+#include "local_planner_optimizer/ceres_constraint_7_cont_fix_initial_dynamic_state.hpp"
+#include "local_planner_optimizer/ceres_constraint_7_cont_goal_dynamic_state.hpp"
+#include "local_planner_optimizer/ceres_constraint_7_cont_dynamic_limits_all.hpp"
+#include "local_planner_optimizer/ceres_constraint_7_cont_traj_time.hpp"
 
 
 #include "local_planner_optimizer/ceres_constraint_cont_init_distance_to_wp.hpp"
@@ -113,7 +123,8 @@ namespace Ceresopt{
     Planners::utils::OptimizedContinuousFunction ceresOptimizerContinuousPathInitG5(Eigen::VectorXd init_coeff_x, Eigen::VectorXd init_coeff_y, Eigen::VectorXd init_coeff_z, Planners::utils::CoordinateList global_path_local_section, Planners::utils::Vec3i local_goal);
     Planners::utils::OptimizedContinuousFunction ceresOptimizerTestContinuousPath(Eigen::VectorXd coeff_x, Eigen::VectorXd coeff_y, Eigen::VectorXd coeff_z, Planners::utils::Vec3i local_goal, float resolution_, const std::vector<Eigen::Vector3d>& obstacle_point_cloud);
     Planners::utils::OptimizedContinuousFunction ceresOptimizerContinuousPathInitChebyshev(Eigen::VectorXd init_coeff_x, Eigen::VectorXd init_coeff_y, Eigen::VectorXd init_coeff_z, Planners::utils::CoordinateList global_path_local_section, Planners::utils::Vec3i local_start, Planners::utils::Vec3i local_goal);
-    
+    Planners::utils::OptimizedTimeContinuousFunction ceresOptimizerChebyshevTimeOpt(Eigen::VectorXd coeff_x, Eigen::VectorXd coeff_y, Eigen::VectorXd coeff_z, double T_ini, double origin_x, double origin_y, double origin_z, Planners::utils::Vec3i local_start, Planners::utils::Vec3i local_goal, Local_Grid3d &_grid, torch::jit::script::Module& loaded_sdf, float resolution_, std::shared_ptr<voxblox::EsdfMap>& esdf_map_, bool use_voxfield, double v_max_ms, double a_max_ms2, double j_max_ms3, double vel_x_ms, double vel_y_ms, double vel_z_ms, double acc_x_ms2, double acc_y_ms2, double acc_z_ms2, double goal_vel_x_ms, double goal_vel_y_ms, double goal_vel_z_ms, double goal_acc_x_ms2, double goal_acc_y_ms2, double goal_acc_z_ms2);
+
 }
 
 

@@ -17,6 +17,7 @@
 #include "utils/geometry_utils.hpp"
 #include "utils/metrics.hpp"
 #include "utils/CeresOpt.hpp"
+#include "utils/chebyshev_utils.hpp"
 
 #include "Grid3D/local_grid3d.hpp"
 
@@ -53,6 +54,9 @@
 #include <voxblox/core/voxel.h>
 #include <voxblox/core/common.h>
 
+#include <std_msgs/Float64MultiArray.h>
+#include <std_msgs/Float64.h>
+#include <std_msgs/String.h>
 #include <std_srvs/Empty.h>
 
 #define ENVIRONMENT_REPRESENTATION 0
@@ -63,14 +67,22 @@
 
 #define USING_CERES 1
 
-#define CERES_MODE 5
+#define CERES_MODE 7
     //      0       CERES PATH PLANNER (USING WP)
     //      1       CERES TRAJECTORY PLANNER (USING WP)
-    //      2       CERES PATH PLANNER (USING CONTINUOUS FUNCTION)
+    //      2       CERES TRAJ PLANNER (USING CONTINUOUS FUNCTION)
     //      3       TEST - CERES PATH PLANNER (USING CONTINUOUS FUNCTION) WITH SIMPLE DISTANCE FUNCTION
-    //      4       CERES PATH PLANNER - CONTINUOUS FUNCTION - MONOMIAL - EVALUATION CALLBACK VERSION
-    //      5       CERES PATH PLANNER - CONTINUOUS FUNCTION - CHEBYSHEV - EVALUATION CALLBACK VERSION
-    //      6       CERES PATH PLANNER - CONTINUOUS FUNCTION - REDUCED STATES CHEBYSHEV - EVALUATION CALLBACK VERSION
+    //      4       CERES TRAJ PLANNER - CONTINUOUS FUNCTION - MONOMIAL - EVALUATION CALLBACK VERSION
+    //      5       CERES TRAJ PLANNER - CONTINUOUS FUNCTION - CHEBYSHEV - EVALUATION CALLBACK VERSION
+    //      6       CERES TRAJ PLANNER - CONTINUOUS FUNCTION - REDUCED STATES CHEBYSHEV - EVALUATION CALLBACK VERSION
+    //      7       CERES TRAJ PLANNER - CONTINUOUS FUNCTION - CHEBYSHEV - TIME OPTIMIZATION
+
+
+#define PUBLISH_KINEMATICS_PROFILE 1
+    //      0       Disabled — no v(s)/a(s) topics published (better performance)
+    //      1       Enabled  — publishes kinematics/s, kinematics/velocity_magnitude,
+    //                         kinematics/acceleration_magnitude for PlotJuggler
+    //                         (only active for CERES_MODE == 5)
 
 #define USE_INITIAL_OPTIMIZER 0 // For CERES_MODE = 2, 4 and 5
     //      0       NO
@@ -128,6 +140,17 @@ public:
         ini_local_line_markers_pub_  = lnh_.advertise<visualization_msgs::Marker>("ini_local_path_line_markers", 1);
         ini_local_point_markers_pub_ = lnh_.advertise<visualization_msgs::Marker>("ini_local_path_points_markers", 1);
         obstacle_pc_point_markers_pub_ = lnh_.advertise<visualization_msgs::Marker>("obstacle_pc_points_markers_", 1);
+
+#if PUBLISH_KINEMATICS_PROFILE
+        // PlotJuggler: velocity, acceleration and jerk profiles in real units
+        kinematics_s_pub_     = lnh_.advertise<std_msgs::Float64MultiArray>("kinematics/s", 1);
+        kinematics_vel_pub_   = lnh_.advertise<std_msgs::Float64MultiArray>("kinematics/velocity_magnitude", 1);
+        kinematics_accel_pub_ = lnh_.advertise<std_msgs::Float64MultiArray>("kinematics/acceleration_magnitude", 1);
+        kinematics_jerk_pub_  = lnh_.advertise<std_msgs::Float64MultiArray>("kinematics/jerk_magnitude", 1);
+        kinematics_T_pub_     = lnh_.advertise<std_msgs::Float64>("kinematics/T", 1);
+#endif
+        benchmark_pub_ = lnh_.advertise<std_msgs::String>("/benchmark/metrics", 10);
+
         cloud_test  = lnh_.advertise<pcl::PointCloud<pcl::PointXYZ> >("/cloud_PCL", 1, true);  // Defined by me to show the point cloud as pcl::PointCloud<pcl::PointXYZ
         
         networkReceivedFlag_ = 1;
@@ -200,13 +223,17 @@ private:
 
         //Ponemos el flag de recepción a 1
         globalPathReceived_ = 1;
+        // Reset goal stabilisation so the first goal of the new path is computed fresh
+        has_prev_safe_goal_ = false;
+        // Reset warm-start so the optimizer restarts from a straight line on a new path
+        has_prev_opt_coeffs_ = false;
         std::cout << "Global path successfully received" << std::endl;
         std::cout << global_path_ << std::endl;
 
     }
 
     void networkUpdateCallback(const std_msgs::Empty::ConstPtr& msg){
-        ROS_INFO("Received new network callback");
+        // ROS_INFO("Received new network callback");
         networkReceivedFlag_ = 1;
     }
 
@@ -251,7 +278,7 @@ private:
     void localtimedCallback(const ros::TimerEvent& event)
     {
         timed_local_path_ = lnh_.createTimer(ros::Duration(0), &HeuristicLocalPlannerROS::localtimedCallback, this, true);
-        printf("-----TIMED CALLBACK------\n");
+        //printf("-----TIMED CALLBACK------\n");
 
         // Only perform local planning if global path was received
         if(globalPathReceived_ == 1){
@@ -304,6 +331,37 @@ private:
             auto loop_end = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double, std::milli> loop_duration = loop_end - loop_start;
             printf("ELAPSED TIME - FULL LOOP: %.2f ms\n", loop_duration.count());
+            printf("┌─────────────────────────────────────────┐\n");
+            printf("│  Full loop time : %6.1f ms             │\n", loop_duration.count());
+            printf("│  Min dist obs   : %6.3f m              │\n", last_min_dist_m_);
+            printf("│  Path length    : %6.3f m              │\n", last_path_length_m_);
+            if(CERES_MODE == 5)
+                printf("│  Min traj time  : %6.3f s              │\n", last_traj_duration_s_);
+            else if(CERES_MODE == 7)
+                printf("│  Opt traj time  : %6.3f s              │\n", last_traj_duration_s_);
+            printf("└─────────────────────────────────────────┘\n");
+
+            // ---- Benchmark logging: publish JSON metrics on /benchmark/metrics ----
+            {
+                const int dyn_valid = (last_max_v_ >= 0.0 &&
+                                       last_max_v_ <= v_max_ms_  * 1.01 &&
+                                       last_max_a_ <= a_max_ms2_ * 1.01 &&
+                                       last_max_j_ <= j_max_ms3_ * 1.01) ? 1 : 0;
+                char buf[640];
+                snprintf(buf, sizeof(buf),
+                    "{\"planner\":\"c3to\",\"replan\":%d,"
+                    "\"x\":%.3f,\"y\":%.3f,\"z\":%.3f,"
+                    "\"plan_ms\":%.3f,\"min_dist\":%.3f,\"path_len\":%.3f,\"traj_T\":%.3f,"
+                    "\"max_v\":%.3f,\"max_a\":%.3f,\"max_j\":%.3f,"
+                    "\"dyn_valid\":%d,\"success\":1}",
+                    benchmark_replan_idx_++,
+                    (double)drone_x_, (double)drone_y_, (double)drone_z_,
+                    loop_duration.count(), last_min_dist_m_, last_path_length_m_, last_traj_duration_s_,
+                    last_max_v_, last_max_a_, last_max_j_, dyn_valid);
+                std_msgs::String bench_msg;
+                bench_msg.data = buf;
+                benchmark_pub_.publish(bench_msg);
+            }
 
         }
     }
@@ -461,13 +519,13 @@ private:
         // 1. Check if starting point is free
         if(m_local_grid3d_->m_grid[(m_local_grid3d_->m_gridSize-1)/2].dist > 0)
         {
-            ROS_INFO("Starting point is FREE");
+            //ROS_INFO("Starting point is FREE");
             //std::cout << "Point index queried: " << (m_local_grid3d_->m_gridSize-1)/2 <<" |  Value of dist: " << m_local_grid3d_->m_grid[(m_local_grid3d_->m_gridSize-1)/2].dist << std::endl;
         }
         else
         {
-            ROS_INFO("Starting point is NOT FREE -> ABORTING");
-            std::cout << "Point index queried: " << (m_local_grid3d_->m_gridSize-1)/2 <<" |  Value of dist: " << m_local_grid3d_->m_grid[(m_local_grid3d_->m_gridSize-1)/2].dist << std::endl;
+            //ROS_INFO("Starting point is NOT FREE -> ABORTING");
+            //std::cout << "Point index queried: " << (m_local_grid3d_->m_gridSize-1)/2 <<" |  Value of dist: " << m_local_grid3d_->m_grid[(m_local_grid3d_->m_gridSize-1)/2].dist << std::endl;
             exit(EXIT_FAILURE);
         }
 
@@ -574,110 +632,106 @@ private:
         
         if (ENVIRONMENT_REPRESENTATION == 0)
         {
-            Planners::utils::Vec3i raw_local_goal = local_goal;
-            int max_search_radius = 20; // 20 cells = 1.0m (if res=0.05)
-            float TARGET_SDF = 1.3f;
+            const Planners::utils::Vec3i raw_local_goal = local_goal;
+            const int   max_search_radius = 20;  // cells (1.0 m at res=0.05)
+            const float TARGET_SDF        = 1.2f;
 
             auto start_time = std::chrono::high_resolution_clock::now();
 
-            bool found_safe = false;
+            bool found_safe    = false;
             float global_max_d = -1000.0f;
+            Planners::utils::Vec3i candidate_goal = raw_local_goal;
             Planners::utils::Vec3i fallback_point = raw_local_goal;
             int num_points = 0;
 
-            // A: Short-circuit — evaluate the raw goal point alone first.
-            // Avoids building and inferring the full batch in the common case (goal already safe).
-            float xc0 = drone_x_ + (raw_local_goal.x - (m_local_grid3d_->m_gridSizeX - 1) / 2.0f) * resolution_;
-            float yc0 = drone_y_ + (raw_local_goal.y - (m_local_grid3d_->m_gridSizeY - 1) / 2.0f) * resolution_;
-            float zc0 = drone_z_ + (raw_local_goal.z - (m_local_grid3d_->m_gridSizeZ - 1) / 2.0f) * resolution_;
-            try {
-                torch::Tensor single_pt = torch::tensor({{xc0, yc0, zc0}}, torch::kFloat);
-                global_max_d = loaded_sdf_.forward({single_pt}).toTensor().view({-1})[0].item<float>();
-            } catch (...) {}
+            // ── Short-circuit: test raw_local_goal first ─────────────────────
+            {
+                const float gx = drone_x_ + (raw_local_goal.x - (m_local_grid3d_->m_gridSizeX - 1) / 2.0f) * resolution_;
+                const float gy = drone_y_ + (raw_local_goal.y - (m_local_grid3d_->m_gridSizeY - 1) / 2.0f) * resolution_;
+                const float gz = drone_z_ + (raw_local_goal.z - (m_local_grid3d_->m_gridSizeZ - 1) / 2.0f) * resolution_;
+                try {
+                    torch::Tensor single_pt = torch::tensor({{gx, gy, gz}}, torch::kFloat);
+                    global_max_d = loaded_sdf_.forward({single_pt}).toTensor().view({-1})[0].item<float>();
+                } catch (...) {}
 
-            if (global_max_d >= TARGET_SDF) {
-                found_safe = true;
-                local_goal = raw_local_goal;
-                std::cout << "Local goal inherently safe (SDF=" << global_max_d << ") - short-circuit" << std::endl;
-            } else {
-                // B: Flat buffer for coords — avoids vector<vector<float>> and element-wise tensor assignment.
-                std::vector<Planners::utils::Vec3i> offsets;
-                std::vector<float> flat_coords;
-                std::vector<int> radii;
+                if (global_max_d >= TARGET_SDF) {
+                    found_safe     = true;
+                    candidate_goal = raw_local_goal;
+                }
+            }
 
-                for(int dx = -max_search_radius; dx <= max_search_radius; dx += 2) {
-                    for(int dy = -max_search_radius; dy <= max_search_radius; dy += 2) {
-                        for(int dz = -max_search_radius; dz <= max_search_radius; dz += 2) {
+            // ── Full search: concentric 3D spheres around raw_local_goal ─────
+            if (!found_safe)
+            {
+                struct Candidate { Planners::utils::Vec3i cell; int dist_sq; };
+                std::vector<Candidate> candidates;
+                std::vector<float>     flat_coords;
+
+                const int R    = max_search_radius;
+                const int R_sq = R * R;
+                const int x0   = raw_local_goal.x;
+                const int y0   = raw_local_goal.y;
+                const int z0   = raw_local_goal.z;
+
+                const int dz_lo = std::max(-R, -z0);
+                const int dz_hi = std::min( R, m_local_grid3d_->m_gridSizeZ - 1 - z0);
+                const int dx_lo = std::max(-R, -x0);
+                const int dx_hi = std::min( R, m_local_grid3d_->m_gridSizeX - 1 - x0);
+                const int dy_lo = std::max(-R, -y0);
+                const int dy_hi = std::min( R, m_local_grid3d_->m_gridSizeY - 1 - y0);
+
+                for (int dz = dz_lo; dz <= dz_hi; dz += 2) {
+                    for (int dx = dx_lo; dx <= dx_hi; dx += 2) {
+                        for (int dy = dy_lo; dy <= dy_hi; dy += 2) {
+                            const int dist_sq = dx*dx + dy*dy + dz*dz;
+                            if (dist_sq > R_sq) continue;  // outside sphere
+
                             Planners::utils::Vec3i p;
-                            p.x = raw_local_goal.x + dx;
-                            p.y = raw_local_goal.y + dy;
-                            p.z = raw_local_goal.z + dz;
+                            p.x = x0 + dx;
+                            p.y = y0 + dy;
+                            p.z = z0 + dz;
 
-                            if (0 <= p.x && p.x < m_local_grid3d_->m_gridSizeX &&
-                                0 <= p.y && p.y < m_local_grid3d_->m_gridSizeY &&
-                                0 <= p.z && p.z < m_local_grid3d_->m_gridSizeZ)
-                            {
-                                offsets.push_back(p);
-                                radii.push_back(std::max({std::abs(dx), std::abs(dy), std::abs(dz)}));
-                                flat_coords.push_back(drone_x_ + (p.x - (m_local_grid3d_->m_gridSizeX - 1) / 2.0f) * resolution_);
-                                flat_coords.push_back(drone_y_ + (p.y - (m_local_grid3d_->m_gridSizeY - 1) / 2.0f) * resolution_);
-                                flat_coords.push_back(drone_z_ + (p.z - (m_local_grid3d_->m_gridSizeZ - 1) / 2.0f) * resolution_);
-                            }
+                            candidates.push_back({p, dist_sq});
+                            flat_coords.push_back(drone_x_ + (p.x - (m_local_grid3d_->m_gridSizeX - 1) / 2.0f) * resolution_);
+                            flat_coords.push_back(drone_y_ + (p.y - (m_local_grid3d_->m_gridSizeY - 1) / 2.0f) * resolution_);
+                            flat_coords.push_back(drone_z_ + (p.z - (m_local_grid3d_->m_gridSizeZ - 1) / 2.0f) * resolution_);
                         }
                     }
                 }
 
-                num_points = static_cast<int>(offsets.size());
+                num_points = static_cast<int>(candidates.size());
 
-                if (num_points > 0) {
-                    // B: from_blob on flat contiguous buffer — single memcpy instead of N×3 indexed assignments.
-                    torch::Tensor coords_tensor = torch::from_blob(
-                        flat_coords.data(), {num_points, 3}, torch::kFloat).clone();
-
+                if (num_points > 0)
+                {
                     torch::Tensor dists;
                     try {
+                        torch::Tensor coords_tensor = torch::from_blob(
+                            flat_coords.data(), {num_points, 3}, torch::kFloat).clone();
                         dists = loaded_sdf_.forward({coords_tensor}).toTensor();
                     } catch (...) {
                         ROS_WARN("NN goal search forward pass failed.");
                     }
 
-                    if (dists.defined() && dists.sizes()[0] == num_points) {
-                        auto dists_flat = dists.view({-1});
+                    if (dists.defined() && dists.sizes()[0] == num_points)
+                    {
+                        auto dists_flat     = dists.view({-1});
                         auto dists_accessor = dists_flat.accessor<float, 1>();
 
-                        // C: Pre-group indices by Chebyshev radius in one O(N) pass.
-                        // Shell iteration is then O(N) total instead of O(N x R).
-                        std::vector<std::vector<int>> by_radius(max_search_radius + 1);
-                        for (int i = 0; i < num_points; ++i) {
-                            float dist_val = dists_accessor[i];
-                            if (dist_val > global_max_d) {
-                                global_max_d = dist_val;
-                                fallback_point = offsets[i];
-                            }
-                            by_radius[radii[i]].push_back(i);
-                        }
+                        int best_dist_sq = std::numeric_limits<int>::max();
 
-                        for (int rad = 0; rad <= max_search_radius && !found_safe; rad += 2) {
-                            float min_dev = 1e9;
-                            Planners::utils::Vec3i best_point = raw_local_goal;
+                        for (int i = 0; i < num_points; ++i)
+                        {
+                            const float sdf_val = dists_accessor[i];
 
-                            for (int i : by_radius[rad]) {
-                                float dist_val = dists_accessor[i];
-                                if (dist_val >= TARGET_SDF) {
-                                    found_safe = true;
-                                    double dev = std::pow(offsets[i].x - raw_local_goal.x, 2) +
-                                                 std::pow(offsets[i].y - raw_local_goal.y, 2) +
-                                                 std::pow(offsets[i].z - raw_local_goal.z, 2);
-                                    if (dev < min_dev) {
-                                        min_dev = dev;
-                                        best_point = offsets[i];
-                                    }
-                                }
+                            if (sdf_val > global_max_d) {
+                                global_max_d   = sdf_val;
+                                fallback_point = candidates[i].cell;
                             }
 
-                            if (found_safe) {
-                                local_goal = best_point;
-                                std::cout << "Found safe local goal at Radius " << rad << " with SDF >= " << TARGET_SDF << std::endl;
+                            if (sdf_val >= TARGET_SDF && candidates[i].dist_sq < best_dist_sq) {
+                                best_dist_sq   = candidates[i].dist_sq;
+                                candidate_goal = candidates[i].cell;
+                                found_safe     = true;
                             }
                         }
                     }
@@ -686,14 +740,59 @@ private:
 
             auto stop_time = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double, std::milli> dur = stop_time - start_time;
-            std::cout << "Batched Layered goal BFS (" << num_points << " pts) took " << dur.count() << " ms" << std::endl;
+            //std::cout << "[GoalSearch] " << num_points << " pts evaluated in " << dur.count() << " ms" << std::endl;
 
             if (!found_safe) {
-                local_goal = fallback_point;
-                ROS_WARN("No entirely safe goal found (>=%.2f). Using best available SDF=%.2f", TARGET_SDF, global_max_d);
+                candidate_goal = fallback_point;
+                ROS_WARN("No entirely safe goal found (>=%.2f). Using best available SDF=%.2f",
+                         TARGET_SDF, global_max_d);
             }
+
+            // ── Update guard ─────────────────────────────────────────────────
+            // Apply candidate_goal to the optimizer only when it is at least
+            // MIN_GOAL_UPDATE_DIST metres away from the previous active goal.
+            // This prevents micro-jitter from ESDF noise without blocking
+            // genuine goal advances.
+            if (has_prev_safe_goal_) {
+                const double cand_wx = drone_x_ + (candidate_goal.x - (m_local_grid3d_->m_gridSizeX - 1) / 2.0f) * resolution_;
+                const double cand_wy = drone_y_ + (candidate_goal.y - (m_local_grid3d_->m_gridSizeY - 1) / 2.0f) * resolution_;
+                const double cand_wz = drone_z_ + (candidate_goal.z - (m_local_grid3d_->m_gridSizeZ - 1) / 2.0f) * resolution_;
+                const double dist_from_prev = std::sqrt(
+                    std::pow(cand_wx - prev_safe_goal_wx_, 2) +
+                    std::pow(cand_wy - prev_safe_goal_wy_, 2) +
+                    std::pow(cand_wz - prev_safe_goal_wz_, 2));
+
+                if (dist_from_prev >= MIN_GOAL_UPDATE_DIST) {
+                    local_goal         = candidate_goal;
+                    prev_safe_goal_wx_ = cand_wx;
+                    prev_safe_goal_wy_ = cand_wy;
+                    prev_safe_goal_wz_ = cand_wz;
+                    //std::cout << "[GoalSearch] Goal updated (dist=" << dist_from_prev << " m)" << std::endl;
+                } else {
+                    // Re-project previous active goal into current local frame
+                    local_goal.x = static_cast<int>(std::round(
+                        (prev_safe_goal_wx_ - drone_x_) / resolution_ + (m_local_grid3d_->m_gridSizeX - 1) / 2.0));
+                    local_goal.y = static_cast<int>(std::round(
+                        (prev_safe_goal_wy_ - drone_y_) / resolution_ + (m_local_grid3d_->m_gridSizeY - 1) / 2.0));
+                    local_goal.z = static_cast<int>(std::round(
+                        (prev_safe_goal_wz_ - drone_z_) / resolution_ + (m_local_grid3d_->m_gridSizeZ - 1) / 2.0));
+                    // Clamp to grid
+                    local_goal.x = std::max(0, std::min(local_goal.x, m_local_grid3d_->m_gridSizeX - 1));
+                    local_goal.y = std::max(0, std::min(local_goal.y, m_local_grid3d_->m_gridSizeY - 1));
+                    local_goal.z = std::max(0, std::min(local_goal.z, m_local_grid3d_->m_gridSizeZ - 1));
+                    //std::cout << "[GoalSearch] Goal unchanged (dist=" << dist_from_prev << " m < " << MIN_GOAL_UPDATE_DIST << " m)" << std::endl;
+                }
+            } else {
+                // First iteration — accept unconditionally
+                local_goal         = candidate_goal;
+                prev_safe_goal_wx_ = drone_x_ + (local_goal.x - (m_local_grid3d_->m_gridSizeX - 1) / 2.0f) * resolution_;
+                prev_safe_goal_wy_ = drone_y_ + (local_goal.y - (m_local_grid3d_->m_gridSizeY - 1) / 2.0f) * resolution_;
+                prev_safe_goal_wz_ = drone_z_ + (local_goal.z - (m_local_grid3d_->m_gridSizeZ - 1) / 2.0f) * resolution_;
+                has_prev_safe_goal_ = true;
+            }
+            // ── End update guard ─────────────────────────────────────────────
         }
-        std::cout << "Local goal found: " << local_goal << std::endl;
+        //std::cout << "Local goal found: " << local_goal << std::endl;
 
         // 4 - Use path planner to find local waypoints (if planning before the Ceres optimizer)
         int planning_solved = 0;
@@ -1253,9 +1352,31 @@ private:
                 auto ini_ceres_start = std::chrono::high_resolution_clock::now();
                 if(USE_INITIAL_OPTIMIZER == 0)
                 {
-                    coeff_x = init_coeff_x;
-                    coeff_y = init_coeff_y;
-                    coeff_z = init_coeff_z;
+                    if (has_prev_opt_coeffs_)
+                    {
+                        // Warm start: reuse c0..c3 from the previous solution
+                        // (they encode the obstacle-avoidance shape), then
+                        // recompute c4,c5 to satisfy the new boundary conditions:
+                        //   P( 1) = c0+c1+c2+c3+c4+c5 = goal  →  c4 = (goal−start)/2 − c0 − c2
+                        //   P(−1) =−c0+c1−c2+c3−c4+c5 = start  →  c5 = (goal+start)/2 − c1 − c3
+                        coeff_x = Eigen::VectorXd::Map(prev_opt_coeff_x_.data(), 6);
+                        coeff_y = Eigen::VectorXd::Map(prev_opt_coeff_y_.data(), 6);
+                        coeff_z = Eigen::VectorXd::Map(prev_opt_coeff_z_.data(), 6);
+
+                        coeff_x(4) = 0.5*(local_goal.x - local_start.x) - coeff_x(0) - coeff_x(2);
+                        coeff_x(5) = 0.5*(local_goal.x + local_start.x) - coeff_x(1) - coeff_x(3);
+                        coeff_y(4) = 0.5*(local_goal.y - local_start.y) - coeff_y(0) - coeff_y(2);
+                        coeff_y(5) = 0.5*(local_goal.y + local_start.y) - coeff_y(1) - coeff_y(3);
+                        coeff_z(4) = 0.5*(local_goal.z - local_start.z) - coeff_z(0) - coeff_z(2);
+                        coeff_z(5) = 0.5*(local_goal.z + local_start.z) - coeff_z(1) - coeff_z(3);
+                    }
+                    else
+                    {
+                        // First iteration: straight-line initialisation
+                        coeff_x = init_coeff_x;
+                        coeff_y = init_coeff_y;
+                        coeff_z = init_coeff_z;
+                    }
                 }
                 else if(USE_INITIAL_OPTIMIZER == 1)
                 {
@@ -1322,6 +1443,24 @@ private:
                 printf("ELAPSED TIME - INITIAL OPTIMIZER: %.2f ms\n", ini_ceres_duration.count());
                 printf("ELAPSED TIME - MAIN OPTIMIZER: %.2f ms\n", ceres_duration.count());
 
+                last_min_dist_m_    = opt_local_path_function.min_dist_m;
+                last_path_length_m_ = opt_local_path_function.path_length_m;
+                last_traj_duration_s_ = computeT_min_chebyshev(
+                    opt_local_path_function.x_params,
+                    opt_local_path_function.y_params,
+                    opt_local_path_function.z_params,
+                    static_cast<double>(resolution_),
+                    v_max_ms_, a_max_ms2_, j_max_ms3_);
+
+                // Store optimised coefficients for warm-starting the next iteration
+                prev_opt_coeff_x_.assign(opt_local_path_function.x_params.begin(),
+                                         opt_local_path_function.x_params.end());
+                prev_opt_coeff_y_.assign(opt_local_path_function.y_params.begin(),
+                                         opt_local_path_function.y_params.end());
+                prev_opt_coeff_z_.assign(opt_local_path_function.z_params.begin(),
+                                         opt_local_path_function.z_params.end());
+                has_prev_opt_coeffs_ = true;
+
                 // 3 - Print the results
 
                 // std::cout << "Coeficientes opt. para x(t): " << opt_local_path_function.x_params << std::endl;
@@ -1378,12 +1517,68 @@ private:
                 //     float y_aux = wp.y * resolution_;
                 //     float z_aux = wp.z * resolution_;
                 //     std::cout << "(" << x_aux << "," << y_aux << "," << z_aux << ")";
-                    
+
                 //     if (i < local_path_real.size() - 1) {
                 //         std::cout << ", ";
                 //     }
                 // }
                 // std::cout << "]" << std::endl;
+
+#if PUBLISH_KINEMATICS_PROFILE
+                // ---------------------------------------------------------------
+                // Publish v(s), a(s), j(s) in real units (m/s, m/s², m/s³)
+                // Time scaling: ds/dt = 2/T  →
+                //   v_real = ||dP/ds||   * res * 2/T
+                //   a_real = ||d²P/ds²|| * res * 4/T²
+                //   j_real = ||d³P/ds³|| * res * 8/T³
+                // ---------------------------------------------------------------
+                {
+                    const int    N_KIN = 50;
+                    const double T_kin = (last_traj_duration_s_ > 0.0) ? last_traj_duration_s_ : 1.0;
+                    const double res   = static_cast<double>(resolution_);
+                    const double k1    = 2.0 * res / T_kin;
+                    const double k2    = 4.0 * res / (T_kin * T_kin);
+                    const double k3    = 8.0 * res / (T_kin * T_kin * T_kin);
+
+                    std_msgs::Float64MultiArray s_msg, vel_msg, acc_msg, jerk_msg;
+                    s_msg.data.resize(N_KIN);
+                    vel_msg.data.resize(N_KIN);
+                    acc_msg.data.resize(N_KIN);
+                    jerk_msg.data.resize(N_KIN);
+
+                    for (int i = 0; i < N_KIN; ++i)
+                    {
+                        const double s  = -1.0 + 2.0 * i / (N_KIN - 1);
+                        const double s2 = s * s;
+                        s_msg.data[i] = s;
+
+                        const double vx = p1x + s*(2.0*p2x + s*(3.0*p3x + s*(4.0*p4x + s*5.0*p5x)));
+                        const double vy = p1y + s*(2.0*p2y + s*(3.0*p3y + s*(4.0*p4y + s*5.0*p5y)));
+                        const double vz = p1z + s*(2.0*p2z + s*(3.0*p3z + s*(4.0*p4z + s*5.0*p5z)));
+                        vel_msg.data[i] = k1 * std::sqrt(vx*vx + vy*vy + vz*vz);
+
+                        const double ax = 2.0*p2x + s*(6.0*p3x + s*(12.0*p4x + s*20.0*p5x));
+                        const double ay = 2.0*p2y + s*(6.0*p3y + s*(12.0*p4y + s*20.0*p5y));
+                        const double az = 2.0*p2z + s*(6.0*p3z + s*(12.0*p4z + s*20.0*p5z));
+                        acc_msg.data[i] = k2 * std::sqrt(ax*ax + ay*ay + az*az);
+
+                        const double jx = 6.0*p3x + s*(24.0*p4x + s*60.0*p5x);
+                        const double jy = 6.0*p3y + s*(24.0*p4y + s*60.0*p5y);
+                        const double jz = 6.0*p3z + s*(24.0*p4z + s*60.0*p5z);
+                        jerk_msg.data[i] = k3 * std::sqrt(jx*jx + jy*jy + jz*jz);
+                    }
+
+                    std_msgs::Float64 T_msg;
+                    T_msg.data = T_kin;
+
+                    kinematics_s_pub_.publish(s_msg);
+                    kinematics_vel_pub_.publish(vel_msg);
+                    kinematics_accel_pub_.publish(acc_msg);
+                    kinematics_jerk_pub_.publish(jerk_msg);
+                    kinematics_T_pub_.publish(T_msg);
+                }
+                // ---------------------------------------------------------------
+#endif // PUBLISH_KINEMATICS_PROFILE
 
 
 
@@ -1564,6 +1759,250 @@ private:
 
 
             }
+            else if(CERES_MODE == 7){ // CHEBYSHEV - TRAJECTORY TIME OPTIMIZATION
+                // Independent parameter s[-1, 1]
+
+                Planners::utils::Vec3i local_start;
+                local_start.x = drone_local_x;
+                local_start.y = drone_local_y;
+                local_start.z = drone_local_z;
+
+                // 1 - Initial state init
+
+                Eigen::VectorXd coeff_x(6), coeff_y(6), coeff_z(6);
+                double a_x, a_y, a_z, b_x, b_y, b_z, T_init;
+
+                auto ini_ceres_start = std::chrono::high_resolution_clock::now();
+                if (has_prev_opt_coeffs_)
+                {
+                    // Warm start: reuse c0..c3 from the previous solution
+                    // recompute c4,c5 to satisfy the new boundary conditions:
+                    //   P( 1) = c0+c1+c2+c3+c4+c5 = goal  →  c4 = (goal−start)/2 − c0 − c2
+                    //   P(−1) =−c0+c1−c2+c3−c4+c5 = start  →  c5 = (goal+start)/2 − c1 − c3
+                    coeff_x = Eigen::VectorXd::Map(prev_opt_coeff_x_.data(), 6);
+                    coeff_y = Eigen::VectorXd::Map(prev_opt_coeff_y_.data(), 6);
+                    coeff_z = Eigen::VectorXd::Map(prev_opt_coeff_z_.data(), 6);
+
+                    coeff_x(4) = 0.5*(local_goal.x - local_start.x) - coeff_x(0) - coeff_x(2);
+                    coeff_x(5) = 0.5*(local_goal.x + local_start.x) - coeff_x(1) - coeff_x(3);
+                    coeff_y(4) = 0.5*(local_goal.y - local_start.y) - coeff_y(0) - coeff_y(2);
+                    coeff_y(5) = 0.5*(local_goal.y + local_start.y) - coeff_y(1) - coeff_y(3);
+                    coeff_z(4) = 0.5*(local_goal.z - local_start.z) - coeff_z(0) - coeff_z(2);
+                    coeff_z(5) = 0.5*(local_goal.z + local_start.z) - coeff_z(1) - coeff_z(3);
+                    T_init = prev_opt_coeff_T_;
+                }
+                else
+                {
+                    // First iteration: straight-line initialisation
+                    a_x = 0.5 * (local_goal.x + local_start.x);
+                    b_x = 0.5 * (local_goal.x - local_start.x);
+                    a_y = 0.5 * (local_goal.y + local_start.y);
+                    b_y = 0.5 * (local_goal.y - local_start.y);
+                    a_z = 0.5 * (local_goal.z + local_start.z);
+                    b_z = 0.5 * (local_goal.z - local_start.z);
+
+                    coeff_x << 0.0, 0.0, 0.0, 0.0, b_x, a_x;
+                    coeff_y << 0.0, 0.0, 0.0, 0.0, b_y, a_y;
+                    coeff_z << 0.0, 0.0, 0.0, 0.0, b_z, a_z;
+                    const double dist_cells = std::sqrt(
+                        std::pow(local_goal.x - local_start.x, 2.0) +
+                        std::pow(local_goal.y - local_start.y, 2.0) +
+                        std::pow(local_goal.z - local_start.z, 2.0));
+                    T_init = 2.0 * resolution_ * dist_cells / v_max_ms_;
+                }
+                auto ini_ceres_stop = std::chrono::high_resolution_clock::now();
+
+
+                // Print initial approximation (using Horner's algorithm)
+
+                int N_DIVISIONS_INI = 20.0;
+                double p0x = coeff_x(5) - coeff_x(3) + coeff_x(1);
+                double p1x = coeff_x(4) - 3.0*coeff_x(2) + 5.0*coeff_x(0);
+                double p2x = 2.0*coeff_x(3) - 8.0*coeff_x(1);
+                double p3x = 4.0*coeff_x(2) - 20.0*coeff_x(0);
+                double p4x = 8.0*coeff_x(1);
+                double p5x = 16.0*coeff_x(0);
+                double p0y = coeff_y(5) - coeff_y(3) + coeff_y(1);
+                double p1y = coeff_y(4) - 3.0*coeff_y(2) + 5.0*coeff_y(0);
+                double p2y = 2.0*coeff_y(3) - 8.0*coeff_y(1);
+                double p3y = 4.0*coeff_y(2) - 20.0*coeff_y(0);
+                double p4y = 8.0*coeff_y(1);
+                double p5y = 16.0*coeff_y(0);
+                double p0z = coeff_z(5) - coeff_z(3) + coeff_z(1);
+                double p1z = coeff_z(4) - 3.0*coeff_z(2) + 5.0*coeff_z(0);
+                double p2z = 2.0*coeff_z(3) - 8.0*coeff_z(1);
+                double p3z = 4.0*coeff_z(2) - 20.0*coeff_z(0);
+                double p4z = 8.0*coeff_z(1);
+                double p5z = 16.0*coeff_z(0);
+
+                for(int i=0; i < N_DIVISIONS_INI + 1; i++)
+                {
+                    double s_act = 2.0 * i / N_DIVISIONS_INI - 1.0;
+                    Planners::utils::Vec3i global_wp_point;
+                    global_wp_point.x = p0x + s_act*(p1x + s_act*(p2x + s_act*(p3x + s_act*(p4x + s_act*p5x)))) + origen_local_x;
+                    global_wp_point.y = p0y + s_act*(p1y + s_act*(p2y + s_act*(p3y + s_act*(p4y + s_act*p5y)))) + origen_local_y;
+                    global_wp_point.z = p0z + s_act*(p1z + s_act*(p2z + s_act*(p3z + s_act*(p4z + s_act*p5z)))) + origen_local_z;
+                    ini_local_path_line_markers_.points.push_back(Planners::utils::continousPoint(global_wp_point, resolution_));
+                    ini_local_path_points_markers_.points.push_back(Planners::utils::continousPoint(global_wp_point, resolution_));
+                }
+
+                publishMarker(ini_local_path_line_markers_, ini_local_line_markers_pub_);
+                publishMarker(ini_local_path_points_markers_, ini_local_point_markers_pub_);
+
+                ini_local_path_line_markers_.points.clear();
+                ini_local_path_points_markers_.points.clear();
+                
+
+
+                // 2 - Ceres optimization
+
+                Planners::utils::OptimizedTimeContinuousFunction opt_local_path_function;
+                auto ceres_start = std::chrono::high_resolution_clock::now();
+                opt_local_path_function = Ceresopt::ceresOptimizerChebyshevTimeOpt(coeff_x, coeff_y, coeff_z, T_init, origen_local_x_cont, origen_local_y_cont, origen_local_z_cont, local_start, local_goal, *m_local_grid3d_, loaded_sdf_, resolution_, esdf_map_, USING_VOXFIELD_PERFECT_ESDF, v_max_ms_, a_max_ms2_, j_max_ms3_, init_vel_x_ms_, init_vel_y_ms_, init_vel_z_ms_, init_acc_x_ms2_, init_acc_y_ms2_, init_acc_z_ms2_, goal_vel_x_ms_, goal_vel_y_ms_, goal_vel_z_ms_, goal_acc_x_ms2_, goal_acc_y_ms2_, goal_acc_z_ms2_);
+                auto ceres_stop = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double, std::milli> ceres_duration = ceres_stop - ceres_start;
+                std::chrono::duration<double, std::milli> ini_ceres_duration = ini_ceres_stop - ini_ceres_start;
+                printf("ELAPSED TIME - INITIAL OPTIMIZER: %.2f ms\n", ini_ceres_duration.count());
+                printf("ELAPSED TIME - MAIN OPTIMIZER: %.2f ms\n", ceres_duration.count());
+
+                last_min_dist_m_    = opt_local_path_function.min_dist_m;
+                last_path_length_m_ = opt_local_path_function.path_length_m;
+                last_traj_duration_s_ = opt_local_path_function.T_param;
+
+                // Store optimised coefficients for warm-starting the next iteration
+                prev_opt_coeff_x_.assign(opt_local_path_function.x_params.begin(),
+                                         opt_local_path_function.x_params.end());
+                prev_opt_coeff_y_.assign(opt_local_path_function.y_params.begin(),
+                                         opt_local_path_function.y_params.end());
+                prev_opt_coeff_z_.assign(opt_local_path_function.z_params.begin(),
+                                         opt_local_path_function.z_params.end());
+                prev_opt_coeff_T_ = opt_local_path_function.T_param;
+                has_prev_opt_coeffs_ = true;
+
+                // 3 - Print the results
+
+                // std::cout << "Coeficientes opt. para x(t): " << opt_local_path_function.x_params << std::endl;
+                // std::cout << "Coeficientes opt. para y(t): " << opt_local_path_function.y_params << std::endl;
+                // std::cout << "Coeficientes opt. para z(t): " << opt_local_path_function.z_params << std::endl;
+
+                // 3b - Print in RViz (AUN NO CONSIDERO SI LA RESOLUCIÓN DEL GLOBAL Y LOCAL NO SON LO MISMO)
+
+                Planners::utils::CoordinateList local_path_real;
+
+                int N_DIVISIONS = 20.0;
+                p0x = opt_local_path_function.x_params[5] - opt_local_path_function.x_params[3] + opt_local_path_function.x_params[1];
+                p1x = opt_local_path_function.x_params[4] - 3.0*opt_local_path_function.x_params[2] + 5.0*opt_local_path_function.x_params[0];
+                p2x = 2.0*opt_local_path_function.x_params[3] - 8.0*opt_local_path_function.x_params[1];
+                p3x = 4.0*opt_local_path_function.x_params[2] - 20.0*opt_local_path_function.x_params[0];
+                p4x = 8.0*opt_local_path_function.x_params[1];
+                p5x = 16.0*opt_local_path_function.x_params[0];
+                p0y = opt_local_path_function.y_params[5] - opt_local_path_function.y_params[3] + opt_local_path_function.y_params[1];
+                p1y = opt_local_path_function.y_params[4] - 3.0*opt_local_path_function.y_params[2] + 5.0*opt_local_path_function.y_params[0];
+                p2y = 2.0*opt_local_path_function.y_params[3] - 8.0*opt_local_path_function.y_params[1];
+                p3y = 4.0*opt_local_path_function.y_params[2] - 20.0*opt_local_path_function.y_params[0];
+                p4y = 8.0*opt_local_path_function.y_params[1];
+                p5y = 16.0*opt_local_path_function.y_params[0];
+                p0z = opt_local_path_function.z_params[5] - opt_local_path_function.z_params[3] + opt_local_path_function.z_params[1];
+                p1z = opt_local_path_function.z_params[4] - 3.0*opt_local_path_function.z_params[2] + 5.0*opt_local_path_function.z_params[0];
+                p2z = 2.0*opt_local_path_function.z_params[3] - 8.0*opt_local_path_function.z_params[1];
+                p3z = 4.0*opt_local_path_function.z_params[2] - 20.0*opt_local_path_function.z_params[0];
+                p4z = 8.0*opt_local_path_function.z_params[1];
+                p5z = 16.0*opt_local_path_function.z_params[0];
+
+                for(int i=0; i < N_DIVISIONS + 1; i++)
+                {
+                    double s_act = 2.0 * i / N_DIVISIONS - 1.0;
+                    Planners::utils::Vec3i global_wp_point;
+                    global_wp_point.x = p0x + s_act*(p1x + s_act*(p2x + s_act*(p3x + s_act*(p4x + s_act*p5x)))) + origen_local_x;
+                    global_wp_point.y = p0y + s_act*(p1y + s_act*(p2y + s_act*(p3y + s_act*(p4y + s_act*p5y)))) + origen_local_y;
+                    global_wp_point.z = p0z + s_act*(p1z + s_act*(p2z + s_act*(p3z + s_act*(p4z + s_act*p5z)))) + origen_local_z;
+
+                    local_path_line_markers_.points.push_back(Planners::utils::continousPoint(global_wp_point, resolution_));
+                    local_path_points_markers_.points.push_back(Planners::utils::continousPoint(global_wp_point, resolution_));
+
+                    local_path_real.push_back(global_wp_point);
+                }
+                publishMarker(local_path_line_markers_, local_line_markers_pub_);
+                publishMarker(local_path_points_markers_, local_point_markers_pub_);
+
+                local_path_line_markers_.points.clear();
+                local_path_points_markers_.points.clear();
+
+                // std::cout << "Global Path (in meters): [";
+                // for (size_t i = 0; i < local_path_real.size(); ++i) {
+                //     const auto &wp = local_path_real[i];
+                //     float x_aux = wp.x * resolution_;
+                //     float y_aux = wp.y * resolution_;
+                //     float z_aux = wp.z * resolution_;
+                //     std::cout << "(" << x_aux << "," << y_aux << "," << z_aux << ")";
+
+                //     if (i < local_path_real.size() - 1) {
+                //         std::cout << ", ";
+                //     }
+                // }
+                // std::cout << "]" << std::endl;
+
+#if PUBLISH_KINEMATICS_PROFILE
+                // ---------------------------------------------------------------
+                // Publish v(s), a(s), j(s) in real units (m/s, m/s², m/s³)
+                // T comes from the optimizer state (stateCoeff[18])
+                // ---------------------------------------------------------------
+                {
+                    const int    N_KIN = 50;
+                    const double T_kin = (last_traj_duration_s_ > 0.0) ? last_traj_duration_s_ : 1.0;
+                    const double res   = static_cast<double>(resolution_);
+                    const double k1    = 2.0 * res / T_kin;
+                    const double k2    = 4.0 * res / (T_kin * T_kin);
+                    const double k3    = 8.0 * res / (T_kin * T_kin * T_kin);
+
+                    std_msgs::Float64MultiArray s_msg, vel_msg, acc_msg, jerk_msg;
+                    s_msg.data.resize(N_KIN);
+                    vel_msg.data.resize(N_KIN);
+                    acc_msg.data.resize(N_KIN);
+                    jerk_msg.data.resize(N_KIN);
+
+                    // Reset per-trajectory maxima for benchmark dynamic-validity check
+                    last_max_v_ = last_max_a_ = last_max_j_ = 0.0;
+
+                    for (int i = 0; i < N_KIN; ++i)
+                    {
+                        const double s  = -1.0 + 2.0 * i / (N_KIN - 1);
+                        const double s2 = s * s;
+                        s_msg.data[i] = s;
+
+                        const double vx = p1x + s*(2.0*p2x + s*(3.0*p3x + s*(4.0*p4x + s*5.0*p5x)));
+                        const double vy = p1y + s*(2.0*p2y + s*(3.0*p3y + s*(4.0*p4y + s*5.0*p5y)));
+                        const double vz = p1z + s*(2.0*p2z + s*(3.0*p3z + s*(4.0*p4z + s*5.0*p5z)));
+                        vel_msg.data[i] = k1 * std::sqrt(vx*vx + vy*vy + vz*vz);
+
+                        const double ax = 2.0*p2x + s*(6.0*p3x + s*(12.0*p4x + s*20.0*p5x));
+                        const double ay = 2.0*p2y + s*(6.0*p3y + s*(12.0*p4y + s*20.0*p5y));
+                        const double az = 2.0*p2z + s*(6.0*p3z + s*(12.0*p4z + s*20.0*p5z));
+                        acc_msg.data[i] = k2 * std::sqrt(ax*ax + ay*ay + az*az);
+
+                        const double jx = 6.0*p3x + s*(24.0*p4x + s*60.0*p5x);
+                        const double jy = 6.0*p3y + s*(24.0*p4y + s*60.0*p5y);
+                        const double jz = 6.0*p3z + s*(24.0*p4z + s*60.0*p5z);
+                        jerk_msg.data[i] = k3 * std::sqrt(jx*jx + jy*jy + jz*jz);
+
+                        last_max_v_ = std::max(last_max_v_, vel_msg.data[i]);
+                        last_max_a_ = std::max(last_max_a_, acc_msg.data[i]);
+                        last_max_j_ = std::max(last_max_j_, jerk_msg.data[i]);
+                    }
+
+                    std_msgs::Float64 T_msg;
+                    T_msg.data = T_kin;
+
+                    kinematics_s_pub_.publish(s_msg);
+                    kinematics_vel_pub_.publish(vel_msg);
+                    kinematics_accel_pub_.publish(acc_msg);
+                    kinematics_jerk_pub_.publish(jerk_msg);
+                    kinematics_T_pub_.publish(T_msg);
+                }
+                // ---------------------------------------------------------------
+#endif // PUBLISH_KINEMATICS_PROFILE
+            }
+            
 
         }
         else{
@@ -1738,7 +2177,25 @@ private:
 
         lnh_.param("overlay_markers", overlay_markers_, (bool)false);
 
-        // Init internal variables: TF transform 
+        lnh_.param("v_max_ms",  v_max_ms_,  (double)3.0);
+        lnh_.param("a_max_ms2", a_max_ms2_, (double)2.0);
+        lnh_.param("j_max_ms3", j_max_ms3_, (double)4.0);
+
+        lnh_.param("ceres7_init_vel_x_ms",  init_vel_x_ms_,  (double)0.0);
+        lnh_.param("ceres7_init_vel_y_ms",  init_vel_y_ms_,  (double)0.0);
+        lnh_.param("ceres7_init_vel_z_ms",  init_vel_z_ms_,  (double)0.0);
+        lnh_.param("ceres7_init_acc_x_ms2", init_acc_x_ms2_, (double)0.0);
+        lnh_.param("ceres7_init_acc_y_ms2", init_acc_y_ms2_, (double)0.0);
+        lnh_.param("ceres7_init_acc_z_ms2", init_acc_z_ms2_, (double)0.0);
+
+        lnh_.param("ceres7_goal_vel_x_ms",  goal_vel_x_ms_,  (double)0.0);
+        lnh_.param("ceres7_goal_vel_y_ms",  goal_vel_y_ms_,  (double)0.0);
+        lnh_.param("ceres7_goal_vel_z_ms",  goal_vel_z_ms_,  (double)0.0);
+        lnh_.param("ceres7_goal_acc_x_ms2", goal_acc_x_ms2_, (double)0.0);
+        lnh_.param("ceres7_goal_acc_y_ms2", goal_acc_y_ms2_, (double)0.0);
+        lnh_.param("ceres7_goal_acc_z_ms2", goal_acc_z_ms2_, (double)0.0);
+
+        // Init internal variables: TF transform
         m_tfCache = false;
         ROS_INFO("CONFIGURE ALGORITHM COMPLETED");
     }
@@ -1931,7 +2388,43 @@ private:
     ros::Subscriber pointcloud_local_sub_, occupancy_grid_local_sub_, path_local_sub_, voxblox_map_sub_;
     //TODO Fix point markers
     ros::Publisher local_line_markers_pub_, local_point_markers_pub_, local_velocity_markers_pub_, ini_local_line_markers_pub_, ini_local_point_markers_pub_, obstacle_pc_point_markers_pub_,  cloud_test;
+    // PlotJuggler kinematics profile publishers
+    ros::Publisher kinematics_s_pub_, kinematics_vel_pub_, kinematics_accel_pub_,
+                   kinematics_jerk_pub_, kinematics_T_pub_;
     ros::ServiceClient save_model_client_;
+
+    // Per-iteration metrics set by calculatePath3D(), printed in the main loop
+    double last_min_dist_m_      = -1.0;
+    double last_path_length_m_   = -1.0;
+    double last_traj_duration_s_ = -1.0;
+
+    // Benchmark logging: max dynamic magnitudes along the optimized trajectory
+    double last_max_v_ = -1.0;
+    double last_max_a_ = -1.0;
+    double last_max_j_ = -1.0;
+    int    benchmark_replan_idx_ = 0;
+    ros::Publisher benchmark_pub_;   // publishes JSON metrics on /benchmark/metrics
+
+    // Kinematic limits for T_min computation (read from ROS params)
+    double v_max_ms_   = 3.0;   // m/s
+    double a_max_ms2_  = 2.0;   // m/s²
+    double j_max_ms3_  = 4.0;   // m/s³
+
+    // Initial dynamic state for CERES_MODE 7 block 5 (read from ROS params)
+    double init_vel_x_ms_  = 0.0;
+    double init_vel_y_ms_  = 0.0;
+    double init_vel_z_ms_  = 0.0;
+    double init_acc_x_ms2_ = 0.0;
+    double init_acc_y_ms2_ = 0.0;
+    double init_acc_z_ms2_ = 0.0;
+
+    // Goal dynamic state for CERES_MODE 7 block 6 (read from ROS params)
+    double goal_vel_x_ms_  = 0.0;
+    double goal_vel_y_ms_  = 0.0;
+    double goal_vel_z_ms_  = 0.0;
+    double goal_acc_x_ms2_ = 0.0;
+    double goal_acc_y_ms2_ = 0.0;
+    double goal_acc_z_ms2_ = 0.0;
 
     tf::TransformListener m_tfListener;
 
@@ -1986,6 +2479,32 @@ private:
     double drone_x_ = 0.0;
     double drone_y_ = 0.0;
     double drone_z_ = 0.0;
+
+    // ── Local goal stabilisation (world coordinates) ──────────────────────
+    // Each iteration a new candidate goal is computed (search centred at the
+    // midpoint of raw_goal and the previous safe goal, ordered by distance from
+    // that midpoint).  The candidate is only forwarded to the optimizer when it
+    // is at least MIN_GOAL_UPDATE_DIST metres away from the previous active goal,
+    // preventing ESDF-noise-induced micro-jitter while still allowing the goal
+    // to advance when the drone genuinely progresses.
+    //
+    // MIN_GOAL_UPDATE_DIST: tune to ~2–4 cells × resolution (e.g. 0.15 m at 0.05 m/cell).
+    static constexpr float MIN_GOAL_UPDATE_DIST = 0.15f; // metres
+
+    bool   has_prev_safe_goal_ {false};
+    double prev_safe_goal_wx_  {0.0}, prev_safe_goal_wy_  {0.0}, prev_safe_goal_wz_  {0.0};
+
+    // ── Warm-start for CERES_MODE 5 (Chebyshev) ───────────────────────────
+    // Stores the optimised Chebyshev coefficients from the previous iteration.
+    // On subsequent iterations, c0..c3 (obstacle-avoidance shape) are reused
+    // and c4,c5 are recomputed to satisfy the new start/goal boundary conditions:
+    //   c4 = (goal−start)/2 − c0 − c2
+    //   c5 = (goal+start)/2 − c1 − c3
+    bool                has_prev_opt_coeffs_ {false};
+    std::vector<double> prev_opt_coeff_x_    {0,0,0,0,0,0};
+    std::vector<double> prev_opt_coeff_y_    {0,0,0,0,0,0};
+    std::vector<double> prev_opt_coeff_z_    {0,0,0,0,0,0};
+    double              prev_opt_coeff_T_    {1.0};
 
     //real local origin (not discretized)
     double origen_local_x_cont, origen_local_y_cont, origen_local_z_cont;

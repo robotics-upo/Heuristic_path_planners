@@ -208,6 +208,11 @@ if(BUILD_ROS_SUPPORT)
   add_dependencies(local_planner_ros_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_LIBRARIES})
   target_link_libraries(local_planner_ros_node ${catkin_LIBRARIES} ${${PROJECT_NAME}_LIBRARIES} -lstdc++fs Eigen3::Eigen -lcrypto -lssl)
   list(APPEND ${PROJECT_NAME}_TARGETS local_planner_ros_node)
+
+  add_executable(global_path_smoother_node src/ROS/global_path_smoother_node.cpp)
+  add_dependencies(global_path_smoother_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_LIBRARIES})
+  target_link_libraries(global_path_smoother_node ${catkin_LIBRARIES} ${${PROJECT_NAME}_LIBRARIES} ${CERES_LIBRARIES} -lstdc++fs Eigen3::Eigen -lcrypto -lssl)
+  list(APPEND ${PROJECT_NAME}_TARGETS global_path_smoother_node)
 #############
   ## Install ##
 #############
@@ -227,6 +232,8 @@ if(BUILD_ROS_SUPPORT)
                                   scripts/compare_trajectories_rviz.py
                                   scripts/plan_caller.py
                                   scripts/generate2d_random_map.py
+                                  scripts/plot_kinematics.py
+                                  scripts/benchmark_logger.py
                                   setup.py
                                   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
   )

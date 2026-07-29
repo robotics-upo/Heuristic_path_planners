@@ -13,9 +13,9 @@
     <!-- <arg name="algorithm_name"      default="costastar"/> -->
 
     <!-- Size of the Local Map  -->
-    <arg name="local_world_size_x"        default="3"/>
-    <arg name="local_world_size_y"        default="3"/>
-    <arg name="local_world_size_z"        default="1.6"/>
+    <arg name="local_world_size_x"        default="6"/>
+    <arg name="local_world_size_y"        default="6"/>
+    <arg name="local_world_size_z"        default="2"/>
     <arg name="resolution"          default="0.05"/>
 
     <arg name="inflate_map"         default="true"/>
@@ -70,6 +70,9 @@
 
         <param name="cost_scaling_factor"   value="$(arg cost_scaling_factor)"/>
         <param name="robot_radius"          value="$(arg robot_radius)"/>
+
+        <!-- Planner configuration: kinematic limits + optimizer weights-->
+        <rosparam file="$(find heuristic_planners)/config/local_planner_configuration.yaml" command="load"/>
     </node>
 
     <!-- x y z yaw pitch roll frame_id child_frame_id period_in_ms -->

@@ -1,5 +1,5 @@
-#ifndef CERES_CONSTRAINTS_5_CONT_SMOOTHNESS
-#define CERES_CONSTRAINTS_5_CONT_SMOOTHNESS
+#ifndef CERES_CONSTRAINTS_7_CONT_SMOOTHNESS
+#define CERES_CONSTRAINTS_7_CONT_SMOOTHNESS
 
 #include <iostream>
 #include <fstream>
@@ -11,8 +11,6 @@
 #include "utils/metrics.hpp"
 #include <ros/ros.h>
 #include <Eigen/Dense>
-#include <chrono>
-
 
 #include <heuristic_planners/Vec3i.h>
 #include <heuristic_planners/CoordinateList.h>
@@ -27,17 +25,14 @@ using ceres::Problem;
 using ceres::Solve;
 using ceres::Solver;
 
-class Ceres5_SmoothnessContFunctor {
+class Ceres7_SmoothnessContFunctor {
 
 public:
-    Ceres5_SmoothnessContFunctor(double weight): weight_(weight) {}
+    Ceres7_SmoothnessContFunctor(double weight): weight_(weight) {}
 
     template <typename T>
     bool operator()(const T* const stateCoeff, T* residual) const {
 
-        auto t0 = std::chrono::high_resolution_clock::now();
-
-        double weight_high = weight_ * 50.0;
         double z_stiffness = 1e3;
         double high_order_stiffness = 50.0;
 
@@ -55,12 +50,6 @@ public:
         residual[9]  = z_stiffness * weight_ * (4.0*stateCoeff[14] - 20.0*stateCoeff[12]);
         residual[10] = z_stiffness * high_order_stiffness * weight_ * (8.0*stateCoeff[13]);
         residual[11] = z_stiffness * high_order_stiffness * weight_ * (16.0*stateCoeff[12]);
-
-        auto t1 = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double, std::milli> dt = t1 - t0;
-        //Planners::utils::safe_log("Cost Function - Smoothness", dt.count());
-        //std::cout << "[T] - Cost Function - Smoothness: " << dt.count() << std::endl;
-    
 
         return true;
     }

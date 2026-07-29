@@ -1,0 +1,78 @@
+# -----------------------------------------------------------------------------
+# Kinematic limits (shared across all CERES_MODEs)
+# -----------------------------------------------------------------------------
+# Reference values:
+#   PX4 defaults          : a_max ~3 m/s²,  j_max ~8 m/s³
+#   DJI Phantom 4 P-mode  : v_max ~10 m/s,  a_max ~4 m/s²
+#   DJI Matrice 300 RTK   : v_max ~23 m/s,  a_max ~5 m/s²
+#   EGO/Fast-Planner bench: v_max 3 m/s,    a_max 2 m/s²,  j_max 4 m/s³
+
+# Maximum 3D velocity norm [m/s]
+v_max_ms: 3.0
+
+# Maximum 3D acceleration norm [m/s²]
+a_max_ms2: 2.0
+
+# Maximum 3D jerk norm [m/s³]
+j_max_ms3: 4.0
+
+# -----------------------------------------------------------------------------
+# Initial dynamic state of the drone at trajectory start
+# -----------------------------------------------------------------------------
+# Set these to fixed values for offline test; for online use, replace with odometry readings before calling the optimizer.
+ceres7_init_vel_x_ms:  0.0   # [m/s]
+ceres7_init_vel_y_ms:  0.0   # [m/s]
+ceres7_init_vel_z_ms:  0.0   # [m/s]
+ceres7_init_acc_x_ms2: 0.0   # [m/s²]
+ceres7_init_acc_y_ms2: 0.0   # [m/s²]
+ceres7_init_acc_z_ms2: 0.0   # [m/s²]
+
+# -----------------------------------------------------------------------------
+# Desired dynamic state of the drone at trajectory end
+# -----------------------------------------------------------------------------
+#Set to zero for hover arrival, or to a cruise velocity for waypoint-following without stopping.
+ceres7_goal_vel_x_ms:  0.0   # [m/s]
+ceres7_goal_vel_y_ms:  0.0   # [m/s]
+ceres7_goal_vel_z_ms:  0.0   # [m/s]
+ceres7_goal_acc_x_ms2: 0.0   # [m/s²]
+ceres7_goal_acc_y_ms2: 0.0   # [m/s²]
+ceres7_goal_acc_z_ms2: 0.0   # [m/s²]
+
+# -----------------------------------------------------------------------------
+# CERES_MODE 7 — Chebyshev time-optimal optimizer
+# -----------------------------------------------------------------------------
+# Block 1 — Path length (soft constraint)
+ceres7_weight_path_length: 200.0
+
+# Block 2 — ESDF obstacle avoidance (soft)
+ceres7_weight_esdf: 3000.0
+ceres7_esdf_samp: 20          # Number of sample points along s for ESDF evaluation
+
+# Block 3 — Smoothness (soft)
+ceres7_weight_smoothness: 2.0
+
+# Block 4 — Fix start/goal positions (hard constraint)
+ceres7_weight_fix_startgoal: 50000.0
+
+# Block 5 — Initial dynamic state fix (hard constraint)
+ceres7_weight_init_dynamic: 50000.0
+
+# Block 6 — Goal dynamic state (soft constraint)
+ceres7_weight_goal_dynamic: 0.0
+
+# Block 7 — Dynamic limits enforcement (hard constraint)
+ceres7_weight_dyn_limits: 500000.0
+ceres7_dyn_samp: 50             # sample count
+ceres7_dyn_k_softplus: 50.0     # softplus sharpness constant (larger = tighter transition)
+
+# Block 8 — Trajectory time minimization (soft)
+ceres7_weight_traj_time: 5000.0
+
+# Curvature bounds — prevents loops without sacrificing warm-start convergence speed.
+# Bounds the high-order Chebyshev coefficients (T5/T4/T3/T2, indices c[0..3]) to
+#   ± curvature_bound_factor × ||goal − start||_cells
+# If the warm-start violates this, Ceres projects it automatically before the first
+# iteration — the optimizer never starts from a loopy state.
+# Increase if legitimate obstacle-avoidance detours require more curvature.
+# Set to a very large value (e.g. 999) to effectively disable the bounds.
+ceres7_curvature_bound_factor: 0.5
