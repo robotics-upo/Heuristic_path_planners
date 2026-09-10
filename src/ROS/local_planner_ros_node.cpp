@@ -347,17 +347,22 @@ private:
                                        last_max_v_ <= v_max_ms_  * 1.01 &&
                                        last_max_a_ <= a_max_ms2_ * 1.01 &&
                                        last_max_j_ <= j_max_ms3_ * 1.01) ? 1 : 0;
-                char buf[640];
+                char buf[4096];
                 snprintf(buf, sizeof(buf),
                     "{\"planner\":\"c3to\",\"replan\":%d,"
                     "\"x\":%.3f,\"y\":%.3f,\"z\":%.3f,"
                     "\"plan_ms\":%.3f,\"min_dist\":%.3f,\"path_len\":%.3f,\"traj_T\":%.3f,"
                     "\"max_v\":%.3f,\"max_a\":%.3f,\"max_j\":%.3f,"
+                    "\"max_v_axis\":%.3f,\"max_a_axis\":%.3f,"
+                    "\"avg_v\":%.3f,\"avg_a\":%.3f,"
+                    "\"traj\":%s,"
                     "\"dyn_valid\":%d,\"success\":1}",
                     benchmark_replan_idx_++,
                     (double)drone_x_, (double)drone_y_, (double)drone_z_,
                     loop_duration.count(), last_min_dist_m_, last_path_length_m_, last_traj_duration_s_,
-                    last_max_v_, last_max_a_, last_max_j_, dyn_valid);
+                    last_max_v_, last_max_a_, last_max_j_,
+                    last_max_v_axis_, last_max_a_axis_,
+                    last_avg_v_, last_avg_a_, last_traj_json_.c_str(), dyn_valid);
                 std_msgs::String bench_msg;
                 bench_msg.data = buf;
                 benchmark_pub_.publish(bench_msg);
@@ -1773,7 +1778,12 @@ private:
                 double a_x, a_y, a_z, b_x, b_y, b_z, T_init;
 
                 auto ini_ceres_start = std::chrono::high_resolution_clock::now();
-                if (has_prev_opt_coeffs_)
+                // Skip the warm start if the previous trajectory was too long: a long
+                // previous solution is a poor local initial guess for the new start/goal,
+                // so we fall back to the straight-line init instead.
+                const bool use_warm_start = has_prev_opt_coeffs_ &&
+                    (last_path_length_m_ <= max_reuse_path_length_m_);
+                if (use_warm_start)
                 {
                     // Warm start: reuse c0..c3 from the previous solution
                     // recompute c4,c5 to satisfy the new boundary conditions:
@@ -1793,7 +1803,9 @@ private:
                 }
                 else
                 {
-                    // First iteration: straight-line initialisation
+                    // Straight-line initialisation: either the first iteration (no
+                    // previous solution yet) or the previous trajectory exceeded
+                    // ceres7_max_reuse_path_length_m and was discarded as warm start.
                     a_x = 0.5 * (local_goal.x + local_start.x);
                     b_x = 0.5 * (local_goal.x - local_start.x);
                     a_y = 0.5 * (local_goal.y + local_start.y);
@@ -1909,19 +1921,32 @@ private:
                 p4z = 8.0*opt_local_path_function.z_params[1];
                 p5z = 16.0*opt_local_path_function.z_params[0];
 
+                // Build the sampled geometry of the optimized trajectory (world
+                // metres) for the benchmark logger, alongside the RViz markers.
+                last_traj_json_ = "[";
                 for(int i=0; i < N_DIVISIONS + 1; i++)
                 {
                     double s_act = 2.0 * i / N_DIVISIONS - 1.0;
+                    const double gx = p0x + s_act*(p1x + s_act*(p2x + s_act*(p3x + s_act*(p4x + s_act*p5x)))) + origen_local_x;
+                    const double gy = p0y + s_act*(p1y + s_act*(p2y + s_act*(p3y + s_act*(p4y + s_act*p5y)))) + origen_local_y;
+                    const double gz = p0z + s_act*(p1z + s_act*(p2z + s_act*(p3z + s_act*(p4z + s_act*p5z)))) + origen_local_z;
+
                     Planners::utils::Vec3i global_wp_point;
-                    global_wp_point.x = p0x + s_act*(p1x + s_act*(p2x + s_act*(p3x + s_act*(p4x + s_act*p5x)))) + origen_local_x;
-                    global_wp_point.y = p0y + s_act*(p1y + s_act*(p2y + s_act*(p3y + s_act*(p4y + s_act*p5y)))) + origen_local_y;
-                    global_wp_point.z = p0z + s_act*(p1z + s_act*(p2z + s_act*(p3z + s_act*(p4z + s_act*p5z)))) + origen_local_z;
+                    global_wp_point.x = gx;
+                    global_wp_point.y = gy;
+                    global_wp_point.z = gz;
 
                     local_path_line_markers_.points.push_back(Planners::utils::continousPoint(global_wp_point, resolution_));
                     local_path_points_markers_.points.push_back(Planners::utils::continousPoint(global_wp_point, resolution_));
 
                     local_path_real.push_back(global_wp_point);
+
+                    char pb[72];
+                    snprintf(pb, sizeof(pb), "%s[%.3f,%.3f,%.3f]", i ? "," : "",
+                             gx * resolution_, gy * resolution_, gz * resolution_);
+                    last_traj_json_ += pb;
                 }
+                last_traj_json_ += "]";
                 publishMarker(local_path_line_markers_, local_line_markers_pub_);
                 publishMarker(local_path_points_markers_, local_point_markers_pub_);
 
@@ -1963,6 +1988,8 @@ private:
 
                     // Reset per-trajectory maxima for benchmark dynamic-validity check
                     last_max_v_ = last_max_a_ = last_max_j_ = 0.0;
+                    last_max_v_axis_ = last_max_a_axis_ = 0.0;
+                    double sum_v = 0.0, sum_a = 0.0;   // for mean speed / acceleration
 
                     for (int i = 0; i < N_KIN; ++i)
                     {
@@ -1988,7 +2015,14 @@ private:
                         last_max_v_ = std::max(last_max_v_, vel_msg.data[i]);
                         last_max_a_ = std::max(last_max_a_, acc_msg.data[i]);
                         last_max_j_ = std::max(last_max_j_, jerk_msg.data[i]);
+                        sum_v += vel_msg.data[i];
+                        sum_a += acc_msg.data[i];
+                        // largest single-axis |v| / |a| in real units (per-axis limit metric)
+                        last_max_v_axis_ = std::max(last_max_v_axis_, k1 * std::max(std::fabs(vx), std::max(std::fabs(vy), std::fabs(vz))));
+                        last_max_a_axis_ = std::max(last_max_a_axis_, k2 * std::max(std::fabs(ax), std::max(std::fabs(ay), std::fabs(az))));
                     }
+                    last_avg_v_ = sum_v / N_KIN;   // uniform s == uniform time -> time-mean
+                    last_avg_a_ = sum_a / N_KIN;
 
                     std_msgs::Float64 T_msg;
                     T_msg.data = T_kin;
@@ -2180,6 +2214,8 @@ private:
         lnh_.param("v_max_ms",  v_max_ms_,  (double)3.0);
         lnh_.param("a_max_ms2", a_max_ms2_, (double)2.0);
         lnh_.param("j_max_ms3", j_max_ms3_, (double)4.0);
+
+        lnh_.param("ceres7_max_reuse_path_length_m", max_reuse_path_length_m_, (double)10.0);
 
         lnh_.param("ceres7_init_vel_x_ms",  init_vel_x_ms_,  (double)0.0);
         lnh_.param("ceres7_init_vel_y_ms",  init_vel_y_ms_,  (double)0.0);
@@ -2402,6 +2438,11 @@ private:
     double last_max_v_ = -1.0;
     double last_max_a_ = -1.0;
     double last_max_j_ = -1.0;
+    double last_avg_v_ = -1.0;   // mean speed over the trajectory [m/s]
+    double last_avg_a_ = -1.0;   // mean acceleration over the trajectory [m/s^2]
+    double last_max_v_axis_ = -1.0;   // largest single-axis |v| (per-axis limit metric) [m/s]
+    double last_max_a_axis_ = -1.0;   // largest single-axis |a| [m/s^2]
+    std::string last_traj_json_ = "[]";   // sampled geometry of the optimized trajectory
     int    benchmark_replan_idx_ = 0;
     ros::Publisher benchmark_pub_;   // publishes JSON metrics on /benchmark/metrics
 
@@ -2409,6 +2450,10 @@ private:
     double v_max_ms_   = 3.0;   // m/s
     double a_max_ms2_  = 2.0;   // m/s²
     double j_max_ms3_  = 4.0;   // m/s³
+
+    // CERES_MODE 7: max length of the previous trajectory for its coefficients to
+    // still be reused as warm start (read from ROS params)
+    double max_reuse_path_length_m_ = 10.0;   // m
 
     // Initial dynamic state for CERES_MODE 7 block 5 (read from ROS params)
     double init_vel_x_ms_  = 0.0;

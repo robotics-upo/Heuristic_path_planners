@@ -234,6 +234,7 @@ if(BUILD_ROS_SUPPORT)
                                   scripts/generate2d_random_map.py
                                   scripts/plot_kinematics.py
                                   scripts/benchmark_logger.py
+                                  scripts/benchmark_viz.py
                                   setup.py
                                   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
   )

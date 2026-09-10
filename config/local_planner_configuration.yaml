@@ -17,6 +17,15 @@ a_max_ms2: 2.0
 j_max_ms3: 4.0
 
 # -----------------------------------------------------------------------------
+# Warm-start reuse (CERES_MODE 7 only)
+# -----------------------------------------------------------------------------
+# If the previous optimized trajectory is longer than this, its coefficients are
+# NOT reused as the warm start for the next iteration — the optimizer falls back
+# to the straight-line initial guess instead. Set to a very large value (e.g.
+# 999) to always reuse the previous solution.
+ceres7_max_reuse_path_length_m: 5.0
+
+# -----------------------------------------------------------------------------
 # Initial dynamic state of the drone at trajectory start
 # -----------------------------------------------------------------------------
 # Set these to fixed values for offline test; for online use, replace with odometry readings before calling the optimizer.
@@ -61,7 +70,16 @@ ceres7_weight_init_dynamic: 50000.0
 ceres7_weight_goal_dynamic: 0.0
 
 # Block 7 — Dynamic limits enforcement (hard constraint)
-ceres7_weight_dyn_limits: 500000.0
+# Raised 500000 -> 5000000: the softplus transition is centred ON the limit, so
+# the optimum settles slightly ABOVE it (median was ~1.08x the jerk limit) where
+# the penalty balances the time-minimisation pull. The residual excess scales as
+# ~1/weight^2. Measured on this benchmark (jerk median / feasible @1% tol):
+#   5e5 -> 1.083x /  0.0%   (77 ms)
+#   2e6 -> 1.000x / 77.8%   (88 ms)  <- converges exactly ON the limit: knife edge,
+#                                       half the trajectories land just above it
+#   5e6 -> 0.976x / 99.5%   (91 ms)  <- real margin, only ~3% slower than 2e6
+# 5e6 it is: the extra cost is within run-to-run noise and buys full compliance.
+ceres7_weight_dyn_limits: 5000000.0
 ceres7_dyn_samp: 50             # sample count
 ceres7_dyn_k_softplus: 50.0     # softplus sharpness constant (larger = tighter transition)
 

@@ -29,7 +29,8 @@ above dist_valid metres. Tunable without rebuilding any planner. The raw
 max_v/max_a/max_j are still logged, so dynamic validity is recoverable offline.
 
 Parameters (private):
-    ~output_dir   : folder for the CSV     (default: /home/ros/exchange/bench_results_RAL26)
+    ~output_dir   : folder for the CSV
+                    (default: /home/ros/exchange/RAL26_Benchmark_Multibag/results)
     ~run_tag      : optional label appended to the filename (default: "")
     ~metrics_topic: topic to subscribe to   (default: /benchmark/metrics)
     ~dist_valid   : min clearance for a valid trajectory, in metres (default: 0.4)
@@ -42,6 +43,7 @@ so you get one file per planner run without overwriting previous ones.
 import csv
 import json
 import os
+import time
 import datetime
 
 import rospy
@@ -49,7 +51,10 @@ from std_msgs.msg import String
 
 # Fixed CSV column order. Keys not present in a message are left blank.
 COLUMNS = [
-    "stamp",        # ROS time when the logger received the message
+    "stamp",        # ROS time (SIMULATION time under use_sim_time) at reception
+    "wall",         # wall-clock time at reception -- use THIS for replan rates,
+                    # so the rate and plan_ms share one time base. A heavy planner
+                    # slows the simulator, which inflates the sim-time rate.
     "planner",
     "replan",
     "x", "y", "z",
@@ -58,6 +63,8 @@ COLUMNS = [
     "path_len",
     "traj_T",
     "max_v", "max_a", "max_j",
+    "max_v_axis", "max_a_axis",   # largest single-axis |v| / |a| (Fast/EGO's own per-axis limit)
+    "avg_v", "avg_a",   # mean speed / mean acceleration over the (in-window) trajectory
     "valid",        # obstacle-safety validity: 1 if min_dist >= dist_valid
     "success",
 ]
@@ -65,8 +72,14 @@ COLUMNS = [
 
 class BenchmarkLogger(object):
     def __init__(self):
-        out_dir = rospy.get_param("~output_dir",
-                                  "/home/ros/exchange/bench_results_RAL26")
+        # Benchmark suite lives in its own folder; the analysis scripts read
+        # the CSVs from here. Legacy location kept as a fallback so a container
+        # that has not been migrated yet still logs somewhere sensible.
+        default_out = "/home/ros/exchange/RAL26_Benchmark_Multibag/results"
+        if not os.path.isdir(default_out) and \
+                os.path.isdir("/home/ros/exchange/bench_results_RAL26"):
+            default_out = "/home/ros/exchange/bench_results_RAL26"
+        out_dir = rospy.get_param("~output_dir", default_out)
         self.out_dir = os.path.expanduser(out_dir)
         self.run_tag = str(rospy.get_param("~run_tag", ""))
         topic = rospy.get_param("~metrics_topic", "/benchmark/metrics")
@@ -83,7 +96,11 @@ class BenchmarkLogger(object):
         self.csv_file = None
         self.writer = None
         self.csv_path = None
+        self.traj_file = None      # sampled trajectory geometry (separate CSV)
+        self.traj_writer = None
+        self.traj_path = None
         self.rows = []            # kept in memory for the shutdown summary
+        self._shutdown = False    # set on shutdown so late callbacks stop writing
 
         self.sub = rospy.Subscriber(topic, String, self.cb, queue_size=100)
         rospy.on_shutdown(self.on_shutdown)
@@ -103,8 +120,21 @@ class BenchmarkLogger(object):
         self.csv_file.flush()
         rospy.loginfo("[benchmark_logger] writing CSV: %s", self.csv_path)
 
+        # Trajectory geometry goes to its own file: one row per sampled point,
+        # so the metrics CSV stays one-row-per-replan and easy to analyse.
+        self.traj_path = os.path.join(self.out_dir, "{}{}_{}_traj.csv".format(planner, tag, ts))
+        self.traj_file = open(self.traj_path, "w", newline="")
+        self.traj_writer = csv.writer(self.traj_file)
+        self.traj_writer.writerow(["replan", "k", "x", "y", "z"])
+        self.traj_file.flush()
+        rospy.loginfo("[benchmark_logger] writing trajectory geometry: %s", self.traj_path)
+
     # ------------------------------------------------------------------ #
     def cb(self, msg):
+        # Ignore any callback that fires during/after shutdown (the CSV is closed
+        # in on_shutdown; a late message would otherwise write to a closed file).
+        if self._shutdown or (self.csv_file is not None and self.csv_file.closed):
+            return
         try:
             data = json.loads(msg.data)
         except (ValueError, TypeError) as e:
@@ -124,6 +154,7 @@ class BenchmarkLogger(object):
 
         row = {c: "" for c in COLUMNS}
         row["stamp"] = "%.6f" % rospy.get_time()
+        row["wall"] = "%.6f" % time.time()
         for k, v in data.items():
             if k in row:
                 row[k] = v
@@ -131,10 +162,28 @@ class BenchmarkLogger(object):
         self.csv_file.flush()
         self.rows.append(data)
 
+        # Sampled trajectory geometry -> separate CSV (never into the metrics row)
+        traj = data.get("traj")
+        if isinstance(traj, list) and self.traj_writer is not None:
+            rep = data.get("replan", "")
+            for k, pt in enumerate(traj):
+                if isinstance(pt, (list, tuple)) and len(pt) == 3:
+                    self.traj_writer.writerow([rep, k, pt[0], pt[1], pt[2]])
+            self.traj_file.flush()
+
     # ------------------------------------------------------------------ #
     def on_shutdown(self):
-        if self.csv_file is not None:
+        # Stop new callbacks first, then close the file, so cb() never writes
+        # to a closed file (avoids the "I/O operation on closed file" race).
+        self._shutdown = True
+        try:
+            self.sub.unregister()
+        except Exception:
+            pass
+        if self.csv_file is not None and not self.csv_file.closed:
             self.csv_file.close()
+        if self.traj_file is not None and not self.traj_file.closed:
+            self.traj_file.close()
 
         n = len(self.rows)
         if n == 0:
@@ -171,6 +220,8 @@ class BenchmarkLogger(object):
             self.dist_valid, valid_ok, n, 100.0 * valid_ok / n))
         print(" success             : {}/{}  ({:.1f}%)".format(succ, n, 100.0 * succ / n))
         print(" CSV                 : {}".format(self.csv_path))
+        if self.traj_path:
+            print(" Trajectory geometry : {}".format(self.traj_path))
         print("=" * 55 + "\n")
 
 
