@@ -26,6 +26,14 @@
 #include <pcl_ros/transforms.h>
 
 #include <nav_msgs/OccupancyGrid.h>
+#include <nav_msgs/Path.h>
+
+#include <geometry_msgs/PointStamped.h>
+#include <tf2_ros/transform_listener.h>
+#include <tf2_ros/buffer.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+
+#include <algorithm>   // std::reverse
 
 #include <heuristic_planners/GetPath.h>
 #include <heuristic_planners/SetAlgorithm.h>
@@ -39,13 +47,20 @@ class HeuristicPlannerROS
 {
 
 public:
-    HeuristicPlannerROS()
+    HeuristicPlannerROS(): tf_buffer_(), tf_listener_(tf_buffer_)
     {
 
         std::string algorithm_name;
         lnh_.param("algorithm", algorithm_name, (std::string)"astar");
         lnh_.param("heuristic", heuristic_, (std::string)"euclidean");
-        
+
+        //  A request arrives in the frame the operator and the drone work in;
+        //  the search grid lives in the frame Grid3d shifted the OctoMap into,
+        //  with its origin at a corner. Equal names mean no transform, which is
+        //  the behaviour of this node before these two parameters existed.
+        lnh_.param("world_frame", world_frame_, std::string("world"));
+        lnh_.param("map_frame", map_frame_, std::string("map"));
+
         configureAlgorithm(algorithm_name, heuristic_);
 
         pointcloud_sub_     = lnh_.subscribe<pcl::PointCloud<pcl::PointXYZ>>("/points", 1, &HeuristicPlannerROS::pointCloudCallback, this);
@@ -57,6 +72,12 @@ public:
         line_markers_pub_  = lnh_.advertise<visualization_msgs::Marker>("path_line_markers", 1);
         point_markers_pub_ = lnh_.advertise<visualization_msgs::Marker>("path_points_markers", 1);
 
+        //  Latched: a consumer that starts after the path was computed still
+        //  receives it, instead of waiting for a request it cannot make.
+        global_path_pub_ = lnh_.advertise<nav_msgs::Path>("global_path", 1, true);
+
+        ROS_INFO("Planning in '%s'; requests are accepted in '%s'",
+                 map_frame_.c_str(), world_frame_.c_str());
     }
 
 private:
@@ -106,9 +127,26 @@ private:
         publishMarker(path_line_markers_, line_markers_pub_);
         publishMarker(path_points_markers_, point_markers_pub_);
 
+        //  Into the planning frame first. Without this the request's metres are
+        //  read as if they were already grid coordinates, which plans from
+        //  somewhere else entirely -- or off the grid, reported as "not valid".
+        geometry_msgs::Point start_in_map, goal_in_map;
+        if (!transformPoint(_req.start, world_frame_, map_frame_, start_in_map) ||
+            !transformPoint(_req.goal,  world_frame_, map_frame_, goal_in_map)) {
+            ROS_ERROR("Cannot bring the request from '%s' into '%s'. Is that TF being published?",
+                      world_frame_.c_str(), map_frame_.c_str());
+            return false;
+        }
+        ROS_INFO("start (%s): [%.2f, %.2f, %.2f] -> (%s): [%.2f, %.2f, %.2f]",
+                 world_frame_.c_str(), _req.start.x, _req.start.y, _req.start.z,
+                 map_frame_.c_str(), start_in_map.x, start_in_map.y, start_in_map.z);
+        ROS_INFO("goal  (%s): [%.2f, %.2f, %.2f] -> (%s): [%.2f, %.2f, %.2f]",
+                 world_frame_.c_str(), _req.goal.x, _req.goal.y, _req.goal.z,
+                 map_frame_.c_str(), goal_in_map.x, goal_in_map.y, goal_in_map.z);
+
         //Astar coordinate list is std::vector<vec3i>
-        const auto discrete_goal =  Planners::utils::discretePoint(_req.goal, resolution_);
-        const auto discrete_start = Planners::utils::discretePoint(_req.start, resolution_);
+        const auto discrete_goal =  Planners::utils::discretePoint(goal_in_map, resolution_);
+        const auto discrete_start = Planners::utils::discretePoint(start_in_map, resolution_);
 
         if( algorithm_->detectCollision(discrete_start) ){
             std::cout << discrete_start << ": Start not valid" << std::endl;
@@ -151,6 +189,33 @@ private:
                         _rep.max_los.data              = std::get<unsigned int>(path_data["max_line_of_sight_cells"]);
                     }
                     path = std::get<Planners::utils::CoordinateList>(path_data["path"]);
+
+                    //  The path leaves this node in metres, in a declared frame
+                    //  and ordered start to goal. It used to leave only as
+                    //  marker points, which forced any consumer that is not
+                    //  RViz to reconstruct it from a visualisation message, and
+                    //  to know this planner's resolution and its search order.
+                    //  A path is an interface; an interface must not expose the
+                    //  internal discretisation of whoever produced it.
+                    nav_msgs::Path path_msg;
+                    path_msg.header.stamp = ros::Time::now();
+                    path_msg.header.frame_id = map_frame_;
+                    path_msg.poses.reserve(path.size());
+                    for (const auto& vec3 : path) {
+                        geometry_msgs::PoseStamped pose;
+                        pose.header = path_msg.header;
+                        pose.pose.position.x = vec3.x * resolution_;
+                        pose.pose.position.y = vec3.y * resolution_;
+                        pose.pose.position.z = vec3.z * resolution_;
+                        pose.pose.orientation.w = 1.0;
+                        path_msg.poses.push_back(pose);
+                    }
+                    //  The search returns the goal first; publish it the way a
+                    //  reader expects to walk it.
+                    std::reverse(path_msg.poses.begin(), path_msg.poses.end());
+                    global_path_pub_.publish(path_msg);
+                    ROS_INFO("Global path published: %zu poses in '%s'",
+                             path_msg.poses.size(), path_msg.header.frame_id.c_str());
 
                 }catch(std::bad_variant_access const& ex){
                     std::cerr << "Bad variant error: " << ex.what() << std::endl;
@@ -429,11 +494,41 @@ private:
     }
 
 
+    //  Declared before the listener: tf_listener_ takes a reference to the
+    //  buffer in its constructor, and members are initialised in declaration
+    //  order, so the other way round binds a reference to an unbuilt object.
+    tf2_ros::Buffer tf_buffer_;
+    tf2_ros::TransformListener tf_listener_;
+
+    bool transformPoint(const geometry_msgs::Point& input, const std::string& from_frame,
+                        const std::string& to_frame, geometry_msgs::Point& output) {
+        if (from_frame == to_frame) {
+            output = input;
+            return true;
+        }
+        geometry_msgs::PointStamped stamped_in, stamped_out;
+        stamped_in.header.frame_id = from_frame;
+        stamped_in.header.stamp = ros::Time(0);  // the latest transform available
+        stamped_in.point = input;
+        try {
+            tf_buffer_.transform(stamped_in, stamped_out, to_frame, ros::Duration(1.0));
+            output = stamped_out.point;
+            return true;
+        } catch (tf2::TransformException& ex) {
+            ROS_WARN("TF2 transform failed: %s", ex.what());
+            return false;
+        }
+    }
+
     ros::NodeHandle lnh_{"~"};
     ros::ServiceServer request_path_server_, change_planner_server_;
     ros::Subscriber pointcloud_sub_, occupancy_grid_sub_;
     //TODO Fix point markers
     ros::Publisher line_markers_pub_, point_markers_pub_;
+    ros::Publisher global_path_pub_;
+
+    std::string world_frame_;
+    std::string map_frame_;
 
     std::unique_ptr<Grid3d> m_grid3d_;
 
